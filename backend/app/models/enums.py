@@ -6,7 +6,31 @@ class UserRole(str, enum.Enum):
     MODERATOR = "moderator"
     ADMINISTRATION = "administration"
     SOCIAL_SERVICE = "social_service"
+    SERVICE_PROVIDER = "service_provider"
     SUPER_ADMIN = "super_admin"
+
+
+class ServiceType(str, enum.Enum):
+    MANICURE = "manicure"
+    PEDICURE = "pedicure"
+    HAIRCUT = "haircut"
+    HAIR_COLOR = "hair_color"
+    MASSAGE = "massage"
+    COSMETOLOGY = "cosmetology"
+    BROWS = "brows"
+    OTHER = "other"
+
+
+SERVICE_TYPE_LABELS = {
+    ServiceType.MANICURE: "Маникюр",
+    ServiceType.PEDICURE: "Педикюр",
+    ServiceType.HAIRCUT: "Стрижка",
+    ServiceType.HAIR_COLOR: "Окрашивание",
+    ServiceType.MASSAGE: "Массаж",
+    ServiceType.COSMETOLOGY: "Косметология",
+    ServiceType.BROWS: "Брови/ресницы",
+    ServiceType.OTHER: "Другое",
+}
 
 
 class IssueStatus(str, enum.Enum):
@@ -75,6 +99,7 @@ class PlaceCategory(str, enum.Enum):
     CULTURE = "culture"
     HOTEL = "hotel"
     GAS = "gas"
+    BEAUTY = "beauty"
     OTHER = "other"
 
 
@@ -103,6 +128,7 @@ PLACE_CATEGORY_LABELS = {
     PlaceCategory.CULTURE: "Культура",
     PlaceCategory.HOTEL: "Гостиница",
     PlaceCategory.GAS: "АЗС",
+    PlaceCategory.BEAUTY: "Красота/услуги",
     PlaceCategory.OTHER: "Другое",
 }
 

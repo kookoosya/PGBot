@@ -10,6 +10,8 @@ import { Departments } from "./pages/Departments";
 import { Issues } from "./pages/Issues";
 import { Landing } from "./pages/Landing";
 import { MapPage } from "./pages/Map";
+import { Services } from "./pages/Services";
+import { ServiceRegister } from "./pages/ServiceRegister";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Residents } from "./pages/Residents";
@@ -30,6 +32,8 @@ export default function App() {
         <Route index element={<Landing />} />
         <Route path="ai" element={<AIChat />} />
         <Route path="map" element={<MapPage />} />
+        <Route path="services" element={<Services />} />
+        <Route path="services/register" element={<ServiceRegister />} />
         <Route path="register" element={<Register />} />
       </Route>
 

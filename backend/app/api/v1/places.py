@@ -33,6 +33,7 @@ from app.schemas.place import (
     PlaceReviewResponse,
 )
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+from app.services.schedule import format_opening_hours
 
 router = APIRouter()
 settings = get_settings()
@@ -48,7 +49,8 @@ def _place_response(p: Place) -> PlaceResponse:
         category_label=PLACE_CATEGORY_LABELS.get(p.category, p.category),
         description=p.description, address=p.address,
         latitude=p.latitude, longitude=p.longitude,
-        phone=p.phone, website=p.website, opening_hours=p.opening_hours,
+        phone=p.phone, website=p.website,
+        opening_hours=format_opening_hours(p.opening_hours) or p.opening_hours,
         avg_rating=p.avg_rating, review_count=p.review_count,
         complaint_count=p.complaint_count, last_synced_at=p.last_synced_at,
     )

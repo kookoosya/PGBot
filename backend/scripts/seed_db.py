@@ -24,6 +24,7 @@ ROLES = [
     (UserRole.ADMINISTRATION, "Администрация района"),
     (UserRole.SOCIAL_SERVICE, "Социальные службы"),
     (UserRole.SUPER_ADMIN, "Суперадминистратор"),
+    (UserRole.SERVICE_PROVIDER, "Мастер услуг"),
 ]
 
 DEPARTMENTS = [
@@ -69,6 +70,7 @@ async def seed() -> None:
             print(f"Created super admin: {admin_username}")
 
         from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+        from app.services.seed_services import seed_service_providers
         seeded = await seed_pushkin_landmarks(db)
         print(f"Seeded {seeded} landmarks")
         try:
@@ -76,6 +78,9 @@ async def seed() -> None:
             print(f"OSM sync: {osm}")
         except Exception as e:
             print(f"OSM sync skipped: {e}")
+
+        svc_count = await seed_service_providers(db)
+        print(f"Seeded {svc_count} service providers")
 
         await db.commit()
         print("Database seeded successfully")

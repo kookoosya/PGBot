@@ -161,7 +161,12 @@ export function MapPage() {
             {selected.avg_rating > 0 && (
               <p className="mt-1">⭐ {selected.avg_rating} · {selected.review_count} отзывов · {selected.complaint_count} жалоб</p>
             )}
-            {selected.opening_hours && <p className="text-sm mt-1">🕐 {selected.opening_hours}</p>}
+            {selected.opening_hours && (
+              <div className="text-sm mt-2 bg-amber-50 border border-amber-200 rounded p-2">
+                <p className="font-medium">🕐 Время работы:</p>
+                <p className="text-muted-foreground">{selected.opening_hours}</p>
+              </div>
+            )}
             {selected.phone && <p className="text-sm">📞 {selected.phone}</p>}
 
             <div className="flex gap-1 mt-4 border-b">

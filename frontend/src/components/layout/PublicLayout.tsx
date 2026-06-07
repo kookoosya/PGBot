@@ -4,6 +4,7 @@ const nav = [
   { to: "/", label: "Главная" },
   { to: "/ai", label: "ИИ-помощник" },
   { to: "/map", label: "Карта" },
+  { to: "/services", label: "Услуги" },
   { to: "/register", label: "Регистрация служб" },
   { to: "/admin/login", label: "Вход" },
 ];

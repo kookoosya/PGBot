@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api, VerificationRequest } from "@/lib/api";
+import { api, PendingProvider, VerificationRequest } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -13,9 +13,13 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function Verification() {
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
+  const [providers, setProviders] = useState<PendingProvider[]>([]);
   const [loading, setLoading] = useState<number | null>(null);
 
-  const load = () => api.getPendingVerifications().then(setRequests).catch(console.error);
+  const load = () => {
+    api.getPendingVerifications().then(setRequests).catch(console.error);
+    api.getPendingProviders().then(setProviders).catch(console.error);
+  };
   useEffect(() => { load(); }, []);
 
   const handle = async (id: number, action: "approve" | "reject") => {
@@ -36,6 +40,27 @@ export function Verification() {
         <p className="text-muted-foreground">Заявки на регистрацию служб и администрации</p>
       </div>
 
+      {providers.length > 0 && (
+        <div className="space-y-4 mb-8">
+          <h3 className="text-xl font-semibold">Мастера услуг</h3>
+          {providers.map((p) => (
+            <Card key={p.id} className="pushkin-card">
+              <CardContent className="p-6 flex justify-between items-center">
+                <div>
+                  <h4 className="font-semibold">{p.full_name}</h4>
+                  <p className="text-sm text-muted-foreground">{p.phone} · {p.address}</p>
+                  <p className="text-sm">{p.services.join(", ")}</p>
+                </div>
+                <Button size="sm" onClick={async () => { await api.approveProvider(p.id); load(); }} disabled={loading === p.id}>
+                  ✓ Одобрить
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <h3 className="text-xl font-semibold mb-4">Службы и администрация</h3>
       {requests.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">
           Нет ожидающих заявок

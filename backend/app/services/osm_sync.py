@@ -42,13 +42,18 @@ OSM_TAG_TO_CATEGORY = {
     "guest_house": PlaceCategory.HOTEL,
     "fuel": PlaceCategory.GAS,
     "bus_station": PlaceCategory.TRANSPORT,
+    "hairdresser": PlaceCategory.BEAUTY,
+    "beauty": PlaceCategory.BEAUTY,
+    "nails": PlaceCategory.BEAUTY,
+    "spa": PlaceCategory.BEAUTY,
 }
 
 OVERPASS_QUERY = """
 [out:json][timeout:60];
 (
   node["shop"]({bbox});
-  node["amenity"~"pharmacy|cafe|restaurant|fast_food|bank|post_office|school|kindergarten|hospital|clinic|doctors|townhall|library|museum|theatre|fuel|bus_station"]({bbox});
+  node["amenity"~"pharmacy|cafe|restaurant|fast_food|bank|post_office|school|kindergarten|hospital|clinic|doctors|townhall|library|museum|theatre|fuel|bus_station|hairdresser|beauty|spa"]({bbox});
+  node["shop"~"hairdresser|beauty|cosmetics"]({bbox});
   node["tourism"~"hotel|guest_house|museum"]({bbox});
   way["shop"]({bbox});
   way["amenity"~"pharmacy|cafe|restaurant|supermarket|hospital|townhall|library|museum"]({bbox});

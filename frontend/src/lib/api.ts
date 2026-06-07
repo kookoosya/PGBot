@@ -156,6 +156,36 @@ class ApiClient {
     return this.request<{ value: string; label: string }[]>("/places/categories");
   }
 
+  // Services
+  getServiceTypes() {
+    return this.request<{ value: string; label: string }[]>("/services/types");
+  }
+
+  getProviders(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<ServiceProvider[]>(`/services/providers${q}`);
+  }
+
+  getSlots(providerId: number, serviceId: number, date: string) {
+    return this.request<SlotsResult>(`/services/providers/${providerId}/slots?service_id=${serviceId}&appointment_date=${date}`);
+  }
+
+  bookAppointment(providerId: number, data: Record<string, unknown>) {
+    return this.request(`/services/providers/${providerId}/book`, { method: "POST", body: JSON.stringify(data) });
+  }
+
+  registerProvider(data: Record<string, unknown>) {
+    return this.request("/services/register", { method: "POST", body: JSON.stringify(data) });
+  }
+
+  getPendingProviders() {
+    return this.request<PendingProvider[]>("/services/providers/pending/list");
+  }
+
+  approveProvider(id: number) {
+    return this.request(`/services/providers/${id}/approve`, { method: "POST" });
+  }
+
   addReview(placeId: number, data: { rating: number; text?: string; author_name?: string }) {
     return this.request(`/places/${placeId}/reviews`, { method: "POST", body: JSON.stringify(data) });
   }
@@ -312,6 +342,39 @@ export interface MapStats {
   by_category: Record<string, number>;
   last_sync: string | null;
   center: { lat: number; lng: number };
+}
+
+export interface ServiceProvider {
+  id: number;
+  full_name: string;
+  phone: string;
+  bio: string | null;
+  address: string | null;
+  avg_rating: number;
+  review_count: number;
+  services: { id: number; name: string; service_type: string; service_label: string; duration_minutes: number; price: number | null }[];
+  status_today: string;
+  next_free_slot: string | null;
+}
+
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+  label: string;
+}
+
+export interface SlotsResult {
+  date: string;
+  working_hours: string | null;
+  slots: TimeSlot[];
+}
+
+export interface PendingProvider {
+  id: number;
+  full_name: string;
+  phone: string;
+  address: string | null;
+  services: string[];
 }
 
 export interface ComplaintType {
