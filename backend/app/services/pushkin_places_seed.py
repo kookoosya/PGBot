@@ -54,8 +54,6 @@ VILLAGE_PLACES: list[tuple] = [
 TAXI_SEED = [
     ("Наше такси", "+79210002828", "+79009979000", "Местная служба, круглосуточно, от 100 ₽", True, 4.6, 100, 1),
     ("Такси Пушкинские Горы", "+78114620505", None, "Диспетчер автовокзала", False, 4.0, 120, 2),
-    ("Яндекс Go", "приложение", None, "Заказ через приложение Яндекс Go", True, 4.5, 150, 3),
-    ("Maxim", "приложение", None, "Заказ через приложение Maxim", True, 4.2, 130, 4),
 ]
 
 
@@ -92,15 +90,31 @@ async def seed_village_places(db: AsyncSession) -> int:
 
 
 async def seed_taxi_services(db: AsyncSession) -> int:
+    allowed = {row[0] for row in TAXI_SEED}
     count = 0
     for name, phone, extra, desc, is_24h, rating, price, order in TAXI_SEED:
         result = await db.execute(select(TaxiService).where(TaxiService.name == name))
-        if result.scalar_one_or_none():
-            continue
-        db.add(TaxiService(
-            name=name, phone=phone, phones_extra=extra, description=desc,
-            is_24h=is_24h, rating=rating, price_from=price, sort_order=order,
-        ))
-        count += 1
+        existing = result.scalar_one_or_none()
+        if existing:
+            existing.phone = phone
+            existing.phones_extra = extra
+            existing.description = desc
+            existing.is_24h = is_24h
+            existing.rating = rating
+            existing.price_from = price
+            existing.sort_order = order
+            existing.is_active = True
+        else:
+            db.add(TaxiService(
+                name=name, phone=phone, phones_extra=extra, description=desc,
+                is_24h=is_24h, rating=rating, price_from=price, sort_order=order,
+            ))
+            count += 1
+
+    all_result = await db.execute(select(TaxiService))
+    for taxi in all_result.scalars().all():
+        if taxi.name not in allowed:
+            taxi.is_active = False
+
     await db.flush()
     return count
