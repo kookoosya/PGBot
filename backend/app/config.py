@@ -44,6 +44,19 @@ class Settings(BaseSettings):
     # Duplicate threshold
     DUPLICATE_THRESHOLD: float = 0.80
 
+    # Public AI chat limits
+    AI_FREE_DAILY_LIMIT: int = 15
+    AI_VK_DAILY_LIMIT: int = 10
+    AI_MAX_MESSAGE_LENGTH: int = 1000
+
+    # Payment / support (card transfer)
+    PAYMENT_CARD_NUMBER: str = "0000 0000 0000 0000"
+    PAYMENT_CARD_HOLDER: str = "Народный Контроль ПГ"
+    PAYMENT_BANK_NAME: str = "Сбербанк"
+    PAYMENT_DESCRIPTION: str = "Поддержка ИИ-помощника Пушкинских Гор"
+    PAYMENT_AMOUNT_SUGGESTED: int = 199
+    PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

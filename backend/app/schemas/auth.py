@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.enums import UserRole
+from app.models.enums import UserRole, VerificationStatus
 
 
 class LoginRequest(BaseModel):
@@ -46,4 +46,7 @@ class UserResponse(BaseModel):
     role: UserRole
     department_id: int | None
     is_active: bool
+    organization: str | None = None
+    position: str | None = None
+    verification_status: VerificationStatus | None = None
     created_at: datetime

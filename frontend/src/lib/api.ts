@@ -91,6 +91,48 @@ class ApiClient {
   getNotifications() {
     return this.request<Notification[]>("/admin/notifications");
   }
+
+  // Public AI
+  getAIUsage() {
+    return this.request<UsageInfo>("/ai/usage");
+  }
+
+  getPaymentInfo() {
+    return this.request<PaymentInfo>("/ai/payment-info");
+  }
+
+  sendAIChat(message: string, history: { role: string; content: string }[]) {
+    return this.request<ChatResponse>("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ message, history }),
+    });
+  }
+
+  // Official registration
+  registerOfficial(data: Record<string, string>) {
+    return this.request<VerificationRequest>("/verification/register-official", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  getPendingVerifications() {
+    return this.request<VerificationRequest[]>("/verification/pending");
+  }
+
+  approveVerification(id: number, note?: string) {
+    return this.request(`/verification/${id}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ note }),
+    });
+  }
+
+  rejectVerification(id: number, note?: string) {
+    return this.request(`/verification/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ note }),
+    });
+  }
 }
 
 export const api = new ApiClient();
@@ -178,5 +220,47 @@ export interface Notification {
   priority: string;
   status: string;
   message: string;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  remaining: number;
+  daily_limit: number;
+  limit_reached: boolean;
+}
+
+export interface UsageInfo {
+  used: number;
+  remaining: number;
+  daily_limit: number;
+}
+
+export interface PaymentInfo {
+  card_number: string;
+  card_holder: string;
+  bank_name: string;
+  description: string;
+  amount_suggested: number;
+  contact_email: string;
+  message: string;
+}
+
+export interface VerificationRequest {
+  id: number;
+  username: string;
+  email: string | null;
+  full_name: string | null;
+  phone: string | null;
+  organization: string | null;
+  position: string | null;
+  role: string;
+  verification_status: string;
+  verification_note: string | null;
   created_at: string;
 }

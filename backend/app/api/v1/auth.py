@@ -23,6 +23,18 @@ async def login(data: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)]
     user = result.scalar_one_or_none()
     if not user or not user.hashed_password or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    from app.models.enums import VerificationStatus
+
+    if user.verification_status == VerificationStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Аккаунт ожидает верификации администратором",
+        )
+    if user.verification_status == VerificationStatus.REJECTED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Заявка на регистрацию отклонена",
+        )
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
     token = create_access_token({"sub": str(user.id), "role": user.role.name.value})
@@ -78,5 +90,8 @@ async def get_me(current_user: Annotated[User, Depends(get_current_user)]):
         role=current_user.role.name,
         department_id=current_user.department_id,
         is_active=current_user.is_active,
+        organization=current_user.organization,
+        position=current_user.position,
+        verification_status=current_user.verification_status,
         created_at=current_user.created_at,
     )

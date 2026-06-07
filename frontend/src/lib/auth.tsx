@@ -25,6 +25,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           api.setToken(null);
         })
         .finally(() => setLoading(false));
+    // only check auth on admin paths
+    } else if (!window.location.pathname.startsWith("/admin")) {
+      setLoading(false);
     } else {
       setLoading(false);
     }

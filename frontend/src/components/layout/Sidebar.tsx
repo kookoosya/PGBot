@@ -7,29 +7,36 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  ShieldCheck,
   Users,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/issues", icon: ClipboardList, label: "Обращения" },
-  { to: "/residents", icon: Users, label: "Жители" },
-  { to: "/departments", icon: Building2, label: "Отделы" },
-  { to: "/analytics", icon: BarChart3, label: "Аналитика" },
-  { to: "/audit", icon: FileText, label: "Аудит" },
-  { to: "/settings", icon: Settings, label: "Настройки" },
+  { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/admin/issues", icon: ClipboardList, label: "Обращения" },
+  { to: "/admin/residents", icon: Users, label: "Жители" },
+  { to: "/admin/departments", icon: Building2, label: "Отделы" },
+  { to: "/admin/analytics", icon: BarChart3, label: "Аналитика" },
+  { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
+  { to: "/admin/audit", icon: FileText, label: "Аудит" },
+  { to: "/admin/settings", icon: Settings, label: "Настройки" },
 ];
 
 export function Sidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-card">
-      <div className="border-b p-6">
-        <h1 className="text-lg font-bold leading-tight">Народный Контроль</h1>
-        <p className="text-xs text-muted-foreground">Пушкинские Горы</p>
+    <aside className="flex h-screen w-64 flex-col border-r pushkin-gradient text-white">
+      <div className="border-b border-white/10 p-6">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-2xl">🪶</span>
+          <div>
+            <h1 className="text-lg font-bold leading-tight">Народный Контроль</h1>
+            <p className="text-xs text-white/60">Пушкинские Горы</p>
+          </div>
+        </Link>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
@@ -37,13 +44,13 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
-            end={to === "/"}
+            end={to === "/admin"}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
               )
             }
           >
@@ -53,14 +60,14 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t p-4">
+      <div className="border-t border-white/10 p-4">
         <div className="mb-3 px-3">
           <p className="text-sm font-medium">{user?.full_name || user?.username}</p>
-          <p className="text-xs text-muted-foreground">{user?.role}</p>
+          <p className="text-xs text-white/50">{user?.role}</p>
         </div>
         <button
           onClick={logout}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-white/60 hover:bg-white/10"
         >
           <LogOut className="h-4 w-4" />
           Выйти
