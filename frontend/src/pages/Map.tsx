@@ -146,10 +146,6 @@ export function MapPage() {
     api.getTaxiServices().then(setTaxi).catch(console.error);
   }, []);
 
-  useEffect(() => {
-    loadPlaces();
-  }, [category, shopsOnly, search, loadPlaces]);
-
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     const params: Record<string, string> = { page_size: "500", sort: "rating" };
     if (category) params.category = category;
