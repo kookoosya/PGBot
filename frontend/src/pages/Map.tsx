@@ -14,7 +14,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { Button } from "@/components/ui/button";
-import { VkBotBanner, telHref } from "@/components/VkBotLink";
+import { telHref } from "@/components/VkBotLink";
 import { api, Place, PlaceDetail, ComplaintType, TaxiService } from "@/lib/api";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
@@ -283,15 +283,6 @@ export function MapPage() {
         </div>
       </div>
 
-      <div className="page-section pb-3 space-y-3">
-        <VkBotBanner />
-        <div className="human-note">
-          <p className="m-0 text-sm">
-            Гостиницы и гостевые дома — отдельно от посуточной аренды (Авито).
-            Такси — только местные мобильные номера. «Офлайн» — карта без интернета.
-          </p>
-        </div>
-      </div>
 
       {showTaxi && taxi.length > 0 && (
         <div className="page-section pb-3">

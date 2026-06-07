@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
+
+from app.core.rate_limit import limiter
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,6 +36,7 @@ def _visitor_key(ip: str, user_agent: str | None) -> str:
 
 
 @router.post("/track", status_code=204)
+@limiter.limit("120/minute")
 async def track_visit(
     data: VisitTrackRequest,
     request: Request,

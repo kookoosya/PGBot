@@ -240,6 +240,11 @@ class ApiClient {
     return this.request(`/services/providers/${id}/approve`, { method: "POST" });
   }
 
+  rejectProvider(id: number, reason?: string) {
+    const q = reason ? `?reason=${encodeURIComponent(reason)}` : "";
+    return this.request(`/services/providers/${id}/reject${q}`, { method: "POST" });
+  }
+
   getMyProviderProfile() {
     return this.request<ProviderDetail>("/services/my/profile");
   }

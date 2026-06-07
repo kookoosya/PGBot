@@ -2,14 +2,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.deps import get_client_ip, get_current_user, require_owner
+from app.core.rate_limit import limiter
 from app.core.password_policy import validate_password
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.database import get_db
@@ -20,7 +19,6 @@ from app.services.audit import log_action
 
 router = APIRouter()
 settings = get_settings()
-limiter = Limiter(key_func=get_remote_address)
 
 
 def _check_lockout(user: User) -> None:

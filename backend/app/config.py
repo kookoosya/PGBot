@@ -46,7 +46,10 @@ class Settings(BaseSettings):
     TELEGRAM_ADMIN_CHAT_ID: str = ""
 
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://localhost"
+    CORS_ORIGINS: str = (
+        "http://localhost:5173,http://localhost:3000,http://localhost,"
+        "https://pushkiny.gmxreply.com"
+    )
 
     # Rate limiting
     RATE_LIMIT: str = "100/minute"

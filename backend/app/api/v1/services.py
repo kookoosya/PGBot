@@ -1,7 +1,9 @@
 from datetime import date, datetime, time, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from app.core.rate_limit import limiter
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -56,7 +58,12 @@ async def list_service_types():
 
 
 @router.post("/register", status_code=201)
-async def register_provider(data: ProviderRegisterRequest, db: Annotated[AsyncSession, Depends(get_db)]):
+@limiter.limit("5/hour")
+async def register_provider(
+    request: Request,
+    data: ProviderRegisterRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
     ok, msg = validate_password(data.password)
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
@@ -204,6 +211,34 @@ async def approve_provider(
                 )
     await notify_owner(f"✅ Мастер #{provider_id} «{p.full_name}» одобрен и опубликован.")
     return {"status": "approved"}
+
+
+@router.post("/providers/{provider_id}/reject")
+async def reject_provider(
+    provider_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+    reason: str = "Не подтверждены данные",
+):
+    result = await db.execute(select(ServiceProvider).where(ServiceProvider.id == provider_id))
+    p = result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(404)
+    p.verification_status = VerificationStatus.REJECTED
+    p.is_active = False
+    if p.user_id:
+        user_result = await db.execute(select(User).where(User.id == p.user_id))
+        user = user_result.scalar_one_or_none()
+        if user:
+            user.verification_status = VerificationStatus.REJECTED
+            user.is_active = False
+            if user.vk_id:
+                await notify_vk_user(
+                    user.vk_id,
+                    f"❌ Заявка мастера отклонена.\n{reason}",
+                )
+    await notify_owner(f"❌ Мастер #{provider_id} «{p.full_name}» отклонён: {reason}")
+    return {"status": "rejected"}
 
 
 @router.get("/providers/{provider_id}", response_model=ProviderDetailResponse)

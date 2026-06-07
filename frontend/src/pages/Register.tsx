@@ -119,7 +119,7 @@ export function Register() {
             </div>
             <div>
               <label className="text-sm font-medium">Пароль</label>
-              <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} minLength={6} required />
+              <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} minLength={10} required />
             </div>
             <div>
               <label className="text-sm font-medium">Комментарий для проверки</label>

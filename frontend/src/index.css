@@ -714,8 +714,8 @@
     @apply relative shrink-0 md:w-48 h-36 md:h-auto overflow-hidden;
   }
 
-  .classified-ad-image img {
-    @apply w-full h-full object-cover opacity-60;
+  .classified-ad-icon {
+    @apply absolute inset-0 flex items-center justify-center text-5xl opacity-90;
   }
 
   .classified-ad-badge {

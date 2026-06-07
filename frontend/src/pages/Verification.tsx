@@ -9,12 +9,18 @@ const ROLE_LABELS: Record<string, string> = {
   administration: "Администрация",
   social_service: "Соцслужбы",
   moderator: "Модератор",
+  resident: "Житель (организация)",
 };
+
+function isOrganization(r: VerificationRequest): boolean {
+  return (r.verification_note || "").includes("[ОРГАНИЗАЦИЯ]");
+}
 
 export function Verification() {
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [providers, setProviders] = useState<PendingProvider[]>([]);
   const [loading, setLoading] = useState<number | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
   const load = () => {
     api.getPendingVerifications().then(setRequests).catch(console.error);
@@ -22,95 +28,132 @@ export function Verification() {
   };
   useEffect(() => { load(); }, []);
 
-  const handle = async (id: number, action: "approve" | "reject") => {
+  const organizations = requests.filter(isOrganization);
+  const officials = requests.filter((r) => !isOrganization(r));
+
+  const handleUser = async (id: number, action: "approve" | "reject") => {
     setLoading(id);
     try {
       if (action === "approve") await api.approveVerification(id);
-      else await api.rejectVerification(id, "Не подтверждены данные");
+      else await api.rejectVerification(id, rejectNote || "Не подтверждены данные");
+      setRejectNote("");
       load();
     } finally {
       setLoading(null);
     }
   };
 
+  const handleProvider = async (id: number, action: "approve" | "reject") => {
+    setLoading(id);
+    try {
+      if (action === "approve") await api.approveProvider(id);
+      else await api.rejectProvider(id, rejectNote || "Не подтверждены данные");
+      setRejectNote("");
+      load();
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const renderUserCard = (r: VerificationRequest) => (
+    <Card key={r.id} className="pushkin-card">
+      <CardContent className="p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="font-semibold text-lg">{r.full_name}</h3>
+              <Badge className="bg-amber-100 text-amber-800">
+                {isOrganization(r) ? "Организация" : ROLE_LABELS[r.role] || r.role}
+              </Badge>
+            </div>
+            {r.organization && <p className="text-sm"><strong>Организация:</strong> {r.organization}</p>}
+            {r.position && <p className="text-sm"><strong>Должность:</strong> {r.position}</p>}
+            <p className="text-sm text-muted-foreground mt-1">
+              {r.email} · {r.phone} · @{r.username}
+            </p>
+            {r.verification_note && (
+              <pre className="text-xs mt-3 p-3 rounded-lg bg-muted whitespace-pre-wrap">{r.verification_note}</pre>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">{formatDate(r.created_at)}</p>
+          </div>
+          <div className="flex flex-col gap-2 shrink-0">
+            <Button size="sm" onClick={() => handleUser(r.id, "approve")} disabled={loading === r.id}>
+              ✓ Одобрить
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => handleUser(r.id, "reject")} disabled={loading === r.id}>
+              ✗ Отклонить
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold">Верификация</h2>
-        <p className="text-muted-foreground">Заявки на регистрацию служб и администрации</p>
+        <h2 className="text-3xl font-bold">Модерация регистраций</h2>
+        <p className="text-muted-foreground">
+          Организации, службы, мастера — проверяйте данные перед публикацией на портале.
+        </p>
       </div>
 
-      {providers.length > 0 && (
-        <div className="space-y-4 mb-8">
-          <h3 className="text-xl font-semibold">Мастера услуг</h3>
-          {providers.map((p) => (
-            <Card key={p.id} className="pushkin-card">
-              <CardContent className="p-6 flex justify-between items-center">
-                <div>
-                  <h4 className="font-semibold">{p.full_name}</h4>
-                  <p className="text-sm text-muted-foreground">{p.phone} · {p.address}</p>
-                  <p className="text-sm">{p.services.join(", ")}</p>
-                </div>
-                <Button size="sm" onClick={async () => { await api.approveProvider(p.id); load(); }} disabled={loading === p.id}>
-                  ✓ Одобрить
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="pushkin-card p-4">
+        <label className="text-sm font-medium">Причина отклонения (необязательно)</label>
+        <input
+          className="w-full mt-1 border rounded px-3 py-2 text-sm"
+          placeholder="Например: не подтверждён адрес организации"
+          value={rejectNote}
+          onChange={(e) => setRejectNote(e.target.value)}
+        />
+      </div>
 
-      <h3 className="text-xl font-semibold mb-4">Службы и администрация</h3>
-      {requests.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">
-          Нет ожидающих заявок
-        </CardContent></Card>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((r) => (
-            <Card key={r.id} className="pushkin-card">
-              <CardContent className="p-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+      <section>
+        <h3 className="text-xl font-semibold mb-4">🏢 Организации ({organizations.length})</h3>
+        {organizations.length === 0 ? (
+          <p className="text-muted-foreground text-sm">Нет заявок</p>
+        ) : (
+          <div className="space-y-4">{organizations.map(renderUserCard)}</div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="text-xl font-semibold mb-4">💇 Мастера услуг ({providers.length})</h3>
+        {providers.length === 0 ? (
+          <p className="text-muted-foreground text-sm">Нет заявок</p>
+        ) : (
+          <div className="space-y-4">
+            {providers.map((p) => (
+              <Card key={p.id} className="pushkin-card">
+                <CardContent className="p-6 flex flex-wrap justify-between items-start gap-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg">{r.full_name}</h3>
-                      <Badge className="bg-amber-100 text-amber-800">
-                        {ROLE_LABELS[r.role] || r.role}
-                      </Badge>
-                    </div>
-                    <p className="text-sm"><strong>Организация:</strong> {r.organization}</p>
-                    <p className="text-sm"><strong>Должность:</strong> {r.position}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {r.email} · {r.phone} · @{r.username}
-                    </p>
-                    {r.verification_note && (
-                      <p className="text-sm mt-2 italic">«{r.verification_note}»</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-2">{formatDate(r.created_at)}</p>
+                    <h4 className="font-semibold">{p.full_name}</h4>
+                    <p className="text-sm text-muted-foreground">{p.phone} · {p.address}</p>
+                    <p className="text-sm">{p.services.join(", ")}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handle(r.id, "approve")}
-                      disabled={loading === r.id}
-                    >
+                  <div className="flex flex-col gap-2">
+                    <Button size="sm" onClick={() => handleProvider(p.id, "approve")} disabled={loading === p.id}>
                       ✓ Одобрить
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handle(r.id, "reject")}
-                      disabled={loading === r.id}
-                    >
+                    <Button size="sm" variant="destructive" onClick={() => handleProvider(p.id, "reject")} disabled={loading === p.id}>
                       ✗ Отклонить
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="text-xl font-semibold mb-4">🏛 Службы и администрация ({officials.length})</h3>
+        {officials.length === 0 ? (
+          <Card><CardContent className="py-8 text-center text-muted-foreground">Нет заявок</CardContent></Card>
+        ) : (
+          <div className="space-y-4">{officials.map(renderUserCard)}</div>
+        )}
+      </section>
     </div>
   );
 }

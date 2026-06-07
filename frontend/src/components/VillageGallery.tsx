@@ -8,8 +8,10 @@ export function VillageGallery() {
     <section className="section-alt">
       <div className="page-section">
         <h3 className="section-title">Пушкиногорье</h3>
-        <p className="text-center text-muted-foreground -mt-6 mb-10 text-sm">Земля, где жил и творил поэт</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <p className="text-center text-muted-foreground -mt-6 mb-10 text-sm">
+          Реальные фото мест — музей-заповедник, монастырь, усадьбы
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VILLAGE_PHOTOS.map((photo) => (
             <div key={photo.title} className="pushkin-card-hover overflow-hidden group">
               <div className="aspect-[4/3] overflow-hidden bg-muted relative">
@@ -28,6 +30,9 @@ export function VillageGallery() {
               <div className="p-4">
                 <h4 className="font-semibold">{photo.title}</h4>
                 <p className="text-xs text-muted-foreground">{photo.caption}</p>
+                {"credit" in photo && photo.credit ? (
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">{photo.credit}</p>
+                ) : null}
               </div>
             </div>
           ))}

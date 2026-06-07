@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from app.core.rate_limit import limiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -28,7 +30,9 @@ settings = get_settings()
 
 
 @router.post("/register-organization", response_model=VerificationRequestResponse, status_code=201)
+@limiter.limit("5/hour")
 async def register_organization(
+    request: Request,
     data: OrganizationRegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
@@ -99,7 +103,12 @@ async def register_organization(
 
 
 @router.post("/register-official", response_model=VerificationRequestResponse, status_code=201)
-async def register_official(data: OfficialRegisterRequest, db: Annotated[AsyncSession, Depends(get_db)]):
+@limiter.limit("5/hour")
+async def register_official(
+    request: Request,
+    data: OfficialRegisterRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
     if data.role not in OFFICIAL_ROLES:
         raise HTTPException(
             status_code=400,
@@ -147,6 +156,14 @@ async def register_official(data: OfficialRegisterRequest, db: Annotated[AsyncSe
             f"📧 {user.email}\n"
             f"📞 {user.phone}",
         )
+
+    await notify_owner(
+        "🏛 Заявка службы/администрации\n\n"
+        f"{user.full_name} — {user.organization}\n"
+        f"Роль: {user.role.name.value}\n"
+        f"📞 {user.phone}\n\n"
+        "Одобрите в админке → Верификация."
+    )
 
     return VerificationRequestResponse(
         id=user.id,

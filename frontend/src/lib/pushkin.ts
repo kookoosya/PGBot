@@ -17,21 +17,43 @@ export const PUSHKIN_VERSES = [
 
 export const SITE_URL = "https://pushkiny.gmxreply.com";
 
+/** Фото Пушкиногорья — Wikimedia Commons, не стоковые карточки */
 export const VILLAGE_PHOTOS = [
   {
     title: "Михайловское",
-    caption: "Музей-заповедник А.С. Пушкина",
+    caption: "Усадьба музея-заповедника А.С. Пушкина",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg/960px-PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg",
+    credit: "Wikimedia / Alexey Komarov",
   },
   {
-    title: "Пушкиногорская лавра",
-    caption: "Свято-Успенский монастырь",
+    title: "Святогорский монастырь",
+    caption: "Пушкиногорская лавра над рекой Сороть",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Svyatogorsky_Monastery_05.jpg/960px-Svyatogorsky_Monastery_05.jpg",
+    credit: "Wikimedia Commons",
   },
   {
-    title: "Пушкинские Горы",
-    caption: "Посёлок поэтической земли",
+    title: "Центр посёлка",
+    caption: "Пушкинские Горы — вид с высоты",
     url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/PushkinGory_asv2018-07_img01.jpg/960px-PushkinGory_asv2018-07_img01.jpg",
+    credit: "Wikimedia / Alexey Komarov",
+  },
+  {
+    title: "Памятник Пушкину",
+    caption: "У Святогорского монастыря",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Pushkin_monument_in_Pushkinskiye_Gory.jpg/960px-Pushkin_monument_in_Pushkinskiye_Gory.jpg",
+    credit: "Wikimedia Commons",
+  },
+  {
+    title: "Тригорское",
+    caption: "Усадьба в заповеднике",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Trigorskoe.jpg/960px-Trigorskoe.jpg",
+    credit: "Wikimedia Commons",
+  },
+  {
+    title: "Петровское",
+    caption: "Усадьба Ганнибалов у озера",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Petrovskoe_Pushkin_hills.jpg/960px-Petrovskoe_Pushkin_hills.jpg",
+    credit: "Wikimedia Commons",
   },
 ];
 

@@ -113,8 +113,7 @@ export function Classifieds() {
               className={`category-tile ${filter === c.value ? "category-tile-active" : ""}`}
               onClick={() => setFilter(c.value)}
             >
-              <img src={visual.image} alt="" className="category-tile-img" loading="lazy" />
-              <div className="category-tile-overlay" style={{ background: visual.gradient }} />
+              <div className="category-tile-bg" style={{ background: visual.gradient }} />
               <span className="category-tile-icon">{visual.icon}</span>
               <span className="category-tile-label">{c.label}</span>
             </button>
@@ -224,8 +223,8 @@ export function Classifieds() {
           return (
             <div key={ad.id} className="classified-ad-card">
               <div className="classified-ad-image" style={{ background: visual.gradient }}>
-                <img src={visual.image} alt="" loading="lazy" />
-                <span className="classified-ad-badge">{visual.icon} {ad.category_label}</span>
+                <span className="classified-ad-icon">{visual.icon}</span>
+                <span className="classified-ad-badge">{ad.category_label}</span>
               </div>
               <div className="classified-ad-body">
                 <div className="flex justify-between gap-2">
