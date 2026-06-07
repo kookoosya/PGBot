@@ -93,8 +93,10 @@ async def seed_taxi_services(db: AsyncSession) -> int:
     allowed = {row[0] for row in TAXI_SEED}
     count = 0
     for name, phone, extra, desc, is_24h, rating, price, order in TAXI_SEED:
-        result = await db.execute(select(TaxiService).where(TaxiService.name == name))
-        existing = result.scalar_one_or_none()
+        result = await db.execute(
+            select(TaxiService).where(TaxiService.name == name).order_by(TaxiService.id)
+        )
+        existing = result.scalars().first()
         if existing:
             existing.phone = phone
             existing.phones_extra = extra
