@@ -4,7 +4,7 @@ import { QuickNav } from "@/components/QuickNav";
 import { VillageGallery } from "@/components/VillageGallery";
 import { BRAND } from "@/lib/branding";
 import { api } from "@/lib/api";
-import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { PUSHKIN_QUOTES, SITE_URL } from "@/lib/pushkin";
 
 const features = [
   { icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги — от соседей для соседей", to: "/classifieds" },
@@ -24,11 +24,12 @@ const POET_FACTS = [
 
 export function Landing() {
   const [stats, setStats] = useState({ places: 0, ads: 0 });
-  const vkUrl = "https://vk.com";
+  const [vkUrl, setVkUrl] = useState(SITE_URL);
 
   useEffect(() => {
     api.getMapStats().then((s) => setStats((st) => ({ ...st, places: s.total_places }))).catch(() => {});
     api.getClassifieds().then((r) => setStats((st) => ({ ...st, ads: r.total }))).catch(() => {});
+    api.getPublicInfo().then((i) => setVkUrl(i.vk_url || SITE_URL)).catch(() => {});
   }, []);
 
   return (
@@ -106,20 +107,6 @@ export function Landing() {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="page-section">
-        <div className="pushkin-heritage-grid">
-          {VILLAGE_PHOTOS.map((photo) => (
-            <div key={photo.title} className="pushkin-heritage-card">
-              <img src={photo.url} alt={photo.title} loading="lazy" />
-              <div className="pushkin-heritage-caption">
-                <h4>{photo.title}</h4>
-                <p>{photo.caption}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 

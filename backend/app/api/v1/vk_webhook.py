@@ -9,8 +9,9 @@ from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.database import get_db
-from app.models.enums import IssueStatus
+from app.models.enums import IssueStatus, PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.issue import Issue
+from app.models.place import Place
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -33,6 +34,35 @@ settings = get_settings()
 router = APIRouter()
 
 _ai_mode_peers: set[int] = set()
+
+_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
+
+
+async def _reply_places(db: AsyncSession, peer_id: int, *, category: PlaceCategory | None = None, search: str | None = None) -> None:
+    query = select(Place).where(Place.is_active.is_(True))
+    if category:
+        query = query.where(Place.category == category)
+    if search:
+        query = query.where(Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%"))
+    result = await db.execute(query.order_by(Place.name).limit(6))
+    places = result.scalars().all()
+    if not places:
+        await send_message(
+            peer_id,
+            f"Пока не нашёл в справочнике. Откройте карту на сайте:\n{_SITE}/map",
+            keyboard=get_welcome_keyboard(),
+        )
+        return
+    lines = ["🗺 Нашёл на карте посёлка:\n"]
+    for p in places:
+        cat = PLACE_CATEGORY_LABELS.get(p.category, "")
+        lines.append(f"• {p.name} — {p.address or 'Пушкинские Горы'}")
+        if p.phone:
+            lines.append(f"  📞 {p.phone}")
+        if p.yandex_url:
+            lines.append(f"  🧭 {p.yandex_url}")
+    lines.append(f"\nВся карта: {_SITE}/map")
+    await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
 
 
 @router.post("/callback")
@@ -82,10 +112,31 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("🌐 сайт", "сайт"):
             await send_message(
                 peer_id,
-                "🌐 Наш сайт доступен по адресу, который настроит администратор.\n\n"
-                "Там — ИИ-помощник, информация и регистрация для служб.",
+                f"🌐 Портал посёлка Пушкинские Горы:\n{_SITE}\n\n"
+                "Карта, объявления, услуги, ИИ-помощник и регистрация.",
                 keyboard=get_welcome_keyboard(),
             )
+            return PlainTextResponse("ok")
+
+        if text_lower in ("🗺 карта", "карта"):
+            await send_message(
+                peer_id,
+                f"🗺 Карта посёлка — магазины, аптеки, АЗС, шиномонтаж:\n{_SITE}/map\n\n"
+                "Напишите «шиномонтаж» или «заправка» — пришлю адреса.",
+                keyboard=get_welcome_keyboard(),
+            )
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
+            await _reply_places(db, peer_id, category=PlaceCategory.TYRE)
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in ("азс", "заправка", "бензин", "лукойл")):
+            await _reply_places(db, peer_id, category=PlaceCategory.GAS)
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in ("аэродромная", "аэродром")):
+            await _reply_places(db, peer_id, search="аэродром")
             return PlainTextResponse("ok")
 
         if text_lower in ("📋 мои обращения", "мои обращения"):
@@ -121,7 +172,9 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 "📝 Обращение — просто напишите проблему:\n"
                 "«Не работает фонарь на ул. Ленина, 15»\n\n"
                 "🤖 ИИ-помощник — нажмите кнопку, задайте вопрос\n\n"
-                "📋 Мои обращения — статус ваших заявок\n\n"
+                "📋 Мои обращения — статус ваших заявок\n"
+                f"🗺 Карта — {_SITE}/map\n"
+                "Напишите «шиномонтаж» или «заправка»\n\n"
                 "🪶 «Я памятник себе воздвиг нерукотворный...»\n"
                 "А мы воздвигаем порядок в поселке — вместе!",
                 keyboard=get_welcome_keyboard(),

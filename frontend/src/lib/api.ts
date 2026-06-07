@@ -112,6 +112,10 @@ class ApiClient {
     return this.request<VisitStats>("/visits/stats");
   }
 
+  getPublicInfo() {
+    return this.request<PublicInfo>("/public/info");
+  }
+
   getCategories() {
     return this.request<{ value: string; label: string }[]>("/categories");
   }
@@ -375,6 +379,13 @@ export interface Statistics {
   top_categories: { category: string; count: number }[];
   top_streets: { street: string; count: number }[];
   monthly_dynamics: { month: string; count: number; resolved: number }[];
+}
+
+export interface PublicInfo {
+  site_url: string;
+  vk_url: string;
+  map_url: string;
+  yandex_maps_add_org: string;
 }
 
 export interface VisitStats {

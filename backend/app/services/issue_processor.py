@@ -13,6 +13,7 @@ from app.models.issue import Issue, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.user import User
 from app.services.gemini import analyze_issue
+from app.services.notifications import notify_owner
 from app.services.telegram import notify_about_issue
 from app.services.vk import send_message
 
@@ -195,6 +196,13 @@ async def process_incoming_message(
         message=f"Новое обращение #{issue.id}: {analysis.get('summary', text[:100])}",
     )
     db.add(notification)
+
+    await notify_owner(
+        f"📋 Новое обращение #{issue.id}\n"
+        f"{analysis.get('summary', text[:120])}\n"
+        f"Категория: {category or '—'}\n"
+        f"От: VK id{vk_id}"
+    )
 
     if notif_priority == NotificationPriority.HIGH:
         dept_chat = department.telegram_chat_id if department else None

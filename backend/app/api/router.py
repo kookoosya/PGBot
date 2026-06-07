@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, ai_chat, auth, categories, classifieds, departments, issues, places, services, statistics, users, verification, visits, vk_webhook
+from app.api.v1 import admin, ai_chat, auth, categories, classifieds, departments, issues, places, public_info, services, statistics, users, verification, visits, vk_webhook
 
 api_router = APIRouter()
 
+api_router.include_router(public_info.router, prefix="/public", tags=["public"])
 api_router.include_router(ai_chat.router, prefix="/ai", tags=["ai"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(verification.router, prefix="/verification", tags=["verification"])

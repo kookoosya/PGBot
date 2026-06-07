@@ -15,21 +15,23 @@ export const PUSHKIN_VERSES = [
   "«Всё, что ни делается, — к лучшему.»",
 ];
 
+export const SITE_URL = "https://pushkiny.gmxreply.com";
+
 export const VILLAGE_PHOTOS = [
   {
     title: "Михайловское",
     caption: "Музей-заповедник А.С. Пушкина",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Mikhailovskoe_park.jpg/800px-Mikhailovskoe_park.jpg",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg/960px-PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg",
   },
   {
     title: "Пушкиногорская лавра",
     caption: "Свято-Успенский монастырь",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Pushkinskiye_Gory_Lavra.jpg/800px-Pushkinskiye_Gory_Lavra.jpg",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Svyatogorsky_Monastery_05.jpg/960px-Svyatogorsky_Monastery_05.jpg",
   },
   {
     title: "Пушкинские Горы",
     caption: "Посёлок поэтической земли",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Pushkin_hills.jpg/800px-Pushkin_hills.jpg",
+    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/PushkinGory_asv2018-07_img01.jpg/960px-PushkinGory_asv2018-07_img01.jpg",
   },
 ];
 
@@ -41,4 +43,12 @@ export function quoteForPage(path: string): string {
   if (path.startsWith("/classifieds")) return PUSHKIN_QUOTES.classifieds;
   if (path.startsWith("/register")) return PUSHKIN_QUOTES.register;
   return PUSHKIN_QUOTES.default;
+}
+
+export function yandexRouteUrl(lat: number, lng: number): string {
+  return `https://yandex.ru/maps/?rtext=~${lat},${lng}&rtt=auto`;
+}
+
+export function yandexMapsPointUrl(lat: number, lng: number, name: string): string {
+  return `https://yandex.ru/maps/?pt=${lng},${lat}&z=17&text=${encodeURIComponent(name + " Пушкинские Горы")}`;
 }

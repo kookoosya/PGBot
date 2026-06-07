@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { yandexMapsPointUrl, yandexRouteUrl } from "@/lib/pushkin";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -49,6 +50,7 @@ function RatingBadge({ place }: { place: Place | PlaceDetail }) {
       <span className="org-rating-meta">
         {place.display_review_count} отзывов
         {place.rating_source === "yandex" && " · Яндекс"}
+        {place.rating_source === "reference" && " · справочник"}
         {place.rating_source === "users" && " · жители"}
       </span>
     </div>
@@ -137,6 +139,7 @@ export function MapPage() {
   });
   const [msg, setMsg] = useState("");
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+  const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
 
   useEffect(() => {
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
@@ -145,21 +148,22 @@ export function MapPage() {
   }, []);
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
+    if (bounds) boundsRef.current = bounds;
+    const b = bounds || boundsRef.current;
+    if (!b) return;
     const params: Record<string, string> = { page_size: "500", sort: "rating" };
     if (category) params.category = category;
     if (shopsOnly) params.shops_only = "true";
     if (search) params.search = search;
-    if (bounds) {
-      params.south = String(bounds.south);
-      params.west = String(bounds.west);
-      params.north = String(bounds.north);
-      params.east = String(bounds.east);
-    }
+    params.south = String(b.south);
+    params.west = String(b.west);
+    params.north = String(b.north);
+    params.east = String(b.east);
     api.getPlaces(params).then((r) => setPlaces(r.items)).catch(console.error);
   }, [category, shopsOnly, search]);
 
   useEffect(() => {
-    loadPlaces();
+    if (boundsRef.current) loadPlaces(boundsRef.current);
   }, [category, shopsOnly, search, loadPlaces]);
 
   const sortedPlaces = useMemo(
@@ -209,8 +213,9 @@ export function MapPage() {
       <div className="page-section pb-3">
         <div className="human-note">
           <p className="m-0 text-sm">
-            Магазины, аптеки и шиномонтажи подтягиваются из справочников и обновляются автоматически раз в сутки.
-            Нашли ошибку — напишите отзыв или жалобу в карточке организации.
+            Только проверенные организации посёлка — без выдуманных заправок.
+            Шиномонтаж на ул. Аэродромная, 23 и другие точки обновляются из справочника.
+            Нашли ошибку — отзыв или жалоба в карточке. Нет на карте — напишите в ВК-бот.
           </p>
         </div>
       </div>
@@ -330,6 +335,25 @@ export function MapPage() {
               {selected.description && (
                 <p className="text-sm text-muted-foreground mt-2">{selected.description}</p>
               )}
+
+              <div className="flex flex-wrap gap-2 mt-4">
+                <a
+                  href={yandexRouteUrl(selected.latitude, selected.longitude)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-hero-primary text-xs px-3 py-2 no-underline"
+                >
+                  🧭 Проложить маршрут
+                </a>
+                <a
+                  href={selected.yandex_url || yandexMapsPointUrl(selected.latitude, selected.longitude, selected.name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-hero-secondary text-xs px-3 py-2 no-underline"
+                >
+                  Яндекс.Карты
+                </a>
+              </div>
 
               <div className="flex gap-1 mt-4 border-b">
                 {(["info", "review", "complaint"] as const).map((t) => (

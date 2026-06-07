@@ -1,3 +1,4 @@
+import math
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -55,12 +56,26 @@ EFFECTIVE_REVIEWS = case(
 )
 
 
+def _settlement_bbox() -> tuple[float, float, float, float]:
+    """~8 км вокруг центра посёлка — без лишних объектов района."""
+    radius_km = 8.0
+    lat_delta = radius_km / 111.0
+    lng_delta = radius_km / (111.0 * math.cos(math.radians(settings.MAP_CENTER_LAT)))
+    return (
+        settings.MAP_CENTER_LAT - lat_delta,
+        settings.MAP_CENTER_LAT + lat_delta,
+        settings.MAP_CENTER_LNG - lng_delta,
+        settings.MAP_CENTER_LNG + lng_delta,
+    )
+
+
 def _rating_meta(p: Place) -> dict:
     if p.external_rating > 0:
+        source = "yandex" if p.external_source == "yandex" else "reference"
         return {
             "display_rating": p.external_rating,
             "display_review_count": p.external_review_count,
-            "rating_source": "yandex",
+            "rating_source": source,
         }
     if p.avg_rating > 0:
         return {
@@ -164,6 +179,12 @@ async def list_places(
         query = query.where(
             Place.latitude >= south, Place.latitude <= north,
             Place.longitude >= west, Place.longitude <= east,
+        )
+    else:
+        lat_min, lat_max, lng_min, lng_max = _settlement_bbox()
+        query = query.where(
+            Place.latitude >= lat_min, Place.latitude <= lat_max,
+            Place.longitude >= lng_min, Place.longitude <= lng_max,
         )
 
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
@@ -287,6 +308,14 @@ async def add_complaint(
     db.add(issue)
     await db.flush()
     complaint.issue_id = issue.id
+
+    from app.services.notifications import notify_owner
+    await notify_owner(
+        f"⚠️ Жалоба на организацию\n\n"
+        f"«{place.name}» — {place.address or 'адрес не указан'}\n"
+        f"{SHOP_COMPLAINT_LABELS.get(data.complaint_type, data.complaint_type)}\n"
+        f"{data.description[:300]}"
+    )
 
     return PlaceComplaintResponse(
         id=complaint.id, complaint_type=complaint.complaint_type,
