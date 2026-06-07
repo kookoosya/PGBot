@@ -1,5 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import { PushkinBanner } from "@/components/PushkinBanner";
+import { BRAND } from "@/lib/branding";
 import { TabNav } from "./TabNav";
 
 export function PublicLayout() {
@@ -12,9 +13,9 @@ export function PublicLayout() {
               <div className="pushkin-logo-badge">🪶</div>
               <div>
                 <h1 className="text-lg font-bold text-amber-100 leading-tight tracking-wide">
-                  Народный Контроль
+                  {BRAND.name}
                 </h1>
-                <p className="text-xs text-amber-300 font-medium">Пушкинские Горы</p>
+                <p className="text-xs text-amber-300 font-medium">{BRAND.tagline}</p>
               </div>
             </Link>
             <Link to="/admin/login" className="pushkin-login-btn text-sm">
@@ -39,8 +40,9 @@ export function PublicLayout() {
             «Здесь Пушкин родился, здесь он и умер...»
           </p>
           <p className="mt-3 text-sm font-medium text-amber-950">
-            Народный Контроль — Пушкинские Горы · {new Date().getFullYear()}
+            {BRAND.name} · {BRAND.district} · {new Date().getFullYear()}
           </p>
+          <p className="mt-1 text-xs text-amber-900/70">Сервис «{BRAND.programName}» для жителей посёлка</p>
         </div>
       </footer>
     </div>

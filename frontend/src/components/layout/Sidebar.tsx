@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/branding";
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
@@ -35,8 +36,8 @@ export function Sidebar() {
         <Link to="/" className="flex items-center gap-2">
           <span className="text-2xl">🪶</span>
           <div>
-            <h1 className="text-lg font-bold leading-tight">Народный Контроль</h1>
-            <p className="text-xs text-white/60">Пушкинские Горы</p>
+            <h1 className="text-lg font-bold leading-tight">{BRAND.adminTitle}</h1>
+            <p className="text-xs text-white/60">{BRAND.adminSubtitle}</p>
           </div>
         </Link>
       </div>

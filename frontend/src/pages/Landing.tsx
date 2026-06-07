@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { VillageGallery } from "@/components/VillageGallery";
+import { BRAND } from "@/lib/branding";
 
 const features = [
   {
@@ -50,13 +51,14 @@ export function Landing() {
             «Любви, надежды, тихой славы...»
           </p>
           <h2 className="text-4xl font-bold md:text-6xl leading-tight">
-            Народный Контроль
-            <br />
-            <span className="text-amber-300">Пушкинские Горы</span>
+            {BRAND.name}
           </h2>
+          <p className="mt-3 text-2xl md:text-3xl text-amber-300 font-serif">
+            {BRAND.tagline}
+          </p>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/80">
-            Цифровая платформа для жителей поэтического поселка.
-            Сообщайте о проблемах, общайтесь с ИИ, следите за решениями.
+            Сайт для жителей посёлка: объявления, мастера, карта магазинов и служб,
+            обращения в администрацию. Земля Пушкина — наш общий дом.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link to="/map">

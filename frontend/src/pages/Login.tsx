@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
+import { BRAND } from "@/lib/branding";
 
 export function Login() {
   const [username, setUsername] = useState("");
@@ -32,8 +33,8 @@ export function Login() {
       <Card className="w-full max-w-md pushkin-card bg-card/95">
         <CardHeader className="text-center">
           <span className="text-4xl">🪶</span>
-          <CardTitle className="text-2xl mt-2">Панель управления</CardTitle>
-          <p className="text-sm text-muted-foreground">Народный Контроль — Пушкинские Горы</p>
+          <CardTitle className="text-2xl mt-2">{BRAND.adminTitle}</CardTitle>
+          <p className="text-sm text-muted-foreground">{BRAND.name} · {BRAND.tagline}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

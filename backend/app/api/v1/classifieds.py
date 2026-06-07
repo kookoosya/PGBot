@@ -64,7 +64,7 @@ def get_classified_payment_info() -> dict:
         "contact_email": settings.PAYMENT_CONTACT_EMAIL,
         "message": (
             f"Размещение объявления — {settings.CLASSIFIED_PLACEMENT_FEE} ₽. "
-            "Перевод на карту поддерживает проект «Народный Контроль». "
+            "Перевод на карту поддерживает портал посёлка Пушкинские Горы. "
             "После оплаты объявление проверяется модератором (обычно в течение суток)."
         ),
     }

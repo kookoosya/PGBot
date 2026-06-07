@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # App
-    APP_NAME: str = "Народный Контроль Пушкинские Горы"
+    APP_NAME: str = "Пушкинские Горы — портал посёлка"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     API_V1_PREFIX: str = "/api/v1"
@@ -54,15 +54,15 @@ class Settings(BaseSettings):
 
     # Payment / support (card transfer)
     PAYMENT_CARD_NUMBER: str = "2204240170359972"
-    PAYMENT_CARD_HOLDER: str = "Народный Контроль ПГ"
+    PAYMENT_CARD_HOLDER: str = "Портал ПГ"
     PAYMENT_BANK_NAME: str = "Сбербанк"
-    PAYMENT_DESCRIPTION: str = "Поддержка ИИ Пушкинские Горы"
+    PAYMENT_DESCRIPTION: str = "Портал посёлка ПГ"
     PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
 
     # Classified ads placement fee
     CLASSIFIED_PLACEMENT_FEE: int = 150
-    CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление НК Пушкинские Горы"
+    CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление Пушкинские Горы"
 
     # Map / OSM sync (Pushkinogorsky district center)
     MAP_CENTER_LAT: float = 57.0267

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd, ClassifiedPaymentInfo } from "@/lib/api";
+import { BRAND } from "@/lib/branding";
 
 export function Classifieds() {
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
@@ -75,9 +76,9 @@ export function Classifieds() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">📋 Объявления</h2>
+        <h2 className="text-3xl font-bold">📋 Доска объявлений</h2>
         <p className="text-muted-foreground mt-2">
-          Дрова, строительство, вакансии — жители помогают жителям
+          {BRAND.name} — дрова, строительство, вакансии от жителей посёлка
         </p>
         {payment && (
           <p className="mt-3 text-sm font-semibold text-amber-800 pushkin-card inline-block px-4 py-2">
