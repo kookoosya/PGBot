@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.enums import IssueStatus, PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.issue import Issue
 from app.models.place import Place
+from app.models.taxi import TaxiService
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -140,6 +141,29 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             "где жить", "проживан", "турбаз", "усадьб",
         )):
             await _reply_places(db, peer_id, category=PlaceCategory.HOTEL)
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in ("такси", "извоз", "машин")):
+            result = await db.execute(
+                select(TaxiService)
+                .where(TaxiService.is_active.is_(True))
+                .order_by(TaxiService.sort_order)
+            )
+            services = result.scalars().all()
+            if services:
+                lines = ["🚕 Местное такси — звоните с мобильного:\n"]
+                for t in services:
+                    lines.append(f"• {t.name}: {t.phone}")
+                    if t.phones_extra:
+                        lines.append(f"  ещё: {t.phones_extra}")
+                lines.append(f"\nКарта: {_SITE}/map")
+                await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+            else:
+                await send_message(
+                    peer_id,
+                    "🚕 Наше такси: +7 (921) 000-28-28\nТакси Комфорт: +7 (931) 905-50-50",
+                    keyboard=get_welcome_keyboard(),
+                )
             return PlainTextResponse("ok")
 
         if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):

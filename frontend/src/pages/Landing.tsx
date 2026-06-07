@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { QuickNav } from "@/components/QuickNav";
 import { VillageGallery } from "@/components/VillageGallery";
 import { BRAND } from "@/lib/branding";
+import { VkBotBanner } from "@/components/VkBotLink";
 import { api } from "@/lib/api";
-import { PUSHKIN_QUOTES, SITE_URL } from "@/lib/pushkin";
+import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const features = [
   { icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги — от соседей для соседей", to: "/classifieds" },
@@ -24,12 +25,10 @@ const POET_FACTS = [
 
 export function Landing() {
   const [stats, setStats] = useState({ places: 0, ads: 0 });
-  const [vkUrl, setVkUrl] = useState(SITE_URL);
 
   useEffect(() => {
     api.getMapStats().then((s) => setStats((st) => ({ ...st, places: s.total_places }))).catch(() => {});
     api.getClassifieds().then((r) => setStats((st) => ({ ...st, ads: r.total }))).catch(() => {});
-    api.getPublicInfo().then((i) => setVkUrl(i.vk_url || SITE_URL)).catch(() => {});
   }, []);
 
   return (
@@ -111,21 +110,7 @@ export function Landing() {
       </section>
 
       <section className="page-section">
-        <a
-          href={vkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="vk-cta-card"
-        >
-          <span className="vk-cta-icon">📱</span>
-          <div>
-            <h3 className="vk-cta-title">Бот ВКонтакте — обращения и уведомления</h3>
-            <p className="vk-cta-desc">
-              Сообщите о проблеме в посёлке. Уведомления о записях и объявлениях — сразу в ВК.
-            </p>
-          </div>
-          <span className="vk-cta-arrow">→</span>
-        </a>
+        <VkBotBanner />
       </section>
 
       <section className="page-section">

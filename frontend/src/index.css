@@ -853,8 +853,22 @@
     @apply absolute bottom-3 left-3 z-[1000] pushkin-card p-3 text-sm max-w-xs;
   }
 
+  .map-pane {
+    min-height: 420px;
+    height: 100%;
+  }
+
+  .map-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+  }
+
   .map-sidebar {
-    max-height: calc(100vh - 180px);
+    height: 100%;
+    max-height: none;
+    overflow-y: auto;
+    flex-shrink: 0;
   }
 
   .taxi-panel {
@@ -978,13 +992,25 @@
   }
 
   .map-layout {
-    height: calc(100vh - 220px);
-    min-height: 480px;
+    height: calc(100vh - 240px);
+    min-height: 520px;
+    overflow: hidden;
   }
   @media (max-width: 1023px) {
     .map-layout {
       height: auto;
-      min-height: 70vh;
+      min-height: unset;
+      overflow: visible;
+    }
+    .map-pane {
+      height: 50vh;
+      min-height: 300px;
+      flex-shrink: 0;
+    }
+    .map-sidebar {
+      height: auto;
+      max-height: none;
+      width: 100% !important;
     }
   }
 }

@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { api } from "@/lib/api";
 import { FooterNav } from "@/components/FooterNav";
 import { PushkinBanner } from "@/components/PushkinBanner";
+import { VkBotBanner, VkBotLink } from "@/components/VkBotLink";
 import { BRAND } from "@/lib/branding";
 import { useUserAuth } from "@/lib/userAuth";
 import { TabNav } from "./TabNav";
@@ -28,6 +29,7 @@ export function PublicLayout() {
               </div>
             </Link>
             <div className="pushkin-header-actions">
+              <VkBotLink />
               {user ? (
                 <Link to="/cabinet" className="pushkin-header-link">
                   👤 {user.full_name || user.username}
@@ -54,6 +56,9 @@ export function PublicLayout() {
 
       <footer className="pushkin-footer pushkin-footer-spacer">
         <div className="pushkin-footer-inner">
+          <div className="mb-6">
+            <VkBotBanner />
+          </div>
           <FooterNav />
           <p className="pushkin-quote-footer mt-8">
             «Здесь Пушкин родился, здесь он и умер...»

@@ -14,6 +14,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { Button } from "@/components/ui/button";
+import { VkBotBanner, telHref } from "@/components/VkBotLink";
 import { api, Place, PlaceDetail, ComplaintType, TaxiService } from "@/lib/api";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
@@ -64,9 +65,16 @@ function RatingBadge({ place }: { place: Place | PlaceDetail }) {
   );
 }
 
-function MapEvents({ onBounds }: { onBounds: (b: { south: number; west: number; north: number; east: number }) => void }) {
+function MapEvents({
+  onBounds,
+  pausedRef,
+}: {
+  onBounds: (b: { south: number; west: number; north: number; east: number }) => void;
+  pausedRef: React.MutableRefObject<boolean>;
+}) {
   const map = useMapEvents({
     moveend: () => {
+      if (pausedRef.current) return;
       const b = map.getBounds();
       onBounds({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() });
     },
@@ -91,9 +99,10 @@ function ClusterLayer({
   useEffect(() => {
     if (!clusterRef.current) {
       clusterRef.current = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        spiderfyOnMaxZoom: true,
+        maxClusterRadius: 45,
+        spiderfyOnMaxZoom: false,
         showCoverageOnHover: false,
+        zoomToBoundsOnClick: false,
       });
       map.addLayer(clusterRef.current);
     }
@@ -118,13 +127,24 @@ function ClusterLayer({
   return null;
 }
 
-function FlyToPlace({ place }: { place: Place | null }) {
+function FlyToPlace({
+  place,
+  pausedRef,
+}: {
+  place: Place | null;
+  pausedRef: React.MutableRefObject<boolean>;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (place) {
-      map.flyTo([place.latitude, place.longitude], 16, { duration: 0.8 });
-    }
-  }, [place, map]);
+    if (!place) return;
+    pausedRef.current = true;
+    const zoom = Math.max(map.getZoom(), 15);
+    map.setView([place.latitude, place.longitude], zoom, { animate: true, duration: 0.4 });
+    const t = window.setTimeout(() => {
+      pausedRef.current = false;
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [place, map, pausedRef]);
   return null;
 }
 
@@ -150,6 +170,7 @@ export function MapPage() {
   const [offlineBusy, setOfflineBusy] = useState(false);
   const [offlineMsg, setOfflineMsg] = useState("");
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
+  const boundsPausedRef = useRef(false);
 
   useEffect(() => {
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
@@ -160,6 +181,7 @@ export function MapPage() {
   const isLodging = category === "hotel" || category === "rental";
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
+    if (boundsPausedRef.current) return;
     if (bounds) boundsRef.current = bounds;
     const b = bounds || boundsRef.current;
     if (!b && !isLodging) return;
@@ -219,11 +241,15 @@ export function MapPage() {
   );
 
   const openPlace = async (id: number) => {
+    boundsPausedRef.current = true;
     const detail = await api.getPlace(id);
     setSelected(detail);
     setHighlight(detail);
     setTab("info");
     setMsg("");
+    window.setTimeout(() => {
+      boundsPausedRef.current = false;
+    }, 800);
   };
 
   const submitReview = async () => {
@@ -257,12 +283,12 @@ export function MapPage() {
         </div>
       </div>
 
-      <div className="page-section pb-3">
+      <div className="page-section pb-3 space-y-3">
+        <VkBotBanner />
         <div className="human-note">
           <p className="m-0 text-sm">
             Гостиницы и гостевые дома — отдельно от посуточной аренды (Авито).
-            Шиномонтаж ул. Аэродромная, 23, АЗС и другие точки — из справочника.
-            «Скачать для офлайн» — карта и точки без интернета; «Навигатор офлайн» — GPS на телефоне.
+            Такси — только местные мобильные номера. «Офлайн» — карта без интернета.
           </p>
         </div>
       </div>
@@ -278,8 +304,8 @@ export function MapPage() {
               {taxi.map((t) => (
                 <a
                   key={t.id}
-                  href={t.phone.startsWith("+") ? `tel:${t.phone.replace(/\s/g, "")}` : undefined}
-                  className={`taxi-card ${t.phone.startsWith("+") ? "" : "taxi-card-app"}`}
+                  href={telHref(t.phone)}
+                  className="taxi-card"
                 >
                   <div className="taxi-card-top">
                     <strong>{t.name}</strong>
@@ -300,17 +326,17 @@ export function MapPage() {
       )}
 
       <div className="flex flex-col lg:flex-row map-layout">
-        <div className="flex-1 relative min-h-[420px]">
-          <MapContainer center={CENTER} zoom={14} className="h-full w-full z-0" scrollWheelZoom>
+        <div className="map-pane flex-1 relative">
+          <MapContainer center={CENTER} zoom={14} className="map-canvas z-0" scrollWheelZoom>
             <TileLayer
               attribution={mapStyle === "scheme"
                 ? '&copy; <a href="https://www.openstreetmap.org/">OSM</a> · данные Яндекс/справочник'
                 : '&copy; Esri'}
               url={mapStyle === "scheme" ? OSM_TILES : SAT_TILES}
             />
-            <MapEvents onBounds={loadPlaces} />
+            <MapEvents onBounds={loadPlaces} pausedRef={boundsPausedRef} />
             <ClusterLayer places={places} onSelect={openPlace} />
-            <FlyToPlace place={highlight} />
+            <FlyToPlace place={highlight} pausedRef={boundsPausedRef} />
           </MapContainer>
 
           <div className="map-overlay-controls">
