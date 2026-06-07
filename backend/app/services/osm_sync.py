@@ -86,7 +86,11 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
                 "https://overpass-api.de/api/interpreter",
-                data={"data": query},
+                content=query,
+                headers={
+                    "Content-Type": "text/plain; charset=utf-8",
+                    "User-Agent": "NarodnyKontrol-PushkinGory/1.0 (contact: support@pushkinskie-gory.local)",
+                },
             )
             response.raise_for_status()
             data = response.json()
