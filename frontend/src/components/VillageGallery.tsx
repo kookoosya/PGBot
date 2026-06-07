@@ -12,18 +12,24 @@ export function VillageGallery() {
           Реальные фото мест — музей-заповедник, монастырь, усадьбы
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {VILLAGE_PHOTOS.map((photo) => (
+          {VILLAGE_PHOTOS.map((photo, i) => (
             <div key={photo.title} className="pushkin-card-hover overflow-hidden group">
               <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                 {!broken[photo.title] ? (
-                  <img
-                    src={photo.url}
-                    alt={photo.title}
-                    className="h-full w-full object-cover transition group-hover:scale-105"
-                    loading="eager"
-                    decoding="async"
-                    onError={() => setBroken((b) => ({ ...b, [photo.title]: true }))}
-                  />
+                  <picture>
+                    <source srcSet={photo.webp} type="image/webp" />
+                    <img
+                      src={photo.url}
+                      alt={photo.title}
+                      className="h-full w-full object-cover transition group-hover:scale-105"
+                      loading={i < 2 ? "eager" : "lazy"}
+                      decoding="async"
+                      fetchPriority={i < 2 ? "high" : "low"}
+                      width={720}
+                      height={540}
+                      onError={() => setBroken((b) => ({ ...b, [photo.title]: true }))}
+                    />
+                  </picture>
                 ) : (
                   <div className="h-full w-full bg-muted flex items-center justify-center text-sm text-muted-foreground px-4 text-center">
                     Фото временно недоступно

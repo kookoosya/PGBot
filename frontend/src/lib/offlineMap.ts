@@ -137,8 +137,19 @@ function lat2tile(lat: number, zoom: number): number {
   );
 }
 
+/** Убираем старый SW с главной — он мешал загрузке на мобильных */
+export async function clearStaleServiceWorkers(): Promise<void> {
+  if (!("serviceWorker" in navigator)) return;
+  const regs = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(regs.map((r) => r.unregister()));
+  if ("caches" in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k.startsWith("pgbot-")).map((k) => caches.delete(k)));
+  }
+}
+
 export function registerServiceWorker(): void {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
   }
 }

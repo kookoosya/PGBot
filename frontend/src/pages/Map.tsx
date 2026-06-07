@@ -6,6 +6,7 @@ import {
   getOfflinePlaces,
   isOfflineMapReady,
   offlineBundleAge,
+  registerServiceWorker,
 } from "@/lib/offlineMap";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -173,6 +174,7 @@ export function MapPage() {
   const boundsPausedRef = useRef(false);
 
   useEffect(() => {
+    registerServiceWorker();
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
