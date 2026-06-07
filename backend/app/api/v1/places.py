@@ -46,6 +46,8 @@ SHOP_CATEGORIES = {
     PlaceCategory.TYRE, PlaceCategory.AUTO,
 }
 
+LODGING_CATEGORIES = {PlaceCategory.HOTEL, PlaceCategory.RENTAL}
+
 EFFECTIVE_RATING = case(
     (Place.external_rating > 0, Place.external_rating),
     else_=Place.avg_rating,
@@ -56,9 +58,7 @@ EFFECTIVE_REVIEWS = case(
 )
 
 
-def _settlement_bbox() -> tuple[float, float, float, float]:
-    """~8 км вокруг центра посёлка — без лишних объектов района."""
-    radius_km = 8.0
+def _radius_bbox(radius_km: float) -> tuple[float, float, float, float]:
     lat_delta = radius_km / 111.0
     lng_delta = radius_km / (111.0 * math.cos(math.radians(settings.MAP_CENTER_LAT)))
     return (
@@ -67,6 +67,14 @@ def _settlement_bbox() -> tuple[float, float, float, float]:
         settings.MAP_CENTER_LNG - lng_delta,
         settings.MAP_CENTER_LNG + lng_delta,
     )
+
+
+def _settlement_bbox() -> tuple[float, float, float, float]:
+    return _radius_bbox(8.0)
+
+
+def _district_bbox() -> tuple[float, float, float, float]:
+    return _radius_bbox(settings.MAP_SYNC_RADIUS_KM)
 
 
 def _rating_meta(p: Place) -> dict:
@@ -163,6 +171,7 @@ async def list_places(
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=500),
     sort: str = Query("rating", pattern="^(rating|name)$"),
+    district: bool = False,
 ):
     query = select(Place).where(Place.is_active.is_(True))
     if category:
@@ -181,7 +190,8 @@ async def list_places(
             Place.longitude >= west, Place.longitude <= east,
         )
     else:
-        lat_min, lat_max, lng_min, lng_max = _settlement_bbox()
+        use_district = district or category in LODGING_CATEGORIES
+        lat_min, lat_max, lng_min, lng_max = _district_bbox() if use_district else _settlement_bbox()
         query = query.where(
             Place.latitude >= lat_min, Place.latitude <= lat_max,
             Place.longitude >= lng_min, Place.longitude <= lng_max,

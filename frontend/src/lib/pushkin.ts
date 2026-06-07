@@ -52,3 +52,8 @@ export function yandexRouteUrl(lat: number, lng: number): string {
 export function yandexMapsPointUrl(lat: number, lng: number, name: string): string {
   return `https://yandex.ru/maps/?pt=${lng},${lat}&z=17&text=${encodeURIComponent(name + " Пушкинские Горы")}`;
 }
+
+/** Работает офлайн на телефоне — открывает навигатор по GPS */
+export function geoNavigateUrl(lat: number, lng: number): string {
+  return `geo:${lat},${lng}?q=${lat},${lng}`;
+}

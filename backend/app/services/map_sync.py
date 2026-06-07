@@ -3,6 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+from app.services.lodging_seed import seed_lodging_places
 from app.services.pushkin_places_seed import seed_taxi_services, seed_village_places
 from app.services.yandex_sync import sync_places_from_yandex
 
@@ -14,6 +15,7 @@ async def sync_all_map_data(db: AsyncSession) -> dict:
     results = {}
     results["landmarks"] = await seed_pushkin_landmarks(db)
     results["village"] = await seed_village_places(db)
+    results["lodging"] = await seed_lodging_places(db)
     results["taxi"] = await seed_taxi_services(db)
     results["osm"] = await sync_places_from_osm(db)
     results["yandex"] = await sync_places_from_yandex(db)

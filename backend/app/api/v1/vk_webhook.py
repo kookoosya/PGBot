@@ -59,6 +59,8 @@ async def _reply_places(db: AsyncSession, peer_id: int, *, category: PlaceCatego
         lines.append(f"• {p.name} — {p.address or 'Пушкинские Горы'}")
         if p.phone:
             lines.append(f"  📞 {p.phone}")
+        if p.website:
+            lines.append(f"  🔗 {p.website}")
         if p.yandex_url:
             lines.append(f"  🧭 {p.yandex_url}")
     lines.append(f"\nВся карта: {_SITE}/map")
@@ -121,10 +123,23 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("🗺 карта", "карта"):
             await send_message(
                 peer_id,
-                f"🗺 Карта посёлка — магазины, аптеки, АЗС, шиномонтаж:\n{_SITE}/map\n\n"
-                "Напишите «шиномонтаж» или «заправка» — пришлю адреса.",
+                f"🗺 Карта посёлка — магазины, аптеки, АЗС, гостиницы:\n{_SITE}/map\n\n"
+                "Напишите «шиномонтаж», «заправка», «гостиница» или «посуточно».",
                 keyboard=get_welcome_keyboard(),
             )
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in ("посуточно", "авито", "квартир")) and not any(
+            k in text_lower for k in ("продам", "куплю", "сдам надолго")
+        ):
+            await _reply_places(db, peer_id, category=PlaceCategory.RENTAL)
+            return PlainTextResponse("ok")
+
+        if any(k in text_lower for k in (
+            "гостиниц", "отель", "отдых", "ночлег", "гостевой", "остановиться",
+            "где жить", "проживан", "турбаз", "усадьб",
+        )):
+            await _reply_places(db, peer_id, category=PlaceCategory.HOTEL)
             return PlainTextResponse("ok")
 
         if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
@@ -174,7 +189,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 "🤖 ИИ-помощник — нажмите кнопку, задайте вопрос\n\n"
                 "📋 Мои обращения — статус ваших заявок\n"
                 f"🗺 Карта — {_SITE}/map\n"
-                "Напишите «шиномонтаж» или «заправка»\n\n"
+                "«шиномонтаж», «заправка», «гостиница», «посуточно»\n\n"
                 "🪶 «Я памятник себе воздвиг нерукотворный...»\n"
                 "А мы воздвигаем порядок в поселке — вместе!",
                 keyboard=get_welcome_keyboard(),

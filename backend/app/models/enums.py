@@ -137,6 +137,7 @@ class PlaceCategory(str, enum.Enum):
     TRANSPORT = "transport"
     CULTURE = "culture"
     HOTEL = "hotel"
+    RENTAL = "rental"
     GAS = "gas"
     BEAUTY = "beauty"
     TYRE = "tyre"
@@ -169,6 +170,7 @@ PLACE_CATEGORY_LABELS = {
     PlaceCategory.TRANSPORT: "Транспорт",
     PlaceCategory.CULTURE: "Культура",
     PlaceCategory.HOTEL: "Гостиница",
+    PlaceCategory.RENTAL: "Посуточно",
     PlaceCategory.GAS: "АЗС",
     PlaceCategory.BEAUTY: "Красота/услуги",
     PlaceCategory.TYRE: "Шиномонтаж",

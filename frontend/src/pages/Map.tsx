@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { yandexMapsPointUrl, yandexRouteUrl } from "@/lib/pushkin";
+import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/pushkin";
+import {
+  cachePlacesForOffline,
+  downloadOfflineMapPack,
+  getOfflinePlaces,
+  isOfflineMapReady,
+  offlineBundleAge,
+} from "@/lib/offlineMap";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -16,7 +23,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   shop: "🛒", supermarket: "🏪", pharmacy: "💊", cafe: "☕",
   restaurant: "🍽", bank: "🏦", post: "📮", school: "🏫",
   hospital: "🏥", government: "🏛", transport: "🚌", culture: "🎭",
-  hotel: "🏨", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
+  hotel: "🏨", rental: "🏠", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
   taxi: "🚕", other: "📍",
 };
 
@@ -24,7 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   shop: "#e67e22", supermarket: "#d35400", pharmacy: "#27ae60",
   cafe: "#8e44ad", restaurant: "#c0392b", bank: "#2980b9",
   government: "#2c3e50", culture: "#9b59b6", tyre: "#34495e",
-  auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085", beauty: "#e91e63",
+  auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085", rental: "#db2777", beauty: "#e91e63",
   other: "#1a5c3a",
 };
 
@@ -139,6 +146,9 @@ export function MapPage() {
   });
   const [msg, setMsg] = useState("");
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+  const [offlineReady, setOfflineReady] = useState(isOfflineMapReady());
+  const [offlineBusy, setOfflineBusy] = useState(false);
+  const [offlineMsg, setOfflineMsg] = useState("");
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
 
   useEffect(() => {
@@ -147,24 +157,61 @@ export function MapPage() {
     api.getTaxiServices().then(setTaxi).catch(console.error);
   }, []);
 
+  const isLodging = category === "hotel" || category === "rental";
+
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     if (bounds) boundsRef.current = bounds;
     const b = bounds || boundsRef.current;
-    if (!b) return;
+    if (!b && !isLodging) return;
     const params: Record<string, string> = { page_size: "500", sort: "rating" };
     if (category) params.category = category;
     if (shopsOnly) params.shops_only = "true";
     if (search) params.search = search;
-    params.south = String(b.south);
-    params.west = String(b.west);
-    params.north = String(b.north);
-    params.east = String(b.east);
-    api.getPlaces(params).then((r) => setPlaces(r.items)).catch(console.error);
-  }, [category, shopsOnly, search]);
+    if (isLodging) {
+      params.district = "true";
+    } else if (b) {
+      params.south = String(b.south);
+      params.west = String(b.west);
+      params.north = String(b.north);
+      params.east = String(b.east);
+    }
+    api
+      .getPlaces(params)
+      .then((r) => {
+        setPlaces(r.items);
+        cachePlacesForOffline(r.items);
+      })
+      .catch(() => {
+        const cached = getOfflinePlaces();
+        if (cached.length) {
+          const filtered = category
+            ? cached.filter((p) => p.category === category)
+            : cached;
+          setPlaces(filtered);
+          setOfflineMsg("Нет сети — показаны сохранённые точки.");
+        }
+      });
+  }, [category, shopsOnly, search, isLodging]);
+
+  async function handleOfflineDownload() {
+    setOfflineBusy(true);
+    setOfflineMsg("");
+    try {
+      const all = await api.getPlaces({ district: "true", page_size: "500", sort: "rating" });
+      const n = await downloadOfflineMapPack(all.items);
+      setOfflineReady(true);
+      const age = offlineBundleAge();
+      setOfflineMsg(`Офлайн готов: ${all.items.length} точек, ${n} тайлов карты${age ? ` · ${new Date(age).toLocaleString("ru")}` : ""}.`);
+    } catch {
+      setOfflineMsg("Не удалось скачать. Проверьте интернет.");
+    } finally {
+      setOfflineBusy(false);
+    }
+  }
 
   useEffect(() => {
-    if (boundsRef.current) loadPlaces(boundsRef.current);
-  }, [category, shopsOnly, search, loadPlaces]);
+    if (boundsRef.current || isLodging) loadPlaces(boundsRef.current ?? undefined);
+  }, [category, shopsOnly, search, loadPlaces, isLodging]);
 
   const sortedPlaces = useMemo(
     () => [...places].sort((a, b) => b.display_rating - a.display_rating || b.display_review_count - a.display_review_count),
@@ -213,9 +260,9 @@ export function MapPage() {
       <div className="page-section pb-3">
         <div className="human-note">
           <p className="m-0 text-sm">
-            Только проверенные организации посёлка — без выдуманных заправок.
-            Шиномонтаж на ул. Аэродромная, 23 и другие точки обновляются из справочника.
-            Нашли ошибку — отзыв или жалоба в карточке. Нет на карте — напишите в ВК-бот.
+            Гостиницы и гостевые дома — отдельно от посуточной аренды (Авито).
+            Шиномонтаж ул. Аэродромная, 23, АЗС и другие точки — из справочника.
+            «Скачать для офлайн» — карта и точки без интернета; «Навигатор офлайн» — GPS на телефоне.
           </p>
         </div>
       </div>
@@ -296,6 +343,15 @@ export function MapPage() {
               <Button size="sm" variant={category === "tyre" ? "default" : "outline"} onClick={() => setCategory(category === "tyre" ? "" : "tyre")}>
                 🛞 Шины
               </Button>
+              <Button size="sm" variant={category === "hotel" ? "default" : "outline"} onClick={() => setCategory(category === "hotel" ? "" : "hotel")}>
+                🏨 Гостиницы
+              </Button>
+              <Button size="sm" variant={category === "rental" ? "default" : "outline"} onClick={() => setCategory(category === "rental" ? "" : "rental")}>
+                🏠 Посуточно
+              </Button>
+              <Button size="sm" variant={offlineReady ? "outline" : "default"} onClick={handleOfflineDownload} disabled={offlineBusy}>
+                {offlineBusy ? "Скачиваю…" : offlineReady ? "📥 Обновить офлайн" : "📥 Офлайн"}
+              </Button>
               <select className="text-sm rounded-md border px-2 py-1 flex-1 min-w-[120px]" value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="">Все</option>
                 {categories.map((c) => (
@@ -303,6 +359,7 @@ export function MapPage() {
                 ))}
               </select>
             </div>
+            {offlineMsg ? <p className="text-xs text-muted-foreground">{offlineMsg}</p> : null}
           </div>
 
           {selected ? (
@@ -332,6 +389,14 @@ export function MapPage() {
                   📞 <a href={`tel:${selected.phone.replace(/\s/g, "")}`} className="clickable-phone">{selected.phone}</a>
                 </p>
               )}
+              {selected.website && (
+                <p className="org-detail-row">
+                  🔗{" "}
+                  <a href={selected.website} target="_blank" rel="noopener noreferrer">
+                    {selected.category === "rental" ? "Объявление / бронь" : "Сайт"}
+                  </a>
+                </p>
+              )}
               {selected.description && (
                 <p className="text-sm text-muted-foreground mt-2">{selected.description}</p>
               )}
@@ -344,6 +409,12 @@ export function MapPage() {
                   className="btn-hero-primary text-xs px-3 py-2 no-underline"
                 >
                   🧭 Проложить маршрут
+                </a>
+                <a
+                  href={geoNavigateUrl(selected.latitude, selected.longitude)}
+                  className="btn-hero-secondary text-xs px-3 py-2 no-underline"
+                >
+                  📍 Навигатор офлайн
                 </a>
                 <a
                   href={selected.yandex_url || yandexMapsPointUrl(selected.latitude, selected.longitude, selected.name)}
