@@ -57,11 +57,16 @@ TAXI_SEED = [
 ]
 
 
+def _place_key(name: str, addr: str) -> str:
+    digest = hashlib.md5(f"{name}|{addr}".encode()).hexdigest()[:20]
+    return f"ref_{digest}"
+
+
 async def seed_village_places(db: AsyncSession) -> int:
     count = 0
     for row in VILLAGE_PLACES:
         name, cat, lat, lng, addr, phone, hours, rating, reviews = row
-        key = f"seed:{name}:{addr}"
+        key = _place_key(name, addr)
         result = await db.execute(select(Place).where(Place.yandex_id == key))
         place = result.scalar_one_or_none()
         cat_label = PLACE_CATEGORY_LABELS.get(cat, "Объект")
