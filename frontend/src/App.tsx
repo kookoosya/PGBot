@@ -13,6 +13,7 @@ import { MapPage } from "./pages/Map";
 import { Services } from "./pages/Services";
 import { ServiceRegister } from "./pages/ServiceRegister";
 import { Classifieds } from "./pages/Classifieds";
+import { ClassifiedModeration } from "./pages/ClassifiedModeration";
 import { ProviderCabinet } from "./pages/ProviderCabinet";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="audit" element={<AuditLogs />} />
         <Route path="verification" element={<Verification />} />
+        <Route path="classifieds" element={<ClassifiedModeration />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 

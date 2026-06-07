@@ -214,13 +214,32 @@ class ApiClient {
     return this.request<{ value: string; label: string }[]>("/classifieds/categories");
   }
 
+  getClassifiedPaymentInfo() {
+    return this.request<ClassifiedPaymentInfo>("/classifieds/payment-info");
+  }
+
   getClassifieds(params?: Record<string, string>) {
     const q = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<{ items: ClassifiedAd[]; total: number }>(`/classifieds${q}`);
   }
 
+  getPendingClassifieds() {
+    return this.request<ClassifiedPending[]>("/classifieds/pending");
+  }
+
   createClassified(data: Record<string, unknown>) {
-    return this.request("/classifieds", { method: "POST", body: JSON.stringify(data) });
+    return this.request<{ id: number; message: string }>("/classifieds", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  approveClassified(id: number) {
+    return this.request(`/classifieds/${id}/approve`, { method: "POST" });
+  }
+
+  rejectClassified(id: number) {
+    return this.request(`/classifieds/${id}/reject`, { method: "POST" });
   }
 
   addReview(placeId: number, data: { rating: number; text?: string; author_name?: string }) {
@@ -430,6 +449,16 @@ export interface BusyBlock {
   reason: string | null;
 }
 
+export interface ClassifiedPaymentInfo {
+  card_number: string;
+  card_holder: string;
+  bank_name: string;
+  description: string;
+  amount: number;
+  contact_email: string;
+  message: string;
+}
+
 export interface ClassifiedAd {
   id: number;
   category: string;
@@ -442,6 +471,12 @@ export interface ClassifiedAd {
   author_name: string;
   address: string | null;
   created_at: string;
+}
+
+export interface ClassifiedPending extends ClassifiedAd {
+  payment_status: string;
+  payment_reference: string | null;
+  placement_fee: number;
 }
 
 export interface PendingProvider {

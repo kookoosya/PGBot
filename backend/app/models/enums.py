@@ -27,11 +27,20 @@ class ClassifiedCategory(str, enum.Enum):
     DELIVERY = "delivery"
     HANDYMAN = "handyman"
     SNOW_REMOVAL = "snow_removal"
+    CONSTRUCTION = "construction"
+    CONSTRUCTION_VACANCY = "construction_vacancy"
+    CONSTRUCTION_OFFER = "construction_offer"
     TUTORING = "tutoring"
     RENT = "rent"
     SALE = "sale"
     JOB = "job"
     OTHER = "other"
+
+
+class ClassifiedPaymentStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 CLASSIFIED_LABELS = {
@@ -40,6 +49,9 @@ CLASSIFIED_LABELS = {
     ClassifiedCategory.DELIVERY: "Доставка",
     ClassifiedCategory.HANDYMAN: "Разные работы",
     ClassifiedCategory.SNOW_REMOVAL: "Уборка снега",
+    ClassifiedCategory.CONSTRUCTION: "Строительство / ремонт",
+    ClassifiedCategory.CONSTRUCTION_VACANCY: "Строительство: вакансии",
+    ClassifiedCategory.CONSTRUCTION_OFFER: "Строительство: предложения",
     ClassifiedCategory.TUTORING: "Услуги / обучение",
     ClassifiedCategory.RENT: "Аренда",
     ClassifiedCategory.SALE: "Продажа",

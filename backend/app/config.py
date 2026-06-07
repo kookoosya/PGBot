@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
 
+    # Classified ads placement fee
+    CLASSIFIED_PLACEMENT_FEE: int = 150
+    CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление НК Пушкинские Горы"
+
     # Map / OSM sync (Pushkinogorsky district center)
     MAP_CENTER_LAT: float = 57.0267
     MAP_CENTER_LNG: float = 28.9100
