@@ -6,8 +6,13 @@ from app.models.enums import UserRole, VerificationStatus
 
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=3, max_length=100)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=10, max_length=128)
 
 
 class Token(BaseModel):
@@ -18,7 +23,7 @@ class Token(BaseModel):
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=100)
     email: EmailStr | None = None
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=10, max_length=128)
     full_name: str | None = None
     phone: str | None = None
     role: UserRole = UserRole.RESIDENT

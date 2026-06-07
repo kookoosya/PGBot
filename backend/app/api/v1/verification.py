@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_client_ip, require_roles
+from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import OFFICIAL_ROLES, UserRole, VerificationStatus
@@ -31,6 +32,10 @@ async def register_official(data: OfficialRegisterRequest, db: Annotated[AsyncSe
             status_code=400,
             detail="Регистрация доступна только для администрации, соцслужб и модераторов",
         )
+
+    ok, msg = validate_password(data.password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
 
     for field, value in [("username", data.username), ("email", data.email)]:
         result = await db.execute(select(User).where(getattr(User, field) == value))

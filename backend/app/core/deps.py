@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -40,6 +41,17 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account locked")
+
+    token_pwd = payload.get("pwd")
+    pwd_anchor = user.password_changed_at or user.created_at
+    if pwd_anchor:
+        user_pwd_ts = int(pwd_anchor.timestamp())
+        if not token_pwd or int(token_pwd) < user_pwd_ts:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
+
     return user
 
 

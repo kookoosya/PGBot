@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_user, require_roles
+from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import SERVICE_TYPE_LABELS, ServiceType, UserRole, VerificationStatus
@@ -55,6 +56,10 @@ async def list_service_types():
 
 @router.post("/register", status_code=201)
 async def register_provider(data: ProviderRegisterRequest, db: Annotated[AsyncSession, Depends(get_db)]):
+    ok, msg = validate_password(data.password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+
     existing = await db.execute(select(User).where(
         (User.username == data.username) | (User.email == data.email)
     ))

@@ -19,7 +19,10 @@ class Settings(BaseSettings):
     # JWT
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 4
+    LOGIN_MAX_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 30
+    LOGIN_RATE_LIMIT: str = "10/minute"
 
     # Gemini
     GEMINI_API_KEY: str = ""

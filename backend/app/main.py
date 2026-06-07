@@ -11,6 +11,7 @@ from slowapi.util import get_remote_address
 
 from app.api.router import api_router
 from app.config import get_settings
+from app.core.security_headers import SecurityHeadersMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,8 +36,19 @@ async def _background_map_sync():
         await asyncio.sleep(settings.MAP_AUTO_SYNC_HOURS * 3600)
 
 
+def _validate_security_config() -> None:
+    weak_secret = settings.SECRET_KEY in (
+        "",
+        "change-me-in-production-use-long-random-string",
+        "change-me-use-openssl-rand-hex-32",
+    )
+    if not settings.DEBUG and weak_secret:
+        raise RuntimeError("SECRET_KEY must be set to a strong random value in production")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _validate_security_config()
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     sync_task = asyncio.create_task(_background_map_sync())
     yield
@@ -56,6 +68,7 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
