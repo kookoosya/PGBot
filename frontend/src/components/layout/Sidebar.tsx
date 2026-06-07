@@ -12,6 +12,7 @@ import {
   Megaphone,
   TrendingUp,
   Eye,
+  Lock,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -27,6 +28,7 @@ const navItems = [
   { to: "/admin/visits", icon: Eye, label: "Посещения сайта" },
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
   { to: "/admin/classifieds", icon: Megaphone, label: "Объявления" },
+  { to: "/admin/proposals", icon: Lock, label: "Предложения" },
   { to: "/admin/audit", icon: FileText, label: "Аудит" },
   { to: "/admin/settings", icon: Settings, label: "Настройки" },
 ];

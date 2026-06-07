@@ -27,6 +27,7 @@ import { UserCabinet } from "./pages/UserCabinet";
 import { UserLogin } from "./pages/UserLogin";
 import { Residents } from "./pages/Residents";
 import { Settings } from "./pages/Settings";
+import { AdminProposals } from "./pages/AdminProposals";
 import { Verification } from "./pages/Verification";
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="visits" element={<AdminVisits />} />
         <Route path="verification" element={<Verification />} />
         <Route path="classifieds" element={<ClassifiedModeration />} />
+        <Route path="proposals" element={<AdminProposals />} />
         <Route path="audit" element={<AuditLogs />} />
         <Route path="settings" element={<Settings />} />
       </Route>

@@ -4,6 +4,7 @@ export interface CategoryVisual {
 }
 
 export const CLASSIFIED_CATEGORY_VISUALS: Record<string, CategoryVisual> = {
+  garden: { icon: "🌱", gradient: "linear-gradient(135deg, #365314 0%, #65a30d 100%)" },
   firewood: { icon: "🪵", gradient: "linear-gradient(135deg, #5c3d2e 0%, #8b5a3c 100%)" },
   grass_mowing: { icon: "🌿", gradient: "linear-gradient(135deg, #2d5a27 0%, #4a8f3f 100%)" },
   delivery: { icon: "🚚", gradient: "linear-gradient(135deg, #1e4d6b 0%, #3a7ca5 100%)" },

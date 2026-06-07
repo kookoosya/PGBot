@@ -215,6 +215,42 @@ class ApiClient {
     return this.request<{ value: string; label: string }[]>("/services/types");
   }
 
+  getCatalogCategories() {
+    return this.request<{ value: string; label: string }[]>("/catalog/categories");
+  }
+
+  getCatalogItems(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<CatalogItem[]>(`/catalog/items${q}`);
+  }
+
+  getAdminCatalogItems(internalOnly = false) {
+    const q = internalOnly ? "?internal_only=true" : "";
+    return this.request<CatalogItemAdmin[]>(`/catalog/admin/items${q}`);
+  }
+
+  createCatalogItem(data: CatalogItemCreate) {
+    return this.request<CatalogItemAdmin>("/catalog/admin/items", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateCatalogItem(id: number, data: Partial<CatalogItemCreate> & { is_active?: boolean }) {
+    return this.request<CatalogItemAdmin>(`/catalog/admin/items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  deleteCatalogItem(id: number) {
+    return this.request(`/catalog/admin/items/${id}`, { method: "DELETE" });
+  }
+
+  getServiceClassifieds(params?: Record<string, string>) {
+    return this.getClassifieds({ ...params, services_only: "true", page_size: "50" });
+  }
+
   getProviders(params?: Record<string, string>) {
     const q = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<ServiceProvider[]>(`/services/providers${q}`);
@@ -490,6 +526,39 @@ export interface Place {
   rating_source: string | null;
   yandex_url: string | null;
   complaint_count: number;
+}
+
+export interface CatalogItem {
+  id: number;
+  name: string;
+  category: string;
+  category_label: string;
+  description: string | null;
+  phone: string | null;
+  external_url: string | null;
+  price_hint: string | null;
+  address: string | null;
+  source: string;
+  is_internal: boolean;
+  sort_order: number;
+}
+
+export interface CatalogItemAdmin extends CatalogItem {
+  is_active: boolean;
+  seed_key: string | null;
+  created_at: string;
+}
+
+export interface CatalogItemCreate {
+  name: string;
+  category: string;
+  description?: string;
+  phone?: string;
+  external_url?: string;
+  price_hint?: string;
+  address?: string;
+  is_internal?: boolean;
+  sort_order?: number;
 }
 
 export interface TaxiService {

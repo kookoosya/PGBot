@@ -2,6 +2,7 @@ from app.models.ai_analysis import AIAnalysis
 from app.models.ai_usage import AIUsage
 from app.models.place import Place, PlaceComplaint, PlaceReview
 from app.models.taxi import TaxiService
+from app.models.catalog_item import CatalogItem
 from app.models.classified import ClassifiedAd
 from app.models.provider_busy import ProviderBusyBlock
 from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
@@ -32,6 +33,7 @@ __all__ = [
     "ProviderService",
     "ProviderSchedule",
     "ServiceAppointment",
+    "CatalogItem",
     "ClassifiedAd",
     "ProviderBusyBlock",
     "PageVisit",

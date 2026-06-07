@@ -21,7 +21,44 @@ class ServiceType(str, enum.Enum):
     OTHER = "other"
 
 
+class CatalogCategory(str, enum.Enum):
+    GARDEN = "garden"
+    FIREWOOD = "firewood"
+    GRASS_MOWING = "grass_mowing"
+    DELIVERY = "delivery"
+    HANDYMAN = "handyman"
+    SNOW_REMOVAL = "snow_removal"
+    CONSTRUCTION = "construction"
+    BEAUTY = "beauty"
+    TUTORING = "tutoring"
+    TRANSPORT = "transport"
+    AVITO = "avito"
+    OTHER = "other"
+
+
+class CatalogSource(str, enum.Enum):
+    REFERENCE = "reference"
+    AVITO = "avito"
+    INTERNAL = "internal"
+
+
+CATALOG_CATEGORY_LABELS = {
+    CatalogCategory.GARDEN: "Огород / дача",
+    CatalogCategory.FIREWOOD: "Дрова / колка",
+    CatalogCategory.GRASS_MOWING: "Покос травы",
+    CatalogCategory.DELIVERY: "Доставка / вывоз",
+    CatalogCategory.HANDYMAN: "Разные работы",
+    CatalogCategory.SNOW_REMOVAL: "Уборка снега",
+    CatalogCategory.CONSTRUCTION: "Строительство / ремонт",
+    CatalogCategory.BEAUTY: "Красота / уход",
+    CatalogCategory.TUTORING: "Обучение / репетитор",
+    CatalogCategory.TRANSPORT: "Перевозки / грузчики",
+    CatalogCategory.AVITO: "На Авито",
+    CatalogCategory.OTHER: "Другое",
+}
+
 class ClassifiedCategory(str, enum.Enum):
+    GARDEN = "garden"
     FIREWOOD = "firewood"
     GRASS_MOWING = "grass_mowing"
     DELIVERY = "delivery"
@@ -37,6 +74,21 @@ class ClassifiedCategory(str, enum.Enum):
     OTHER = "other"
 
 
+# Категории объявлений в едином каталоге услуг
+SERVICE_CLASSIFIED_CATEGORIES = {
+    ClassifiedCategory.GARDEN,
+    ClassifiedCategory.FIREWOOD,
+    ClassifiedCategory.GRASS_MOWING,
+    ClassifiedCategory.DELIVERY,
+    ClassifiedCategory.HANDYMAN,
+    ClassifiedCategory.SNOW_REMOVAL,
+    ClassifiedCategory.CONSTRUCTION,
+    ClassifiedCategory.CONSTRUCTION_OFFER,
+    ClassifiedCategory.TUTORING,
+    ClassifiedCategory.OTHER,
+}
+
+
 class ClassifiedPaymentStatus(str, enum.Enum):
     PENDING = "pending"
     APPROVED = "approved"
@@ -44,6 +96,7 @@ class ClassifiedPaymentStatus(str, enum.Enum):
 
 
 CLASSIFIED_LABELS = {
+    ClassifiedCategory.GARDEN: "Огород / перепашка",
     ClassifiedCategory.FIREWOOD: "Дрова / колка",
     ClassifiedCategory.GRASS_MOWING: "Покос травы",
     ClassifiedCategory.DELIVERY: "Доставка",

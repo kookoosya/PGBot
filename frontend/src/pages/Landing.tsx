@@ -7,7 +7,7 @@ import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const features = [
   { icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги — от соседей", to: "/classifieds" },
-  { icon: "💇", title: "Услуги мастеров", desc: "Маникюр, стрижки — запись онлайн", to: "/services" },
+  { icon: "🛠", title: "Услуги", desc: "Огород, дрова, покос, мастера — всё в одном месте", to: "/services" },
   { icon: "🗺", title: "Карта", desc: "Магазины, аптеки, такси, гостиницы", to: "/map" },
   { icon: "🤖", title: "ИИ-помощник", desc: "Вопросы о посёлке и быте", to: "/ai" },
   { icon: "👤", title: "Регистрация", desc: "Жители, организации, службы", to: "/register" },

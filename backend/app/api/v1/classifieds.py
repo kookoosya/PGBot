@@ -9,7 +9,12 @@ from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
 from app.database import get_db
 from app.models.classified import ClassifiedAd
-from app.models.enums import CLASSIFIED_LABELS, ClassifiedCategory, ClassifiedPaymentStatus
+from app.models.enums import (
+    CLASSIFIED_LABELS,
+    ClassifiedCategory,
+    ClassifiedPaymentStatus,
+    SERVICE_CLASSIFIED_CATEGORIES,
+)
 from app.models.user import User
 from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
 
@@ -175,6 +180,7 @@ async def list_ads(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: ClassifiedCategory | None = None,
     search: str | None = None,
+    services_only: bool = False,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
@@ -182,6 +188,8 @@ async def list_ads(
         ClassifiedAd.is_active.is_(True),
         ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
     )
+    if services_only:
+        query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
     if category:
         query = query.where(ClassifiedAd.category == category)
     if search:

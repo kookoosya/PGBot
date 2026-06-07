@@ -89,8 +89,9 @@ export function Classifieds() {
 
       <div className="human-note mb-6">
         <p className="m-0 text-sm">
-          Объявление видят соседи по посёлку — дрова, вакансии, услуги.
-          Размещение стоит <strong>150 ₽ на 30 дней</strong>: эти деньги идут на развитие портала, а не в карман посредникам.
+          Продажа, аренда, вакансии — здесь. Услуги (огород, дрова, покос, мастера) — на{" "}
+          <a href="/services" className="text-primary hover:underline">странице «Услуги»</a>.
+          Размещение <strong>150 ₽ / 30 дней</strong>.
         </p>
       </div>
 
