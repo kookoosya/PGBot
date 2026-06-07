@@ -13,14 +13,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-async function verifyOwnerAccess(): Promise<void> {
-  const me = await api.getMe();
-  if (me.role !== "super_admin") {
-    throw new Error(OWNER_DENIED);
-  }
-  await api.ownerCheck();
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isOwner, setIsOwner] = useState(false);
@@ -56,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("token", access_token);
     api.setToken(access_token);
     try {
-      await verifyOwnerAccess();
+      await api.ownerCheck();
       const me = await api.getMe();
       setUser(me);
       setIsOwner(true);

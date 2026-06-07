@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { ClassifiedMarketingCharts } from "@/components/ClassifiedMarketingCharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api, ClassifiedAd, ClassifiedMarketingStats, ClassifiedPaymentInfo } from "@/lib/api";
+import { api, ClassifiedAd, ClassifiedPaymentInfo } from "@/lib/api";
 import { BRAND } from "@/lib/branding";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
@@ -12,7 +11,6 @@ export function Classifieds() {
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [payment, setPayment] = useState<ClassifiedPaymentInfo | null>(null);
-  const [marketing, setMarketing] = useState<ClassifiedMarketingStats | null>(null);
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -39,7 +37,6 @@ export function Classifieds() {
   useEffect(() => {
     api.getClassifiedCategories().then(setCategories).catch(console.error);
     api.getClassifiedPaymentInfo().then(setPayment).catch(console.error);
-    api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
     load();
   }, [filter]);
 
@@ -66,7 +63,7 @@ export function Classifieds() {
         contact_vk: "",
         payment_confirmed: false,
       }));
-      api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
+      load();
     } catch (err) {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка");
@@ -90,7 +87,12 @@ export function Classifieds() {
         )}
       </PageHeader>
 
-      {marketing && <ClassifiedMarketingCharts stats={marketing} />}
+      <div className="human-note mb-6">
+        <p className="m-0 text-sm">
+          Объявление видят соседи по посёлку — дрова, вакансии, услуги.
+          Размещение стоит <strong>150 ₽ на 30 дней</strong>: эти деньги идут на развитие портала, а не в карман посредникам.
+        </p>
+      </div>
 
       <div className="category-grid">
         <button

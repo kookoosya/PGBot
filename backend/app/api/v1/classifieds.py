@@ -77,7 +77,10 @@ async def payment_info():
 
 
 @router.get("/marketing-stats")
-async def marketing_stats(db: Annotated[AsyncSession, Depends(get_db)]):
+async def marketing_stats(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+):
     base = select(ClassifiedAd).where(
         ClassifiedAd.is_active.is_(True),
         ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,

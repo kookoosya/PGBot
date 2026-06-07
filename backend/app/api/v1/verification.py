@@ -14,15 +14,88 @@ from app.models.enums import OFFICIAL_ROLES, UserRole, VerificationStatus
 from app.models.user import Role, User
 from app.schemas.verification import (
     OfficialRegisterRequest,
+    OrganizationRegisterRequest,
     VerificationAction,
     VerificationRequestResponse,
 )
 from app.services.audit import log_action
+from app.services.notifications import notify_owner
 from app.services.telegram import send_telegram_message
 from app.config import get_settings
 
 router = APIRouter()
 settings = get_settings()
+
+
+@router.post("/register-organization", response_model=VerificationRequestResponse, status_code=201)
+async def register_organization(
+    data: OrganizationRegisterRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Полная регистрация организации с указанием ответственного лица."""
+    ok, msg = validate_password(data.password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+
+    for field, value in [("username", data.username), ("email", data.email)]:
+        result = await db.execute(select(User).where(getattr(User, field) == value))
+        if result.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail=f"{'Логин' if field == 'username' else 'Email'} уже занят")
+
+    role_result = await db.execute(select(Role).where(Role.name == UserRole.RESIDENT))
+    role = role_result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=400, detail="Роль не найдена")
+
+    note_parts = [
+        "[ОРГАНИЗАЦИЯ]",
+        f"Адрес: {data.org_address}",
+        f"Ответственный: {data.responsible_full_name}, {data.responsible_position}",
+    ]
+    if data.inn:
+        note_parts.append(f"ИНН: {data.inn}")
+    if data.website:
+        note_parts.append(f"Сайт: {data.website}")
+    note_parts.append(f"Описание: {data.description}")
+
+    user = User(
+        username=data.username,
+        email=data.email,
+        hashed_password=get_password_hash(data.password),
+        full_name=data.responsible_full_name,
+        phone=data.phone,
+        organization=data.organization_name,
+        position=data.responsible_position,
+        role_id=role.id,
+        verification_status=VerificationStatus.PENDING,
+        verification_note="\n".join(note_parts),
+        is_active=False,
+    )
+    db.add(user)
+    await db.flush()
+    await db.refresh(user, ["role"])
+
+    await notify_owner(
+        "🏢 Новая организация на проверку\n\n"
+        f"«{data.organization_name}»\n"
+        f"Ответственный: {data.responsible_full_name}\n"
+        f"📞 {data.phone} · {data.org_address}\n\n"
+        "Одобрите в админ-панели → Верификация."
+    )
+
+    return VerificationRequestResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        organization=user.organization,
+        position=user.position,
+        role=user.role.name,
+        verification_status=user.verification_status,
+        verification_note=user.verification_note,
+        created_at=user.created_at,
+    )
 
 
 @router.post("/register-official", response_model=VerificationRequestResponse, status_code=201)

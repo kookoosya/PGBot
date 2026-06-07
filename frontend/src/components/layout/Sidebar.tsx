@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Users,
   Megaphone,
+  TrendingUp,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/admin/residents", icon: Users, label: "Жители" },
   { to: "/admin/departments", icon: Building2, label: "Отделы" },
   { to: "/admin/analytics", icon: BarChart3, label: "Аналитика" },
+  { to: "/admin/marketing", icon: TrendingUp, label: "Статистика объявлений" },
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
   { to: "/admin/classifieds", icon: Megaphone, label: "Объявления" },
   { to: "/admin/audit", icon: FileText, label: "Аудит" },

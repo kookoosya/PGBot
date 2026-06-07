@@ -61,7 +61,10 @@ export function Register() {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold">Регистрация службы</h2>
         <p className="text-muted-foreground mt-2">
-          Для сотрудников администрации и социальных служб
+          Для сотрудников администрации и социальных служб. Доступ после ручной проверки.
+        </p>
+        <p className="text-sm mt-3">
+          <Link to="/register" className="text-primary hover:underline">← Все варианты регистрации</Link>
         </p>
       </div>
 

@@ -120,6 +120,11 @@ async def register(request: Request, data: UserCreate, db: Annotated[AsyncSessio
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Логин уже занят")
 
+    if data.email:
+        email_taken = await db.execute(select(User).where(User.email == data.email))
+        if email_taken.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Email уже занят")
+
     role_result = await db.execute(select(Role).where(Role.name == UserRole.RESIDENT))
     role = role_result.scalar_one_or_none()
     if not role:

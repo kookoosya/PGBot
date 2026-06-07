@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ClassifiedMarketingCharts } from "@/components/ClassifiedMarketingCharts";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { api, ClassifiedMarketingStats, ServiceProvider, TimeSlot } from "@/lib/api";
+import { api, ServiceProvider, TimeSlot } from "@/lib/api";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const STATUS: Record<string, { label: string; color: string }> = {
@@ -25,11 +24,8 @@ export function Services() {
   const [form, setForm] = useState({ client_name: "", client_phone: "", notes: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [marketing, setMarketing] = useState<ClassifiedMarketingStats | null>(null);
-
   useEffect(() => {
     api.getServiceTypes().then(setTypes).catch(console.error);
-    api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
     loadProviders();
   }, [filter]);
 
@@ -87,7 +83,12 @@ export function Services() {
         <Link to="/services/cabinet" className="btn-hero-secondary text-sm">Кабинет мастера</Link>
       </PageHeader>
 
-      {marketing && <ClassifiedMarketingCharts stats={marketing} />}
+      <div className="human-note mb-6">
+        <p className="m-0 text-sm">
+          Мастера из посёлка — маникюр, стрижки, ремонт. Запись онлайн, без звонков в неудобное время.
+          Хотите принимать клиентов? <Link to="/services/register" className="text-primary hover:underline">Зарегистрируйтесь как мастер</Link>.
+        </p>
+      </div>
 
       <div className="filter-bar">
         <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>Все</button>

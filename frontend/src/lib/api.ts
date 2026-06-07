@@ -2,9 +2,18 @@ const API_BASE = "/api/v1";
 
 class ApiClient {
   private token: string | null = null;
+  private userToken: string | null = null;
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  setUserToken(token: string | null) {
+    this.userToken = token;
+  }
+
+  private authHeader(): string | null {
+    return this.token || this.userToken;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -12,8 +21,9 @@ class ApiClient {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     };
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    const auth = this.authHeader();
+    if (auth) {
+      headers["Authorization"] = `Bearer ${auth}`;
     }
 
     const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -116,6 +126,20 @@ class ApiClient {
     return this.request<ChatResponse>("/ai/chat", {
       method: "POST",
       body: JSON.stringify({ message, history }),
+    });
+  }
+
+  registerResident(data: { username: string; email: string; password: string; full_name: string; phone?: string }) {
+    return this.request<User>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ ...data, role: "resident" }),
+    });
+  }
+
+  registerOrganization(data: Record<string, string>) {
+    return this.request<VerificationRequest>("/verification/register-organization", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
@@ -277,9 +301,13 @@ export interface User {
   username: string;
   email: string | null;
   full_name: string | null;
+  phone?: string | null;
   role: string;
   department_id: number | null;
   is_active: boolean;
+  organization?: string | null;
+  position?: string | null;
+  verification_status?: string | null;
   created_at: string;
 }
 

@@ -7,12 +7,12 @@ import { api } from "@/lib/api";
 import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const features = [
-  { icon: "📋", title: "Объявления", desc: "150 ₽ за объявление — дрова, вакансии, услуги", to: "/classifieds" },
-  { icon: "💇", title: "Услуги мастеров", desc: "Маникюр, стрижки — запись по расписанию", to: "/services" },
-  { icon: "🗺", title: "Карта посёлка", desc: "Магазины, аптеки, отзывы и жалобы", to: "/map" },
-  { icon: "🤖", title: "ИИ-помощник", desc: "Ответы о посёлке и помощь с текстом", to: "/ai" },
-  { icon: "📅", title: "Кабинет мастера", desc: "Расписание, занятость, записи", to: "/services/cabinet" },
-  { icon: "🏛", title: "Для служб", desc: "Регистрация и верификация сотрудников", to: "/register" },
+  { icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги — от соседей для соседей", to: "/classifieds" },
+  { icon: "💇", title: "Услуги мастеров", desc: "Маникюр, стрижки — запись без лишних звонков", to: "/services" },
+  { icon: "🗺", title: "Карта посёлка", desc: "Магазины, аптеки, такси — данные обновляются сами", to: "/map" },
+  { icon: "🤖", title: "ИИ-помощник", desc: "Спросите о посёлке или попросите помочь с текстом", to: "/ai" },
+  { icon: "👤", title: "Личный кабинет", desc: "Простая регистрация для жителей", to: "/register" },
+  { icon: "🏢", title: "Для организаций", desc: "Полная регистрация с ответственным лицом", to: "/register/organization" },
 ];
 
 const POET_FACTS = [
@@ -42,7 +42,8 @@ export function Landing() {
           <h2 className="hero-title">{BRAND.name}</h2>
           <p className="hero-tagline">{BRAND.tagline}</p>
           <p className="hero-desc">
-            Земля поэта — наш дом. Объявления, мастера, карта и ИИ-помощник для жителей посёлка.
+            Сайт для тех, кто живёт здесь: найти аптеку, записаться к мастеру, подать объявление соседям.
+            Карта и справочник обновляются автоматически — вам не нужно ничего искать вручную.
           </p>
 
           {(stats.places > 0 || stats.ads > 0) && (
@@ -62,8 +63,8 @@ export function Landing() {
           <div className="hero-actions">
             <Link to="/map" className="btn-hero-primary">🗺 Карта посёлка</Link>
             <Link to="/classifieds" className="btn-hero-secondary">📋 Объявления</Link>
-            <Link to="/services" className="btn-hero-secondary">💇 Услуги</Link>
-            <Link to="/ai" className="btn-hero-secondary">🤖 ИИ</Link>
+            <Link to="/register" className="btn-hero-secondary">✍️ Регистрация</Link>
+            <Link to="/cabinet" className="btn-hero-secondary">👤 Кабинет</Link>
           </div>
         </div>
       </section>

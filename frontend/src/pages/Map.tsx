@@ -123,7 +123,6 @@ export function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<PlaceDetail | null>(null);
   const [highlight, setHighlight] = useState<Place | null>(null);
-  const [stats, setStats] = useState<{ total_places: number; by_category: Record<string, number> } | null>(null);
   const [taxi, setTaxi] = useState<TaxiService[]>([]);
   const [category, setCategory] = useState("");
   const [shopsOnly, setShopsOnly] = useState(false);
@@ -140,7 +139,6 @@ export function MapPage() {
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
-    api.getMapStats().then(setStats).catch(console.error);
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
@@ -208,6 +206,15 @@ export function MapPage() {
         </div>
       </div>
 
+      <div className="page-section pb-3">
+        <div className="human-note">
+          <p className="m-0 text-sm">
+            Магазины, аптеки и шиномонтажи подтягиваются из справочников и обновляются автоматически раз в сутки.
+            Нашли ошибку — напишите отзыв или жалобу в карточке организации.
+          </p>
+        </div>
+      </div>
+
       {showTaxi && taxi.length > 0 && (
         <div className="page-section pb-3">
           <div className="taxi-panel">
@@ -263,10 +270,6 @@ export function MapPage() {
             </button>
           </div>
 
-          <div className="map-stats-overlay">
-            <p className="font-semibold">🗺 {stats?.total_places ?? "…"} организаций</p>
-            <p className="text-xs text-muted-foreground">Магазины · аптеки · шиномонтаж · кафе</p>
-          </div>
         </div>
 
         <div className="w-full lg:w-[420px] border-l bg-card overflow-y-auto map-sidebar">

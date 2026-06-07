@@ -5,6 +5,20 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from app.models.enums import UserRole, VerificationStatus
 
 
+class OrganizationRegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=100)
+    email: EmailStr
+    password: str = Field(min_length=10)
+    organization_name: str = Field(min_length=2, max_length=255)
+    responsible_full_name: str = Field(min_length=2, max_length=255, description="ФИО ответственного лица")
+    responsible_position: str = Field(min_length=2, max_length=255, description="Должность ответственного")
+    phone: str = Field(min_length=10, max_length=20)
+    org_address: str = Field(min_length=5, max_length=500)
+    inn: str | None = Field(None, max_length=12)
+    description: str = Field(min_length=20, max_length=1000, description="Чем занимается организация")
+    website: str | None = Field(None, max_length=500)
+
+
 class OfficialRegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=100)
     email: EmailStr

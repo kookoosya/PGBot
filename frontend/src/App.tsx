@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { useAuth } from "./lib/auth";
+import { useUserAuth } from "./lib/userAuth";
+import { AdminMarketing } from "./pages/AdminMarketing";
 import { AIChat } from "./pages/AIChat";
 import { Analytics } from "./pages/Analytics";
 import { AuditLogs } from "./pages/AuditLogs";
@@ -17,6 +19,11 @@ import { ClassifiedModeration } from "./pages/ClassifiedModeration";
 import { ProviderCabinet } from "./pages/ProviderCabinet";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { RegisterHub } from "./pages/RegisterHub";
+import { RegisterOrganization } from "./pages/RegisterOrganization";
+import { Signup } from "./pages/Signup";
+import { UserCabinet } from "./pages/UserCabinet";
+import { UserLogin } from "./pages/UserLogin";
 import { Residents } from "./pages/Residents";
 import { Settings } from "./pages/Settings";
 import { Verification } from "./pages/Verification";
@@ -25,6 +32,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isOwner, loading } = useAuth();
   if (loading) return <div className="flex h-screen items-center justify-center">Загрузка...</div>;
   if (!user || !isOwner) return <Navigate to="/admin/login" replace />;
+  return <>{children}</>;
+}
+
+function UserRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useUserAuth();
+  if (loading) return <div className="page-section text-center text-muted-foreground">Загрузка...</div>;
+  if (!user) return <Navigate to="/cabinet/login" replace />;
   return <>{children}</>;
 }
 
@@ -39,7 +53,19 @@ export default function App() {
         <Route path="services/register" element={<ServiceRegister />} />
         <Route path="services/cabinet" element={<ProviderCabinet />} />
         <Route path="classifieds" element={<Classifieds />} />
-        <Route path="register" element={<Register />} />
+        <Route path="register" element={<RegisterHub />} />
+        <Route path="signup" element={<Signup />} />
+        <Route path="register/organization" element={<RegisterOrganization />} />
+        <Route path="register/official" element={<Register />} />
+        <Route path="cabinet/login" element={<UserLogin />} />
+        <Route
+          path="cabinet"
+          element={
+            <UserRoute>
+              <UserCabinet />
+            </UserRoute>
+          }
+        />
       </Route>
 
       <Route path="/admin/login" element={<Login />} />
@@ -57,13 +83,14 @@ export default function App() {
         <Route path="residents" element={<Residents />} />
         <Route path="departments" element={<Departments />} />
         <Route path="analytics" element={<Analytics />} />
-        <Route path="audit" element={<AuditLogs />} />
+        <Route path="marketing" element={<AdminMarketing />} />
         <Route path="verification" element={<Verification />} />
         <Route path="classifieds" element={<ClassifiedModeration />} />
+        <Route path="audit" element={<AuditLogs />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
-      <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+      <Route path="/login" element={<Navigate to="/cabinet/login" replace />} />
     </Routes>
   );
 }
