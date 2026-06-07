@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { ClassifiedMarketingCharts } from "@/components/ClassifiedMarketingCharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api, ClassifiedAd, ClassifiedPaymentInfo } from "@/lib/api";
+import { api, ClassifiedAd, ClassifiedMarketingStats, ClassifiedPaymentInfo } from "@/lib/api";
 import { BRAND } from "@/lib/branding";
+import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 export function Classifieds() {
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [payment, setPayment] = useState<ClassifiedPaymentInfo | null>(null);
+  const [marketing, setMarketing] = useState<ClassifiedMarketingStats | null>(null);
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -20,7 +24,7 @@ export function Classifieds() {
     phone: "",
     author_name: "",
     address: "",
-    payment_reference: "",
+    contact_vk: "",
     payment_confirmed: false,
   });
   const [msg, setMsg] = useState("");
@@ -35,6 +39,7 @@ export function Classifieds() {
   useEffect(() => {
     api.getClassifiedCategories().then(setCategories).catch(console.error);
     api.getClassifiedPaymentInfo().then(setPayment).catch(console.error);
+    api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
     load();
   }, [filter]);
 
@@ -53,72 +58,80 @@ export function Classifieds() {
       setMsgType("ok");
       setMsg(res.message);
       setShowForm(false);
-      setForm((f) => ({ ...f, title: "", description: "", price: "", payment_reference: "", payment_confirmed: false }));
+      setForm((f) => ({
+        ...f,
+        title: "",
+        description: "",
+        price: "",
+        contact_vk: "",
+        payment_confirmed: false,
+      }));
+      api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
     } catch (err) {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка");
     }
   };
 
-  const ICONS: Record<string, string> = {
-    firewood: "🪵",
-    grass_mowing: "🌿",
-    delivery: "🚚",
-    handyman: "🔧",
-    snow_removal: "❄️",
-    construction: "🏗",
-    construction_vacancy: "👷",
-    construction_offer: "🔨",
-    sale: "📦",
-    job: "💼",
-    other: "📋",
-  };
-
   return (
-    <div className="page-section max-w-4xl">
+    <div className="page-section max-w-5xl">
       <PageHeader
         icon="📋"
         title="Доска объявлений"
-        subtitle={`${BRAND.name} — дрова, строительство, вакансии от жителей`}
+        subtitle={`${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`}
       >
         <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Подать объявление"}
         </button>
         {payment && (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
-            Размещение — {payment.amount} ₽
+            {payment.amount} ₽ / объявление / {payment.period_days} дн.
           </span>
         )}
       </PageHeader>
 
-      <div className="filter-bar">
-        <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>
-          Все
+      {marketing && <ClassifiedMarketingCharts stats={marketing} />}
+
+      <div className="category-grid">
+        <button
+          type="button"
+          className={`category-tile ${!filter ? "category-tile-active" : ""}`}
+          onClick={() => setFilter("")}
+        >
+          <div className="category-tile-bg" style={{ background: "linear-gradient(135deg, #1a4d3a, #2d6a4f)" }} />
+          <span className="category-tile-icon">🪶</span>
+          <span className="category-tile-label">Все</span>
         </button>
-        {categories.map((c) => (
-          <button
-            key={c.value}
-            type="button"
-            className={`filter-chip ${filter === c.value ? "filter-chip-active" : ""}`}
-            onClick={() => setFilter(c.value)}
-          >
-            {ICONS[c.value] || "📋"} {c.label}
-          </button>
-        ))}
+        {categories.map((c) => {
+          const visual = getCategoryVisual(c.value);
+          return (
+            <button
+              key={c.value}
+              type="button"
+              className={`category-tile ${filter === c.value ? "category-tile-active" : ""}`}
+              onClick={() => setFilter(c.value)}
+            >
+              <img src={visual.image} alt="" className="category-tile-img" loading="lazy" />
+              <div className="category-tile-overlay" style={{ background: visual.gradient }} />
+              <span className="category-tile-icon">{visual.icon}</span>
+              <span className="category-tile-label">{c.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {showForm && payment && (
         <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4">
-          <div className="payment-box">
-            <p className="font-bold text-amber-900 mb-2">💳 Оплата размещения — {payment.amount} ₽</p>
-            <p className="text-muted-foreground mb-2">{payment.message}</p>
-            <p>
-              Карта: <strong className="font-mono">{payment.card_number}</strong>
+          <div className="payment-box payment-box-simple">
+            <p className="font-bold text-amber-900 text-lg mb-2">
+              💳 {payment.amount} ₽ за объявление на {payment.period_days} дней
             </p>
-            <p>Получатель: {payment.card_holder}</p>
-            <p>Банк: {payment.bank_name}</p>
-            <p>
-              Комментарий к переводу: «{payment.description}»
+            <p className="text-muted-foreground mb-4">{payment.message}</p>
+            <div className="payment-card-number">
+              {payment.card_number}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              10 объявлений = 10 × {payment.amount} ₽. Каждое оплачивается отдельно.
             </p>
           </div>
 
@@ -129,7 +142,7 @@ export function Classifieds() {
           >
             {categories.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {getCategoryVisual(c.value).icon} {c.label}
               </option>
             ))}
           </select>
@@ -149,7 +162,7 @@ export function Classifieds() {
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="number"
-              placeholder="Цена услуги"
+              placeholder="Ваша цена услуги"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
             />
@@ -177,9 +190,9 @@ export function Classifieds() {
             onChange={(e) => setForm({ ...form, address: e.target.value })}
           />
           <Input
-            placeholder="Комментарий к переводу (необязательно)"
-            value={form.payment_reference}
-            onChange={(e) => setForm({ ...form, payment_reference: e.target.value })}
+            placeholder="ВКонтакте (id или ссылка) — для уведомления о публикации"
+            value={form.contact_vk}
+            onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
           />
           <label className="flex items-start gap-2 text-sm cursor-pointer">
             <input
@@ -189,12 +202,12 @@ export function Classifieds() {
               onChange={(e) => setForm({ ...form, payment_confirmed: e.target.checked })}
             />
             <span>
-              Я перевёл(а) <strong>{payment.amount} ₽</strong> на карту {payment.card_number} за размещение
-              объявления
+              Я перевёл(а) <strong>{payment.amount} ₽</strong> на карту{" "}
+              <strong className="font-mono">{payment.card_number}</strong>
             </span>
           </label>
           <Button type="submit" className="w-full">
-            Отправить на модерацию
+            Отправить — уведомление придёт сразу
           </Button>
         </form>
       )}
@@ -204,24 +217,26 @@ export function Classifieds() {
       )}
 
       <div className="space-y-4">
-        {ads.map((ad) => (
-          <div key={ad.id} className="pushkin-card-hover p-5">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{ICONS[ad.category] || "📋"}</span>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="font-bold">{ad.title}</h3>
+        {ads.map((ad) => {
+          const visual = getCategoryVisual(ad.category);
+          return (
+            <div key={ad.id} className="classified-ad-card">
+              <div className="classified-ad-image" style={{ background: visual.gradient }}>
+                <img src={visual.image} alt="" loading="lazy" />
+                <span className="classified-ad-badge">{visual.icon} {ad.category_label}</span>
+              </div>
+              <div className="classified-ad-body">
+                <div className="flex justify-between gap-2">
+                  <h3 className="font-bold text-lg">{ad.title}</h3>
                   {ad.price != null && (
-                    <span className="text-amber-700 font-semibold">
+                    <span className="text-amber-700 font-semibold shrink-0">
                       {ad.price} {ad.price_unit || "₽"}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {ad.category_label} · {ad.author_name}
-                </p>
+                <p className="text-xs text-muted-foreground">{ad.author_name}</p>
                 <p className="text-sm mt-2">{ad.description}</p>
-                <p className="text-sm mt-2">
+                <p className="text-sm mt-3">
                   📞{" "}
                   <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">
                     {ad.phone}
@@ -230,8 +245,8 @@ export function Classifieds() {
                 </p>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {ads.length === 0 && (
           <p className="text-center text-muted-foreground py-12">
             Объявлений пока нет. Будьте первым!

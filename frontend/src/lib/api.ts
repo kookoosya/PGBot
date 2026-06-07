@@ -229,6 +229,10 @@ class ApiClient {
     return this.request<ClassifiedPaymentInfo>("/classifieds/payment-info");
   }
 
+  getClassifiedMarketingStats() {
+    return this.request<ClassifiedMarketingStats>("/classifieds/marketing-stats");
+  }
+
   getClassifieds(params?: Record<string, string>) {
     const q = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<{ items: ClassifiedAd[]; total: number }>(`/classifieds${q}`);
@@ -368,13 +372,28 @@ export interface UsageInfo {
   daily_limit: number;
 }
 
+export interface ClassifiedMarketingStats {
+  total_ads: number;
+  total_views: number;
+  avg_views_per_ad: number;
+  monthly_reach_estimate: number;
+  placement_fee: number;
+  period_days: number;
+  category_stats: { category: string; label: string; ads: number; views: number }[];
+  roi_examples: {
+    service: string;
+    ad_cost: number;
+    clients: number;
+    avg_check: number;
+    income: number;
+    roi_percent: number;
+  }[];
+  weekly_views: { day: string; views: number }[];
+}
+
 export interface PaymentInfo {
   card_number: string;
-  card_holder: string;
-  bank_name: string;
-  description: string;
   amount_suggested: number;
-  contact_email: string;
   message: string;
 }
 
@@ -462,11 +481,8 @@ export interface BusyBlock {
 
 export interface ClassifiedPaymentInfo {
   card_number: string;
-  card_holder: string;
-  bank_name: string;
-  description: string;
   amount: number;
-  contact_email: string;
+  period_days: number;
   message: string;
 }
 

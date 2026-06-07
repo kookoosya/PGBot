@@ -615,6 +615,170 @@
     border: 2px solid hsl(42 65% 58%);
   }
 
+  .payment-box-simple {
+    text-align: center;
+  }
+
+  .payment-card-number {
+    @apply inline-block font-mono text-xl md:text-2xl font-bold tracking-wider px-6 py-4 rounded-xl;
+    background: hsl(152 48% 18%);
+    color: hsl(42 85% 88%);
+    border: 3px solid hsl(42 78% 46%);
+    letter-spacing: 0.12em;
+  }
+
+  .category-grid {
+    @apply grid gap-3 mb-8;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .category-tile {
+    @apply relative overflow-hidden rounded-xl border-2 border-transparent text-left transition-all;
+    min-height: 110px;
+    cursor: pointer;
+  }
+
+  .category-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.18);
+  }
+
+  .category-tile-active {
+    border-color: hsl(42 78% 46%);
+    box-shadow: 0 0 0 2px hsl(42 78% 46% / 0.35);
+  }
+
+  .category-tile-bg,
+  .category-tile-img {
+    @apply absolute inset-0 w-full h-full object-cover;
+  }
+
+  .category-tile-overlay {
+    @apply absolute inset-0 opacity-75;
+  }
+
+  .category-tile-icon {
+    @apply relative z-10 block text-2xl px-3 pt-3;
+  }
+
+  .category-tile-label {
+    @apply relative z-10 block text-xs font-bold text-white px-3 pb-3 leading-tight;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .classified-ad-card {
+    @apply pushkin-card-hover overflow-hidden flex flex-col md:flex-row;
+  }
+
+  .classified-ad-image {
+    @apply relative shrink-0 md:w-48 h-36 md:h-auto overflow-hidden;
+  }
+
+  .classified-ad-image img {
+    @apply w-full h-full object-cover opacity-60;
+  }
+
+  .classified-ad-badge {
+    @apply absolute bottom-2 left-2 text-xs font-bold text-white px-2 py-1 rounded-lg;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .classified-ad-body {
+    @apply p-5 flex-1;
+  }
+
+  .marketing-section {
+    @apply pushkin-card p-5 md:p-6 mb-8;
+    background: linear-gradient(135deg, hsl(42 45% 96%), hsl(152 20% 94%));
+  }
+
+  .marketing-title {
+    @apply text-xl font-bold m-0;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .marketing-subtitle {
+    @apply text-sm text-muted-foreground mt-1 mb-0;
+  }
+
+  .marketing-stats-row {
+    @apply grid grid-cols-3 gap-3 mt-4;
+  }
+
+  .marketing-stat {
+    @apply text-center p-3 rounded-xl;
+    background: hsl(152 40% 18% / 0.08);
+    border: 1px solid hsl(152 30% 75%);
+  }
+
+  .marketing-stat-value {
+    @apply block text-xl md:text-2xl font-bold text-foreground;
+  }
+
+  .marketing-stat-label {
+    @apply block text-xs text-muted-foreground mt-1;
+  }
+
+  .marketing-charts-grid {
+    @apply grid gap-4 lg:grid-cols-2 mt-4;
+  }
+
+  .marketing-chart-card {
+    @apply rounded-xl p-4;
+    background: hsl(40 55% 99%);
+    border: 1px solid hsl(42 35% 85%);
+  }
+
+  .marketing-chart-title {
+    @apply text-sm font-bold mb-2 m-0;
+  }
+
+  .marketing-chart-note {
+    @apply text-xs text-muted-foreground mt-2 mb-0;
+  }
+
+  .pushkin-timeline .timeline-row {
+    @apply grid gap-4 md:grid-cols-4;
+  }
+
+  .timeline-item {
+    @apply pushkin-card p-4 text-center;
+  }
+
+  .timeline-year {
+    @apply block text-2xl font-bold;
+    color: hsl(42 78% 40%);
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .timeline-text {
+    @apply text-sm text-muted-foreground mt-2 mb-0;
+  }
+
+  .pushkin-heritage-grid {
+    @apply grid gap-4 md:grid-cols-3;
+  }
+
+  .pushkin-heritage-card {
+    @apply pushkin-card-hover overflow-hidden;
+  }
+
+  .pushkin-heritage-card img {
+    @apply w-full aspect-[4/3] object-cover;
+  }
+
+  .pushkin-heritage-caption {
+    @apply p-4;
+  }
+
+  .pushkin-heritage-caption h4 {
+    @apply font-bold m-0 text-base;
+  }
+
+  .pushkin-heritage-caption p {
+    @apply text-xs text-muted-foreground mt-1 mb-0;
+  }
+
   .map-layout {
     height: calc(100vh - 220px);
     min-height: 480px;

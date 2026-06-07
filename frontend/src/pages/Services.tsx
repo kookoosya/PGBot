@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ClassifiedMarketingCharts } from "@/components/ClassifiedMarketingCharts";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { api, ServiceProvider, TimeSlot } from "@/lib/api";
+import { api, ClassifiedMarketingStats, ServiceProvider, TimeSlot } from "@/lib/api";
+import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const STATUS: Record<string, { label: string; color: string }> = {
   free: { label: "🟢 Свободен", color: "text-green-700" },
@@ -23,9 +25,11 @@ export function Services() {
   const [form, setForm] = useState({ client_name: "", client_phone: "", notes: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [marketing, setMarketing] = useState<ClassifiedMarketingStats | null>(null);
 
   useEffect(() => {
     api.getServiceTypes().then(setTypes).catch(console.error);
+    api.getClassifiedMarketingStats().then(setMarketing).catch(console.error);
     loadProviders();
   }, [filter]);
 
@@ -63,7 +67,7 @@ export function Services() {
         start_time: selectedSlot,
         ...form,
       });
-      setMsg("✅ Запись подтверждена! Мастер свяжется с вами.");
+      setMsg("✅ Запись подтверждена! Уведомление отправлено — мастер свяжется с вами.");
       loadProviders();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Ошибка записи");
@@ -77,11 +81,13 @@ export function Services() {
       <PageHeader
         icon="💇"
         title="Услуги и мастера"
-        subtitle="Маникюр, стрижки, брови — запись онлайн по расписанию"
+        subtitle={PUSHKIN_QUOTES.services}
       >
         <Link to="/services/register" className="btn-hero-secondary text-sm">Стать мастером</Link>
         <Link to="/services/cabinet" className="btn-hero-secondary text-sm">Кабинет мастера</Link>
       </PageHeader>
+
+      {marketing && <ClassifiedMarketingCharts stats={marketing} />}
 
       <div className="filter-bar">
         <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>Все</button>

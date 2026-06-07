@@ -22,6 +22,7 @@ class ClassifiedAd(Base):
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     vk_id: Mapped[int | None] = mapped_column(BigInteger)
     contact_telegram: Mapped[str | None] = mapped_column(String(100))
+    contact_vk: Mapped[str | None] = mapped_column(String(100))
     is_active: Mapped[bool] = mapped_column(default=False)
     payment_status: Mapped[ClassifiedPaymentStatus] = mapped_column(
         String(20), default=ClassifiedPaymentStatus.PENDING

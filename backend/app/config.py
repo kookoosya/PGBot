@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     VK_CONFIRMATION_CODE: str = ""
     VK_SECRET_KEY: str = ""
     VK_API_VERSION: str = "5.199"
+    VK_GROUP_URL: str = "https://vk.com"
+    VK_ADMIN_PEER_ID: str = ""
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
@@ -64,8 +66,9 @@ class Settings(BaseSettings):
     PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
 
-    # Classified ads placement fee
+    # Classified ads: 150 ₽ per ad per month (each ad billed separately)
     CLASSIFIED_PLACEMENT_FEE: int = 150
+    CLASSIFIED_PERIOD_DAYS: int = 30
     CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление Пушкинские Горы"
 
     # Map / OSM sync (Pushkinogorsky district center)

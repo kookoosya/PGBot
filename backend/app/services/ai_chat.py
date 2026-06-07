@@ -113,14 +113,9 @@ async def chat_with_ai(message: str, history: list[dict] | None = None) -> str:
 def get_payment_info() -> dict:
     return {
         "card_number": settings.PAYMENT_CARD_NUMBER,
-        "card_holder": settings.PAYMENT_CARD_HOLDER,
-        "bank_name": settings.PAYMENT_BANK_NAME,
-        "description": settings.PAYMENT_DESCRIPTION,
         "amount_suggested": settings.PAYMENT_AMOUNT_SUGGESTED,
-        "contact_email": settings.PAYMENT_CONTACT_EMAIL,
         "message": (
-            "Бесплатный лимит помогает всем пользоваться ИИ. "
-            "Если вам нужно больше — поддержите проект переводом на карту. "
-            "Средства идут на оплату серверов и ИИ."
+            f"Поддержите портал посёлка — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
+            "Перевод на карту помогает развивать сайт."
         ),
     }

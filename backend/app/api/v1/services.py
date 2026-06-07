@@ -29,6 +29,7 @@ from app.schemas.service import (
     TimeSlot,
     UpdateScheduleRequest,
 )
+from app.services.notifications import notify_owner, notify_vk_user
 from app.services.schedule import (
     DAY_LABELS,
     format_time,
@@ -118,6 +119,15 @@ async def register_provider(data: ProviderRegisterRequest, db: Annotated[AsyncSe
             is_working=sch.is_working,
         ))
 
+    svc_names = ", ".join(s.name for s in data.services)
+    await notify_owner(
+        "💇 Новая заявка мастера\n\n"
+        f"#{provider.id} · {data.full_name}\n"
+        f"📞 {data.phone}\n"
+        f"Услуги: {svc_names}\n\n"
+        "Одобрите в админ-панели."
+    )
+
     return {"id": provider.id, "message": "Заявка отправлена на проверку. После одобрения вы появитесь в каталоге."}
 
 
@@ -187,6 +197,12 @@ async def approve_provider(
         if user:
             user.verification_status = VerificationStatus.APPROVED
             user.is_active = True
+            if user.vk_id:
+                await notify_vk_user(
+                    user.vk_id,
+                    f"✅ Ваш профиль мастера одобрен!\n\n{p.full_name} — теперь в каталоге услуг посёлка.",
+                )
+    await notify_owner(f"✅ Мастер #{provider_id} «{p.full_name}» одобрен и опубликован.")
     return {"status": "approved"}
 
 
@@ -290,6 +306,27 @@ async def book_appointment(
     )
     db.add(appt)
     await db.flush()
+
+    date_str = appt.appointment_date.isoformat()
+    time_str = format_time(appt.start_time)
+    await notify_owner(
+        "📅 Новая запись к мастеру!\n\n"
+        f"Мастер: {provider.full_name}\n"
+        f"Услуга: {service.name}\n"
+        f"📆 {date_str} в {time_str}\n"
+        f"👤 {appt.client_name} · 📞 {appt.client_phone}"
+    )
+
+    if provider.user_id:
+        user_result = await db.execute(select(User).where(User.id == provider.user_id))
+        provider_user = user_result.scalar_one_or_none()
+        if provider_user and provider_user.vk_id:
+            await notify_vk_user(
+                provider_user.vk_id,
+                f"📅 Новая запись!\n\n"
+                f"{service.name} · {date_str} в {time_str}\n"
+                f"Клиент: {appt.client_name}, {appt.client_phone}",
+            )
 
     return AppointmentResponse(
         id=appt.id,

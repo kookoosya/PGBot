@@ -8,6 +8,13 @@ export const PUSHKIN_QUOTES: Record<string, string> = {
   default: "«Я памятник себе воздвиг нерукотворный...»",
 };
 
+export const PUSHKIN_VERSES = [
+  "«Уж небо осенью дышало...»",
+  "«Здесь русский дух... здесь Русью пахнет!»",
+  "«Труд — вот лучшая зарядка для юности!»",
+  "«Всё, что ни делается, — к лучшему.»",
+];
+
 export const VILLAGE_PHOTOS = [
   {
     title: "Михайловское",

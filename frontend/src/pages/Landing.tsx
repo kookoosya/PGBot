@@ -4,9 +4,10 @@ import { QuickNav } from "@/components/QuickNav";
 import { VillageGallery } from "@/components/VillageGallery";
 import { BRAND } from "@/lib/branding";
 import { api } from "@/lib/api";
+import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const features = [
-  { icon: "📋", title: "Объявления", desc: "Дрова, строительство, вакансии от жителей", to: "/classifieds" },
+  { icon: "📋", title: "Объявления", desc: "150 ₽ за объявление — дрова, вакансии, услуги", to: "/classifieds" },
   { icon: "💇", title: "Услуги мастеров", desc: "Маникюр, стрижки — запись по расписанию", to: "/services" },
   { icon: "🗺", title: "Карта посёлка", desc: "Магазины, аптеки, отзывы и жалобы", to: "/map" },
   { icon: "🤖", title: "ИИ-помощник", desc: "Ответы о посёлке и помощь с текстом", to: "/ai" },
@@ -14,10 +15,16 @@ const features = [
   { icon: "🏛", title: "Для служб", desc: "Регистрация и верификация сотрудников", to: "/register" },
 ];
 
-const VK_BOT_URL = "https://vk.com";
+const POET_FACTS = [
+  { year: "1799", text: "Александр Пушкин родился в Москве" },
+  { year: "1817", text: "Первое посещение Михайловского — ссылка отца" },
+  { year: "1824", text: "Ссылка в Михайловское — великие творения" },
+  { year: "1837", text: "Пушкинские Горы — место последнего приюта поэта" },
+];
 
 export function Landing() {
   const [stats, setStats] = useState({ places: 0, ads: 0 });
+  const vkUrl = "https://vk.com";
 
   useEffect(() => {
     api.getMapStats().then((s) => setStats((st) => ({ ...st, places: s.total_places }))).catch(() => {});
@@ -31,11 +38,11 @@ export function Landing() {
         <div className="absolute inset-0 opacity-10 feather-pattern" />
         <div className="hero-content animate-hero">
           <p className="hero-badge">🪶 {BRAND.district}</p>
-          <p className="hero-quote">«Любви, надежды, тихой славы...»</p>
+          <p className="hero-quote">{PUSHKIN_QUOTES.home}</p>
           <h2 className="hero-title">{BRAND.name}</h2>
           <p className="hero-tagline">{BRAND.tagline}</p>
           <p className="hero-desc">
-            Объявления, мастера, карта магазинов и служб — всё для жителей в одном месте.
+            Земля поэта — наш дом. Объявления, мастера, карта и ИИ-помощник для жителей посёлка.
           </p>
 
           {(stats.places > 0 || stats.ads > 0) && (
@@ -57,6 +64,20 @@ export function Landing() {
             <Link to="/classifieds" className="btn-hero-secondary">📋 Объявления</Link>
             <Link to="/services" className="btn-hero-secondary">💇 Услуги</Link>
             <Link to="/ai" className="btn-hero-secondary">🤖 ИИ</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="pushkin-timeline section-alt">
+        <div className="page-section">
+          <h3 className="section-title">Пушкин и эти места</h3>
+          <div className="timeline-row">
+            {POET_FACTS.map((f) => (
+              <div key={f.year} className="timeline-item">
+                <span className="timeline-year">{f.year}</span>
+                <p className="timeline-text">{f.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -88,17 +109,31 @@ export function Landing() {
       </section>
 
       <section className="page-section">
+        <div className="pushkin-heritage-grid">
+          {VILLAGE_PHOTOS.map((photo) => (
+            <div key={photo.title} className="pushkin-heritage-card">
+              <img src={photo.url} alt={photo.title} loading="lazy" />
+              <div className="pushkin-heritage-caption">
+                <h4>{photo.title}</h4>
+                <p>{photo.caption}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="page-section">
         <a
-          href={VK_BOT_URL}
+          href={vkUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="vk-cta-card"
         >
           <span className="vk-cta-icon">📱</span>
           <div>
-            <h3 className="vk-cta-title">Обращения жителей — бот ВКонтакте</h3>
+            <h3 className="vk-cta-title">Бот ВКонтакте — обращения и уведомления</h3>
             <p className="vk-cta-desc">
-              Сообщите о проблеме в посёлке — дороги, мусор, освещение. Передадим ответственным службам.
+              Сообщите о проблеме в посёлке. Уведомления о записях и объявлениях — сразу в ВК.
             </p>
           </div>
           <span className="vk-cta-arrow">→</span>
