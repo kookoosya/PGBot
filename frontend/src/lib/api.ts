@@ -133,6 +133,36 @@ class ApiClient {
       body: JSON.stringify({ note }),
     });
   }
+
+  // Map / Places
+  getMapStats() {
+    return this.request<MapStats>("/places/map/stats");
+  }
+
+  getPlaces(params?: Record<string, string>) {
+    const query = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<PlaceListResponse>(`/places${query}`);
+  }
+
+  getPlace(id: number) {
+    return this.request<PlaceDetail>(`/places/${id}`);
+  }
+
+  getComplaintTypes() {
+    return this.request<ComplaintType[]>("/places/complaint-types");
+  }
+
+  getPlaceCategories() {
+    return this.request<{ value: string; label: string }[]>("/places/categories");
+  }
+
+  addReview(placeId: number, data: { rating: number; text?: string; author_name?: string }) {
+    return this.request(`/places/${placeId}/reviews`, { method: "POST", body: JSON.stringify(data) });
+  }
+
+  addComplaint(placeId: number, data: Record<string, string | undefined>) {
+    return this.request(`/places/${placeId}/complaints`, { method: "POST", body: JSON.stringify(data) });
+  }
 }
 
 export const api = new ApiClient();
@@ -249,6 +279,44 @@ export interface PaymentInfo {
   amount_suggested: number;
   contact_email: string;
   message: string;
+}
+
+export interface Place {
+  id: number;
+  name: string;
+  category: string;
+  category_label: string;
+  description: string | null;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  phone: string | null;
+  opening_hours: string | null;
+  avg_rating: number;
+  review_count: number;
+  complaint_count: number;
+}
+
+export interface PlaceDetail extends Place {
+  reviews: { id: number; rating: number; text: string | null; author_name: string | null; created_at: string }[];
+  recent_complaints: { id: number; complaint_type: string; complaint_label: string; description: string; price_tagged: string | null; price_charged: string | null; status: string; created_at: string }[];
+}
+
+export interface PlaceListResponse {
+  items: Place[];
+  total: number;
+}
+
+export interface MapStats {
+  total_places: number;
+  by_category: Record<string, number>;
+  last_sync: string | null;
+  center: { lat: number; lng: number };
+}
+
+export interface ComplaintType {
+  value: string;
+  label: string;
 }
 
 export interface VerificationRequest {

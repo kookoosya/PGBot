@@ -45,17 +45,23 @@ class Settings(BaseSettings):
     DUPLICATE_THRESHOLD: float = 0.80
 
     # Public AI chat limits
-    AI_FREE_DAILY_LIMIT: int = 15
-    AI_VK_DAILY_LIMIT: int = 10
+    AI_FREE_DAILY_LIMIT: int = 30
+    AI_VK_DAILY_LIMIT: int = 20
     AI_MAX_MESSAGE_LENGTH: int = 1000
 
     # Payment / support (card transfer)
-    PAYMENT_CARD_NUMBER: str = "0000 0000 0000 0000"
+    PAYMENT_CARD_NUMBER: str = "2204240170359972"
     PAYMENT_CARD_HOLDER: str = "Народный Контроль ПГ"
     PAYMENT_BANK_NAME: str = "Сбербанк"
-    PAYMENT_DESCRIPTION: str = "Поддержка ИИ-помощника Пушкинских Гор"
-    PAYMENT_AMOUNT_SUGGESTED: int = 199
+    PAYMENT_DESCRIPTION: str = "Поддержка ИИ Пушкинские Горы"
+    PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
+
+    # Map / OSM sync (Pushkinogorsky district center)
+    MAP_CENTER_LAT: float = 57.0267
+    MAP_CENTER_LNG: float = 28.9100
+    MAP_SYNC_RADIUS_KM: float = 15.0
+    MAP_AUTO_SYNC_HOURS: int = 24
 
     @property
     def cors_origins_list(self) -> list[str]:

@@ -1,5 +1,6 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.ai_usage import AIUsage
+from app.models.place import Place, PlaceComplaint, PlaceReview
 from app.models.audit_log import AuditLog
 from app.models.department import Department
 from app.models.issue import Issue, IssueComment, IssueDuplicate, IssuePhoto
@@ -18,4 +19,7 @@ __all__ = [
     "AuditLog",
     "AIAnalysis",
     "AIUsage",
+    "Place",
+    "PlaceReview",
+    "PlaceComplaint",
 ]

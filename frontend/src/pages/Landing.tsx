@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 
 const features = [
   {
+    icon: "🗺",
+    title: "Карта поселка",
+    desc: "Магазины, аптеки, службы — с отзывами и жалобами на обман с ценами",
+  },
+  {
     icon: "📝",
     title: "Обращения жителей",
     desc: "Напишите боту ВКонтакте о проблеме — мы передадим ответственным службам",
@@ -43,9 +48,14 @@ export function Landing() {
             Сообщайте о проблемах, общайтесь с ИИ, следите за решениями.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Link to="/ai">
+            <Link to="/map">
               <Button size="lg" className="bg-amber-500 text-green-950 hover:bg-amber-400 font-semibold px-8">
-                🤖 Попробовать ИИ-помощника
+                🗺 Карта поселка
+              </Button>
+            </Link>
+            <Link to="/ai">
+              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8">
+                🤖 ИИ-помощник
               </Button>
             </Link>
             <a

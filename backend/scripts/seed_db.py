@@ -68,6 +68,15 @@ async def seed() -> None:
             ))
             print(f"Created super admin: {admin_username}")
 
+        from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+        seeded = await seed_pushkin_landmarks(db)
+        print(f"Seeded {seeded} landmarks")
+        try:
+            osm = await sync_places_from_osm(db)
+            print(f"OSM sync: {osm}")
+        except Exception as e:
+            print(f"OSM sync skipped: {e}")
+
         await db.commit()
         print("Database seeded successfully")
 

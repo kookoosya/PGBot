@@ -60,6 +60,63 @@ class VerificationStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 
+class PlaceCategory(str, enum.Enum):
+    SHOP = "shop"
+    SUPERMARKET = "supermarket"
+    PHARMACY = "pharmacy"
+    CAFE = "cafe"
+    RESTAURANT = "restaurant"
+    BANK = "bank"
+    POST = "post"
+    SCHOOL = "school"
+    HOSPITAL = "hospital"
+    GOVERNMENT = "government"
+    TRANSPORT = "transport"
+    CULTURE = "culture"
+    HOTEL = "hotel"
+    GAS = "gas"
+    OTHER = "other"
+
+
+class ShopComplaintType(str, enum.Enum):
+    PRICE_TAG_FRAUD = "price_tag_fraud"
+    RECEIPT_FRAUD = "receipt_fraud"
+    OVERCHARGE = "overcharge"
+    NO_RECEIPT = "no_receipt"
+    EXPIRED_PRODUCT = "expired_product"
+    SHORT_WEIGHT = "short_weight"
+    OTHER = "other"
+
+
+PLACE_CATEGORY_LABELS = {
+    PlaceCategory.SHOP: "Магазин",
+    PlaceCategory.SUPERMARKET: "Супермаркет",
+    PlaceCategory.PHARMACY: "Аптека",
+    PlaceCategory.CAFE: "Кафе",
+    PlaceCategory.RESTAURANT: "Ресторан",
+    PlaceCategory.BANK: "Банк",
+    PlaceCategory.POST: "Почта",
+    PlaceCategory.SCHOOL: "Школа",
+    PlaceCategory.HOSPITAL: "Медицина",
+    PlaceCategory.GOVERNMENT: "Госучреждение",
+    PlaceCategory.TRANSPORT: "Транспорт",
+    PlaceCategory.CULTURE: "Культура",
+    PlaceCategory.HOTEL: "Гостиница",
+    PlaceCategory.GAS: "АЗС",
+    PlaceCategory.OTHER: "Другое",
+}
+
+SHOP_COMPLAINT_LABELS = {
+    ShopComplaintType.PRICE_TAG_FRAUD: "Цена на полке ≠ на кассе",
+    ShopComplaintType.RECEIPT_FRAUD: "Обман в чеке",
+    ShopComplaintType.OVERCHARGE: "Завышение цены",
+    ShopComplaintType.NO_RECEIPT: "Не выдали чек",
+    ShopComplaintType.EXPIRED_PRODUCT: "Просроченный товар",
+    ShopComplaintType.SHORT_WEIGHT: "Недовес",
+    ShopComplaintType.OTHER: "Другое",
+}
+
+
 OFFICIAL_ROLES = {
     UserRole.MODERATOR,
     UserRole.ADMINISTRATION,

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -17,10 +18,29 @@ settings = get_settings()
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIMIT])
 
 
+async def _background_map_sync():
+    """Auto-sync map data from OpenStreetMap every MAP_AUTO_SYNC_HOURS."""
+    from app.database import AsyncSessionLocal
+    from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+
+    while True:
+        try:
+            async with AsyncSessionLocal() as db:
+                await seed_pushkin_landmarks(db)
+                result = await sync_places_from_osm(db)
+                await db.commit()
+                logger.info("Map auto-sync: %s", result)
+        except Exception as e:
+            logger.error("Map auto-sync error: %s", e)
+        await asyncio.sleep(settings.MAP_AUTO_SYNC_HOURS * 3600)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
+    sync_task = asyncio.create_task(_background_map_sync())
     yield
+    sync_task.cancel()
     logger.info("Shutting down")
 
 

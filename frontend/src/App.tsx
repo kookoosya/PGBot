@@ -9,6 +9,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Departments } from "./pages/Departments";
 import { Issues } from "./pages/Issues";
 import { Landing } from "./pages/Landing";
+import { MapPage } from "./pages/Map";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Residents } from "./pages/Residents";
@@ -28,6 +29,7 @@ export default function App() {
       <Route element={<PublicLayout />}>
         <Route index element={<Landing />} />
         <Route path="ai" element={<AIChat />} />
+        <Route path="map" element={<MapPage />} />
         <Route path="register" element={<Register />} />
       </Route>
 

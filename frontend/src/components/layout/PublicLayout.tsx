@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router-dom";
 const nav = [
   { to: "/", label: "Главная" },
   { to: "/ai", label: "ИИ-помощник" },
+  { to: "/map", label: "Карта" },
   { to: "/register", label: "Регистрация служб" },
   { to: "/admin/login", label: "Вход" },
 ];
