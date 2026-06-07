@@ -160,6 +160,10 @@ export function MapPage() {
     api.getPlaces(params).then((r) => setPlaces(r.items)).catch(console.error);
   }, [category, shopsOnly, search]);
 
+  useEffect(() => {
+    loadPlaces();
+  }, [category, shopsOnly, search, loadPlaces]);
+
   const sortedPlaces = useMemo(
     () => [...places].sort((a, b) => b.display_rating - a.display_rating || b.display_review_count - a.display_review_count),
     [places]

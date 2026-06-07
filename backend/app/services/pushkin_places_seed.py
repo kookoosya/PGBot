@@ -1,5 +1,7 @@
 """Справочник организаций посёлка Пушкинские Горы (Псковская обл.)."""
 
+import hashlib
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
