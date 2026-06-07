@@ -72,7 +72,8 @@ async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession
     user.last_login_at = datetime.now(timezone.utc)
 
     pwd_ts = int((user.password_changed_at or user.created_at).timestamp())
-    token = create_access_token({"sub": str(user.id), "role": user.role.name.value, "pwd": pwd_ts})
+    role_name = user.role.name.value if hasattr(user.role.name, "value") else user.role.name
+    token = create_access_token({"sub": str(user.id), "role": role_name, "pwd": pwd_ts})
     await log_action(db, "login_success", "user", user.id, user_id=user.id, ip_address=get_client_ip(request))
     return Token(access_token=token)
 
