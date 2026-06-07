@@ -21,6 +21,12 @@ class PlaceResponse(BaseModel):
     opening_hours: str | None
     avg_rating: float
     review_count: int
+    external_rating: float = 0.0
+    external_review_count: int = 0
+    display_rating: float = 0.0
+    display_review_count: int = 0
+    rating_source: str | None = None
+    yandex_url: str | None = None
     complaint_count: int
     last_synced_at: datetime | None
 
@@ -85,3 +91,16 @@ class MapStatsResponse(BaseModel):
     by_category: dict[str, int]
     last_sync: datetime | None
     center: dict[str, float]
+
+
+class TaxiServiceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    phone: str
+    phones_extra: str | None
+    description: str | None
+    is_24h: bool
+    rating: float
+    price_from: int | None

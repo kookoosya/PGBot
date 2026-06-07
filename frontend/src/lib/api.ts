@@ -167,6 +167,10 @@ class ApiClient {
     return this.request<{ value: string; label: string }[]>("/places/categories");
   }
 
+  getTaxiServices() {
+    return this.request<TaxiService[]>("/places/taxi");
+  }
+
   // Services
   getServiceTypes() {
     return this.request<{ value: string; label: string }[]>("/services/types");
@@ -407,10 +411,28 @@ export interface Place {
   latitude: number;
   longitude: number;
   phone: string | null;
+  website: string | null;
   opening_hours: string | null;
   avg_rating: number;
   review_count: number;
+  external_rating: number;
+  external_review_count: number;
+  display_rating: number;
+  display_review_count: number;
+  rating_source: string | null;
+  yandex_url: string | null;
   complaint_count: number;
+}
+
+export interface TaxiService {
+  id: number;
+  name: string;
+  phone: string;
+  phones_extra: string | null;
+  description: string | null;
+  is_24h: boolean;
+  rating: number;
+  price_from: number | null;
 }
 
 export interface PlaceDetail extends Place {

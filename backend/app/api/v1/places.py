@@ -1,8 +1,7 @@
-from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,10 +16,10 @@ from app.models.enums import (
     PlaceCategory,
     Priority,
     ShopComplaintType,
-    UserRole,
 )
 from app.models.issue import Issue
 from app.models.place import Place, PlaceComplaint, PlaceReview
+from app.models.taxi import TaxiService
 from app.models.user import User
 from app.schemas.place import (
     MapStatsResponse,
@@ -31,19 +30,49 @@ from app.schemas.place import (
     PlaceResponse,
     PlaceReviewCreate,
     PlaceReviewResponse,
+    TaxiServiceResponse,
 )
+from app.services.map_sync import sync_all_map_data
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
 from app.services.schedule import format_opening_hours
+from app.services.yandex_sync import sync_places_from_yandex
 
 router = APIRouter()
 settings = get_settings()
 
 SHOP_CATEGORIES = {
     PlaceCategory.SHOP, PlaceCategory.SUPERMARKET, PlaceCategory.PHARMACY,
+    PlaceCategory.TYRE, PlaceCategory.AUTO,
 }
+
+EFFECTIVE_RATING = case(
+    (Place.external_rating > 0, Place.external_rating),
+    else_=Place.avg_rating,
+)
+EFFECTIVE_REVIEWS = case(
+    (Place.external_review_count > 0, Place.external_review_count),
+    else_=Place.review_count,
+)
+
+
+def _rating_meta(p: Place) -> dict:
+    if p.external_rating > 0:
+        return {
+            "display_rating": p.external_rating,
+            "display_review_count": p.external_review_count,
+            "rating_source": "yandex",
+        }
+    if p.avg_rating > 0:
+        return {
+            "display_rating": p.avg_rating,
+            "display_review_count": p.review_count,
+            "rating_source": "users",
+        }
+    return {"display_rating": 0.0, "display_review_count": 0, "rating_source": None}
 
 
 def _place_response(p: Place) -> PlaceResponse:
+    meta = _rating_meta(p)
     return PlaceResponse(
         id=p.id, name=p.name, category=p.category,
         category_label=PLACE_CATEGORY_LABELS.get(p.category, p.category),
@@ -52,7 +81,12 @@ def _place_response(p: Place) -> PlaceResponse:
         phone=p.phone, website=p.website,
         opening_hours=format_opening_hours(p.opening_hours) or p.opening_hours,
         avg_rating=p.avg_rating, review_count=p.review_count,
-        complaint_count=p.complaint_count, last_synced_at=p.last_synced_at,
+        external_rating=p.external_rating,
+        external_review_count=p.external_review_count,
+        yandex_url=p.yandex_url,
+        complaint_count=p.complaint_count,
+        last_synced_at=p.last_synced_at,
+        **meta,
     )
 
 
@@ -70,6 +104,16 @@ async def list_complaint_types():
         {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]}
         for t in ShopComplaintType
     ]
+
+
+@router.get("/taxi", response_model=list[TaxiServiceResponse])
+async def list_taxi(db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(
+        select(TaxiService)
+        .where(TaxiService.is_active.is_(True))
+        .order_by(TaxiService.sort_order, TaxiService.rating.desc())
+    )
+    return [TaxiServiceResponse.model_validate(t) for t in result.scalars().all()]
 
 
 @router.get("/map/stats", response_model=MapStatsResponse)
@@ -96,12 +140,14 @@ async def list_places(
     category: PlaceCategory | None = None,
     search: str | None = None,
     shops_only: bool = False,
+    min_rating: float | None = Query(None, ge=0, le=5),
     south: float | None = None,
     west: float | None = None,
     north: float | None = None,
     east: float | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=500),
+    sort: str = Query("rating", pattern="^(rating|name)$"),
 ):
     query = select(Place).where(Place.is_active.is_(True))
     if category:
@@ -109,7 +155,11 @@ async def list_places(
     if shops_only:
         query = query.where(Place.category.in_(SHOP_CATEGORIES))
     if search:
-        query = query.where(Place.name.ilike(f"%{search}%"))
+        query = query.where(
+            Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%")
+        )
+    if min_rating:
+        query = query.where(EFFECTIVE_RATING >= min_rating)
     if all(v is not None for v in (south, west, north, east)):
         query = query.where(
             Place.latitude >= south, Place.latitude <= north,
@@ -117,7 +167,11 @@ async def list_places(
         )
 
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
-    query = query.order_by(Place.name).offset((page - 1) * page_size).limit(page_size)
+    if sort == "rating":
+        query = query.order_by(EFFECTIVE_RATING.desc(), EFFECTIVE_REVIEWS.desc(), Place.name)
+    else:
+        query = query.order_by(Place.name)
+    query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
     places = result.scalars().all()
     return PlaceListResponse(items=[_place_response(p) for p in places], total=total)
@@ -250,6 +304,22 @@ async def sync_osm(
 ):
     result = await sync_places_from_osm(db)
     return result
+
+
+@router.post("/sync-all")
+async def sync_all(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+):
+    return await sync_all_map_data(db)
+
+
+@router.post("/sync-yandex")
+async def sync_yandex(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+):
+    return await sync_places_from_yandex(db)
 
 
 @router.post("/seed")

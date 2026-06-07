@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     MAP_SYNC_RADIUS_KM: float = 15.0
     MAP_AUTO_SYNC_HOURS: int = 24
 
+    # Yandex Maps Organization Search API (optional — enriches ratings)
+    YANDEX_MAPS_API_KEY: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

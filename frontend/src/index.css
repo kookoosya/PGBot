@@ -779,6 +779,164 @@
     @apply text-xs text-muted-foreground mt-1 mb-0;
   }
 
+  .map-marker-pin {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #c9a227;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    color: #fff;
+  }
+
+  .map-overlay-controls {
+    @apply absolute top-3 right-3 z-[1000] flex gap-1;
+  }
+
+  .map-layer-btn {
+    @apply px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition;
+    background: hsl(40 55% 99% / 0.95);
+    border-color: hsl(42 50% 75%);
+  }
+
+  .map-layer-btn.active {
+    background: hsl(152 48% 22%);
+    color: hsl(42 85% 90%);
+    border-color: hsl(42 78% 46%);
+  }
+
+  .map-stats-overlay {
+    @apply absolute bottom-3 left-3 z-[1000] pushkin-card p-3 text-sm max-w-xs;
+  }
+
+  .map-sidebar {
+    max-height: calc(100vh - 180px);
+  }
+
+  .taxi-panel {
+    @apply pushkin-card p-4 md:p-5;
+    background: linear-gradient(135deg, hsl(42 55% 94%), hsl(200 30% 92%));
+  }
+
+  .taxi-panel-header {
+    @apply flex justify-between items-center mb-3;
+  }
+
+  .taxi-panel-header h3 {
+    @apply text-lg font-bold m-0;
+  }
+
+  .taxi-grid {
+    @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .taxi-card {
+    @apply rounded-xl p-4 no-underline text-inherit transition block;
+    background: hsl(152 48% 18%);
+    color: hsl(42 85% 92%);
+    border: 2px solid hsl(42 65% 50%);
+  }
+
+  .taxi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .taxi-card-app {
+    background: hsl(220 40% 22%);
+  }
+
+  .taxi-card-top {
+    @apply flex justify-between items-start gap-2;
+  }
+
+  .taxi-24h {
+    @apply text-[10px] font-bold px-2 py-0.5 rounded-full;
+    background: hsl(42 78% 46%);
+    color: hsl(152 50% 10%);
+  }
+
+  .taxi-phone {
+    @apply font-mono font-bold text-lg mt-2 mb-0;
+  }
+
+  .taxi-phone-extra, .taxi-desc, .taxi-meta {
+    @apply text-xs opacity-85 mt-1 mb-0;
+  }
+
+  .org-list-card {
+    @apply w-full text-left flex gap-3 p-3 rounded-xl border-2 border-transparent transition;
+    background: hsl(42 40% 97%);
+  }
+
+  .org-list-card:hover {
+    border-color: hsl(42 65% 58%);
+    background: hsl(42 50% 95%);
+  }
+
+  .org-list-icon {
+    @apply text-2xl shrink-0;
+  }
+
+  .org-list-body {
+    @apply flex-1 min-w-0;
+  }
+
+  .org-list-rating {
+    @apply text-xs font-bold shrink-0;
+    color: hsl(42 78% 35%);
+  }
+
+  .org-detail-card {
+    @apply animate-in;
+  }
+
+  .org-detail-header {
+    @apply flex gap-3 items-start;
+  }
+
+  .org-detail-icon {
+    @apply text-3xl;
+  }
+
+  .org-rating-badge {
+    @apply inline-flex flex-col mt-3 px-3 py-2 rounded-xl;
+    background: hsl(42 70% 92%);
+    border: 1px solid hsl(42 60% 70%);
+  }
+
+  .org-rating-score {
+    @apply font-bold text-lg;
+    color: hsl(42 78% 30%);
+  }
+
+  .org-rating-meta {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .org-rating-none {
+    @apply text-xs text-muted-foreground mt-2 block;
+  }
+
+  .org-detail-row {
+    @apply text-sm mt-2 mb-0;
+  }
+
+  .org-hours-box {
+    @apply text-sm mt-2 p-2 rounded-lg;
+    background: hsl(42 55% 94%);
+    border: 1px solid hsl(42 45% 80%);
+  }
+
+  .org-review-card {
+    @apply text-sm border rounded-lg p-3;
+    background: hsl(42 35% 97%);
+  }
+
   .map-layout {
     height: calc(100vh - 220px);
     min-height: 480px;

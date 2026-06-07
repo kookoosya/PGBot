@@ -46,14 +46,18 @@ OSM_TAG_TO_CATEGORY = {
     "beauty": PlaceCategory.BEAUTY,
     "nails": PlaceCategory.BEAUTY,
     "spa": PlaceCategory.BEAUTY,
+    "tyres": PlaceCategory.TYRE,
+    "car_repair": PlaceCategory.AUTO,
+    "car": PlaceCategory.AUTO,
+    "garage": PlaceCategory.AUTO,
 }
 
 OVERPASS_QUERY = """
 [out:json][timeout:60];
 (
   node["shop"]({bbox});
-  node["amenity"~"pharmacy|cafe|restaurant|fast_food|bank|post_office|school|kindergarten|hospital|clinic|doctors|townhall|library|museum|theatre|fuel|bus_station|hairdresser|beauty|spa"]({bbox});
-  node["shop"~"hairdresser|beauty|cosmetics"]({bbox});
+  node["amenity"~"pharmacy|cafe|restaurant|fast_food|bank|post_office|school|kindergarten|hospital|clinic|doctors|townhall|library|museum|theatre|fuel|bus_station|hairdresser|beauty|spa|car_repair"]({bbox});
+  node["shop"~"hairdresser|beauty|cosmetics|tyres|car|car_repair"]({bbox});
   node["tourism"~"hotel|guest_house|museum"]({bbox});
   way["shop"]({bbox});
   way["amenity"~"pharmacy|cafe|restaurant|supermarket|hospital|townhall|library|museum"]({bbox});

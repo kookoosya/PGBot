@@ -69,15 +69,13 @@ async def seed() -> None:
             ))
             print(f"Created super admin: {admin_username}")
 
-        from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+        from app.services.map_sync import sync_all_map_data
         from app.services.seed_services import seed_service_providers
-        seeded = await seed_pushkin_landmarks(db)
-        print(f"Seeded {seeded} landmarks")
         try:
-            osm = await sync_places_from_osm(db)
-            print(f"OSM sync: {osm}")
+            map_result = await sync_all_map_data(db)
+            print(f"Map sync: {map_result}")
         except Exception as e:
-            print(f"OSM sync skipped: {e}")
+            print(f"Map sync partial: {e}")
 
         svc_count = await seed_service_providers(db)
         print(f"Seeded {svc_count} service providers")

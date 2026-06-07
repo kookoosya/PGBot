@@ -22,13 +22,12 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIM
 async def _background_map_sync():
     """Auto-sync map data from OpenStreetMap every MAP_AUTO_SYNC_HOURS."""
     from app.database import AsyncSessionLocal
-    from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
+    from app.services.map_sync import sync_all_map_data
 
     while True:
         try:
             async with AsyncSessionLocal() as db:
-                await seed_pushkin_landmarks(db)
-                result = await sync_places_from_osm(db)
+                result = await sync_all_map_data(db)
                 await db.commit()
                 logger.info("Map auto-sync: %s", result)
         except Exception as e:
