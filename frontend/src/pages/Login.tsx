@@ -60,7 +60,7 @@ export function Login() {
             </Button>
           </form>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Доступ только для владельца сайта. Чужие аккаунты не принимаются.
+            Доступ только для владельца сайта. Временный вход: <strong>admin</strong> / <strong>admin</strong>
           </p>
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <Link to="/" className="inline-block hover:underline">← На главную</Link>

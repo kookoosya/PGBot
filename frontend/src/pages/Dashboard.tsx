@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api, Issue, Statistics } from "@/lib/api";
+import { api, Issue, Statistics, VisitStats } from "@/lib/api";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 import { AlertCircle, CheckCircle, Clock, FileText } from "lucide-react";
 
 export function Dashboard() {
   const [stats, setStats] = useState<Statistics | null>(null);
+  const [visits, setVisits] = useState<VisitStats | null>(null);
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
 
   useEffect(() => {
     api.getStatistics().then(setStats).catch(console.error);
+    api.getVisitStats().then(setVisits).catch(console.error);
     api.getIssues({ page_size: "5" }).then((r) => setRecentIssues(r.items)).catch(console.error);
   }, []);
 
@@ -28,6 +30,29 @@ export function Dashboard() {
         <h2 className="text-3xl font-bold tracking-tight">Моя панель</h2>
         <p className="text-muted-foreground">Личный обзор портала посёлка</p>
       </div>
+
+      {visits && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Посещения сайта сегодня</CardTitle>
+            <Link to="/admin/visits" className="text-sm text-primary hover:underline">Подробнее →</Link>
+          </CardHeader>
+          <CardContent className="flex gap-6 flex-wrap">
+            <div>
+              <p className="text-2xl font-bold">{visits.today}</p>
+              <p className="text-xs text-muted-foreground">просмотров</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{visits.unique_today}</p>
+              <p className="text-xs text-muted-foreground">уникальных</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{visits.week}</p>
+              <p className="text-xs text-muted-foreground">за 7 дней</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {cards.map(({ title, value, icon: Icon, color }) => (

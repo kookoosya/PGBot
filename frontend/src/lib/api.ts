@@ -101,6 +101,17 @@ class ApiClient {
     return this.request<Statistics>("/statistics");
   }
 
+  trackVisit(path: string) {
+    return this.request<void>("/visits/track", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    });
+  }
+
+  getVisitStats() {
+    return this.request<VisitStats>("/visits/stats");
+  }
+
   getCategories() {
     return this.request<{ value: string; label: string }[]>("/categories");
   }
@@ -364,6 +375,17 @@ export interface Statistics {
   top_categories: { category: string; count: number }[];
   top_streets: { street: string; count: number }[];
   monthly_dynamics: { month: string; count: number; resolved: number }[];
+}
+
+export interface VisitStats {
+  today: number;
+  week: number;
+  month: number;
+  total: number;
+  unique_today: number;
+  unique_week: number;
+  top_pages: { path: string; label: string; count: number }[];
+  daily: { day: string; visits: number; unique_visitors: number }[];
 }
 
 export interface AuditLog {

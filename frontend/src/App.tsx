@@ -4,6 +4,7 @@ import { PublicLayout } from "./components/layout/PublicLayout";
 import { useAuth } from "./lib/auth";
 import { useUserAuth } from "./lib/userAuth";
 import { AdminMarketing } from "./pages/AdminMarketing";
+import { AdminVisits } from "./pages/AdminVisits";
 import { AIChat } from "./pages/AIChat";
 import { Analytics } from "./pages/Analytics";
 import { AuditLogs } from "./pages/AuditLogs";
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="departments" element={<Departments />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="marketing" element={<AdminMarketing />} />
+        <Route path="visits" element={<AdminVisits />} />
         <Route path="verification" element={<Verification />} />
         <Route path="classifieds" element={<ClassifiedModeration />} />
         <Route path="audit" element={<AuditLogs />} />

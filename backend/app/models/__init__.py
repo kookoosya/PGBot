@@ -9,6 +9,7 @@ from app.models.audit_log import AuditLog
 from app.models.department import Department
 from app.models.issue import Issue, IssueComment, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
+from app.models.page_visit import PageVisit
 from app.models.user import Role, User
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
     "ServiceAppointment",
     "ClassifiedAd",
     "ProviderBusyBlock",
+    "PageVisit",
 ]

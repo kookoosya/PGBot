@@ -1,4 +1,6 @@
-import { Link, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { api } from "@/lib/api";
 import { FooterNav } from "@/components/FooterNav";
 import { PushkinBanner } from "@/components/PushkinBanner";
 import { BRAND } from "@/lib/branding";
@@ -7,6 +9,11 @@ import { TabNav } from "./TabNav";
 
 export function PublicLayout() {
   const { user } = useUserAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    api.trackVisit(location.pathname).catch(() => {});
+  }, [location.pathname]);
 
   return (
     <div className="pushkin-page min-h-screen flex flex-col">

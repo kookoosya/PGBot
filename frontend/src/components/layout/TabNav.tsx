@@ -6,7 +6,7 @@ const tabs = [
   { to: "/classifieds", label: "Объявления", icon: "📋" },
   { to: "/services", label: "Услуги", icon: "💇" },
   { to: "/ai", label: "ИИ", icon: "🤖" },
-  { to: "/services/cabinet", label: "Мастер", icon: "📅" },
+  { to: "/services/cabinet", label: "Мастерам", icon: "📅" },
 ];
 
 export function TabNav({ variant = "top" }: { variant?: "top" | "bottom" }) {
