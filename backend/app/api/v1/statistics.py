@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import require_roles
+from app.core.deps import require_owner
 from app.database import get_db
 from app.models.enums import IssueStatus, UserRole
 from app.models.issue import Issue
@@ -18,9 +18,7 @@ router = APIRouter()
 @router.get("", response_model=StatisticsResponse)
 async def get_statistics(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(
-        UserRole.MODERATOR, UserRole.ADMINISTRATION, UserRole.SOCIAL_SERVICE, UserRole.SUPER_ADMIN
-    ))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     total = (await db.execute(select(func.count(Issue.id)))).scalar() or 0
     resolved = (await db.execute(

@@ -6,7 +6,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import get_current_user, require_roles
+from app.core.deps import get_current_user, require_owner
 from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
@@ -153,7 +153,7 @@ async def list_providers(
 @router.get("/providers/pending/list")
 async def list_pending_providers(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(ServiceProvider)
@@ -173,7 +173,7 @@ async def list_pending_providers(
 async def approve_provider(
     provider_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(select(ServiceProvider).where(ServiceProvider.id == provider_id))
     p = result.scalar_one_or_none()

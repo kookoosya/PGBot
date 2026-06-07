@@ -17,9 +17,6 @@ export function PublicLayout() {
                 <h1 className="pushkin-brand-title">{BRAND.name}</h1>
               </div>
             </Link>
-            <Link to="/admin/login" className="pushkin-login-btn">
-              Вход для служб
-            </Link>
           </div>
         </div>
         <TabNav variant="top" />
@@ -43,6 +40,9 @@ export function PublicLayout() {
             {BRAND.name} · {BRAND.district} · {new Date().getFullYear()}
           </p>
           <p className="pushkin-footer-note">Сервис «{BRAND.programName}» для жителей посёлка</p>
+          <p className="pushkin-footer-note mt-2 opacity-40">
+            <Link to="/admin/login" className="hover:opacity-80">·</Link>
+          </p>
         </div>
       </footer>
     </div>

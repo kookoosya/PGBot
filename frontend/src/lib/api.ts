@@ -38,6 +38,17 @@ class ApiClient {
     return this.request<User>("/auth/me");
   }
 
+  ownerCheck() {
+    return this.request<{ ok: boolean; username: string }>("/auth/owner-check");
+  }
+
+  changePassword(current_password: string, new_password: string) {
+    return this.request<{ message: string }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    });
+  }
+
   getIssues(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<IssueListResponse>(`/issues${query}`);

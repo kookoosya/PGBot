@@ -22,9 +22,9 @@ import { Settings } from "./pages/Settings";
 import { Verification } from "./pages/Verification";
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isOwner, loading } = useAuth();
   if (loading) return <div className="flex h-screen items-center justify-center">Загрузка...</div>;
-  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!user || !isOwner) return <Navigate to="/admin/login" replace />;
   return <>{children}</>;
 }
 

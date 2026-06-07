@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import get_current_user, require_roles
+from app.core.deps import get_current_user, require_owner
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import UserRole
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("", response_model=list[UserResponse])
 async def list_users(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     role: UserRole | None = None,
@@ -43,7 +43,7 @@ async def list_users(
 async def create_user(
     data: UserCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     role_result = await db.execute(select(Role).where(Role.name == data.role))
     role = role_result.scalar_one_or_none()
@@ -74,7 +74,7 @@ async def update_user(
     user_id: int,
     data: UserUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(select(User).options(selectinload(User.role)).where(User.id == user_id))
     user = result.scalar_one_or_none()

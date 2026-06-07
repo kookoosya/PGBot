@@ -32,30 +32,37 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center pushkin-gradient feather-pattern px-4">
       <Card className="w-full max-w-md pushkin-card bg-card/95">
         <CardHeader className="text-center">
-          <span className="text-4xl">🪶</span>
+          <span className="text-4xl">🔐</span>
           <CardTitle className="text-2xl mt-2">{BRAND.adminTitle}</CardTitle>
-          <p className="text-sm text-muted-foreground">{BRAND.name} · {BRAND.tagline}</p>
+          <p className="text-sm text-muted-foreground">
+            {BRAND.name} · личный доступ владельца
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-sm font-medium">Логин</label>
-              <Input value={username} onChange={(e) => setUsername(e.target.value)} required />
+              <Input value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username" />
             </div>
             <div>
               <label className="text-sm font-medium">Пароль</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Вход..." : "Войти"}
+              {loading ? "Проверка..." : "Войти в панель"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground space-y-2">
-            <p>
-              Нет аккаунта?{" "}
-              <Link to="/register" className="text-primary hover:underline">Зарегистрировать службу</Link>
-            </p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Доступ только для владельца сайта. Чужие аккаунты не принимаются.
+          </p>
+          <div className="mt-4 text-center text-sm text-muted-foreground">
             <Link to="/" className="inline-block hover:underline">← На главную</Link>
           </div>
         </CardContent>

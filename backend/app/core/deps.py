@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.core.security import decode_access_token
 from app.database import get_db
 from app.models.enums import UserRole
@@ -65,6 +66,26 @@ async def get_optional_user(
         return await get_current_user(credentials, db)
     except HTTPException:
         return None
+
+
+def require_owner():
+    """Only the site owner (super_admin + configured username) may access."""
+
+    async def owner_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+        settings = get_settings()
+        if current_user.role.name != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Личная панель только для владельца сайта",
+            )
+        if current_user.username not in settings.owner_usernames:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Личная панель только для владельца сайта",
+            )
+        return current_user
+
+    return owner_checker
 
 
 def require_roles(*roles: UserRole):

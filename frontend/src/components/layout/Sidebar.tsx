@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth";
 import { BRAND } from "@/lib/branding";
 
 const navItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/admin", icon: LayoutDashboard, label: "Обзор" },
   { to: "/admin/issues", icon: ClipboardList, label: "Обращения" },
   { to: "/admin/residents", icon: Users, label: "Жители" },
   { to: "/admin/departments", icon: Building2, label: "Отделы" },

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
-from app.core.deps import get_optional_user, require_roles
+from app.core.deps import get_optional_user, require_owner
 from app.database import get_db
 from app.models.enums import (
     PLACE_CATEGORY_LABELS,
@@ -246,7 +246,7 @@ async def add_complaint(
 @router.post("/sync")
 async def sync_osm(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await sync_places_from_osm(db)
     return result
@@ -255,7 +255,7 @@ async def sync_osm(
 @router.post("/seed")
 async def seed_landmarks(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     count = await seed_pushkin_landmarks(db)
     return {"seeded": count}

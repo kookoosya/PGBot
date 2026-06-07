@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import require_roles
+from app.core.deps import require_owner
 from app.database import get_db
 from app.models.audit_log import AuditLog
 from app.models.enums import NotificationStatus, UserRole
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("/audit-logs")
 async def get_audit_logs(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
 ):
@@ -48,7 +48,7 @@ async def get_audit_logs(
 @router.get("/notifications")
 async def get_notifications(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
     status_filter: NotificationStatus | None = None,
 ):
     query = select(Notification).order_by(Notification.created_at.desc()).limit(100)
@@ -73,7 +73,7 @@ async def get_notifications(
 @router.post("/notifications/process-queue")
 async def process_notification_queue(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     from datetime import datetime, timezone
 

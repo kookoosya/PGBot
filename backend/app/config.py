@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     LOGIN_LOCKOUT_MINUTES: int = 30
     LOGIN_RATE_LIMIT: str = "10/minute"
 
+    # Owner-only admin panel (comma-separated logins; empty = SUPER_ADMIN_USERNAME)
+    OWNER_USERNAME: str = ""
+    SUPER_ADMIN_USERNAME: str = "admin"
+
     # Gemini
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
@@ -73,6 +77,11 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def owner_usernames(self) -> set[str]:
+        raw = self.OWNER_USERNAME.strip() or self.SUPER_ADMIN_USERNAME
+        return {u.strip() for u in raw.split(",") if u.strip()}
 
 
 @lru_cache

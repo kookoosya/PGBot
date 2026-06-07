@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import get_client_ip, require_roles
+from app.core.deps import get_client_ip, require_owner
 from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
@@ -93,7 +93,7 @@ async def register_official(data: OfficialRegisterRequest, db: Annotated[AsyncSe
 @router.get("/pending", response_model=list[VerificationRequestResponse])
 async def list_pending(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(User)
@@ -119,7 +119,7 @@ async def approve_user(
     data: VerificationAction,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    current_user: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(User).options(selectinload(User.role)).where(User.id == user_id)
@@ -157,7 +157,7 @@ async def reject_user(
     data: VerificationAction,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN))],
+    current_user: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(User).options(selectinload(User.role)).where(User.id == user_id)

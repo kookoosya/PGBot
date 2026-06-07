@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.core.deps import get_optional_user, require_roles
+from app.core.deps import get_optional_user, require_owner
 from app.database import get_db
 from app.models.classified import ClassifiedAd
 from app.models.enums import CLASSIFIED_LABELS, ClassifiedCategory, ClassifiedPaymentStatus, UserRole
@@ -119,7 +119,7 @@ async def list_ads(
 @router.get("/pending")
 async def list_pending(
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.MODERATOR, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(ClassifiedAd)
@@ -187,7 +187,7 @@ async def create_ad(
 async def approve_ad(
     ad_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.MODERATOR, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(select(ClassifiedAd).where(ClassifiedAd.id == ad_id))
     ad = result.scalar_one_or_none()
@@ -202,7 +202,7 @@ async def approve_ad(
 async def reject_ad(
     ad_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_roles(UserRole.SUPER_ADMIN, UserRole.MODERATOR, UserRole.ADMINISTRATION))],
+    _: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(select(ClassifiedAd).where(ClassifiedAd.id == ad_id))
     ad = result.scalar_one_or_none()

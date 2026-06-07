@@ -6,7 +6,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import get_client_ip, get_current_user, require_roles
+from app.config import get_settings
+from app.core.deps import get_client_ip, get_current_user, require_owner
 from app.database import get_db
 from app.models.enums import IssueStatus, UserRole
 from app.models.issue import Issue, IssueComment
@@ -45,6 +46,13 @@ async def list_issues(
 
     if current_user.role.name == UserRole.RESIDENT:
         query = query.where(Issue.resident_id == current_user.id)
+    else:
+        settings = get_settings()
+        if (
+            current_user.role.name != UserRole.SUPER_ADMIN
+            or current_user.username not in settings.owner_usernames
+        ):
+            raise HTTPException(status_code=403, detail="Личная панель только для владельца сайта")
 
     if status_filter:
         query = query.where(Issue.status == status_filter)
@@ -93,9 +101,7 @@ async def update_issue(
     data: IssueUpdate,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_roles(
-        UserRole.MODERATOR, UserRole.ADMINISTRATION, UserRole.SOCIAL_SERVICE, UserRole.SUPER_ADMIN
-    ))],
+    current_user: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(Issue)
@@ -123,9 +129,7 @@ async def update_issue_status(
     data: IssueStatusUpdate,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_roles(
-        UserRole.MODERATOR, UserRole.ADMINISTRATION, UserRole.SOCIAL_SERVICE, UserRole.SUPER_ADMIN
-    ))],
+    current_user: Annotated[User, Depends(require_owner())],
 ):
     result = await db.execute(
         select(Issue)

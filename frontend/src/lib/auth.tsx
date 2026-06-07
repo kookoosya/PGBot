@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { api, User } from "./api";
 
+const OWNER_DENIED = "Личная панель только для владельца сайта";
+
 interface AuthContextType {
   user: User | null;
+  isOwner: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -10,45 +13,63 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+async function verifyOwnerAccess(): Promise<void> {
+  const me = await api.getMe();
+  if (me.role !== "super_admin") {
+    throw new Error(OWNER_DENIED);
+  }
+  await api.ownerCheck();
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const clearSession = () => {
+    localStorage.removeItem("token");
+    api.setToken(null);
+    setUser(null);
+    setIsOwner(false);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      api.setToken(token);
-      api.getMe()
-        .then(setUser)
-        .catch(() => {
-          localStorage.removeItem("token");
-          api.setToken(null);
-        })
-        .finally(() => setLoading(false));
-    // only check auth on admin paths
-    } else if (!window.location.pathname.startsWith("/admin")) {
+    if (!token) {
       setLoading(false);
-    } else {
-      setLoading(false);
+      return;
     }
+
+    api.setToken(token);
+    api.getMe()
+      .then(async (me) => {
+        await api.ownerCheck();
+        setUser(me);
+        setIsOwner(true);
+      })
+      .catch(() => clearSession())
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username: string, password: string) => {
     const { access_token } = await api.login(username, password);
     localStorage.setItem("token", access_token);
     api.setToken(access_token);
-    const me = await api.getMe();
-    setUser(me);
+    try {
+      await verifyOwnerAccess();
+      const me = await api.getMe();
+      setUser(me);
+      setIsOwner(true);
+    } catch (err) {
+      clearSession();
+      throw err instanceof Error ? err : new Error(OWNER_DENIED);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    api.setToken(null);
-    setUser(null);
-  };
+  const logout = () => clearSession();
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isOwner, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

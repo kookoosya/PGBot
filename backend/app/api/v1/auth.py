@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
-from app.core.deps import get_client_ip, get_current_user
+from app.core.deps import get_client_ip, get_current_user, require_owner
 from app.core.password_policy import validate_password
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.database import get_db
@@ -142,6 +142,11 @@ async def register(request: Request, data: UserCreate, db: Annotated[AsyncSessio
         phone=user.phone, vk_id=user.vk_id, role=user.role.name,
         department_id=user.department_id, is_active=user.is_active, created_at=user.created_at,
     )
+
+
+@router.get("/owner-check")
+async def owner_check(current_user: Annotated[User, Depends(require_owner())]):
+    return {"ok": True, "username": current_user.username}
 
 
 @router.get("/me", response_model=UserResponse)
