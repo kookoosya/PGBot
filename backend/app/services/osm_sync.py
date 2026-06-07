@@ -183,7 +183,7 @@ async def seed_pushkin_landmarks(db: AsyncSession) -> int:
     count = 0
     for name, cat, lat, lng, addr in landmarks:
         result = await db.execute(select(Place).where(Place.name == name, Place.address == addr))
-        if not result.scalar_one_or_none():
+        if not result.scalars().first():
             db.add(Place(
                 name=name, category=cat, latitude=lat, longitude=lng,
                 address=addr, description=f"Пушкиногорский район — {PLACE_CATEGORY_LABELS.get(cat, '')}",
