@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd, ClassifiedPaymentInfo } from "@/lib/api";
@@ -74,41 +75,41 @@ export function Classifieds() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">📋 Доска объявлений</h2>
-        <p className="text-muted-foreground mt-2">
-          {BRAND.name} — дрова, строительство, вакансии от жителей посёлка
-        </p>
+    <div className="page-section max-w-4xl">
+      <PageHeader
+        icon="📋"
+        title="Доска объявлений"
+        subtitle={`${BRAND.name} — дрова, строительство, вакансии от жителей`}
+      >
+        <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? "✕ Отмена" : "+ Подать объявление"}
+        </button>
         {payment && (
-          <p className="mt-3 text-sm font-semibold text-amber-800 pushkin-card inline-block px-4 py-2">
-            Размещение объявления — <strong>{payment.amount} ₽</strong> (поддержка проекта)
-          </p>
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
+            Размещение — {payment.amount} ₽
+          </span>
         )}
-      </div>
+      </PageHeader>
 
-      <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        <Button size="sm" variant={!filter ? "default" : "outline"} onClick={() => setFilter("")}>
+      <div className="filter-bar">
+        <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>
           Все
-        </Button>
+        </button>
         {categories.map((c) => (
-          <Button
+          <button
             key={c.value}
-            size="sm"
-            variant={filter === c.value ? "default" : "outline"}
+            type="button"
+            className={`filter-chip ${filter === c.value ? "filter-chip-active" : ""}`}
             onClick={() => setFilter(c.value)}
           >
             {ICONS[c.value] || "📋"} {c.label}
-          </Button>
+          </button>
         ))}
-        <Button size="sm" className="ml-auto" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Отмена" : "+ Подать объявление"}
-        </Button>
       </div>
 
       {showForm && payment && (
         <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4">
-          <div className="rounded-xl border-2 border-amber-400/60 bg-amber-50/80 p-4 text-sm">
+          <div className="payment-box">
             <p className="font-bold text-amber-900 mb-2">💳 Оплата размещения — {payment.amount} ₽</p>
             <p className="text-muted-foreground mb-2">{payment.message}</p>
             <p>
@@ -199,14 +200,12 @@ export function Classifieds() {
       )}
 
       {msg && (
-        <p className={`text-center text-sm mb-4 ${msgType === "ok" ? "text-green-700" : "text-destructive"}`}>
-          {msg}
-        </p>
+        <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>
       )}
 
       <div className="space-y-4">
         {ads.map((ad) => (
-          <div key={ad.id} className="pushkin-card p-5">
+          <div key={ad.id} className="pushkin-card-hover p-5">
             <div className="flex items-start gap-3">
               <span className="text-2xl">{ICONS[ad.category] || "📋"}</span>
               <div className="flex-1">

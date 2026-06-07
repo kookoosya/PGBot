@@ -4,28 +4,28 @@
 
 @layer base {
   :root {
-    --background: 42 40% 96%;
-    --foreground: 150 40% 10%;
-    --card: 40 50% 98%;
-    --card-foreground: 150 40% 10%;
-    --primary: 150 45% 18%;
-    --primary-foreground: 42 80% 92%;
-    --secondary: 42 55% 88%;
-    --secondary-foreground: 150 40% 12%;
-    --muted: 42 30% 90%;
-    --muted-foreground: 150 25% 28%;
-    --accent: 42 75% 42%;
-    --accent-foreground: 150 40% 8%;
+    --background: 42 38% 97%;
+    --foreground: 152 42% 12%;
+    --card: 40 55% 99%;
+    --card-foreground: 152 42% 12%;
+    --primary: 152 48% 20%;
+    --primary-foreground: 42 85% 94%;
+    --secondary: 42 52% 90%;
+    --secondary-foreground: 152 40% 14%;
+    --muted: 42 28% 92%;
+    --muted-foreground: 152 18% 32%;
+    --accent: 42 78% 46%;
+    --accent-foreground: 152 48% 10%;
     --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 42 40% 72%;
-    --input: 42 40% 85%;
-    --ring: 42 75% 42%;
-    --radius: 0.75rem;
-    --gold: 42 75% 42%;
-    --forest: 150 45% 18%;
-    --burgundy: 350 55% 28%;
-    --parchment: 42 40% 96%;
+    --border: 42 35% 78%;
+    --input: 42 40% 88%;
+    --ring: 42 78% 46%;
+    --radius: 0.875rem;
+    --gold: 42 78% 46%;
+    --forest: 152 48% 20%;
+    --burgundy: 350 52% 30%;
+    --parchment: 42 38% 97%;
   }
 }
 
@@ -36,76 +36,91 @@
     font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
     background-color: hsl(var(--parchment));
     background-image:
-      radial-gradient(ellipse at 20% 0%, hsl(42 60% 88% / 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, hsl(150 30% 85% / 0.3) 0%, transparent 50%);
+      radial-gradient(ellipse 120% 80% at 50% -20%, hsl(42 55% 88% / 0.65), transparent),
+      radial-gradient(ellipse 80% 50% at 100% 50%, hsl(152 25% 88% / 0.35), transparent);
   }
   h1, h2, h3, h4 {
     font-family: "Playfair Display", Georgia, serif;
     color: hsl(var(--forest));
+    letter-spacing: -0.01em;
   }
 }
 
 @layer components {
   .pushkin-page {
-    background-color: hsl(42 40% 96%);
+    background-color: hsl(42 38% 97%);
   }
 
-  .pushkin-header {
-    background: linear-gradient(180deg, hsl(150 50% 14%) 0%, hsl(150 45% 20%) 100%);
-    border-bottom: 3px solid hsl(42 75% 45%);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  }
-
-  .pushkin-logo-badge {
-    @apply flex h-12 w-12 items-center justify-center text-2xl rounded-full;
-    background: linear-gradient(135deg, hsl(42 70% 50%), hsl(42 80% 65%));
-    border: 2px solid hsl(42 90% 75%);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-
-  .pushkin-login-btn {
-    @apply px-4 py-2 rounded-lg font-semibold transition;
-    background: hsl(42 70% 48%);
-    color: hsl(150 50% 10%);
-    border: 2px solid hsl(42 80% 60%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  .pushkin-login-btn:hover {
-    background: hsl(42 80% 55%);
-  }
-
-  /* === ШАПКА + ВКЛАДКИ — ВСЕГДА НА ВИДУ === */
+  /* === HEADER === */
   .pushkin-header-shell {
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 8px 32px rgba(12, 40, 28, 0.22);
   }
 
+  .pushkin-header {
+    background: linear-gradient(135deg, hsl(152 52% 14%) 0%, hsl(152 44% 22%) 55%, hsl(152 38% 18%) 100%);
+    border-bottom: 3px solid hsl(42 82% 52%);
+  }
+
+  .pushkin-header-row {
+    @apply mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6 md:py-4;
+  }
+
+  .pushkin-brand {
+    @apply flex items-center gap-3 no-underline;
+  }
+
+  .pushkin-brand-eyebrow {
+    @apply text-[0.65rem] uppercase tracking-[0.18em] text-amber-300/90 font-semibold m-0;
+  }
+
+  .pushkin-brand-title {
+    @apply text-xl md:text-2xl font-bold text-amber-50 leading-tight m-0;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .pushkin-logo-badge {
+    @apply flex h-14 w-14 md:h-16 md:w-16 items-center justify-center text-3xl rounded-2xl shrink-0;
+    background: linear-gradient(145deg, hsl(42 75% 52%), hsl(42 85% 68%));
+    border: 3px solid hsl(42 90% 78%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 hsl(42 95% 85%);
+  }
+
+  .pushkin-login-btn {
+    @apply px-4 py-2.5 rounded-xl text-sm font-bold transition shrink-0;
+    background: linear-gradient(180deg, hsl(42 78% 54%), hsl(42 72% 46%));
+    color: hsl(152 50% 10%);
+    border: 2px solid hsl(42 85% 62%);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+  .pushkin-login-btn:hover {
+    background: linear-gradient(180deg, hsl(42 85% 58%), hsl(42 78% 50%));
+    transform: translateY(-1px);
+  }
+
+  /* === TABS === */
   .pushkin-main {
-    padding-bottom: 5.5rem;
+    padding-bottom: 5.75rem;
   }
-
   @media (min-width: 768px) {
-    .pushkin-main {
-      padding-bottom: 1.5rem;
-    }
+    .pushkin-main { padding-bottom: 2rem; }
   }
 
-  .pushkin-footer-spacer {
-    padding-bottom: 5rem;
-  }
-
+  .pushkin-footer-spacer { padding-bottom: 5.5rem; }
   @media (min-width: 768px) {
-    .pushkin-footer-spacer {
-      padding-bottom: 0;
-    }
+    .pushkin-footer-spacer { padding-bottom: 0; }
   }
 
   .pushkin-tab-bar-top {
-    background: linear-gradient(180deg, hsl(42 72% 58%) 0%, hsl(42 68% 50%) 100%);
-    border-top: 2px solid hsl(42 85% 70%);
-    border-bottom: 3px solid hsl(150 45% 18%);
+    background: linear-gradient(180deg, hsl(42 70% 62%) 0%, hsl(42 65% 54%) 100%);
+    border-bottom: 4px solid hsl(152 48% 18%);
+    box-shadow: inset 0 1px 0 hsl(42 85% 75%);
+  }
+
+  .pushkin-tab-inner {
+    @apply mx-auto max-w-6xl;
   }
 
   .pushkin-tab-bar-bottom {
@@ -114,157 +129,338 @@
     left: 0;
     right: 0;
     z-index: 110;
-    background: linear-gradient(0deg, hsl(150 48% 12%) 0%, hsl(150 42% 20%) 100%);
-    border-top: 4px solid hsl(42 78% 48%);
-    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(0deg, hsl(152 50% 11%) 0%, hsl(152 42% 18%) 100%);
+    border-top: 4px solid hsl(42 78% 50%);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-
   @media (min-width: 768px) {
-    .pushkin-tab-bar-bottom {
-      display: none;
-    }
+    .pushkin-tab-bar-bottom { display: none; }
   }
 
   .pushkin-tab-scroll {
     display: flex;
     gap: 0.5rem;
     overflow-x: auto;
-    padding: 0.6rem 0.75rem;
-    -ms-overflow-style: none;
+    padding: 0.65rem 0.85rem;
     scrollbar-width: none;
     justify-content: flex-start;
   }
-
   @media (min-width: 768px) {
     .pushkin-tab-scroll {
       justify-content: center;
-      gap: 0.65rem;
-      padding: 0.75rem 1rem;
+      gap: 0.6rem;
+      padding: 0.85rem 1rem;
+      flex-wrap: wrap;
+      overflow: visible;
     }
   }
-
-  .pushkin-tab-scroll::-webkit-scrollbar {
-    display: none;
-  }
+  .pushkin-tab-scroll::-webkit-scrollbar { display: none; }
 
   .pushkin-tab {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
     flex-shrink: 0;
-    min-width: 5.25rem;
-    min-height: 3.75rem;
-    padding: 0.45rem 0.65rem;
-    border-radius: 0.85rem;
-    border: 2px solid hsl(150 40% 22%);
-    background: hsl(42 55% 94%);
-    color: hsl(150 45% 14%);
+    min-height: 2.75rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 9999px;
+    border: 2px solid hsl(152 35% 28%);
+    background: hsl(42 50% 96%);
+    color: hsl(152 45% 14%);
     text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    font-weight: 700;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  @media (min-width: 768px) {
+    .pushkin-tab {
+      min-height: 3rem;
+      padding: 0.55rem 1.15rem;
+    }
   }
 
   .pushkin-tab-bar-bottom .pushkin-tab {
-    min-width: 4.75rem;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 4.25rem;
     min-height: 3.5rem;
-    background: hsl(150 32% 26%);
-    border-color: hsl(42 60% 45%);
-    color: hsl(42 75% 88%);
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.85rem;
+    background: hsl(152 30% 24%);
+    border-color: hsl(42 55% 42%);
+    color: hsl(42 80% 90%);
   }
 
-  .pushkin-tab-icon {
-    font-size: 1.35rem;
-    line-height: 1;
-  }
+  .pushkin-tab-icon { font-size: 1.15rem; line-height: 1; }
+  .pushkin-tab-bar-bottom .pushkin-tab-icon { font-size: 1.3rem; }
 
   .pushkin-tab-label {
-    margin-top: 0.2rem;
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
-    text-align: center;
     white-space: nowrap;
   }
-
-  @media (min-width: 768px) {
-    .pushkin-tab {
-      min-width: 6.5rem;
-      min-height: 4rem;
-    }
-
-    .pushkin-tab-label {
-      font-size: 0.8rem;
-    }
-  }
+  .pushkin-tab-bar-bottom .pushkin-tab-label { font-size: 0.68rem; }
 
   .pushkin-tab:hover {
     transform: translateY(-2px);
-    border-color: hsl(42 85% 40%);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    border-color: hsl(42 80% 42%);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
   }
 
   .pushkin-tab-active {
-    background: linear-gradient(135deg, hsl(150 45% 18%), hsl(150 38% 28%)) !important;
+    background: linear-gradient(135deg, hsl(152 48% 18%), hsl(152 40% 26%)) !important;
     border-color: hsl(42 85% 55%) !important;
-    color: hsl(42 85% 90%) !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
-    transform: translateY(-1px);
+    color: hsl(42 90% 92%) !important;
+    box-shadow: 0 4px 16px rgba(12, 40, 28, 0.3) !important;
   }
 
   .pushkin-tab-bar-bottom .pushkin-tab-active {
-    background: linear-gradient(135deg, hsl(42 72% 48%), hsl(42 78% 58%)) !important;
-    color: hsl(150 50% 10%) !important;
-    border-color: hsl(42 90% 70%) !important;
+    background: linear-gradient(135deg, hsl(42 72% 48%), hsl(42 78% 56%)) !important;
+    color: hsl(152 50% 10%) !important;
+    border-color: hsl(42 90% 68%) !important;
   }
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* === PAGE SECTIONS === */
+  .page-section {
+    @apply mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10;
   }
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
+  .page-header {
+    @apply mb-8 rounded-2xl p-5 md:p-7;
+    background: linear-gradient(135deg, hsl(152 42% 20%), hsl(152 36% 28%));
+    border: 2px solid hsl(42 70% 48%);
+    box-shadow: 0 8px 28px rgba(12, 40, 28, 0.15);
+    color: hsl(42 85% 94%);
+  }
+
+  .page-header-inner {
+    @apply flex items-center gap-4;
+  }
+
+  .page-header-icon {
+    @apply flex h-14 w-14 items-center justify-center text-3xl rounded-2xl shrink-0;
+    background: hsl(42 70% 52% / 0.25);
+    border: 2px solid hsl(42 75% 55% / 0.5);
+  }
+
+  .page-header-title {
+    @apply text-2xl md:text-3xl font-bold m-0 text-amber-50;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .page-header-subtitle {
+    @apply mt-1 text-sm md:text-base text-amber-100/85 m-0 font-serif italic;
+  }
+
+  .page-header-actions {
+    @apply mt-4 flex flex-wrap gap-2;
+  }
+
+  /* === QUICK NAV === */
+  .quick-nav-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto;
+  }
+
+  .quick-nav-card {
+    @apply flex flex-col items-center text-center p-4 md:p-5 rounded-2xl no-underline transition;
+    background: hsl(40 55% 99%);
+    border: 2px solid hsl(42 55% 72%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    color: hsl(152 42% 14%);
+  }
+  .quick-nav-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(42 75% 48%);
+    box-shadow: 0 10px 24px rgba(12, 40, 28, 0.12);
+  }
+
+  .quick-nav-icon { @apply text-3xl mb-2; }
+  .quick-nav-label { @apply font-bold text-base; font-family: "Playfair Display", Georgia, serif; }
+  .quick-nav-desc { @apply text-xs text-muted-foreground mt-1; }
+
+  /* === CHIPS / FILTERS === */
+  .filter-bar {
+    @apply flex flex-wrap gap-2 justify-center mb-6;
+  }
+
+  .filter-chip {
+    @apply px-4 py-2 rounded-full text-sm font-semibold border-2 transition cursor-pointer;
+    background: hsl(40 55% 99%);
+    border-color: hsl(42 45% 78%);
+    color: hsl(152 35% 22%);
+  }
+  .filter-chip:hover {
+    border-color: hsl(42 70% 48%);
+    background: hsl(42 50% 94%);
+  }
+  .filter-chip-active {
+    background: linear-gradient(135deg, hsl(152 45% 22%), hsl(152 38% 30%)) !important;
+    border-color: hsl(42 75% 50%) !important;
+    color: hsl(42 90% 92%) !important;
+  }
+
+  /* === CARDS & HERO === */
   .pushkin-gradient {
-    background: linear-gradient(135deg, hsl(150 45% 16%) 0%, hsl(150 35% 26%) 40%, hsl(350 40% 28%) 100%);
+    background: linear-gradient(145deg, hsl(152 48% 14%) 0%, hsl(152 38% 22%) 45%, hsl(350 38% 26%) 100%);
   }
 
   .pushkin-card {
-    @apply rounded-2xl shadow-md;
-    background: hsl(40 50% 99%);
-    border: 2px solid hsl(42 60% 65%);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 hsl(42 80% 95%);
+    @apply rounded-2xl;
+    background: hsl(40 55% 99%);
+    border: 2px solid hsl(42 50% 78%);
+    box-shadow: 0 6px 20px rgba(12, 40, 28, 0.07), inset 0 1px 0 hsl(42 90% 98%);
+  }
+
+  .pushkin-card-hover {
+    @apply pushkin-card transition;
+  }
+  .pushkin-card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(12, 40, 28, 0.12);
+    border-color: hsl(42 65% 58%);
   }
 
   .pushkin-quote-banner {
-    background: linear-gradient(90deg, hsl(42 60% 88%) 0%, hsl(40 50% 94%) 50%, hsl(42 60% 88%) 100%);
-    border-bottom: 2px solid hsl(42 70% 50%);
-    border-top: 1px solid hsl(42 50% 80%);
-    color: hsl(350 45% 25%);
+    background: linear-gradient(90deg, hsl(42 58% 90%) 0%, hsl(40 48% 96%) 50%, hsl(42 58% 90%) 100%);
+    border-bottom: 2px solid hsl(42 68% 52%);
+    color: hsl(350 42% 28%);
     font-weight: 500;
+    @apply px-4 py-3;
   }
 
   .pushkin-footer {
-    background: linear-gradient(180deg, hsl(42 50% 88%) 0%, hsl(42 45% 82%) 100%);
-    border-top: 3px solid hsl(42 70% 48%);
+    background: linear-gradient(180deg, hsl(42 48% 90%) 0%, hsl(42 42% 84%) 100%);
+    border-top: 4px solid hsl(42 68% 48%);
+  }
+
+  .pushkin-footer-inner {
+    @apply mx-auto max-w-6xl px-4 py-10 text-center;
   }
 
   .pushkin-quote-footer {
-    @apply font-serif italic text-lg;
-    color: hsl(350 45% 28%);
+    @apply font-serif italic text-lg md:text-xl;
+    color: hsl(350 42% 28%);
+  }
+
+  .pushkin-footer-line {
+    @apply mt-3 text-sm font-semibold text-amber-950;
+  }
+
+  .pushkin-footer-note {
+    @apply mt-1 text-xs text-amber-900/65;
   }
 
   .feather-pattern {
-    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b8860b' fill-opacity='0.06'%3E%3Cpath d='M40 8c-3 10-12 18-22 20 10 3 18 11 22 22 3-10 11-18 22-20-10-2-18-10-22-20z'/%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b8860b' fill-opacity='0.07'%3E%3Cpath d='M40 8c-3 10-12 18-22 20 10 3 18 11 22 22 3-10 11-18 22-20-10-2-18-10-22-20z'/%3E%3C/g%3E%3C/svg%3E");
   }
+
+  .hero-section {
+    @apply relative overflow-hidden px-4 py-16 md:py-24 text-white;
+  }
+
+  .hero-content {
+    @apply relative mx-auto max-w-4xl text-center;
+  }
+
+  .hero-quote {
+    @apply mb-4 text-amber-300 font-serif italic text-lg md:text-xl;
+  }
+
+  .hero-title {
+    @apply text-4xl md:text-6xl font-bold leading-tight text-amber-50 m-0;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+
+  .hero-tagline {
+    @apply mt-3 text-xl md:text-2xl text-amber-300 font-serif;
+  }
+
+  .hero-desc {
+    @apply mx-auto mt-6 max-w-2xl text-base md:text-lg text-white/85 leading-relaxed;
+  }
+
+  .hero-actions {
+    @apply mt-10 flex flex-wrap justify-center gap-3 md:gap-4;
+  }
+
+  .btn-hero-primary {
+    @apply inline-flex items-center gap-2 px-6 py-3 md:px-8 md:py-3.5 rounded-xl font-bold text-base transition;
+    background: linear-gradient(180deg, hsl(42 80% 56%), hsl(42 72% 46%));
+    color: hsl(152 50% 10%);
+    border: 2px solid hsl(42 88% 65%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .btn-hero-primary:hover {
+    background: linear-gradient(180deg, hsl(42 88% 60%), hsl(42 78% 50%));
+    transform: translateY(-2px);
+  }
+
+  .btn-hero-secondary {
+    @apply inline-flex items-center gap-2 px-6 py-3 md:px-8 md:py-3.5 rounded-xl font-semibold text-base transition;
+    background: hsl(152 40% 18% / 0.5);
+    color: hsl(42 90% 92%);
+    border: 2px solid hsl(42 60% 55% / 0.6);
+    backdrop-filter: blur(4px);
+  }
+  .btn-hero-secondary:hover {
+    background: hsl(152 40% 22% / 0.7);
+    border-color: hsl(42 75% 55%);
+  }
+
+  .section-alt {
+    background: hsl(42 35% 93%);
+    border-top: 1px solid hsl(42 40% 85%);
+    border-bottom: 1px solid hsl(42 40% 85%);
+  }
+
+  .section-title {
+    @apply text-center text-2xl md:text-3xl font-bold mb-10;
+  }
+
+  .feature-grid {
+    @apply grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .feature-card {
+    @apply pushkin-card-hover p-5 md:p-6 text-center;
+  }
+
+  .feature-icon { @apply text-4xl mb-3; }
+  .feature-title { @apply text-lg font-bold mb-2; }
+  .feature-desc { @apply text-sm text-muted-foreground leading-relaxed; }
 
   .chat-bubble-user {
     @apply rounded-2xl rounded-br-sm px-4 py-3;
-    background: hsl(150 45% 22%);
-    color: hsl(42 80% 92%);
+    background: linear-gradient(135deg, hsl(152 45% 22%), hsl(152 40% 28%));
+    color: hsl(42 85% 94%);
   }
   .chat-bubble-ai {
-    @apply rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm;
-    background: hsl(40 50% 99%);
-    border: 2px solid hsl(42 50% 75%);
+    @apply rounded-2xl rounded-bl-sm px-4 py-3;
+    background: hsl(40 55% 99%);
+    border: 2px solid hsl(42 48% 78%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .alert-success {
+    @apply rounded-xl px-4 py-3 text-sm text-center font-medium;
+    background: hsl(152 40% 92%);
+    color: hsl(152 50% 18%);
+    border: 2px solid hsl(152 35% 75%);
+  }
+
+  .alert-error {
+    @apply rounded-xl px-4 py-3 text-sm text-center font-medium;
+    background: hsl(0 60% 96%);
+    color: hsl(0 65% 35%);
+    border: 2px solid hsl(0 50% 85%);
+  }
+
+  .payment-box {
+    @apply rounded-xl p-4 md:p-5 text-sm;
+    background: linear-gradient(135deg, hsl(42 55% 94%), hsl(42 48% 90%));
+    border: 2px solid hsl(42 65% 58%);
   }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, ServiceProvider, TimeSlot } from "@/lib/api";
 
@@ -72,30 +73,28 @@ export function Services() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">💇 Услуги и мастера</h2>
-        <p className="text-muted-foreground mt-2 font-serif italic">
-          Маникюр, стрижки, брови — запись онлайн с расписанием
-        </p>
-        <div className="flex gap-4 justify-center mt-2 text-sm">
-          <Link to="/services/register" className="text-primary hover:underline">Стать мастером →</Link>
-          <Link to="/services/cabinet" className="text-primary hover:underline">Кабинет мастера →</Link>
-        </div>
-      </div>
+    <div className="page-section max-w-5xl">
+      <PageHeader
+        icon="💇"
+        title="Услуги и мастера"
+        subtitle="Маникюр, стрижки, брови — запись онлайн по расписанию"
+      >
+        <Link to="/services/register" className="btn-hero-secondary text-sm">Стать мастером</Link>
+        <Link to="/services/cabinet" className="btn-hero-secondary text-sm">Кабинет мастера</Link>
+      </PageHeader>
 
-      <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        <Button size="sm" variant={!filter ? "default" : "outline"} onClick={() => setFilter("")}>Все</Button>
+      <div className="filter-bar">
+        <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>Все</button>
         {types.map((t) => (
-          <Button key={t.value} size="sm" variant={filter === t.value ? "default" : "outline"} onClick={() => setFilter(t.value)}>
+          <button key={t.value} type="button" className={`filter-chip ${filter === t.value ? "filter-chip-active" : ""}`} onClick={() => setFilter(t.value)}>
             {t.label}
-          </Button>
+          </button>
         ))}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {providers.map((p) => (
-          <div key={p.id} className="pushkin-card p-5">
+          <div key={p.id} className="pushkin-card-hover p-5">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-bold text-lg">{p.full_name}</h3>

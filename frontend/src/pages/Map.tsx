@@ -105,7 +105,19 @@ export function MapPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row" style={{ height: "calc(100vh - 120px)" }}>
+    <div>
+      <div className="page-section pb-4">
+        <div className="page-header mb-0">
+          <div className="page-header-inner">
+            <span className="page-header-icon">🗺</span>
+            <div>
+              <h1 className="page-header-title">Карта посёлка</h1>
+              <p className="page-header-subtitle">Магазины, аптеки, службы — отзывы и жалобы жителей</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div className="flex flex-col lg:flex-row map-layout">
       <div className="flex-1 relative min-h-[400px]">
         <MapContainer center={CENTER} zoom={14} className="h-full w-full z-0">
           <TileLayer
@@ -244,6 +256,7 @@ export function MapPage() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

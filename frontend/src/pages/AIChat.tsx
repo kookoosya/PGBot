@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, ChatMessage, PaymentInfo, UsageInfo } from "@/lib/api";
 
@@ -53,21 +54,19 @@ export function AIChat() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">🤖 ИИ-помощник</h2>
-        <p className="text-muted-foreground mt-2 font-serif italic">
-          «Счастье то, что дух просветляет...»
-        </p>
+    <div className="page-section max-w-3xl">
+      <PageHeader
+        icon="🤖"
+        title="ИИ-помощник"
+        subtitle="«Счастье то, что дух просветляет...»"
+      >
         {usage && (
-          <p className="mt-3 text-sm">
-            Сегодня: <strong>{usage.used}</strong> / {usage.daily_limit} сообщений
-            {usage.remaining > 0 && (
-              <span className="text-green-700"> · осталось {usage.remaining}</span>
-            )}
-          </p>
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
+            Сегодня: {usage.used} / {usage.daily_limit}
+            {usage.remaining > 0 && ` · осталось ${usage.remaining}`}
+          </span>
         )}
-      </div>
+      </PageHeader>
 
       <div className="pushkin-card flex flex-col" style={{ height: "calc(100vh - 320px)", minHeight: 400 }}>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

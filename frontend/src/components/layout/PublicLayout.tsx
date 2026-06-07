@@ -8,18 +8,16 @@ export function PublicLayout() {
     <div className="pushkin-page min-h-screen flex flex-col">
       <header className="pushkin-header-shell">
         <div className="pushkin-header">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <Link to="/" className="flex items-center gap-3 group">
+          <div className="pushkin-header-row">
+            <Link to="/" className="pushkin-brand">
               <div className="pushkin-logo-badge">🪶</div>
               <div>
-                <h1 className="text-lg font-bold text-amber-100 leading-tight tracking-wide">
-                  {BRAND.name}
-                </h1>
-                <p className="text-xs text-amber-300 font-medium">{BRAND.tagline}</p>
+                <p className="pushkin-brand-eyebrow">Портал посёлка</p>
+                <h1 className="pushkin-brand-title">{BRAND.name}</h1>
               </div>
             </Link>
-            <Link to="/admin/login" className="pushkin-login-btn text-sm">
-              Вход
+            <Link to="/admin/login" className="pushkin-login-btn">
+              Вход для служб
             </Link>
           </div>
         </div>
@@ -28,21 +26,21 @@ export function PublicLayout() {
 
       <PushkinBanner />
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-3 md:px-6 py-4 pushkin-main">
+      <main className="flex-1 w-full pushkin-main">
         <Outlet />
       </main>
 
       <TabNav variant="bottom" />
 
       <footer className="pushkin-footer pushkin-footer-spacer">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-center">
+        <div className="pushkin-footer-inner">
           <p className="pushkin-quote-footer">
             «Здесь Пушкин родился, здесь он и умер...»
           </p>
-          <p className="mt-3 text-sm font-medium text-amber-950">
+          <p className="pushkin-footer-line">
             {BRAND.name} · {BRAND.district} · {new Date().getFullYear()}
           </p>
-          <p className="mt-1 text-xs text-amber-900/70">Сервис «{BRAND.programName}» для жителей посёлка</p>
+          <p className="pushkin-footer-note">Сервис «{BRAND.programName}» для жителей посёлка</p>
         </div>
       </footer>
     </div>
