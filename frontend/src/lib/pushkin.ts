@@ -17,42 +17,42 @@ export const PUSHKIN_VERSES = [
 
 export const SITE_URL = "https://pushkiny.gmxreply.com";
 
-/** Фото Пушкиногорья — Wikimedia Commons, не стоковые карточки */
+/** Фото Пушкиногорья — локальные копии с Wikimedia Commons */
 export const VILLAGE_PHOTOS = [
   {
     title: "Михайловское",
     caption: "Усадьба музея-заповедника А.С. Пушкина",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg/960px-PushkinGory_asv2018-07_img13_Mikhailovskoe.jpg",
-    credit: "Wikimedia / Alexey Komarov",
+    url: "/images/gallery/mikhailovskoe.jpg",
+    credit: "Wikimedia / Alexey Komarov, 2018",
   },
   {
     title: "Святогорский монастырь",
     caption: "Пушкиногорская лавра над рекой Сороть",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Svyatogorsky_Monastery_05.jpg/960px-Svyatogorsky_Monastery_05.jpg",
-    credit: "Wikimedia Commons",
+    url: "/images/gallery/monastery.jpg",
+    credit: "Wikimedia / Alexey Komarov, 2018",
   },
   {
     title: "Центр посёлка",
-    caption: "Пушкинские Горы — вид с высоты",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/PushkinGory_asv2018-07_img01.jpg/960px-PushkinGory_asv2018-07_img01.jpg",
-    credit: "Wikimedia / Alexey Komarov",
+    caption: "Пушкинские Горы",
+    url: "/images/gallery/village.jpg",
+    credit: "Wikimedia / Alexey Komarov, 2018",
   },
   {
     title: "Памятник Пушкину",
     caption: "У Святогорского монастыря",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Pushkin_monument_in_Pushkinskiye_Gory.jpg/960px-Pushkin_monument_in_Pushkinskiye_Gory.jpg",
+    url: "/images/gallery/monument.jpg",
     credit: "Wikimedia Commons",
   },
   {
     title: "Тригорское",
-    caption: "Усадьба в заповеднике",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Trigorskoe.jpg/960px-Trigorskoe.jpg",
+    caption: "Дом Осиповых-Вульф, усадьба в заповеднике",
+    url: "/images/gallery/trigorskoe.jpg",
     credit: "Wikimedia Commons",
   },
   {
     title: "Петровское",
     caption: "Усадьба Ганнибалов у озера",
-    url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Petrovskoe_Pushkin_hills.jpg/960px-Petrovskoe_Pushkin_hills.jpg",
+    url: "/images/gallery/petrovskoe.jpg",
     credit: "Wikimedia Commons",
   },
 ];
