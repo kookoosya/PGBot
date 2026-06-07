@@ -1,8 +1,10 @@
 # Домен портала посёлка
 
-**Основной адрес:** https://pushkiny.gmxreply.com  
-**Короткий:** https://pg.gmxreply.com  
+**Основной адрес:** https://pushkiny.gmxreply.com ✅  
+**Короткий:** https://pg.gmxreply.com ✅  
 **Резерв:** http://192.210.213.135:8088
+
+HTTPS включён (Let's Encrypt, автообновление).
 
 Поддомен на `gmxreply.com` (Porkbun) — **без паспорта**, основной сайт GMX на Render не трогаем.
 
