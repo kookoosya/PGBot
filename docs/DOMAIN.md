@@ -1,13 +1,51 @@
 # Как привязать домен к сайту
 
-Сайт сейчас: **http://192.210.213.135:8088**  
-После настройки домена будет: **https://ваш-домен.ru**
+Сайт сейчас: **http://192.210.213.135:8088**
+
+## Если домен уже занят другим сайтом (как gmxreply.com на Render)
+
+**Не трогайте основной домен** — `www.gmxreply.com` остаётся на Render (проект GMX).
+
+Для «Народного Контроля» используйте **поддомен**, например:
+- `nk.gmxreply.com` — рекомендуемый
+- `pushkiny.gmxreply.com` — альтернатива
+
+На VPS nginx уже подготовлен для этих имён (прокси на порт 8088).
 
 BetMasterAI на том же VPS работает отдельно (порт 80) — конфликта не будет.
 
+### DNS для gmxreply.com (домен на Render)
+
+1. Откройте, **где управляется DNS** домена `gmxreply.com`:
+   - панель регистратора (reg.ru, nic.ru и т.д.), или
+   - Cloudflare, если домен там.
+2. **Не меняйте** записи `www` / `@`, которые ведут на Render.
+3. Добавьте **новую** A-запись:
+
+| Тип | Имя (Host) | Значение |
+|-----|------------|----------|
+| A | `nk` | `192.210.213.135` |
+
+Через 10–60 минут откроется: **http://nk.gmxreply.com**
+
+4. HTTPS на VPS:
+```bash
+ssh root@192.210.213.135
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d nk.gmxreply.com
+```
+
+5. В `/opt/pgbot/.env` добавьте в CORS:
+```
+CORS_ORIGINS=https://nk.gmxreply.com,http://192.210.213.135:8088
+```
+```bash
+cd /opt/pgbot && docker compose -f docker-compose.prod.yml restart backend
+```
+
 ---
 
-## Шаг 1. Купить домен
+## Шаг 1. Купить домен (если нужен отдельный)
 
 Регистраторы: [reg.ru](https://reg.ru), [nic.ru](https://nic.ru), [timeweb](https://timeweb.com).
 
