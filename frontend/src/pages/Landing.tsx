@@ -1,7 +1,18 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { VillageGallery } from "@/components/VillageGallery";
 
 const features = [
+  {
+    icon: "📋",
+    title: "Объявления",
+    desc: "Дрова, покос травы, доставка — жители размещают объявления сами",
+  },
+  {
+    icon: "💇",
+    title: "Услуги мастеров",
+    desc: "Маникюр, стрижки — мастера сами ведут расписание и отмечают занятость",
+  },
   {
     icon: "🗺",
     title: "Карта поселка",
@@ -99,13 +110,16 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-6 py-20 text-center">
+      <VillageGallery />
+
+      <section className="mx-auto max-w-4xl px-6 py-12 text-center">
         <div className="pushkin-card p-10">
           <span className="text-5xl">🪶</span>
-          <blockquote className="mt-6 text-xl font-serif italic text-muted-foreground">
-            «Я памятник себе воздвиг нерукотворный...»
+          <blockquote className="mt-6 text-xl font-serif italic text-foreground/80">
+            «Я памятник себе воздвиг нерукотворный,<br />
+            К ногам его железный век не наступит...»
           </blockquote>
-          <p className="mt-4 text-sm">
+          <p className="mt-4 text-sm text-muted-foreground">
             А мы вместе возводим порядок и уют в нашем поселке
           </p>
         </div>

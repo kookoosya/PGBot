@@ -186,6 +186,43 @@ class ApiClient {
     return this.request(`/services/providers/${id}/approve`, { method: "POST" });
   }
 
+  getMyProviderProfile() {
+    return this.request<ProviderDetail>("/services/my/profile");
+  }
+
+  getMyAppointments() {
+    return this.request<AppointmentItem[]>("/services/my/appointments");
+  }
+
+  getMyBusyBlocks() {
+    return this.request<BusyBlock[]>("/services/my/busy");
+  }
+
+  addBusyBlock(data: { block_date: string; start_time: string; end_time: string; reason?: string }) {
+    return this.request("/services/my/busy", { method: "POST", body: JSON.stringify(data) });
+  }
+
+  deleteBusyBlock(id: number) {
+    return this.request(`/services/my/busy/${id}`, { method: "DELETE" });
+  }
+
+  updateMySchedule(schedule: { day_of_week: number; start_time: string; end_time: string; is_working: boolean }[]) {
+    return this.request("/services/my/schedule", { method: "PATCH", body: JSON.stringify({ schedule }) });
+  }
+
+  getClassifiedCategories() {
+    return this.request<{ value: string; label: string }[]>("/classifieds/categories");
+  }
+
+  getClassifieds(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<{ items: ClassifiedAd[]; total: number }>(`/classifieds${q}`);
+  }
+
+  createClassified(data: Record<string, unknown>) {
+    return this.request("/classifieds", { method: "POST", body: JSON.stringify(data) });
+  }
+
   addReview(placeId: number, data: { rating: number; text?: string; author_name?: string }) {
     return this.request(`/places/${placeId}/reviews`, { method: "POST", body: JSON.stringify(data) });
   }
@@ -367,6 +404,44 @@ export interface SlotsResult {
   date: string;
   working_hours: string | null;
   slots: TimeSlot[];
+}
+
+export interface ProviderDetail extends ServiceProvider {
+  schedule: { day_of_week: number; day_label: string; start_time: string; end_time: string; is_working: boolean }[];
+  verification_status: string;
+}
+
+export interface AppointmentItem {
+  id: number;
+  provider_name: string;
+  service_name: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  client_name: string;
+}
+
+export interface BusyBlock {
+  id: number;
+  block_date: string;
+  start_time: string;
+  end_time: string;
+  reason: string | null;
+}
+
+export interface ClassifiedAd {
+  id: number;
+  category: string;
+  category_label: string;
+  title: string;
+  description: string;
+  price: number | null;
+  price_unit: string | null;
+  phone: string;
+  author_name: string;
+  address: string | null;
+  created_at: string;
 }
 
 export interface PendingProvider {

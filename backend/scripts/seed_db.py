@@ -82,6 +82,9 @@ async def seed() -> None:
         svc_count = await seed_service_providers(db)
         print(f"Seeded {svc_count} service providers")
 
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "cleanup_demo_providers.py")], check=False)
+
         await db.commit()
         print("Database seeded successfully")
 

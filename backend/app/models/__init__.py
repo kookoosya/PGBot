@@ -1,6 +1,8 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.ai_usage import AIUsage
 from app.models.place import Place, PlaceComplaint, PlaceReview
+from app.models.classified import ClassifiedAd
+from app.models.provider_busy import ProviderBusyBlock
 from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
 from app.models.audit_log import AuditLog
 from app.models.department import Department
@@ -27,4 +29,6 @@ __all__ = [
     "ProviderService",
     "ProviderSchedule",
     "ServiceAppointment",
+    "ClassifiedAd",
+    "ProviderBusyBlock",
 ]

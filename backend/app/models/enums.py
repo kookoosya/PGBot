@@ -21,6 +21,33 @@ class ServiceType(str, enum.Enum):
     OTHER = "other"
 
 
+class ClassifiedCategory(str, enum.Enum):
+    FIREWOOD = "firewood"
+    GRASS_MOWING = "grass_mowing"
+    DELIVERY = "delivery"
+    HANDYMAN = "handyman"
+    SNOW_REMOVAL = "snow_removal"
+    TUTORING = "tutoring"
+    RENT = "rent"
+    SALE = "sale"
+    JOB = "job"
+    OTHER = "other"
+
+
+CLASSIFIED_LABELS = {
+    ClassifiedCategory.FIREWOOD: "Дрова / колка",
+    ClassifiedCategory.GRASS_MOWING: "Покос травы",
+    ClassifiedCategory.DELIVERY: "Доставка",
+    ClassifiedCategory.HANDYMAN: "Разные работы",
+    ClassifiedCategory.SNOW_REMOVAL: "Уборка снега",
+    ClassifiedCategory.TUTORING: "Услуги / обучение",
+    ClassifiedCategory.RENT: "Аренда",
+    ClassifiedCategory.SALE: "Продажа",
+    ClassifiedCategory.JOB: "Работа",
+    ClassifiedCategory.OTHER: "Другое",
+}
+
+
 SERVICE_TYPE_LABELS = {
     ServiceType.MANICURE: "Маникюр",
     ServiceType.PEDICURE: "Педикюр",

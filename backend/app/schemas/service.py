@@ -108,3 +108,22 @@ class AppointmentResponse(BaseModel):
 
 class UpdateScheduleRequest(BaseModel):
     schedule: list[ScheduleItemInput]
+
+
+class BusyBlockCreate(BaseModel):
+    block_date: date
+    start_time: str
+    end_time: str
+    reason: str | None = None
+    note: str | None = None
+
+
+class BusyBlockResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    block_date: date
+    start_time: str
+    end_time: str
+    reason: str | None
+    note: str | None

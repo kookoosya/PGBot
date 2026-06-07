@@ -12,6 +12,8 @@ import { Landing } from "./pages/Landing";
 import { MapPage } from "./pages/Map";
 import { Services } from "./pages/Services";
 import { ServiceRegister } from "./pages/ServiceRegister";
+import { Classifieds } from "./pages/Classifieds";
+import { ProviderCabinet } from "./pages/ProviderCabinet";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Residents } from "./pages/Residents";
@@ -34,6 +36,8 @@ export default function App() {
         <Route path="map" element={<MapPage />} />
         <Route path="services" element={<Services />} />
         <Route path="services/register" element={<ServiceRegister />} />
+        <Route path="services/cabinet" element={<ProviderCabinet />} />
+        <Route path="classifieds" element={<Classifieds />} />
         <Route path="register" element={<Register />} />
       </Route>
 

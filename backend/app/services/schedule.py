@@ -3,7 +3,9 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload
 
+from app.models.provider_busy import ProviderBusyBlock
 from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
 
 DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
@@ -63,6 +65,15 @@ async def get_provider_slots(
         for a in provider.appointments
         if a.appointment_date == target_date and a.status in ("booked", "confirmed")
     ]
+
+    busy_result = await db.execute(
+        select(ProviderBusyBlock).where(
+            ProviderBusyBlock.provider_id == provider_id,
+            ProviderBusyBlock.block_date == target_date,
+        )
+    )
+    for block in busy_result.scalars().all():
+        booked.append((block.start_time, block.end_time))
 
     slots = []
     current = datetime.combine(target_date, sched.start_time)

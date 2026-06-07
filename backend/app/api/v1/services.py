@@ -10,16 +10,20 @@ from app.core.deps import get_current_user, require_roles
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import SERVICE_TYPE_LABELS, ServiceType, UserRole, VerificationStatus
+from app.models.provider_busy import ProviderBusyBlock
 from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
 from app.models.user import Role, User
 from app.schemas.service import (
     AppointmentResponse,
     BookAppointmentRequest,
+    BusyBlockCreate,
+    BusyBlockResponse,
     ProviderDetailResponse,
     ProviderListItem,
     ProviderRegisterRequest,
     ProviderServiceResponse,
     ScheduleResponse,
+    ServiceItemInput,
     SlotsResponse,
     TimeSlot,
     UpdateScheduleRequest,
@@ -294,16 +298,141 @@ async def book_appointment(
     )
 
 
+async def _get_my_provider(db: AsyncSession, user: User) -> ServiceProvider:
+    role_name = user.role.name if hasattr(user.role, "name") else user.role
+    if role_name != UserRole.SERVICE_PROVIDER:
+        raise HTTPException(403, "Доступ только для мастеров")
+    result = await db.execute(
+        select(ServiceProvider)
+        .options(
+            selectinload(ServiceProvider.services),
+            selectinload(ServiceProvider.schedule),
+        )
+        .where(ServiceProvider.user_id == user.id)
+    )
+    provider = result.scalar_one_or_none()
+    if not provider:
+        raise HTTPException(404, "Профиль мастера не найден")
+    return provider
+
+
+@router.get("/my/profile", response_model=ProviderDetailResponse)
+async def my_profile(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    p = await _get_my_provider(db, current_user)
+    status, next_slot = await get_provider_status_today(db, p)
+    schedule = [
+        ScheduleResponse(
+            day_of_week=s.day_of_week, day_label=DAY_LABELS[s.day_of_week],
+            start_time=format_time(s.start_time), end_time=format_time(s.end_time),
+            is_working=s.is_working,
+        )
+        for s in sorted(p.schedule, key=lambda x: x.day_of_week)
+    ]
+    return ProviderDetailResponse(
+        id=p.id, full_name=p.full_name, phone=p.phone, bio=p.bio, address=p.address,
+        avg_rating=p.avg_rating, review_count=p.review_count,
+        services=[_service_resp(s) for s in p.services if s.is_active],
+        status_today=status, next_free_slot=next_slot,
+        schedule=schedule, verification_status=p.verification_status,
+    )
+
+
+@router.post("/my/busy", response_model=BusyBlockResponse, status_code=201)
+async def add_busy_block(
+    data: BusyBlockCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    provider = await _get_my_provider(db, current_user)
+    block = ProviderBusyBlock(
+        provider_id=provider.id,
+        block_date=data.block_date,
+        start_time=parse_time(data.start_time),
+        end_time=parse_time(data.end_time),
+        reason=data.reason,
+        note=data.note,
+    )
+    db.add(block)
+    await db.flush()
+    return BusyBlockResponse(
+        id=block.id, block_date=block.block_date,
+        start_time=format_time(block.start_time), end_time=format_time(block.end_time),
+        reason=block.reason, note=block.note,
+    )
+
+
+@router.get("/my/busy", response_model=list[BusyBlockResponse])
+async def list_busy_blocks(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    provider = await _get_my_provider(db, current_user)
+    result = await db.execute(
+        select(ProviderBusyBlock)
+        .where(ProviderBusyBlock.provider_id == provider.id)
+        .order_by(ProviderBusyBlock.block_date.desc())
+        .limit(100)
+    )
+    return [
+        BusyBlockResponse(
+            id=b.id, block_date=b.block_date,
+            start_time=format_time(b.start_time), end_time=format_time(b.end_time),
+            reason=b.reason, note=b.note,
+        )
+        for b in result.scalars().all()
+    ]
+
+
+@router.delete("/my/busy/{block_id}")
+async def delete_busy_block(
+    block_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    provider = await _get_my_provider(db, current_user)
+    result = await db.execute(
+        select(ProviderBusyBlock).where(
+            ProviderBusyBlock.id == block_id,
+            ProviderBusyBlock.provider_id == provider.id,
+        )
+    )
+    block = result.scalar_one_or_none()
+    if not block:
+        raise HTTPException(404)
+    await db.delete(block)
+    return {"status": "deleted"}
+
+
+@router.post("/my/services", response_model=ProviderServiceResponse, status_code=201)
+async def add_my_service(
+    data: ServiceItemInput,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    provider = await _get_my_provider(db, current_user)
+    svc = ProviderService(
+        provider_id=provider.id,
+        service_type=data.service_type,
+        name=data.name,
+        description=data.description,
+        duration_minutes=data.duration_minutes,
+        price=data.price,
+    )
+    db.add(svc)
+    await db.flush()
+    return _service_resp(svc)
+
+
 @router.patch("/my/schedule")
 async def update_my_schedule(
     data: UpdateScheduleRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    result = await db.execute(select(ServiceProvider).where(ServiceProvider.user_id == current_user.id))
-    provider = result.scalar_one_or_none()
-    if not provider:
-        raise HTTPException(404, "Профиль мастера не найден")
+    provider = await _get_my_provider(db, current_user)
 
     await db.execute(delete(ProviderSchedule).where(ProviderSchedule.provider_id == provider.id))
     await db.flush()
@@ -324,10 +453,7 @@ async def my_appointments(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    result = await db.execute(select(ServiceProvider).where(ServiceProvider.user_id == current_user.id))
-    provider = result.scalar_one_or_none()
-    if not provider:
-        raise HTTPException(404, "Профиль мастера не найден")
+    provider = await _get_my_provider(db, current_user)
 
     appts = await db.execute(
         select(ServiceAppointment)

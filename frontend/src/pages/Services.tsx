@@ -78,9 +78,10 @@ export function Services() {
         <p className="text-muted-foreground mt-2 font-serif italic">
           Маникюр, стрижки, брови — запись онлайн с расписанием
         </p>
-        <Link to="/services/register" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вы мастер? Зарегистрируйтесь →
-        </Link>
+        <div className="flex gap-4 justify-center mt-2 text-sm">
+          <Link to="/services/register" className="text-primary hover:underline">Стать мастером →</Link>
+          <Link to="/services/cabinet" className="text-primary hover:underline">Кабинет мастера →</Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
@@ -120,9 +121,15 @@ export function Services() {
           </div>
         ))}
         {providers.length === 0 && (
-          <p className="col-span-2 text-center text-muted-foreground py-12">
-            Мастера скоро появятся. <Link to="/services/register" className="underline">Станьте первым!</Link>
-          </p>
+          <div className="col-span-2 text-center py-12 pushkin-card p-8">
+            <span className="text-4xl">💇</span>
+            <p className="mt-4 text-muted-foreground">
+              Пока нет зарегистрированных мастеров.
+            </p>
+            <p className="text-sm mt-2">
+              Маникюр, стрижки, брови — <Link to="/services/register" className="text-primary underline">зарегистрируйтесь</Link> и ведите своё расписание сами.
+            </p>
+          </div>
         )}
       </div>
 
