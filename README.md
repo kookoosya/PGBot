@@ -1,1 +1,77 @@
-# PGBot
+# Народный Контроль — Пушкинские Горы
+
+Автоматизированная система приёма обращений жителей через ВКонтакте с AI-анализом, админ-панелью и Telegram-уведомлениями.
+
+## Возможности
+
+- Приём обращений через VK Bot (текст + фото)
+- AI-анализ через Gemini (категория, приоритет, спам-фильтр, дедупликация)
+- Веб-панель для администрации и социальных служб
+- Назначение ответственных отделов
+- Telegram-уведомления (мгновенные для высокого приоритета)
+- Аналитика: статистика, топ категорий, динамика по месяцам
+- Аудит действий администрации
+
+## Стек
+
+| Компонент | Технологии |
+|-----------|-----------|
+| Backend | Python 3.12, FastAPI, SQLAlchemy, Alembic |
+| Frontend | React, Vite, Tailwind CSS |
+| Database | PostgreSQL 16 |
+| AI | Google Gemini |
+| Infra | Docker, Docker Compose, Nginx |
+
+## Быстрый старт
+
+```bash
+cp .env.example .env
+# Заполните API-ключи в .env
+
+docker compose up -d --build
+```
+
+- Админ-панель: http://localhost
+- API документация: http://localhost/api/docs
+- Логин: `admin` / пароль из `SUPER_ADMIN_PASSWORD`
+
+## Структура проекта
+
+```
+backend/          # FastAPI приложение
+frontend/         # React админ-панель
+docker/           # Nginx конфигурация
+docs/             # Документация
+scripts/          # Утилиты
+.github/          # CI/CD
+```
+
+## API
+
+| Endpoint | Описание |
+|----------|----------|
+| `/api/v1/auth` | Аутентификация (JWT) |
+| `/api/v1/issues` | Обращения |
+| `/api/v1/users` | Пользователи |
+| `/api/v1/categories` | Категории |
+| `/api/v1/departments` | Отделы |
+| `/api/v1/statistics` | Аналитика |
+| `/api/v1/admin` | Аудит, уведомления |
+| `/api/v1/vk/callback` | VK Webhook |
+
+## Роли
+
+- **Resident** — житель (обращения через VK)
+- **Moderator** — модерация, дубликаты
+- **Administration** — управление обращениями
+- **SocialService** — социальные обращения
+- **SuperAdmin** — полный доступ
+
+## Документация
+
+- [Архитектура](docs/ARCHITECTURE.md)
+- [Развёртывание](docs/DEPLOYMENT.md)
+
+## Лицензия
+
+MIT
