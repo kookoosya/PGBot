@@ -222,7 +222,11 @@ export function Classifieds() {
                 </p>
                 <p className="text-sm mt-2">{ad.description}</p>
                 <p className="text-sm mt-2">
-                  📞 {ad.phone} {ad.address && `· 📍 ${ad.address}`}
+                  📞{" "}
+                  <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">
+                    {ad.phone}
+                  </a>
+                  {ad.address && ` · 📍 ${ad.address}`}
                 </p>
               </div>
             </div>

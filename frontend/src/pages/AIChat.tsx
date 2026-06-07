@@ -53,6 +53,12 @@ export function AIChat() {
     }
   };
 
+  const suggestions = [
+    "Что интересного в Пушкинских Горах?",
+    "Как подать объявление?",
+    "Где на карте аптеки и магазины?",
+  ];
+
   return (
     <div className="page-section max-w-3xl">
       <PageHeader
@@ -88,6 +94,19 @@ export function AIChat() {
         </div>
 
         <div className="border-t p-4">
+          <div className="suggest-chips">
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="suggest-chip"
+                disabled={loading}
+                onClick={() => { setInput(s); }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
           <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"

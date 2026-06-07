@@ -1,4 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
+import { FooterNav } from "@/components/FooterNav";
 import { PushkinBanner } from "@/components/PushkinBanner";
 import { BRAND } from "@/lib/branding";
 import { TabNav } from "./TabNav";
@@ -34,7 +35,8 @@ export function PublicLayout() {
 
       <footer className="pushkin-footer pushkin-footer-spacer">
         <div className="pushkin-footer-inner">
-          <p className="pushkin-quote-footer">
+          <FooterNav />
+          <p className="pushkin-quote-footer mt-8">
             «Здесь Пушкин родился, здесь он и умер...»
           </p>
           <p className="pushkin-footer-line">

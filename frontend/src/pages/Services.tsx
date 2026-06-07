@@ -94,7 +94,14 @@ export function Services() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {providers.map((p) => (
-          <div key={p.id} className="pushkin-card-hover p-5">
+          <div
+            key={p.id}
+            className="pushkin-card-hover p-5 cursor-pointer"
+            role="button"
+            tabIndex={0}
+            onClick={() => p.status_today !== "off" && openBooking(p)}
+            onKeyDown={(e) => e.key === "Enter" && p.status_today !== "off" && openBooking(p)}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-bold text-lg">{p.full_name}</h3>
@@ -114,8 +121,13 @@ export function Services() {
                 </span>
               ))}
             </div>
-            <Button className="w-full mt-4" size="sm" onClick={() => openBooking(p)} disabled={p.status_today === "off"}>
-              {p.status_today === "off" ? "Выходной" : "Записаться"}
+            <Button
+              className="w-full mt-4"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); openBooking(p); }}
+              disabled={p.status_today === "off"}
+            >
+              {p.status_today === "off" ? "Выходной" : "Записаться →"}
             </Button>
           </div>
         ))}
@@ -133,7 +145,7 @@ export function Services() {
       </div>
 
       {booking && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setBooking(null)}>
+        <div className="modal-overlay" onClick={() => setBooking(null)}>
           <div className="pushkin-card bg-card p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg">Запись к {booking.full_name}</h3>
             {msg && <p className="text-sm mt-2 text-green-700">{msg}</p>}

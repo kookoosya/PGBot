@@ -258,28 +258,47 @@
   .page-header-actions {
     @apply mt-4 flex flex-wrap gap-2;
   }
+  .page-header .btn-hero-secondary {
+    background: hsl(42 70% 52% / 0.3);
+    border-color: hsl(42 75% 55% / 0.7);
+    color: hsl(42 95% 92%);
+  }
+  .page-header .btn-hero-primary {
+    @apply text-sm py-2 px-4;
+  }
 
   /* === QUICK NAV === */
   .quick-nav-grid {
-    @apply grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto;
+    @apply grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-5xl mx-auto;
+  }
+  .quick-nav-grid-6 {
+    @apply md:grid-cols-3 lg:grid-cols-6;
   }
 
   .quick-nav-card {
-    @apply flex flex-col items-center text-center p-4 md:p-5 rounded-2xl no-underline transition;
+    @apply relative flex flex-col items-center text-center p-4 md:p-5 rounded-2xl no-underline transition-all duration-200;
     background: hsl(40 55% 99%);
     border: 2px solid hsl(42 55% 72%);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
     color: hsl(152 42% 14%);
+    cursor: pointer;
   }
   .quick-nav-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px) scale(1.02);
     border-color: hsl(42 75% 48%);
-    box-shadow: 0 10px 24px rgba(12, 40, 28, 0.12);
+    box-shadow: 0 14px 32px rgba(12, 40, 28, 0.15);
+  }
+  .quick-nav-card:hover .quick-nav-arrow {
+    opacity: 1;
+    transform: translateX(4px);
   }
 
   .quick-nav-icon { @apply text-3xl mb-2; }
-  .quick-nav-label { @apply font-bold text-base; font-family: "Playfair Display", Georgia, serif; }
+  .quick-nav-label { @apply font-bold text-sm md:text-base; font-family: "Playfair Display", Georgia, serif; }
   .quick-nav-desc { @apply text-xs text-muted-foreground mt-1; }
+  .quick-nav-arrow {
+    @apply absolute top-3 right-3 text-amber-600 font-bold text-sm opacity-0 transition-all;
+  }
 
   /* === CHIPS / FILTERS === */
   .filter-bar {
@@ -425,12 +444,144 @@
   }
 
   .feature-card {
-    @apply pushkin-card-hover p-5 md:p-6 text-center;
+    @apply pushkin-card-hover p-5 md:p-6 text-center relative cursor-pointer;
+  }
+  .feature-card:hover .feature-go {
+    opacity: 1;
+    color: hsl(42 75% 38%);
   }
 
   .feature-icon { @apply text-4xl mb-3; }
   .feature-title { @apply text-lg font-bold mb-2; }
   .feature-desc { @apply text-sm text-muted-foreground leading-relaxed; }
+  .feature-go {
+    @apply block mt-4 text-sm font-bold text-amber-700/70 transition-opacity;
+    opacity: 0.6;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes heroIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(1.05); }
+  }
+
+  .animate-hero > * {
+    animation: heroIn 0.7s ease-out both;
+  }
+  .animate-hero > *:nth-child(2) { animation-delay: 0.1s; }
+  .animate-hero > *:nth-child(3) { animation-delay: 0.15s; }
+  .animate-hero > *:nth-child(4) { animation-delay: 0.2s; }
+  .animate-hero > *:nth-child(5) { animation-delay: 0.25s; }
+  .animate-hero > *:nth-child(6) { animation-delay: 0.3s; }
+  .animate-hero > *:nth-child(7) { animation-delay: 0.35s; }
+
+  .animate-in {
+    animation: fadeUp 0.55s ease-out both;
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    width: 60%;
+    height: 60%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, hsl(42 80% 50% / 0.25) 0%, transparent 70%);
+    animation: glowPulse 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    @apply inline-block mb-3 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide;
+    background: hsl(42 70% 50% / 0.2);
+    border: 1px solid hsl(42 75% 55% / 0.4);
+    color: hsl(42 85% 88%);
+  }
+
+  .stats-bar {
+    @apply flex flex-wrap justify-center gap-2 mt-8 mb-2;
+  }
+  .stat-pill {
+    @apply px-4 py-2 rounded-full text-sm font-semibold no-underline transition;
+    background: hsl(152 35% 16% / 0.6);
+    border: 1px solid hsl(42 60% 45% / 0.5);
+    color: hsl(42 90% 90%);
+  }
+  .stat-pill:hover {
+    background: hsl(152 35% 20% / 0.8);
+    border-color: hsl(42 75% 50%);
+    transform: translateY(-2px);
+  }
+  .stat-pill strong { color: hsl(42 85% 65%); }
+
+  .vk-cta-card {
+    @apply flex items-center gap-4 p-5 md:p-6 rounded-2xl no-underline transition-all;
+    background: linear-gradient(135deg, hsl(214 80% 96%), hsl(214 60% 92%));
+    border: 2px solid hsl(214 60% 75%);
+    color: hsl(214 50% 22%);
+    box-shadow: 0 6px 20px rgba(30, 80, 160, 0.1);
+  }
+  .vk-cta-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(30, 80, 160, 0.18);
+    border-color: hsl(214 70% 55%);
+  }
+  .vk-cta-icon { @apply text-4xl shrink-0; }
+  .vk-cta-title { @apply text-lg font-bold m-0; font-family: "Playfair Display", Georgia, serif; }
+  .vk-cta-desc { @apply text-sm mt-1 m-0 opacity-80; }
+  .vk-cta-arrow { @apply text-2xl font-bold shrink-0 text-blue-600; }
+
+  .footer-nav {
+    @apply flex flex-wrap justify-center gap-2 md:gap-3;
+  }
+  .footer-nav-link {
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-semibold no-underline transition;
+    background: hsl(42 50% 88%);
+    border: 1px solid hsl(42 45% 75%);
+    color: hsl(152 40% 18%);
+  }
+  .footer-nav-link:hover {
+    background: hsl(42 60% 82%);
+    border-color: hsl(42 70% 48%);
+    transform: translateY(-2px);
+  }
+
+  .suggest-chips {
+    @apply flex flex-wrap gap-2 mb-3;
+  }
+  .suggest-chip {
+    @apply px-3 py-1.5 rounded-full text-xs font-medium border-2 cursor-pointer transition;
+    background: hsl(42 50% 96%);
+    border-color: hsl(42 45% 78%);
+    color: hsl(152 35% 22%);
+  }
+  .suggest-chip:hover {
+    border-color: hsl(42 70% 48%);
+    background: hsl(42 55% 92%);
+  }
+
+  .clickable-phone {
+    @apply font-semibold text-amber-800 hover:text-amber-950 underline decoration-amber-400/50 hover:decoration-amber-600;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 flex items-center justify-center z-50 p-4;
+    background: rgba(12, 40, 28, 0.55);
+    backdrop-filter: blur(4px);
+  }
+
+  .empty-state {
+    @apply text-center py-14 pushkin-card p-8;
+  }
+  .empty-state-icon { @apply text-5xl mb-4; }
 
   .chat-bubble-user {
     @apply rounded-2xl rounded-br-sm px-4 py-3;
@@ -462,5 +613,16 @@
     @apply rounded-xl p-4 md:p-5 text-sm;
     background: linear-gradient(135deg, hsl(42 55% 94%), hsl(42 48% 90%));
     border: 2px solid hsl(42 65% 58%);
+  }
+
+  .map-layout {
+    height: calc(100vh - 220px);
+    min-height: 480px;
+  }
+  @media (max-width: 1023px) {
+    .map-layout {
+      height: auto;
+      min-height: 70vh;
+    }
   }
 }
