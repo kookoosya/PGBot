@@ -52,7 +52,7 @@ services:
     image: nginx:alpine
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8088:80"
+      - "8088:80"
     volumes:
       - ./docker/nginx/prod.conf:/etc/nginx/nginx.conf:ro
     depends_on:
