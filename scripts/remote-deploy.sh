@@ -2,6 +2,14 @@
 # Деплой на VPS. Требует SSHPASS или SSH-ключ в агенте.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/../.deploy.env" ]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/../.deploy.env"
+  set +a
+fi
+
 HOST="${VPS_HOST:-192.210.213.135}"
 USER="${VPS_USER:-root}"
 BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
