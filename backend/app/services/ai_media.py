@@ -7,14 +7,16 @@ from app.services.ai_image_fallback import save_fallback_image
 from app.services.ai_image_store import save_image
 from app.services.ai_prompt_translate import image_prompt_english
 from app.services.ai_providers import pollinations_image_bytes
+from app.services.ai_status import is_valid_pollinations_key
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 CHAT_MODELS = [
-    {"id": "gemini-2.0-flash", "label": "Gemini 2.0 Flash", "provider": "google", "fast": True},
-    {"id": "gemini-1.5-pro", "label": "Gemini 1.5 Pro", "provider": "google", "smart": True},
-    {"id": "pollinations", "label": "Pollinations (резерв)", "provider": "pollinations", "fast": True},
+    {"id": "gemini-flash", "label": "Gemini Flash", "provider": "pollinations", "fast": True},
+    {"id": "openai-fast", "label": "GPT Fast", "provider": "pollinations", "fast": True},
+    {"id": "gemini", "label": "Gemini Pro", "provider": "pollinations", "smart": True},
+    {"id": "gemini-2.0-flash", "label": "Gemini (прямой Google)", "provider": "google", "fast": True},
 ]
 
 IMAGE_MODELS = [
@@ -24,8 +26,8 @@ IMAGE_MODELS = [
 ]
 
 POLLINATIONS_MODEL_MAP = {
-    "nano-banana": "flux",
-    "nanobanana": "flux",
+    "nano-banana": "nanobanana",
+    "nanobanana": "nanobanana",
     "flux": "flux",
     "turbo": "turbo",
 }
@@ -54,6 +56,13 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
             height=height,
         )
     if not data:
+        if not is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+            return {
+                "error": (
+                    "Генератор картинок не настроен: на сервере нет POLLINATIONS_API_KEY. "
+                    "Получите ключ на enter.pollinations.ai и добавьте в /opt/pgbot/.env"
+                ),
+            }
         fallback_id = save_fallback_image(prompt)
         if fallback_id:
             return {

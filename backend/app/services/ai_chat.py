@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.ai_usage import AIUsage
-from app.services.ai_local import local_chat_reply
-from app.services.ai_providers import pollinations_text
+from app.services.ai_local import local_chat_reply, should_use_local_fallback
+from app.services.ai_providers import pollinations_chat, pollinations_text
+from app.services.ai_status import is_valid_gemini_key, is_valid_pollinations_key
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -23,22 +24,20 @@ PUSHKIN_QUOTES = [
     "«Счастье то, что дух просветляет.»",
 ]
 
-CHAT_SYSTEM_PROMPT = """Ты — мощный универсальный ИИ-помощник портала посёлка Пушкинские Горы (Псковская область).
-Здесь жил Александр Сергеевич Пушкин. Ты можешь помочь с ЛЮБЫМИ задачами:
+CHAT_SYSTEM_PROMPT = """Ты — умный и дружелюбный ИИ-помощник портала посёлка Пушкинские Горы (Псковская область).
+Здесь жил Александр Сергеевич Пушкин. Ты помогаешь жителям и гостям с любыми задачами:
 - вопросы о посёлке, быте, ЖКХ, карте, объявлениях, услугах
-- написать текст объявления, пост, поздравление, письмо
+- написать текст объявления, пост, поздравление, стихотворение, письмо
 - идеи для бизнеса, ремонта, дачи, огорода
-- культура, история, маршруты по Пушкиногорью
-- программирование, учёба, переводы, расчёты — всё в разумных пределах
-- подсказать, как сгенерировать картинку на сайте (раздел «Картинки»)
-
-На сайте доступны модели: Gemini Flash/Pro для текста, Nano Banana / Flux / Turbo для картинок.
+- культура, история, маршруты по Пушкиногорью (Михайловское, Тригорское, Святогорская лавра)
+- учёба, переводы, расчёты — в разумных пределах
+- генерация картинок — на сайте, вкладка «Картинки»
 
 Правила:
-- Отвечай на русском, полезно и по делу (до 400 слов)
+- Отвечай на русском, развёрнуто и по делу
 - Не выдавай себя за официальное лицо администрации
-- Для жалоб на проблемы — бот ВК или сайт
-- Будь дружелюбным собеседником
+- Для жалоб — раздел «Жалобы» на сайте или VK-бот
+- Будь живым собеседником, не шаблонным ботом
 """
 
 
@@ -75,19 +74,25 @@ async def increment_usage(db: AsyncSession, identifier: str, source: str = "web"
     return count
 
 
-def _build_pollinations_prompt(message: str, history: list[dict] | None) -> str:
-    lines = [CHAT_SYSTEM_PROMPT, ""]
-    if history:
-        for msg in history[-6:]:
-            role = "Пользователь" if msg.get("role") == "user" else "Ассистент"
-            lines.append(f"{role}: {msg.get('content', '')}")
-    lines.append(f"Пользователь: {message}")
-    lines.append("Ассистент:")
-    return "\n".join(lines)
+def _maybe_quote(text: str) -> str:
+    if random.random() < 0.08:
+        return f"{text}\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
+    return text
+
+
+def _ai_unavailable_message() -> str:
+    return (
+        "⚠️ ИИ сейчас не подключён к внешнему API.\n\n"
+        "На сервере нужен рабочий ключ:\n"
+        "• POLLINATIONS_API_KEY (рекомендуется) — enter.pollinations.ai\n"
+        "• или GEMINI_API_KEY — aistudio.google.com\n\n"
+        "Сейчас на VPS стоит заглушка из .env.example, а не ваш ключ.\n"
+        "Добавьте ключ в /opt/pgbot/.env и перезапустите backend."
+    )
 
 
 async def _chat_gemini(message: str, history: list[dict] | None, model_id: str | None) -> str | None:
-    if not settings.GEMINI_API_KEY:
+    if not is_valid_gemini_key(settings.GEMINI_API_KEY):
         return None
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -104,28 +109,37 @@ async def _chat_gemini(message: str, history: list[dict] | None, model_id: str |
         response = chat.send_message(message)
         return response.text.strip()
     except Exception as e:
-        logger.warning("Gemini chat failed, using fallback: %s", e)
+        logger.warning("Gemini chat failed: %s", e)
         return None
 
 
 async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
-    use_pollinations_only = model_id == "pollinations"
+    model_id = model_id or "gemini-flash"
 
-    if not use_pollinations_only:
+    # 1. Pollinations OpenAI API — основной путь (чат + картинки одним ключом)
+    if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+        poll_text = await pollinations_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if poll_text:
+            return _maybe_quote(poll_text)
+
+    # 2. Прямой Gemini
+    if model_id not in ("pollinations", "openai-fast", "openai"):
         gemini_text = await _chat_gemini(message, history, model_id)
         if gemini_text:
-            if random.random() < 0.12:
-                gemini_text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
-            return gemini_text
+            return _maybe_quote(gemini_text)
 
-    poll_prompt = _build_pollinations_prompt(message, history)
-    poll_text = await pollinations_text(poll_prompt)
-    if poll_text:
-        if random.random() < 0.1:
-            poll_text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
-        return poll_text
+    # 3. Старый GET-текст Pollinations
+    if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+        lines = [CHAT_SYSTEM_PROMPT, f"Пользователь: {message}", "Ассистент:"]
+        poll_text = await pollinations_text("\n".join(lines))
+        if poll_text:
+            return _maybe_quote(poll_text)
 
-    return local_chat_reply(message)
+    # 4. Локальный справочник — только для вопросов о посёлке
+    if should_use_local_fallback(message):
+        return local_chat_reply(message)
+
+    return _ai_unavailable_message()
 
 
 def get_payment_info() -> dict:

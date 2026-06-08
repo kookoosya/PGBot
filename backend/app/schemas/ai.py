@@ -57,3 +57,13 @@ class ModelsResponse(BaseModel):
     chat_models: list[dict]
     image_models: list[dict]
     capabilities: list[str]
+    status: dict | None = None
+
+
+class AIStatusResponse(BaseModel):
+    ready: bool
+    chat_provider: str
+    image_provider: str
+    pollinations_configured: bool
+    gemini_configured: bool
+    message: str

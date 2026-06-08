@@ -837,6 +837,54 @@
     border-color: hsl(42 55% 72%);
   }
 
+  .ai-page {
+    animation: page-fade-in 0.35s ease;
+  }
+
+  .ai-usage-pill {
+    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold;
+    background: hsl(42 70% 52% / 0.18);
+    border: 1px solid hsl(42 75% 55% / 0.35);
+    color: hsl(42 30% 22%);
+  }
+
+  .ai-status-warn {
+    @apply rounded-xl p-4 mb-4 text-sm;
+    background: hsl(38 90% 94%);
+    border: 1px solid hsl(38 70% 70%);
+    color: hsl(28 50% 22%);
+  }
+  .ai-status-warn p { margin: 0.35rem 0 0; }
+
+  .ai-chat-panel {
+    height: calc(100vh - 380px);
+    min-height: 360px;
+  }
+
+  .ai-image-skeleton {
+    @apply relative w-full aspect-[4/3] rounded-lg border overflow-hidden flex items-center justify-center text-sm text-muted-foreground;
+    background: hsl(152 25% 94%);
+  }
+  .ai-image-skeleton-shimmer {
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, hsl(152 30% 88% / 0.8), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+
+  .ai-image-result img {
+    animation: page-fade-in 0.4s ease;
+  }
+
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+
   .feature-card {
     border-top: 3px solid hsl(42 75% 50%);
     background: linear-gradient(180deg, hsl(42 55% 98%), hsl(40 50% 99%));

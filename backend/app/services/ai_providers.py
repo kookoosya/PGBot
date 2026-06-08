@@ -1,4 +1,4 @@
-"""Резервные AI-провайдеры (Pollinations gen API)."""
+"""Pollinations gen API — чат и картинки."""
 
 import logging
 from urllib.parse import quote
@@ -10,39 +10,20 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-POLLINATIONS_TEXT_URL = "https://gen.pollinations.ai/text"
-POLLINATIONS_IMAGE_URL = "https://gen.pollinations.ai/image"
+POLLINATIONS_BASE = "https://gen.pollinations.ai"
+POLLINATIONS_TEXT_URL = f"{POLLINATIONS_BASE}/text"
+POLLINATIONS_IMAGE_URL = f"{POLLINATIONS_BASE}/image"
+POLLINATIONS_CHAT_URL = f"{POLLINATIONS_BASE}/v1/chat/completions"
 
-
-async def pollinations_text(prompt: str, timeout: float = 90.0) -> str | None:
-    """Короткий запрос через Pollinations (с VPS работают только простые фразы)."""
-    text = prompt.strip()[:4000]
-    if not text:
-        return None
-
-    # Извлекаем суть — длинный system prompt API отклоняет
-    user_part = text
-    if "Пользователь:" in text:
-        user_part = text.rsplit("Пользователь:", 1)[-1].split("Ассистент:")[0].strip()
-    short = f"Answer in Russian helpfully: {user_part[:280]}"
-
-    key_q = _pollinations_key_param()
-    headers = _pollinations_headers()
-
-    for candidate in (short, user_part[:120]):
-        if len(candidate) < 8:
-            continue
-        for base in (POLLINATIONS_TEXT_URL, "https://text.pollinations.ai"):
-            url = f"{base}/{quote(candidate)}{'?' + key_q[1:] if key_q else ''}"
-            try:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-                    resp = await client.get(url, headers=headers)
-                    body = resp.text.strip()
-                    if resp.status_code == 200 and body and not body.startswith("{"):
-                        return body
-            except Exception as exc:
-                logger.warning("Pollinations text failed: %s", exc)
-    return None
+POLLINATIONS_CHAT_MODELS = {
+    "gemini-flash": "gemini-3.5-flash",
+    "gemini": "gemini",
+    "openai-fast": "openai-fast",
+    "openai": "openai",
+    "pollinations": "gemini-3.5-flash",
+    "gemini-2.0-flash": "gemini-3.5-flash",
+    "gemini-1.5-pro": "gemini",
+}
 
 
 def _pollinations_headers() -> dict[str, str]:
@@ -55,6 +36,80 @@ def _pollinations_headers() -> dict[str, str]:
 def _pollinations_key_param() -> str:
     key = settings.POLLINATIONS_API_KEY.strip()
     return f"&key={quote(key)}" if key else ""
+
+
+async def pollinations_chat(
+    message: str,
+    history: list[dict] | None,
+    system_prompt: str,
+    model_id: str = "gemini-flash",
+    timeout: float = 120.0,
+) -> str | None:
+    """OpenAI-совместимый чат через Pollinations."""
+    if not settings.POLLINATIONS_API_KEY.strip():
+        return None
+
+    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
+    if history:
+        for msg in history[-8:]:
+            role = msg.get("role", "user")
+            if role not in ("user", "assistant"):
+                continue
+            openai_role = "assistant" if role == "assistant" else "user"
+            content = (msg.get("content") or "")[:2000]
+            if content:
+                messages.append({"role": openai_role, "content": content})
+    messages.append({"role": "user", "content": message[:2000]})
+
+    poll_model = POLLINATIONS_CHAT_MODELS.get(model_id, model_id)
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(
+                POLLINATIONS_CHAT_URL,
+                headers={**_pollinations_headers(), "Content-Type": "application/json"},
+                json={"model": poll_model, "messages": messages, "max_tokens": 1800},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                return text.strip() if text else None
+            logger.warning("Pollinations chat HTTP %s: %s", resp.status_code, resp.text[:300])
+    except Exception as exc:
+        logger.error("Pollinations chat failed: %s", exc)
+    return None
+
+
+async def pollinations_text(prompt: str, timeout: float = 90.0) -> str | None:
+    """Простой GET-текст (резерв, если chat completions недоступен)."""
+    if not settings.POLLINATIONS_API_KEY.strip():
+        return None
+
+    text = prompt.strip()[:4000]
+    if not text:
+        return None
+
+    user_part = text
+    if "Пользователь:" in text:
+        user_part = text.rsplit("Пользователь:", 1)[-1].split("Ассистент:")[0].strip()
+    short = f"Answer in Russian helpfully and thoroughly: {user_part[:500]}"
+
+    key_q = _pollinations_key_param()
+    headers = _pollinations_headers()
+
+    for candidate in (short, user_part[:200]):
+        if len(candidate) < 8:
+            continue
+        url = f"{POLLINATIONS_TEXT_URL}/{quote(candidate)}?{key_q.lstrip('&')}"
+        try:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+                resp = await client.get(url, headers=headers)
+                body = resp.text.strip()
+                if resp.status_code == 200 and body and not body.startswith("{"):
+                    return body
+        except Exception as exc:
+            logger.warning("Pollinations text failed: %s", exc)
+    return None
 
 
 async def pollinations_image_bytes(
@@ -89,7 +144,7 @@ async def pollinations_image_bytes(
                 ctype = resp.headers.get("content-type", "")
                 if resp.status_code == 200 and ctype.startswith("image/"):
                     return resp.content
-                logger.warning("Pollinations image HTTP %s ctype=%s url=%s", resp.status_code, ctype, url[:80])
+                logger.warning("Pollinations image HTTP %s ctype=%s", resp.status_code, ctype)
         except Exception as exc:
             logger.error("Pollinations image failed: %s", exc)
     return None

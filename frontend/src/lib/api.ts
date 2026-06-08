@@ -520,10 +520,20 @@ export interface AIModelOption {
   smart?: boolean;
 }
 
+export interface AIStatus {
+  ready: boolean;
+  chat_provider: string;
+  image_provider: string;
+  pollinations_configured: boolean;
+  gemini_configured: boolean;
+  message: string;
+}
+
 export interface AIModelsInfo {
   chat_models: AIModelOption[];
   image_models: AIModelOption[];
   capabilities: string[];
+  status?: AIStatus;
 }
 
 export interface ImageGenResult {

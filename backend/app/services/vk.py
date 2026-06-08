@@ -88,6 +88,10 @@ def get_welcome_keyboard() -> dict:
             ],
             [
                 {"action": {"type": "text", "label": "⚠️ Жалобы"}, "color": "primary"},
+                {"action": {"type": "text", "label": "💡 Пожелания"}, "color": "secondary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "🚕 Такси"}, "color": "secondary"},
                 {"action": {"type": "text", "label": "📝 Регистрация"}, "color": "secondary"},
             ],
             [

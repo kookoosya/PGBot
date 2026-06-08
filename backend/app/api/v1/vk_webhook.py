@@ -197,6 +197,34 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
+        if text_lower in ("💡 пожелания", "пожелания", "предложения", "идея для сайта"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(
+                peer_id,
+                box(
+                    "Пожелания жителей",
+                    f"Предложите улучшение портала:\n{_SITE}/wishes\n\n"
+                    "Идеи по дизайну, разделам, сервисам — всё сюда.",
+                ),
+                keyboard=get_welcome_keyboard(),
+            )
+            return PlainTextResponse("ok")
+
+        if text_lower in ("🚕 такси", "такси"):
+            result = await db.execute(
+                select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
+            )
+            services = result.scalars().all()
+            lines = ["🚕 Такси посёлка:\n"]
+            if services:
+                for t in services:
+                    lines.append(f"• {t.name}: {t.phone}")
+            else:
+                lines.append("Справочник обновляется. Напишите «аптека» или откройте карту.")
+            lines.append(f"\n{_SITE}/map")
+            await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
         if text_lower in ("⚠️ жалобы", "жалобы", "обращения", "жалоба"):
             _ai_mode_peers.discard(peer_id)
             await send_message(

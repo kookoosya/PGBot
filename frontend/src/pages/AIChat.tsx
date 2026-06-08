@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { api, AIModelOption, ChatMessage, PaymentInfo, UsageInfo } from "@/lib/api";
+import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
 
 type Tab = "chat" | "image";
 
@@ -11,9 +11,9 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "🪶 Привет! Я универсальный ИИ-помощник Пушкинских Гор.\n\n" +
-        "Могу ответить на любой вопрос, написать текст, подсказать идею.\n" +
-        "Во вкладке «Картинки» — генерация изображений (Flux, Turbo…).",
+        "🪶 Привет! Я ИИ-помощник Пушкинских Гор.\n\n" +
+        "Спросите что угодно — напишу текст, подскажу идею, отвечу на вопрос.\n" +
+        "Во вкладке «Картинки» — генерация изображений по описанию.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -21,11 +21,10 @@ export function AIChat() {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
-  const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
   const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
-  const [capabilities, setCapabilities] = useState<string[]>([]);
-  const [chatModel, setChatModel] = useState("pollinations");
+  const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
+  const [chatModel, setChatModel] = useState("gemini-flash");
   const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [imageProvider, setImageProvider] = useState<string | null>(null);
@@ -34,12 +33,12 @@ export function AIChat() {
 
   useEffect(() => {
     api.getAIUsage().then(setUsage).catch(console.error);
-    api.getPaymentInfo().then(setPayment).catch(console.error);
     api.getAIModels().then((m) => {
       setChatModels(m.chat_models);
       setImageModels(m.image_models);
-      setCapabilities(m.capabilities);
-      if (m.chat_models[0]) setChatModel(m.chat_models[0].id);
+      if (m.status) setAiStatus(m.status);
+      const preferred = m.chat_models.find((x) => x.id === "gemini-flash") || m.chat_models[0];
+      if (preferred) setChatModel(preferred.id);
       if (m.image_models[0]) setImageModel(m.image_models[0].id);
     }).catch(console.error);
   }, []);
@@ -94,7 +93,7 @@ export function AIChat() {
   const suggestions = [
     "Напиши объявление про дрова",
     "Что посмотреть в Пушкиногорье?",
-    "Идеи для дачи на лето",
+    "Напиши короткое стихотворение про зиму",
   ];
 
   const imageSuggestions = [
@@ -104,59 +103,45 @@ export function AIChat() {
   ];
 
   return (
-    <div className="page-section max-w-3xl">
-      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Текст · картинки · любые задачи">
+    <div className="page-section max-w-3xl ai-page">
+      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Текст и картинки">
         {usage && (
-          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
-            Сегодня: {usage.used} / {usage.daily_limit}
+          <span className="ai-usage-pill">
+            {usage.remaining} из {usage.daily_limit} сегодня
           </span>
         )}
       </PageHeader>
 
-      {capabilities.length > 0 && (
-        <div className="human-note mb-4 text-sm">
-          <p className="font-semibold m-0 mb-2">ИИ умеет:</p>
-          <ul className="m-0 pl-4 space-y-1">
-            {capabilities.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+      {aiStatus && !aiStatus.ready && (
+        <div className="ai-status-warn" role="status">
+          <strong>ИИ не подключён к API</strong>
+          <p>{aiStatus.message}</p>
         </div>
       )}
 
       <div className="flex gap-2 mb-4">
-        <button
-          type="button"
-          className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`}
-          onClick={() => setTab("chat")}
-        >
+        <button type="button" className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`} onClick={() => setTab("chat")}>
           💬 Чат
         </button>
-        <button
-          type="button"
-          className={`filter-chip ${tab === "image" ? "filter-chip-active" : ""}`}
-          onClick={() => setTab("image")}
-        >
+        <button type="button" className={`filter-chip ${tab === "image" ? "filter-chip-active" : ""}`} onClick={() => setTab("image")}>
           🎨 Картинки
         </button>
       </div>
 
       {tab === "chat" && (
         <>
-          <div className="mb-3">
-            <label className="text-xs text-muted-foreground">Модель чата</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm mt-1"
-              value={chatModel}
-              onChange={(e) => setChatModel(e.target.value)}
-            >
-              {chatModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
-          </div>
+          {chatModels.length > 1 && (
+            <div className="mb-3">
+              <label className="text-xs text-muted-foreground">Модель</label>
+              <select className="w-full border rounded px-3 py-2 text-sm mt-1" value={chatModel} onChange={(e) => setChatModel(e.target.value)}>
+                {chatModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="pushkin-card flex flex-col" style={{ height: "calc(100vh - 420px)", minHeight: 360 }}>
+          <div className="pushkin-card ai-chat-panel flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -165,13 +150,11 @@ export function AIChat() {
                   </div>
                 </div>
               ))}
-              {loading && (
-                <div className="chat-bubble-ai text-sm text-muted-foreground animate-pulse">🪶 Думаю…</div>
-              )}
+              {loading && <div className="chat-bubble-ai text-sm text-muted-foreground animate-pulse">Думаю…</div>}
               <div ref={bottomRef} />
             </div>
             <div className="border-t p-4">
-              <div className="suggest-chips">
+              <div className="suggest-chips mb-2">
                 {suggestions.map((s) => (
                   <button key={s} type="button" className="suggest-chip" disabled={loading} onClick={() => setInput(s)}>
                     {s}
@@ -198,12 +181,8 @@ export function AIChat() {
       {tab === "image" && (
         <div className="pushkin-card p-6 space-y-4">
           <div>
-            <label className="text-xs text-muted-foreground">Модель картинки</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm mt-1"
-              value={imageModel}
-              onChange={(e) => setImageModel(e.target.value)}
-            >
+            <label className="text-xs text-muted-foreground">Модель</label>
+            <select className="w-full border rounded px-3 py-2 text-sm mt-1" value={imageModel} onChange={(e) => setImageModel(e.target.value)}>
               {imageModels.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label}{m.desc ? ` — ${m.desc}` : ""}
@@ -220,7 +199,7 @@ export function AIChat() {
           </div>
           <textarea
             className="w-full border rounded px-3 py-2 text-sm min-h-[80px]"
-            placeholder="Опишите картинку на русском или английском…"
+            placeholder="Опишите картинку на русском…"
             value={imagePrompt}
             onChange={(e) => setImagePrompt(e.target.value)}
             maxLength={500}
@@ -229,48 +208,26 @@ export function AIChat() {
             {imageLoading ? "Рисую…" : "🎨 Сгенерировать"}
           </Button>
           {imageLoading && (
-            <div className="w-full aspect-[4/3] rounded-lg border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center text-sm text-muted-foreground animate-pulse">
-              Генерация может занять до минуты…
+            <div className="ai-image-skeleton">
+              <div className="ai-image-skeleton-shimmer" />
+              <span>Генерация… до 60 сек</span>
             </div>
           )}
-          {imageError && <p className="text-sm text-red-600">{imageError}</p>}
+          {imageError && <p className="text-sm text-red-600 m-0">{imageError}</p>}
           {generatedImage && (
-            <div className="space-y-2">
-              {imageProvider && (
-                <p className="text-xs text-muted-foreground m-0">
-                  {imageProvider === "pollinations" && "✨ Сгенерировано Flux/Turbo (Pollinations)"}
-                  {imageProvider === "google" && "✨ Сгенерировано Gemini Imagen"}
-                  {imageProvider === "local-poster" &&
-                    "🪶 Локальная иллюстрация — внешний генератор недоступен. Добавьте POLLINATIONS_API_KEY для реальных картинок."}
-                  {imageProvider !== "pollinations" &&
-                    imageProvider !== "google" &&
-                    imageProvider !== "local-poster" &&
-                    `Источник: ${imageProvider}`}
-                </p>
+            <div className="space-y-2 ai-image-result">
+              {imageProvider === "pollinations" && (
+                <p className="text-xs text-muted-foreground m-0">✨ Сгенерировано нейросетью</p>
+              )}
+              {imageProvider === "local-poster" && (
+                <p className="text-xs text-amber-700 m-0">Заглушка — API-ключ не настроен на сервере</p>
               )}
               <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border shadow-md" />
-              <a
-                href={generatedImage.split("?")[0]}
-                download="pushkin-ai.jpg"
-                className="btn-hero-secondary text-sm inline-block no-underline"
-              >
+              <a href={generatedImage.split("?")[0]} download="pushkin-ai.jpg" className="btn-hero-secondary text-sm inline-block no-underline">
                 Скачать
               </a>
             </div>
           )}
-        </div>
-      )}
-
-      {payment && (
-        <div className="mt-6 pushkin-card p-6 text-sm ai-payment-box">
-          <h3 className="font-semibold mb-2">💳 Поддержать ИИ-помощник</h3>
-          <p className="text-muted-foreground mb-2">
-            Объявления, услуги и жалобы — <strong>бесплатно</strong>.
-            ИИ после дневного лимита работает за счёт добровольных переводов.
-          </p>
-          <p className="text-muted-foreground mb-3">{payment.message}</p>
-          <div className="payment-card-number">{payment.card_number}</div>
-          <p className="text-xs text-muted-foreground mt-2">{payment.card_holder} · {payment.bank_name}</p>
         </div>
       )}
     </div>

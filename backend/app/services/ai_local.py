@@ -14,6 +14,20 @@ def _has_any(text: str, words: tuple[str, ...]) -> bool:
     return any(w in t for w in words)
 
 
+_VILLAGE_HINTS = (
+    "пушкин", "посёлок", "пушкиногор", "михайловск", "тригорск", "лавр",
+    "жалоб", "обращен", "жкх", "объявлен", "продам", "куплю", "дрова",
+    "карт", "магазин", "аптек", "такси", "услуг", "мастер", "огород",
+    "регистрац", "портал", "сайт", "бот", "vk", "вконтакт",
+)
+
+
+def should_use_local_fallback(message: str) -> bool:
+    """Локальные шаблоны — только для типичных вопросов о посёлке."""
+    low = message.lower()
+    return any(h in low for h in _VILLAGE_HINTS)
+
+
 def local_chat_reply(message: str) -> str:
     msg = message.strip()
     low = msg.lower()

@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.core.deps import get_client_ip
 from app.database import get_db
 from app.schemas.ai import (
+    AIStatusResponse,
     ChatRequest,
     ChatResponse,
     ImageRequest,
@@ -17,6 +18,7 @@ from app.schemas.ai import (
     PaymentInfoResponse,
     UsageResponse,
 )
+from app.services.ai_status import get_ai_status
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -30,17 +32,16 @@ from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
 router = APIRouter()
 settings = get_settings()
 
-AI_CAPABILITIES = [
-    "Ответы на любые вопросы о посёлке и не только",
-    "Написание текстов: объявления, поздравления, письма",
-    "Идеи для дачи, ремонта, бизнеса",
-    "Генерация картинок: Nano Banana, Flux, Turbo, Gemini",
-    "Помощь с учёбой, переводами, расчётами",
-]
+AI_CAPABILITIES: list[str] = []
 
 
 def _get_limit(source: str = "web") -> int:
     return settings.AI_VK_DAILY_LIMIT if source == "vk" else settings.AI_FREE_DAILY_LIMIT
+
+
+@router.get("/status", response_model=AIStatusResponse)
+async def ai_status():
+    return AIStatusResponse(**get_ai_status())
 
 
 @router.get("/models", response_model=ModelsResponse)
@@ -49,6 +50,7 @@ async def list_models():
         chat_models=CHAT_MODELS,
         image_models=IMAGE_MODELS,
         capabilities=AI_CAPABILITIES,
+        status=get_ai_status(),
     )
 
 
