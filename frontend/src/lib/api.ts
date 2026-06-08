@@ -225,6 +225,10 @@ class ApiClient {
     return this.request<MapStats>("/places/map/stats");
   }
 
+  getWeather() {
+    return this.request<WeatherResponse>("/weather");
+  }
+
   getPlaces(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<PlaceListResponse>(`/places${query}`);
@@ -812,4 +816,41 @@ export interface VerificationRequest {
   verification_status: string;
   verification_note: string | null;
   created_at: string;
+}
+
+export interface WeatherCurrent {
+  temperature: number;
+  apparent_temperature: number;
+  humidity: number;
+  precipitation: number;
+  wind_speed: number;
+  weather_code: number;
+  description: string;
+  icon: string;
+  time: string;
+}
+
+export interface WeatherHourlyItem {
+  time: string;
+  hour_label: string;
+  temperature: number;
+  apparent_temperature: number;
+  precipitation: number;
+  precipitation_probability: number | null;
+  humidity: number | null;
+  wind_speed: number;
+  weather_code: number;
+  description: string;
+  icon: string;
+}
+
+export interface WeatherResponse {
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  updated_at: string;
+  current: WeatherCurrent;
+  hourly: WeatherHourlyItem[];
+  cache_ttl_seconds: number;
 }

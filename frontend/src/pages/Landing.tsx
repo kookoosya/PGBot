@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { PushkinVersesSection } from "@/components/PushkinVersesSection";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
+import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
+import { WeatherWidgetDetailed } from "@/components/weather/WeatherWidgetDetailed";
 import { BRAND } from "@/lib/branding";
 import { api } from "@/lib/api";
 import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
@@ -38,6 +40,10 @@ export function Landing() {
             </h1>
             <p className="epic-lead">{BRAND.description}</p>
 
+            <div className="epic-weather-row">
+              <WeatherWidgetCompact variant="inline" />
+            </div>
+
             {placesCount != null && (
               <div className="epic-stats-row">
                 <div className="epic-stat-card epic-stat-card-static">
@@ -62,6 +68,10 @@ export function Landing() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="page-section max-w-5xl mx-auto px-4">
+        <WeatherWidgetDetailed />
       </section>
 
       <section className="epic-vk-section">

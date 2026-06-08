@@ -1977,4 +1977,169 @@
       transform: none;
     }
   }
+
+  /* Weather widgets (Open-Meteo) */
+  .weather-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.88);
+    backdrop-filter: blur(8px);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+  .weather-compact--header {
+    font-size: 0.8125rem;
+    padding: 0.3rem 0.65rem;
+  }
+  .weather-compact--inline {
+    background: hsl(152 48% 12% / 0.35);
+    border-color: hsl(42 55% 88% / 0.25);
+    color: hsl(42 85% 94%);
+  }
+  .weather-compact-icon { font-size: 1.1rem; }
+  .weather-compact-temp {
+    font-weight: 600;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .weather-compact-desc {
+    opacity: 0.85;
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .weather-compact--header .weather-compact-desc {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .weather-compact--header .weather-compact-desc {
+      display: inline;
+      max-width: 7rem;
+    }
+  }
+  .epic-weather-row {
+    margin: 1rem 0 1.25rem;
+  }
+
+  .weather-panel {
+    margin: 2rem auto 2.5rem;
+    padding: 1.5rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.92);
+    box-shadow: 0 12px 40px hsl(152 48% 12% / 0.06);
+  }
+  .weather-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .weather-panel-kicker {
+    margin: 0 0 0.25rem;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .weather-panel-head h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  .weather-panel-updated,
+  .weather-panel-muted {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+  }
+  .weather-current-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .weather-current-grid {
+      grid-template-columns: 1.2fr 1fr;
+      align-items: center;
+    }
+  }
+  .weather-current-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .weather-current-icon { font-size: 3rem; }
+  .weather-current-temp {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 2.5rem;
+    line-height: 1;
+    color: hsl(var(--forest));
+  }
+  .weather-current-desc {
+    margin: 0.35rem 0 0;
+    color: hsl(var(--muted-foreground));
+  }
+  .weather-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    margin: 0;
+  }
+  .weather-metrics div {
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--radius);
+    background: hsl(var(--secondary) / 0.65);
+  }
+  .weather-metrics dt {
+    margin: 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .weather-metrics dd {
+    margin: 0.2rem 0 0;
+    font-weight: 600;
+  }
+  .weather-hourly { margin-top: 1.5rem; }
+  .weather-hourly-title {
+    margin: 0 0 0.85rem;
+    font-size: 1.125rem;
+  }
+  .weather-hourly-scroll {
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x mandatory;
+  }
+  .weather-hour-card {
+    flex: 0 0 5.5rem;
+    scroll-snap-align: start;
+    padding: 0.75rem 0.55rem;
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    text-align: center;
+  }
+  .weather-hour-time {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .weather-hour-icon { font-size: 1.35rem; }
+  .weather-hour-temp {
+    margin: 0.25rem 0 0;
+    font-weight: 600;
+  }
+  .weather-hour-feels,
+  .weather-hour-precip {
+    margin: 0.15rem 0 0;
+    font-size: 0.6875rem;
+    color: hsl(var(--muted-foreground));
+  }
 }

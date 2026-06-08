@@ -4,6 +4,7 @@ import { PageBackdrop } from "@/components/PageBackdrop";
 import { PushkinBanner } from "@/components/PushkinBanner";
 import { FooterNav } from "@/components/FooterNav";
 import { VkBotLink } from "@/components/VkBotLink";
+import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
 import { api } from "@/lib/api";
 import { BRAND } from "@/lib/branding";
 import { getUserHomePath } from "@/lib/navigation";
@@ -34,6 +35,7 @@ export function PublicLayout() {
               </div>
             </Link>
             <div className="pushkin-header-actions">
+              <WeatherWidgetCompact variant="header" />
               {!isHome && <VkBotLink />}
               {user ? (
                 <Link to={getUserHomePath(user)} className="pushkin-header-link">

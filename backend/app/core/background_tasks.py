@@ -41,6 +41,12 @@ async def _vk_digest_work() -> None:
             logger.info("VK daily digest sent to %s subscribers", sent)
 
 
+async def _weather_cache_work() -> None:
+    from app.services.weather_service import refresh_weather_cache
+
+    await refresh_weather_cache()
+
+
 def _create_periodic_task(
     name: str,
     interval_seconds: float,
@@ -62,6 +68,11 @@ def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
             "VK digest",
             3600,
             _vk_digest_work,
+        ),
+        _create_periodic_task(
+            "Weather cache",
+            settings.WEATHER_CACHE_TTL_SECONDS,
+            _weather_cache_work,
         ),
     ]
 

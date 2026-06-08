@@ -93,6 +93,12 @@ class Settings(BaseSettings):
     MAP_SYNC_RADIUS_KM: float = 15.0
     MAP_AUTO_SYNC_HOURS: int = 6
 
+    # Weather (Open-Meteo — free, no API key)
+    WEATHER_TIMEZONE: str = "Europe/Moscow"
+    WEATHER_CACHE_TTL_SECONDS: int = 1800
+    WEATHER_HOURLY_HOURS: int = 24
+    WEATHER_FORECAST_DAYS: int = 2
+
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""
 

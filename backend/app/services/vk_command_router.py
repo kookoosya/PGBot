@@ -51,6 +51,13 @@ from app.services.vk_messages import (
     looks_like_ai_question,
     looks_like_complaint,
 )
+from app.services.weather_service import (
+    WeatherFetchError,
+    format_weather_vk_current,
+    format_weather_vk_hourly,
+    get_weather,
+    looks_like_hourly_weather,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -431,6 +438,24 @@ async def handle_help(ctx: VkRouteContext) -> None:
     await _send_welcome(ctx, help_text())
 
 
+async def handle_weather(ctx: VkRouteContext) -> None:
+    try:
+        snapshot = await get_weather()
+    except WeatherFetchError:
+        await _send_welcome(
+            ctx,
+            "🌤 Прогноз временно недоступен. Попробуйте позже или откройте сайт.",
+        )
+        return
+
+    if looks_like_hourly_weather(ctx.text_lower):
+        message = format_weather_vk_hourly(snapshot)
+    else:
+        message = format_weather_vk_current(snapshot)
+
+    await _send_welcome(ctx, box("Погода", message))
+
+
 # --- Routing tables ---
 
 COMMAND_HANDLERS: dict[str, CommandHandler] = {
@@ -457,6 +482,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "site": handle_site,
     "map": handle_map,
     "my_issues": handle_my_issues,
+    "weather": handle_weather,
     "help": handle_help,
 }
 
@@ -538,6 +564,12 @@ COMMAND_ALIASES: dict[str, str] = {
     "сайт": "site",
     "🗺 карта": "map",
     "карта": "map",
+    "🌤 погода": "weather",
+    "погода": "weather",
+    "прогноз": "weather",
+    "погода на завтра": "weather",
+    "почасовая погода": "weather",
+    "почасовой прогноз": "weather",
     "📋 мои обращения": "my_issues",
     "мои обращения": "my_issues",
     "ℹ️ помощь": "help",
@@ -570,6 +602,14 @@ async def route_welcome(ctx: VkRouteContext) -> bool:
     return True
 
 
+def _matches_weather_query(text_lower: str) -> bool:
+    if text_lower in COMMAND_ALIASES and COMMAND_ALIASES[text_lower] == "weather":
+        return True
+    if text_lower.startswith("погода"):
+        return True
+    return text_lower.startswith("прогноз")
+
+
 async def route_vk_message(ctx: VkRouteContext) -> bool:
     """Route menu commands and map keywords. Returns True if handled."""
     # Special matchers first (order matters — routes_page before generic routes alias)
@@ -580,6 +620,10 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
     if _matches_classified_jobs(ctx.text_lower):
         exit_ai_mode(ctx.peer_id)
         await handle_classified_jobs(ctx)
+        return True
+
+    if _matches_weather_query(ctx.text_lower):
+        await _dispatch(ctx, "weather")
         return True
 
     command_id = COMMAND_ALIASES.get(ctx.text_lower)

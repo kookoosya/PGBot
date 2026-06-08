@@ -117,14 +117,17 @@ def get_welcome_keyboard() -> dict:
             ],
             [
                 {"action": {"type": "text", "label": "🚕 Такси"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🌤 Погода"}, "color": "secondary"},
+            ],
+            [
                 {"action": {"type": "text", "label": "🔕 Отписаться"}, "color": "secondary"},
-            ],
-            [
                 {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
-                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
             ],
             [
+                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
                 {"action": {"type": "text", "label": "📋 Мои обращения"}, "color": "default"},
+            ],
+            [
                 {"action": {"type": "text", "label": "ℹ️ Помощь"}, "color": "default"},
             ],
         ],
