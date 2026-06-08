@@ -1245,6 +1245,47 @@
     background: hsl(42 55% 94%);
     box-shadow: 0 4px 14px rgba(12, 40, 28, 0.1);
   }
+  .map-route-detail {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid hsl(42 35% 88%);
+  }
+  .map-route-stops {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .map-route-stop {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+  }
+  .map-route-stop-num {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: hsl(152 35% 28%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-route-stop-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-top: 0.25rem;
+  }
+  .map-route-stop-links a {
+    color: hsl(152 45% 28%);
+    text-decoration: underline;
+  }
 
   .map-filter-scroll {
     display: flex;
@@ -1748,6 +1789,14 @@
   .epic-bento-violet {
     background: linear-gradient(145deg, hsl(265 40% 94%), hsl(265 32% 90%));
     border-color: hsl(265 30% 78%);
+  }
+  .epic-bento-sky {
+    background: linear-gradient(145deg, hsl(200 45% 94%), hsl(200 38% 90%));
+    border-color: hsl(200 35% 75%);
+  }
+  .epic-vk-section {
+    @apply py-12;
+    background: linear-gradient(180deg, hsl(210 30% 97%), hsl(42 35% 96%));
   }
   .epic-bento-num {
     @apply absolute top-4 right-5 text-4xl font-bold opacity-15;

@@ -123,6 +123,18 @@ export function AIChat() {
         <div className="ai-limits-note" role="status">
           <strong>Лимит на сегодня исчерпан</strong>
           <p>Бесплатные сообщения обновятся завтра. Картинки — во вкладке «Картинки».</p>
+          {usage?.payment_info && (
+            <div className="mt-3 text-sm space-y-1">
+              <p className="m-0">{usage.payment_info.message}</p>
+              {usage.payment_info.card_number ? (
+                <p className="m-0">
+                  💳 {usage.payment_info.card_number}
+                  {usage.payment_info.card_holder && ` · ${usage.payment_info.card_holder}`}
+                  {" "}· от {usage.payment_info.amount_suggested} ₽
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
       )}
 

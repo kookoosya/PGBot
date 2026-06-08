@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { VkBotLink } from "@/components/VkBotLink";
+import { VkBotBanner } from "@/components/VkBotLink";
 import { api, Issue } from "@/lib/api";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
@@ -240,13 +240,7 @@ export function Complaints() {
             </div>
           )}
 
-          <div className="pushkin-card p-6 bg-muted/30">
-            <h3 className="font-bold mb-2">💬 Через VK-бота</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Напишите боту — кнопка «Жалобы» или просто опишите проблему. Можно приложить фото.
-            </p>
-            <VkBotLink />
-          </div>
+          <VkBotBanner />
         </div>
       </div>
     </div>

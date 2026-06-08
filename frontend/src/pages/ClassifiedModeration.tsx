@@ -35,7 +35,7 @@ export function ClassifiedModeration() {
     <div>
       <h2 className="text-2xl font-bold mb-6">📋 Модерация объявлений</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        {items[0]?.placement_fee ? `Проверьте оплату ${items[0].placement_fee} ₽` : "Бесплатное объявление"} — опубликуйте
+        Размещение бесплатное — проверьте текст на мошенничество и опубликуйте
       </p>
       <div className="space-y-4">
         {items.map((ad) => (
@@ -47,13 +47,12 @@ export function ClassifiedModeration() {
                   {ad.category_label} · {ad.author_name} · {ad.phone}
                 </p>
                 <p className="text-sm mt-2">{ad.description}</p>
-                {ad.payment_reference && (
-                  <p className="text-sm mt-2 text-amber-800">
-                    Комментарий к переводу: {ad.payment_reference}
-                  </p>
+                {ad.contact_vk && (
+                  <p className="text-sm mt-2 text-blue-800">VK для уведомления: {ad.contact_vk}</p>
                 )}
+                {ad.address && <p className="text-xs mt-1 text-muted-foreground">📍 {ad.address}</p>}
                 <p className="text-xs mt-2 text-muted-foreground">
-                  Оплата: {ad.placement_fee} ₽ · {new Date(ad.created_at).toLocaleString("ru")}
+                  {new Date(ad.created_at).toLocaleString("ru")}
                 </p>
               </div>
               <div className="flex flex-col gap-2 shrink-0">

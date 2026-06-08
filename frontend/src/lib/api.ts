@@ -568,6 +568,7 @@ export interface UsageInfo {
   used: number;
   remaining: number;
   daily_limit: number;
+  payment_info?: PaymentInfo;
 }
 
 export interface ClassifiedMarketingStats {
@@ -759,6 +760,7 @@ export interface ClassifiedPending extends ClassifiedAd {
   payment_status: string;
   payment_reference: string | null;
   placement_fee: number;
+  contact_vk?: string | null;
 }
 
 export interface PendingProvider {

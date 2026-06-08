@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { VillageGallery } from "@/components/VillageGallery";
-import { VkBotLink } from "@/components/VkBotLink";
+import { VkBotBanner, VkBotLink } from "@/components/VkBotLink";
 import { BRAND } from "@/lib/branding";
 import { MAIN_SECTIONS } from "@/lib/navigation";
 import { api, ClassifiedAd } from "@/lib/api";
@@ -11,10 +11,11 @@ import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
 const heroPhoto = VILLAGE_PHOTOS[0];
 
 const highlights = [
-  { n: "01", icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — бесплатно, без регистрации", to: "/classifieds", tone: "gold" },
-  { n: "02", icon: "💼", title: "Работа", desc: "Вакансии и подработка от местных работодателей", to: "/classifieds?jobs=1", tone: "emerald" },
-  { n: "03", icon: "⚠️", title: "Жалобы", desc: "Дороги, ЖКХ, освещение — официальный канал для жителей", to: "/complaints", tone: "rose" },
-  { n: "04", icon: "🤖", title: "ИИ-помощник", desc: "30 сообщений в день — тексты, идеи, ответы о посёлке", to: "/ai", tone: "violet" },
+  { n: "01", icon: "🗺", title: "Карта", desc: "Магазины, такси, музеи и 11 туристических маршрутов", to: "/map", tone: "sky" },
+  { n: "02", icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — бесплатно, без регистрации", to: "/classifieds", tone: "gold" },
+  { n: "03", icon: "💼", title: "Работа", desc: "Вакансии и подработка от местных работодателей", to: "/classifieds?jobs=1", tone: "emerald" },
+  { n: "04", icon: "⚠️", title: "Жалобы", desc: "Дороги, ЖКХ, освещение — официальный канал для жителей", to: "/complaints", tone: "rose" },
+  { n: "05", icon: "🤖", title: "ИИ-помощник", desc: "30 сообщений в день — тексты, идеи, ответы о посёлке", to: "/ai", tone: "violet" },
 ];
 
 export function Landing() {
@@ -32,7 +33,7 @@ export function Landing() {
     });
   }, []);
 
-  const quickSections = MAIN_SECTIONS.filter((s) => s.to !== "/" && s.to !== "/map");
+  const quickSections = MAIN_SECTIONS.filter((s) => s.to !== "/");
 
   return (
     <div className="landing-epic">
@@ -58,6 +59,10 @@ export function Landing() {
 
             <div className="epic-stats-row">
               <div className="epic-stat-card epic-stat-card-static">
+                <strong>{stats.loaded ? stats.places : "…"}</strong>
+                <span>мест на карте</span>
+              </div>
+              <div className="epic-stat-card epic-stat-card-static">
                 <strong>{stats.loaded ? stats.ads : "…"}</strong>
                 <span>объявлений соседей</span>
               </div>
@@ -65,15 +70,11 @@ export function Landing() {
                 <strong>{stats.loaded ? stats.jobs : "…"}</strong>
                 <span>вакансий сейчас</span>
               </div>
-              <div className="epic-stat-card epic-stat-card-static">
-                <strong>🆓</strong>
-                <span>без регистрации</span>
-              </div>
             </div>
 
             <div className="epic-cta-row">
-              <Link to="/classifieds" className="epic-btn epic-btn-primary">📋 Подать объявление</Link>
-              <Link to="/classifieds?jobs=1" className="epic-btn epic-btn-glass">💼 Работа</Link>
+              <Link to="/map" className="epic-btn epic-btn-primary">🗺 Карта посёлка</Link>
+              <Link to="/classifieds" className="epic-btn epic-btn-glass">📋 Объявление</Link>
               <Link to="/complaints" className="epic-btn epic-btn-glass">⚠️ Жалоба</Link>
             </div>
           </div>
@@ -139,7 +140,7 @@ export function Landing() {
             {jobAds.map((ad) => {
               const visual = getCategoryVisual(ad.category);
               return (
-                <article key={ad.id} className="epic-job-card">
+                <Link key={ad.id} to={`/classifieds/${ad.id}`} className="epic-job-card no-underline text-inherit">
                   <div className="epic-job-icon" style={{ background: visual.gradient }}>
                     {visual.icon}
                   </div>
@@ -154,7 +155,7 @@ export function Landing() {
                       📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">{ad.phone}</a>
                     </p>
                   </div>
-                </article>
+                </Link>
               );
             })}
             {jobAds.length === 0 && (
@@ -164,6 +165,19 @@ export function Landing() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      <section className="epic-vk-section">
+        <div className="page-section max-w-3xl">
+          <div className="epic-section-head mb-6">
+            <p className="epic-section-kicker">В VK тоже</p>
+            <h2 className="epic-section-title">Бот в сообщениях сообщества</h2>
+            <p className="epic-section-desc">
+              Объявления, работа, жалобы с фото, маршруты и подписка на новые объявления — напишите «Начать»
+            </p>
+          </div>
+          <VkBotBanner />
         </div>
       </section>
 

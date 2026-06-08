@@ -206,6 +206,7 @@ export function MapPage() {
     complaint_type: "map_wrong_hours", description: "", author_name: "",
   });
   const [msg, setMsg] = useState("");
+  const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [offlineReady, setOfflineReady] = useState(isOfflineMapReady());
   const [offlineBusy, setOfflineBusy] = useState(false);
@@ -331,8 +332,10 @@ export function MapPage() {
       setHighlight(detail);
       setTab("info");
       setMsg("");
+      setMsgType("ok");
     } catch {
       setMsg("Не удалось загрузить организацию. Попробуйте ещё раз.");
+      setMsgType("err");
     } finally {
       window.setTimeout(() => {
         boundsPausedRef.current = false;
@@ -342,27 +345,45 @@ export function MapPage() {
 
   const submitReview = async () => {
     if (!selected) return;
-    await api.addReview(selected.id, reviewForm);
-    setMsg("Отзыв добавлен!");
-    openPlace(selected.id);
-    loadPlaces();
-    setTab("info");
+    try {
+      await api.addReview(selected.id, reviewForm);
+      setMsg("Отзыв добавлен!");
+      setMsgType("ok");
+      openPlace(selected.id);
+      loadPlaces();
+      setTab("info");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Не удалось отправить отзыв");
+      setMsgType("err");
+    }
   };
 
   const submitComplaint = async () => {
     if (!selected || complaintForm.description.length < 10) return;
-    await api.addComplaint(selected.id, complaintForm);
-    setMsg("Жалоба принята!");
-    openPlace(selected.id);
-    setTab("info");
+    try {
+      await api.addComplaint(selected.id, complaintForm);
+      setMsg("Жалоба принята!");
+      setMsgType("ok");
+      openPlace(selected.id);
+      setTab("info");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Не удалось отправить жалобу");
+      setMsgType("err");
+    }
   };
 
   const submitReport = async () => {
     if (!selected || reportForm.description.length < 10) return;
-    await api.addComplaint(selected.id, reportForm);
-    setMsg("Спасибо! Проверим и обновим карту.");
-    setReportForm({ complaint_type: "map_wrong_hours", description: "", author_name: "" });
-    setTab("info");
+    try {
+      await api.addComplaint(selected.id, reportForm);
+      setMsg("Спасибо! Проверим и обновим карту.");
+      setMsgType("ok");
+      setReportForm({ complaint_type: "map_wrong_hours", description: "", author_name: "" });
+      setTab("info");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Не удалось отправить сообщение");
+      setMsgType("err");
+    }
   };
 
   return (
@@ -399,9 +420,37 @@ export function MapPage() {
               ))}
             </div>
             {activeRoute && (
-              <button type="button" className="text-xs mt-2 opacity-70" onClick={() => setActiveRoute(null)}>
-                Скрыть маршрут
-              </button>
+              <div className="map-route-detail">
+                <div className="flex items-center justify-between gap-2 mt-3">
+                  <h4 className="m-0 text-sm font-bold">{activeRoute.title}</h4>
+                  <button type="button" className="text-xs opacity-70" onClick={() => setActiveRoute(null)}>
+                    Скрыть
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground m-0 mt-1">{activeRoute.duration} · {activeRoute.description}</p>
+                <ol className="map-route-stops">
+                  {activeRoute.stops.map((stop, i) => (
+                    <li key={`${stop.name}-${i}`} className="map-route-stop">
+                      <span className="map-route-stop-num">{i + 1}</span>
+                      <div>
+                        <strong className="text-sm">{stop.name}</strong>
+                        {stop.address && <p className="text-xs text-muted-foreground m-0">{stop.address}</p>}
+                        <div className="map-route-stop-links">
+                          <a href={yandexMapsPointUrl(stop.latitude, stop.longitude, stop.name)} target="_blank" rel="noopener noreferrer" className="text-xs">
+                            Яндекс.Карты
+                          </a>
+                          <a href={yandexRouteUrl(stop.latitude, stop.longitude)} target="_blank" rel="noopener noreferrer" className="text-xs">
+                            Маршрут
+                          </a>
+                          <a href={geoNavigateUrl(stop.latitude, stop.longitude)} className="text-xs">
+                            GPS
+                          </a>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             )}
           </div>
         </div>
@@ -630,7 +679,11 @@ export function MapPage() {
                 ))}
               </div>
 
-              {msg && <p className="text-sm text-green-700 mt-2">{msg}</p>}
+              {msg && (
+                <p className={`text-sm mt-2 ${msgType === "ok" ? "text-green-700" : "text-destructive"}`}>
+                  {msg}
+                </p>
+              )}
 
               {tab === "info" && (
                 <div className="mt-3 space-y-2">
@@ -663,7 +716,9 @@ export function MapPage() {
                   </select>
                   <textarea className="w-full border rounded p-2 text-sm min-h-[80px]" placeholder="Что не так? Например: закрыто, другой телефон..." value={reportForm.description} onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })} />
                   <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Ваше имя (необязательно)" value={reportForm.author_name} onChange={(e) => setReportForm({ ...reportForm, author_name: e.target.value })} />
-                  <Button className="w-full" onClick={submitReport}>Отправить</Button>
+                  <Button className="w-full" disabled={reportForm.description.length < 10} onClick={submitReport}>
+                    Отправить
+                  </Button>
                 </div>
               )}
 
@@ -673,8 +728,14 @@ export function MapPage() {
                   <select className="w-full border rounded px-2 py-1 text-sm" value={complaintForm.complaint_type} onChange={(e) => setComplaintForm({ ...complaintForm, complaint_type: e.target.value })}>
                     {complaintTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
-                  <textarea className="w-full border rounded p-2 text-sm min-h-[100px]" placeholder="Опишите ситуацию..." value={complaintForm.description} onChange={(e) => setComplaintForm({ ...complaintForm, description: e.target.value })} />
-                  <Button className="w-full" variant="destructive" onClick={submitComplaint}>Подать жалобу</Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Цена на ценнике" value={complaintForm.price_tagged} onChange={(e) => setComplaintForm({ ...complaintForm, price_tagged: e.target.value })} />
+                    <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Взяли с вас" value={complaintForm.price_charged} onChange={(e) => setComplaintForm({ ...complaintForm, price_charged: e.target.value })} />
+                  </div>
+                  <textarea className="w-full border rounded p-2 text-sm min-h-[100px]" placeholder="Опишите ситуацию (мин. 10 символов)..." value={complaintForm.description} onChange={(e) => setComplaintForm({ ...complaintForm, description: e.target.value })} />
+                  <Button className="w-full" variant="destructive" disabled={complaintForm.description.length < 10} onClick={submitComplaint}>
+                    Подать жалобу
+                  </Button>
                 </div>
               )}
             </div>

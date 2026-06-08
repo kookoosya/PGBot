@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { VkBotBanner } from "@/components/VkBotLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
@@ -84,7 +85,6 @@ export function Classifieds() {
       const res = await api.createClassified({
         ...form,
         price: form.price ? +form.price : undefined,
-        payment_confirmed: true,
       });
       setMsgType("ok");
       setMsg(res.message);
@@ -228,10 +228,13 @@ export function Classifieds() {
           <Input placeholder="Ваше имя" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
           <Input placeholder="Адрес / район" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           <Input
-            placeholder="ВКонтакте — для уведомления о публикации"
+            placeholder="ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
             value={form.contact_vk}
             onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
           />
+          <p className="text-xs text-muted-foreground m-0 -mt-2">
+            Необязательно. После модерации пришлём сообщение в VK, если указали профиль.
+          </p>
           <input
             type="text"
             name="website_url"
@@ -260,12 +263,16 @@ export function Classifieds() {
 
       {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
 
+      <div className="mb-8">
+        <VkBotBanner />
+      </div>
+
       <div className={jobsOnly ? "epic-jobs-grid classified-jobs-list" : "space-y-4"}>
         {ads.map((ad) => {
           const visual = getCategoryVisual(ad.category);
           if (jobsOnly) {
             return (
-              <article key={ad.id} className="epic-job-card">
+              <Link key={ad.id} to={`/classifieds/${ad.id}`} className="epic-job-card no-underline text-inherit">
                 <div className="epic-job-icon" style={{ background: visual.gradient }}>
                   {visual.icon}
                 </div>
@@ -282,7 +289,7 @@ export function Classifieds() {
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">{ad.author_name}</p>
                 </div>
-              </article>
+              </Link>
             );
           }
           return (
