@@ -63,6 +63,10 @@ class IssueStatusUpdate(BaseModel):
     resolution_text: str | None = None
 
 
+class IssueReopen(BaseModel):
+    target_status: IssueStatus = IssueStatus.UNDER_REVIEW
+
+
 class IssueResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

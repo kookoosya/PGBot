@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.core.deps import get_optional_user, require_owner
+from app.core.deps import get_client_ip, get_optional_user, require_owner
 from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.classified import ClassifiedAd
@@ -17,16 +17,15 @@ from app.models.enums import (
     JOB_CLASSIFIED_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
 )
-from app.services.ip_abuse import contains_suspicious_link
-from app.services.classified_antifraud import (
-    check_phone_rate_limit,
-    check_recent_duplicate,
-    find_scam_phrase,
-    normalize_phone,
-    validate_phone,
-)
 from app.models.user import User
-from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
+from app.services.classified_service import (
+    ClassifiedActorContext,
+    ClassifiedCreateInput,
+    ClassifiedValidationError,
+    create_classified_ad,
+    get_classified_quota,
+    moderate_classified_ad,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -74,39 +73,27 @@ class ClassifiedPendingResponse(ClassifiedResponse):
     contact_vk: str | None = None
 
 
-async def _count_user_ads(db: AsyncSession, phone: str, user_id: int | None = None) -> int:
-    """Сколько объявлений уже подано (включая на модерации)."""
-    from sqlalchemy import or_
+def _to_create_input(data: ClassifiedCreate) -> ClassifiedCreateInput:
+    return ClassifiedCreateInput(
+        category=data.category,
+        title=data.title,
+        description=data.description,
+        phone=data.phone,
+        author_name=data.author_name,
+        price=data.price,
+        price_unit=data.price_unit,
+        address=data.address,
+        contact_telegram=data.contact_telegram,
+        contact_vk=data.contact_vk,
+        payment_confirmed=data.payment_confirmed,
+        payment_reference=data.payment_reference,
+        website_url=data.website_url,
+        agree_rules=data.agree_rules,
+    )
 
-    filters = [
-        ClassifiedAd.payment_status.in_([
-            ClassifiedPaymentStatus.PENDING,
-            ClassifiedPaymentStatus.APPROVED,
-        ]),
-    ]
-    if user_id:
-        filters.append(or_(ClassifiedAd.phone == phone, ClassifiedAd.user_id == user_id))
-    else:
-        filters.append(ClassifiedAd.phone == phone)
-    q = select(func.count(ClassifiedAd.id)).where(*filters)
-    return (await db.execute(q)).scalar() or 0
 
-
-async def get_classified_quota(db: AsyncSession, phone: str | None, user_id: int | None = None) -> dict:
-    used = await _count_user_ads(db, phone, user_id) if phone else 0
-    return {
-        "free_limit": 0,
-        "free_used": used,
-        "free_remaining": 0,
-        "requires_payment": False,
-        "amount": 0,
-        "period_days": settings.CLASSIFIED_PERIOD_DAYS,
-        "card_number": settings.PAYMENT_CARD_NUMBER,
-        "message": (
-            f"Размещение объявлений бесплатно на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
-            "После модерации объявление появится на портале."
-        ),
-    }
+def _classified_actor(request: Request, user: User) -> ClassifiedActorContext:
+    return ClassifiedActorContext(actor_id=user.id, ip_address=get_client_ip(request))
 
 
 @router.get("/payment-info")
@@ -293,135 +280,56 @@ async def create_ad(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
 ):
-    if data.website_url:
-        raise HTTPException(status_code=400, detail="Не удалось отправить форму. Обновите страницу.")
-
-    if not data.agree_rules:
-        raise HTTPException(
-            status_code=400,
-            detail="Подтвердите, что объявление честное и без предоплаты незнакомцам",
+    try:
+        result = await create_classified_ad(
+            db,
+            _to_create_input(data),
+            user=current_user,
         )
+    except ClassifiedValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
-    phone_err = validate_phone(data.phone)
-    if phone_err:
-        raise HTTPException(status_code=400, detail=phone_err)
-
-    scam = find_scam_phrase(f"{data.title} {data.description}")
-    if scam:
-        raise HTTPException(
-            status_code=400,
-            detail="Текст похож на мошенническую схему. Уберите требование предоплаты или перевода.",
-        )
-
-    rate_err = await check_phone_rate_limit(db, data.phone)
-    if rate_err:
-        raise HTTPException(status_code=429, detail=rate_err)
-
-    dup_err = await check_recent_duplicate(db, data.phone, data.title)
-    if dup_err:
-        raise HTTPException(status_code=400, detail=dup_err)
-
-    if contains_suspicious_link(data.contact_telegram, data.contact_vk, data.address):
-        raise HTTPException(status_code=400, detail="Ссылки в контактах не допускаются — укажите телефон.")
-
-    quota = await get_classified_quota(db, data.phone, current_user.id if current_user else None)
-    requires_payment = quota["requires_payment"]
-    placement_fee = settings.CLASSIFIED_PLACEMENT_FEE if requires_payment else 0
-
-    if requires_payment and not data.payment_confirmed:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Подтвердите оплату {settings.CLASSIFIED_PLACEMENT_FEE} ₽ за размещение объявления",
-        )
-
-    vk_id = parse_vk_id(data.contact_vk)
-    ad = ClassifiedAd(
-        category=data.category,
-        title=data.title,
-        description=data.description,
-        price=data.price,
-        price_unit=data.price_unit,
-        phone=data.phone.strip(),
-        author_name=data.author_name,
-        address=data.address,
-        contact_telegram=data.contact_telegram,
-        contact_vk=data.contact_vk,
-        vk_id=vk_id,
-        user_id=current_user.id if current_user else None,
-        is_active=False,
-        payment_status=ClassifiedPaymentStatus.PENDING,
-        payment_reference=data.payment_reference,
-        placement_fee=placement_fee,
-    )
-    db.add(ad)
-    await db.flush()
-
-    cat_label = CLASSIFIED_LABELS.get(data.category, data.category)
-    fee_line = f"💳 {placement_fee} ₽" if requires_payment else "🆓 Бесплатное размещение"
-    site = settings.PUBLIC_SITE_URL.rstrip("/")
-    await notify_owner(
-        "📢 НОВОЕ ОБЪЯВЛЕНИЕ\n\n"
-        f"#{ad.id} · {cat_label}\n"
-        f"«{data.title}»\n"
-        f"{data.description[:200]}{'…' if len(data.description) > 200 else ''}\n\n"
-        f"👤 {data.author_name}\n"
-        f"📞 {data.phone}\n"
-        f"{fee_line}\n\n"
-        f"Модерация: {site}/admin/classifieds"
-    )
-
-    msg = "Заявка принята бесплатно! Объявление появится после модерации."
-    return {"id": ad.id, "message": msg, "free": True}
+    return {"id": result.ad.id, "message": result.message, "free": result.free}
 
 
 @router.post("/{ad_id}/approve")
 async def approve_ad(
     ad_id: int,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_owner())],
+    owner: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(select(ClassifiedAd).where(ClassifiedAd.id == ad_id))
-    ad = result.scalar_one_or_none()
-    if not ad:
-        raise HTTPException(404, "Объявление не найдено")
-    ad.is_active = True
-    ad.payment_status = ClassifiedPaymentStatus.APPROVED
+    try:
+        result = await moderate_classified_ad(
+            db,
+            ad_id,
+            action="approve",
+            actor=_classified_actor(request, owner),
+        )
+    except ClassifiedValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
-    cat_label = CLASSIFIED_LABELS.get(ad.category, ad.category)
-    vk_msg = (
-        f"✅ Ваше объявление опубликовано!\n\n"
-        f"«{ad.title}»\n"
-        f"Категория: {cat_label}\n"
-        f"Срок: {settings.CLASSIFIED_PERIOD_DAYS} дней\n\n"
-        "Жители посёлка уже видят его на портале. Удачных сделок!"
-    )
-    await notify_vk_user(ad.contact_vk or ad.vk_id, vk_msg)
-
-    from app.services.vk_bot import notify_subscribers_new_ad
-    notified = await notify_subscribers_new_ad(db, ad)
-    return {"message": "Объявление опубликовано", "subscribers_notified": notified}
+    return {"message": result.message, "subscribers_notified": result.subscribers_notified}
 
 
 @router.post("/{ad_id}/reject")
 async def reject_ad(
     ad_id: int,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_owner())],
+    owner: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(select(ClassifiedAd).where(ClassifiedAd.id == ad_id))
-    ad = result.scalar_one_or_none()
-    if not ad:
-        raise HTTPException(404, "Объявление не найдено")
-    ad.is_active = False
-    ad.payment_status = ClassifiedPaymentStatus.REJECTED
+    try:
+        result = await moderate_classified_ad(
+            db,
+            ad_id,
+            action="reject",
+            actor=_classified_actor(request, owner),
+        )
+    except ClassifiedValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
-    await notify_vk_user(
-        ad.contact_vk or ad.vk_id,
-        f"❌ Объявление «{ad.title}» не прошло модерацию.\n"
-        "Проверьте оплату и текст. Можно подать заново.",
-    )
-
-    return {"message": "Объявление отклонено"}
+    return {"message": result.message}
 
 
 @router.get("/{ad_id}")

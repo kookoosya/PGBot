@@ -51,7 +51,8 @@ async def _safe_audit(
     issue_id: int,
     actor: IssueActorContext,
     details: dict[str, Any],
-) -> None:
+) -> bool:
+    """Write audit log; return ``True`` on success."""
     try:
         await log_action(
             db,
@@ -62,15 +63,20 @@ async def _safe_audit(
             details=details,
             ip_address=actor.ip_address,
         )
+        return True
     except Exception:
         logger.exception("Audit log failed for issue #%s action %s", issue_id, action)
+        return False
 
 
-async def _safe_notify_status(issue: Issue) -> None:
+async def _safe_notify_status(issue: Issue) -> bool:
+    """Notify resident in VK about status change; return ``True`` on success."""
     try:
         await notify_issue_status(issue)
+        return True
     except Exception:
         logger.exception("Failed to notify resident about issue #%s status change", issue.id)
+        return False
 
 
 def _status_value(status: IssueStatus | str) -> str:
@@ -114,7 +120,9 @@ async def _change_issue_status(
 
     await _safe_audit(db, audit_action, issue.id, actor, details)
     if notify:
-        await _safe_notify_status(issue)
+        notified = await _safe_notify_status(issue)
+        if not notified:
+            logger.warning("Issue #%s status changed but resident was not notified", issue.id)
 
     logger.info(
         "Issue #%s: %s → %s by user %s",

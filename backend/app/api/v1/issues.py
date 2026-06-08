@@ -24,6 +24,7 @@ from app.schemas.issue import (
     IssueCommentResponse,
     IssueCreate,
     IssueListResponse,
+    IssueReopen,
     IssueResponse,
     IssueStatusUpdate,
     IssueUpdate,
@@ -34,7 +35,10 @@ from app.services.issue_processor import process_web_complaint
 from app.services.issue_service import (
     IssueActorContext,
     add_issue_comment,
+    archive_issue,
     get_issue_details,
+    get_issues_for_user,
+    reopen_issue,
     resolve_issue,
     update_issue_status,
 )
@@ -178,6 +182,30 @@ async def list_issues(
     )
 
 
+@router.get("/my", response_model=IssueListResponse)
+async def my_issues(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    status_filter: IssueStatus | None = None,
+    limit: int = Query(50, ge=1, le=100),
+):
+    if current_user.role.name != UserRole.RESIDENT:
+        raise HTTPException(status_code=403, detail="Only residents can use /my")
+
+    issues = await get_issues_for_user(
+        db,
+        current_user,
+        status=status_filter,
+        limit=limit,
+    )
+    return IssueListResponse(
+        items=[_issue_to_response(i) for i in issues],
+        total=len(issues),
+        page=1,
+        page_size=limit,
+    )
+
+
 @router.get("/{issue_id}", response_model=IssueResponse)
 async def get_issue(
     issue_id: int,
@@ -239,6 +267,40 @@ async def update_issue_status_endpoint(
             resolution_text=data.resolution_text,
             actor=actor,
         )
+    return _issue_to_response(issue)
+
+
+@router.patch("/{issue_id}/reopen", response_model=IssueResponse)
+async def reopen_issue_endpoint(
+    issue_id: int,
+    data: IssueReopen,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner_or_official())],
+):
+    issue = await _require_issue(db, issue_id, current_user)
+    actor = _actor(request, current_user)
+    try:
+        await reopen_issue(
+            db,
+            issue,
+            actor=actor,
+            target_status=data.target_status,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _issue_to_response(issue)
+
+
+@router.patch("/{issue_id}/archive", response_model=IssueResponse)
+async def archive_issue_endpoint(
+    issue_id: int,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner_or_official())],
+):
+    issue = await _require_issue(db, issue_id, current_user)
+    await archive_issue(db, issue, actor=_actor(request, current_user))
     return _issue_to_response(issue)
 
 
