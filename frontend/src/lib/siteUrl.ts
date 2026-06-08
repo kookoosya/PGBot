@@ -1,7 +1,5 @@
-/** gmxreply.com заблокирован в РФ (семейство GMX) — основной адрес без VPN */
-export const PRIMARY_SITE_URL = "https://192-210-213-135.sslip.io";
-export const FALLBACK_HTTP_URL = "http://192.210.213.135:8088";
-export const LEGACY_BLOCKED_URL = "https://pushkiny.gmxreply.com";
+/** Основной домен портала (купленный .ru) */
+export const PRIMARY_SITE_URL = "https://pushkinskie-gory.ru";
 
 export function siteOrigin(): string {
   if (typeof window !== "undefined") return window.location.origin;

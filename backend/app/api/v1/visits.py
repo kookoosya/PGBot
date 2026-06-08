@@ -22,6 +22,8 @@ PAGE_LABELS = {
     "/classifieds": "Объявления",
     "/services": "Услуги",
     "/ai": "ИИ",
+    "/wishes": "Пожелания",
+    "/complaints": "Жалобы",
     "/register": "Регистрация",
     "/signup": "Регистрация жителя",
     "/cabinet": "Личный кабинет",

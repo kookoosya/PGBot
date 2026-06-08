@@ -1,5 +1,5 @@
-const CACHE = "pgbot-shell-v5";
-const TILE_CACHE = "pgbot-map-tiles-v5";
+const CACHE = "pgbot-shell-v6";
+const TILE_CACHE = "pgbot-map-tiles-v6";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

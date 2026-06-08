@@ -18,8 +18,8 @@ export function PublicLayout() {
 
   return (
     <div className="pushkin-page min-h-screen flex flex-col">
-      <header className="pushkin-header-shell">
-        <div className="pushkin-header">
+      <header className="pushkin-header-shell epic-header-shell">
+        <div className="pushkin-header epic-header">
           <div className="pushkin-header-row">
             <Link to="/" className="pushkin-brand">
               <div className="pushkin-logo-badge">🪶</div>

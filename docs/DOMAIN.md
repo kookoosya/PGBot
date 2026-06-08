@@ -1,41 +1,30 @@
 # Домен портала посёлка
 
-**Основной (без VPN в РФ):** https://192-210-213-135.sslip.io ✅  
-**Резерв HTTP:** http://192.210.213.135:8088  
-**Старый (заблокирован в РФ):** ~~https://pushkiny.gmxreply.com~~ — домен `gmxreply.com` в блокировке РКН (семейство GMX)
+**Основной адрес:** https://pushkinskie-gory.ru  
+**Резерв:** https://192-210-213-135.sslip.io
 
-HTTPS включён (Let's Encrypt, автообновление).
+## DNS (обязательно для HTTPS)
 
-Поддомен на `gmxreply.com` (Porkbun) — **без паспорта**, основной сайт GMX на Render не трогаем.
-
----
-
-## DNS в Porkbun (2 записи)
-
-1. https://porkbun.com → **Log In** → **Domain Management** → `gmxreply.com`
-2. **DNS** → **Add**
-3. Добавить:
+В панели регистратора домена `pushkinskie-gory.ru` (registrant.ru / Timeweb / др.):
 
 | Type | Host | Answer | TTL |
 |------|------|--------|-----|
-| A | `pushkiny` | `192.210.213.135` | 300 |
-| A | `pg` | `192.210.213.135` | 300 |
+| A | `@` | `192.210.213.135` | 300 |
+| A | `www` | `192.210.213.135` | 300 |
 
-**Не трогать** записи `www` и `@` — они ведут на Render (GMX).
+После смены DNS подождите 10–30 минут и на VPS выполнится авто-выпуск сертификата при деплое (`scripts/setup-russia-mirror.sh`).
 
-Через 10–30 минут: **http://pushkiny.gmxreply.com**
+Проверка: `dig +short pushkinskie-gory.ru A` → должно быть `192.210.213.135`
 
----
+## HTTPS
 
-## HTTPS (на VPS, после DNS)
+Let's Encrypt настраивается автоматически при деплое. Ручной запуск:
 
 ```bash
 ssh root@192.210.213.135
-certbot --nginx -d pushkiny.gmxreply.com -d pg.gmxreply.com
+certbot --nginx -d pushkinskie-gory.ru -d www.pushkinskie-gory.ru
 ```
 
----
+## Старый домен
 
-## .рф домен (пушкинские-горы.рф)
-
-Не обязателен. Timeweb требует паспорт для администратора — можно не использовать.
+`pushkiny.gmxreply.com` — **не использовать в РФ** (блокировка семейства GMX в реестре РКН).

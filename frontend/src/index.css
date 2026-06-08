@@ -59,6 +59,12 @@
     z-index: 100;
     box-shadow: 0 8px 32px rgba(12, 40, 28, 0.22);
   }
+  .epic-header-shell {
+    box-shadow: 0 10px 40px rgba(12, 40, 28, 0.35);
+  }
+  .epic-header {
+    border-bottom-width: 4px;
+  }
 
   .pushkin-header {
     position: relative;

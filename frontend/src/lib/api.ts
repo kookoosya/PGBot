@@ -121,6 +121,17 @@ class ApiClient {
     });
   }
 
+  submitFeedback(data: { message: string; contact?: string; page?: string }) {
+    return this.request<FeedbackItem>("/feedback", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  getAdminFeedback() {
+    return this.request<{ items: FeedbackItem[]; total: number }>("/feedback");
+  }
+
   getVisitStats() {
     return this.request<VisitStats>("/visits/stats");
   }
@@ -731,6 +742,15 @@ export interface PendingProvider {
 export interface ComplaintType {
   value: string;
   label: string;
+}
+
+export interface FeedbackItem {
+  id: number;
+  message: string;
+  contact: string | null;
+  page: string | null;
+  status: string;
+  created_at: string;
 }
 
 export interface VerificationRequest {

@@ -6,7 +6,6 @@ import { BRAND } from "@/lib/branding";
 import { MAIN_SECTIONS } from "@/lib/navigation";
 import { api } from "@/lib/api";
 import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
-import { FALLBACK_HTTP_URL, PRIMARY_SITE_URL } from "@/lib/siteUrl";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 
@@ -72,12 +71,6 @@ export function Landing() {
               <Link to="/complaints" className="epic-btn epic-btn-glass">⚠️ Подать жалобу</Link>
             </div>
 
-            <div className="epic-access-note">
-              <strong>Без VPN:</strong>{" "}
-              <a href={PRIMARY_SITE_URL} className="epic-access-link">{PRIMARY_SITE_URL.replace("https://", "")}</a>
-              {" · "}
-              <a href={FALLBACK_HTTP_URL} className="epic-access-link">по IP</a>
-            </div>
           </div>
 
           <div className="epic-hero-panel animate-in">

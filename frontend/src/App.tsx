@@ -33,6 +33,8 @@ const AdminVisits = lazy(() => import("./pages/AdminVisits").then((m) => ({ defa
 const Verification = lazy(() => import("./pages/Verification").then((m) => ({ default: m.Verification })));
 const ClassifiedModeration = lazy(() => import("./pages/ClassifiedModeration").then((m) => ({ default: m.ClassifiedModeration })));
 const AdminProposals = lazy(() => import("./pages/AdminProposals").then((m) => ({ default: m.AdminProposals })));
+const Wishes = lazy(() => import("./pages/Wishes").then((m) => ({ default: m.Wishes })));
+const AdminFeedback = lazy(() => import("./pages/AdminFeedback").then((m) => ({ default: m.AdminFeedback })));
 const AuditLogs = lazy(() => import("./pages/AuditLogs").then((m) => ({ default: m.AuditLogs })));
 const Settings = lazy(() => import("./pages/Settings").then((m) => ({ default: m.Settings })));
 
@@ -74,6 +76,7 @@ export default function App() {
         <Route path="services/cabinet" element={<Lazy><ProviderCabinet /></Lazy>} />
         <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
+        <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
         <Route path="signup" element={<Lazy><Signup /></Lazy>} />
         <Route path="register/organization" element={<Lazy><RegisterOrganization /></Lazy>} />
@@ -118,6 +121,7 @@ export default function App() {
         <Route path="verification" element={<Lazy><Verification /></Lazy>} />
         <Route path="classifieds" element={<Lazy><ClassifiedModeration /></Lazy>} />
         <Route path="proposals" element={<Lazy><AdminProposals /></Lazy>} />
+        <Route path="feedback" element={<Lazy><AdminFeedback /></Lazy>} />
         <Route path="audit" element={<Lazy><AuditLogs /></Lazy>} />
         <Route path="settings" element={<Lazy><Settings /></Lazy>} />
       </Route>

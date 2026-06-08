@@ -30,5 +30,6 @@ export const MAIN_SECTIONS: NavSection[] = [
   { to: "/classifieds", label: "Объявления", icon: "📋" },
   { to: "/services", label: "Услуги", icon: "🛠", end: true },
   { to: "/complaints", label: "Жалобы", icon: "⚠️" },
+  { to: "/wishes", label: "Пожелания", icon: "💡" },
   { to: "/ai", label: "ИИ", icon: "🤖" },
 ];

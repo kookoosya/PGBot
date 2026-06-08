@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Eye,
   Lock,
+  Lightbulb,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -29,6 +30,7 @@ const navItems = [
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
   { to: "/admin/classifieds", icon: Megaphone, label: "Модерация объявлений" },
   { to: "/admin/proposals", icon: Lock, label: "Предложения" },
+  { to: "/admin/feedback", icon: Lightbulb, label: "Пожелания" },
   { to: "/admin/audit", icon: FileText, label: "Аудит" },
   { to: "/admin/settings", icon: Settings, label: "Настройки" },
 ];

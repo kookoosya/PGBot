@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
     VK_ADMIN_PEER_ID: str = ""
-    PUBLIC_SITE_URL: str = "https://192-210-213-135.sslip.io"
+    PUBLIC_SITE_URL: str = "https://pushkinskie-gory.ru"
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://localhost,"
-        "https://192-210-213-135.sslip.io,http://192.210.213.135:8088,"
-        "https://pushkiny.gmxreply.com,https://pg.gmxreply.com"
+        "https://pushkinskie-gory.ru,https://www.pushkinskie-gory.ru,"
+        "https://192-210-213-135.sslip.io"
     )
 
     # Rate limiting
