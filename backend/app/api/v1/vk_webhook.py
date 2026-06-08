@@ -148,11 +148,36 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
+        if text_lower in ("⚠️ жалобы", "жалобы", "обращения", "жалоба"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(
+                peer_id,
+                f"⚠️ Жалобы и обращения жителей:\n{_SITE}/complaints\n\n"
+                "Опишите проблему прямо здесь — примем заявку.\n"
+                "Или заполните форму на сайте.\n\n"
+                "«Мои обращения» — статус ваших заявок.",
+                keyboard=get_welcome_keyboard(),
+            )
+            return PlainTextResponse("ok")
+
+        if text_lower in ("📝 регистрация", "регистрация", "зарегистрироваться"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(
+                peer_id,
+                f"📝 Регистрация на портале:\n{_SITE}/register\n\n"
+                "🏠 Житель — быстрая регистрация\n"
+                "🏢 Организация — магазин, аптека, ИП\n"
+                "🏛 Администрация / ЖКХ — доступ к обращениям\n"
+                "💇 Мастер услуг — каталог",
+                keyboard=get_welcome_keyboard(),
+            )
+            return PlainTextResponse("ok")
+
         if text_lower in ("🌐 сайт", "сайт"):
             await send_message(
                 peer_id,
                 f"🌐 Портал посёлка:\n{_SITE}\n\n"
-                "Карта · Объявления · Услуги · ИИ · Регистрация",
+                "Главная · Карта · Объявления · Услуги · Жалобы · ИИ",
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -223,12 +248,13 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(
                 peer_id,
                 "ℹ️ Бот = сайт в VK\n\n"
-                "📋 Объявления — доска (3 бесплатно)\n"
                 "🗺 Карта — магазины, аптеки, кафе\n"
+                "📋 Объявления — доска (3 бесплатно)\n"
                 "🛠 Услуги — мастера, огород, дрова\n"
+                "⚠️ Жалобы — опишите проблему или форма на сайте\n"
                 "🤖 ИИ — любые вопросы + картинки на сайте\n"
-                "🔔 Подписаться — уведомления о новых объявлениях\n"
-                "📝 Обращение — просто напишите проблему\n\n"
+                "📝 Регистрация — жители, организации, ЖКХ\n"
+                "🔔 Подписаться — уведомления о новых объявлениях\n\n"
                 f"🌐 {_SITE}",
                 keyboard=get_welcome_keyboard(),
             )

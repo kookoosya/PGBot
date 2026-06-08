@@ -4,7 +4,7 @@ import { PageLoader } from "./components/PageLoader";
 import { Layout } from "./components/layout/Layout";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { useAuth } from "./lib/auth";
-import { useUserAuth } from "./lib/userAuth";
+import { isOfficialUser, useUserAuth } from "./lib/userAuth";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
 import { RegisterHub } from "./pages/RegisterHub";
@@ -15,6 +15,8 @@ const AIChat = lazy(() => import("./pages/AIChat").then((m) => ({ default: m.AIC
 const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m.Services })));
 const ServiceRegister = lazy(() => import("./pages/ServiceRegister").then((m) => ({ default: m.ServiceRegister })));
 const Classifieds = lazy(() => import("./pages/Classifieds").then((m) => ({ default: m.Classifieds })));
+const Complaints = lazy(() => import("./pages/Complaints").then((m) => ({ default: m.Complaints })));
+const OfficialIssues = lazy(() => import("./pages/OfficialIssues").then((m) => ({ default: m.OfficialIssues })));
 const ProviderCabinet = lazy(() => import("./pages/ProviderCabinet").then((m) => ({ default: m.ProviderCabinet })));
 const Register = lazy(() => import("./pages/Register").then((m) => ({ default: m.Register })));
 const RegisterOrganization = lazy(() => import("./pages/RegisterOrganization").then((m) => ({ default: m.RegisterOrganization })));
@@ -47,6 +49,14 @@ function UserRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function OfficialRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useUserAuth();
+  if (loading) return <div className="page-section text-center text-muted-foreground">Загрузка...</div>;
+  if (!user) return <Navigate to="/cabinet/login?next=/official" replace />;
+  if (!isOfficialUser(user)) return <Navigate to="/cabinet" replace />;
+  return <>{children}</>;
+}
+
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
@@ -62,6 +72,7 @@ export default function App() {
         <Route path="services/register" element={<Lazy><ServiceRegister /></Lazy>} />
         <Route path="services/cabinet" element={<Lazy><ProviderCabinet /></Lazy>} />
         <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
+        <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
         <Route path="signup" element={<Lazy><Signup /></Lazy>} />
         <Route path="register/organization" element={<Lazy><RegisterOrganization /></Lazy>} />
@@ -73,6 +84,14 @@ export default function App() {
             <UserRoute>
               <Lazy><UserCabinet /></Lazy>
             </UserRoute>
+          }
+        />
+        <Route
+          path="official"
+          element={
+            <OfficialRoute>
+              <Lazy><OfficialIssues /></Lazy>
+            </OfficialRoute>
           }
         />
       </Route>

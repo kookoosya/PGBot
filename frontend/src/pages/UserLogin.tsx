@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUserAuth } from "@/lib/userAuth";
+import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
 
 export function UserLogin() {
   const [username, setUsername] = useState("");
@@ -11,16 +11,22 @@ export function UserLogin() {
   const [loading, setLoading] = useState(false);
   const { user, login } = useUserAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get("next");
 
-  if (user) return <Navigate to="/cabinet" replace />;
+  if (user) {
+    const dest = next || (isOfficialUser(user) ? "/official" : "/cabinet");
+    return <Navigate to={dest} replace />;
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await login(username, password);
-      navigate("/cabinet");
+      const me = await login(username, password);
+      const dest = next || (isOfficialUser(me) ? "/official" : "/cabinet");
+      navigate(dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка входа");
     } finally {
@@ -32,7 +38,8 @@ export function UserLogin() {
     <div className="page-section max-w-md mx-auto">
       <h1 className="text-2xl font-bold text-center mb-2">Вход в личный кабинет</h1>
       <p className="text-center text-sm text-muted-foreground mb-8">
-        Для жителей и организаций. Владелец сайта входит через{" "}
+        Для жителей, организаций и служб (администрация, ЖКХ).
+        Владелец сайта входит через{" "}
         <Link to="/admin/login" className="text-primary hover:underline">отдельную панель</Link>.
       </p>
 

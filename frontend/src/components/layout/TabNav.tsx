@@ -5,6 +5,7 @@ const tabs = [
   { to: "/map", label: "Карта", icon: "🗺" },
   { to: "/classifieds", label: "Объявления", icon: "📋" },
   { to: "/services", label: "Услуги", icon: "🛠" },
+  { to: "/complaints", label: "Жалобы", icon: "⚠️" },
   { to: "/ai", label: "ИИ", icon: "🤖" },
   { to: "/services/cabinet", label: "Мастерам", icon: "📅" },
 ];

@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from app.config import get_settings
 from app.core.security import decode_access_token
 from app.database import get_db
-from app.models.enums import UserRole
+from app.models.enums import OFFICIAL_ROLES, UserRole
 from app.models.user import User
 
 security = HTTPBearer(auto_error=False)
@@ -86,6 +86,34 @@ def require_owner():
         return current_user
 
     return owner_checker
+
+
+def is_owner_user(user: User) -> bool:
+    settings = get_settings()
+    return (
+        user.role.name == UserRole.SUPER_ADMIN
+        and user.username in settings.owner_usernames
+    )
+
+
+def is_official_user(user: User) -> bool:
+    return user.role.name in OFFICIAL_ROLES
+
+
+def can_manage_issues(user: User) -> bool:
+    return is_owner_user(user) or is_official_user(user)
+
+
+def require_owner_or_official():
+    async def checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+        if not can_manage_issues(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Доступ только для администрации и служб",
+            )
+        return current_user
+
+    return checker
 
 
 def require_roles(*roles: UserRole):

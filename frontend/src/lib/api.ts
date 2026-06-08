@@ -59,6 +59,19 @@ class ApiClient {
     });
   }
 
+  createIssue(data: {
+    description: string;
+    address?: string;
+    category?: string;
+    full_name?: string;
+    phone?: string;
+  }) {
+    return this.request<Issue>("/issues", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   getIssues(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<IssueListResponse>(`/issues${query}`);

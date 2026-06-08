@@ -15,12 +15,10 @@ _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 PUSHKIN_WELCOME = (
     "🪶 Портал Пушкинские Горы — ваш помощник в VK!\n\n"
-    "То же, что на сайте:\n"
-    "📋 Объявления (3 бесплатно)\n"
-    "🗺 Карта магазинов и заведений\n"
-    "🛠 Услуги соседей\n"
-    "🤖 ИИ — ответит на всё + картинки\n"
-    "📝 Обращения жителей\n\n"
+    "Меню как на сайте:\n"
+    "🏠 Главная · 🗺 Карта · 📋 Объявления\n"
+    "🛠 Услуги · ⚠️ Жалобы · 🤖 ИИ\n"
+    "📝 Регистрация для служб и организаций\n\n"
     f"🌐 {_SITE}"
 )
 
@@ -97,12 +95,16 @@ def get_welcome_keyboard() -> dict:
         "inline": False,
         "buttons": [
             [
-                {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
                 {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
+                {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
             ],
             [
                 {"action": {"type": "text", "label": "🛠 Услуги"}, "color": "primary"},
+                {"action": {"type": "text", "label": "⚠️ Жалобы"}, "color": "primary"},
+            ],
+            [
                 {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "📝 Регистрация"}, "color": "secondary"},
             ],
             [
                 {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},

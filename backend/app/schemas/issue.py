@@ -43,6 +43,8 @@ class IssueCreate(BaseModel):
     description: str = Field(min_length=5)
     address: str | None = None
     category: IssueCategory | None = None
+    full_name: str | None = None
+    phone: str | None = None
 
 
 class IssueUpdate(BaseModel):
