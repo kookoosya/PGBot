@@ -7,7 +7,10 @@ USER="${VPS_USER:-root}"
 BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
 REMOTE="cd /opt/pgbot && git fetch origin $BRANCH && git checkout $BRANCH && git pull origin $BRANCH && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head"
 
+export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"
+
 if [ -n "${SSHPASS:-}" ] && command -v sshpass >/dev/null; then
+  unset SSH_ASKPASS SSH_ASKPASS_REQUIRE DISPLAY
   SSHPASS="$SSHPASS" sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" "$REMOTE"
 elif [ -n "${SSH_AUTH_SOCK:-}" ] && ssh-add -l >/dev/null 2>&1; then
   ssh -o StrictHostKeyChecking=no -o BatchMode=yes "$USER@$HOST" "$REMOTE"
