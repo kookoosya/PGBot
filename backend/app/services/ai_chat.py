@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.ai_usage import AIUsage
+from app.services.ai_providers import pollinations_text
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -73,24 +74,24 @@ async def increment_usage(db: AsyncSession, identifier: str, source: str = "web"
     return count
 
 
-async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
-    if not settings.GEMINI_API_KEY:
-        quote = random.choice(PUSHKIN_QUOTES)
-        return (
-            f"🪶 {quote}\n\n"
-            "ИИ-помощник временно работает в демо-режиме. "
-            "Для полноценных ответов администратору нужно настроить GEMINI_API_KEY.\n\n"
-            f"Ваш вопрос: «{message[:100]}» — принят! "
-            "А пока напишите боту ВКонтакте, если нужно отправить обращение."
-        )
+def _build_pollinations_prompt(message: str, history: list[dict] | None) -> str:
+    lines = [CHAT_SYSTEM_PROMPT, ""]
+    if history:
+        for msg in history[-6:]:
+            role = "Пользователь" if msg.get("role") == "user" else "Ассистент"
+            lines.append(f"{role}: {msg.get('content', '')}")
+    lines.append(f"Пользователь: {message}")
+    lines.append("Ассистент:")
+    return "\n".join(lines)
 
+
+async def _chat_gemini(message: str, history: list[dict] | None, model_id: str | None) -> str | None:
+    if not settings.GEMINI_API_KEY:
+        return None
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        model_name = model_id or settings.GEMINI_MODEL
-        model = genai.GenerativeModel(
-            model_name,
-            system_instruction=CHAT_SYSTEM_PROMPT,
-        )
+        model_name = model_id if model_id and model_id.startswith("gemini") else settings.GEMINI_MODEL
+        model = genai.GenerativeModel(model_name, system_instruction=CHAT_SYSTEM_PROMPT)
 
         chat_history = []
         if history:
@@ -100,18 +101,35 @@ async def chat_with_ai(message: str, history: list[dict] | None = None, model_id
 
         chat = model.start_chat(history=chat_history)
         response = chat.send_message(message)
-        text = response.text.strip()
-
-        if random.random() < 0.15:
-            text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
-
-        return text
+        return response.text.strip()
     except Exception as e:
-        logger.error("AI chat failed: %s", e)
-        return (
-            "Простите, сейчас не могу ответить — сервер ИИ перегружен. "
-            "Попробуйте через несколько минут или напишите в бот ВКонтакте."
-        )
+        logger.warning("Gemini chat failed, using fallback: %s", e)
+        return None
+
+
+async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
+    use_pollinations_only = model_id == "pollinations"
+
+    if not use_pollinations_only:
+        gemini_text = await _chat_gemini(message, history, model_id)
+        if gemini_text:
+            if random.random() < 0.12:
+                gemini_text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
+            return gemini_text
+
+    poll_prompt = _build_pollinations_prompt(message, history)
+    poll_text = await pollinations_text(poll_prompt)
+    if poll_text:
+        if random.random() < 0.1:
+            poll_text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
+        return poll_text
+
+    quote = random.choice(PUSHKIN_QUOTES)
+    return (
+        f"🪶 {quote}\n\n"
+        "Сейчас не удалось получить ответ от ИИ. Попробуйте ещё раз через минуту "
+        "или выберите модель «Pollinations (резерв)»."
+    )
 
 
 def get_payment_info() -> dict:

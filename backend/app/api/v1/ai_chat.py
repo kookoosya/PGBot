@@ -1,6 +1,8 @@
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -22,6 +24,7 @@ from app.services.ai_chat import (
     increment_usage,
     make_identifier,
 )
+from app.services.ai_image_store import image_path
 from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
 
 router = APIRouter()
@@ -110,6 +113,16 @@ async def public_chat(
         limit_reached=False,
         model=model_id,
     )
+
+
+@router.get("/images/{image_id}")
+async def serve_generated_image(image_id: str):
+    if not re.fullmatch(r"[a-f0-9]{32}", image_id):
+        raise HTTPException(status_code=404, detail="Not found")
+    path = image_path(image_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(path, media_type="image/jpeg")
 
 
 @router.post("/generate-image", response_model=ImageResponse)

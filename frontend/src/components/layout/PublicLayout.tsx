@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { PageBackdrop } from "@/components/PageBackdrop";
 import { FooterNav } from "@/components/FooterNav";
 import { VkBotLink } from "@/components/VkBotLink";
 import { api } from "@/lib/api";
@@ -17,7 +18,9 @@ export function PublicLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="pushkin-page min-h-screen flex flex-col">
+    <div className="pushkin-page min-h-screen flex flex-col relative">
+      <PageBackdrop />
+      <div className="site-shell relative z-10 flex flex-col min-h-screen">
       <header className="pushkin-header-shell epic-header-shell">
         <div className="pushkin-header epic-header">
           <div className="pushkin-header-row">
@@ -62,6 +65,7 @@ export function PublicLayout() {
       </footer>
 
       <TabNav variant="bottom" />
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export function AIChat() {
       content:
         "🪶 Привет! Я универсальный ИИ-помощник Пушкинских Гор.\n\n" +
         "Могу ответить на любой вопрос, написать текст, подсказать идею.\n" +
-        "Во вкладке «Картинки» — генерация изображений (Nano Banana, Flux, Turbo…).",
+        "Во вкладке «Картинки» — генерация изображений (Flux, Turbo…).",
     },
   ]);
   const [input, setInput] = useState("");
@@ -25,8 +25,8 @@ export function AIChat() {
   const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
   const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
   const [capabilities, setCapabilities] = useState<string[]>([]);
-  const [chatModel, setChatModel] = useState("gemini-2.0-flash");
-  const [imageModel, setImageModel] = useState("nano-banana");
+  const [chatModel, setChatModel] = useState("pollinations");
+  const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -60,8 +60,9 @@ export function AIChat() {
       const res = await api.sendAIChat(userMsg, history, chatModel);
       setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
       setUsage({ used: res.daily_limit - res.remaining, remaining: res.remaining, daily_limit: res.daily_limit });
-    } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "Ошибка. Попробуйте позже." }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Ошибка. Попробуйте позже.";
+      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${msg}` }]);
     } finally {
       setLoading(false);
     }

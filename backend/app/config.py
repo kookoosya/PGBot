@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # Gemini
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
+    POLLINATIONS_API_KEY: str = ""
+    AI_IMAGE_DIR: str = "/tmp/pgbot-ai-images"
 
     # VK
     VK_GROUP_TOKEN: str = ""

@@ -50,6 +50,58 @@
 @layer components {
   .pushkin-page {
     background-color: hsl(42 38% 97%);
+    overflow-x: hidden;
+  }
+
+  .site-shell {
+    min-height: 100vh;
+  }
+
+  .page-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .page-backdrop-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.08);
+    filter: saturate(1.08) contrast(1.05);
+    animation: epicKenBurns 22s ease-in-out infinite alternate;
+  }
+  .page-backdrop-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      hsl(152 48% 12% / 0.72) 0%,
+      hsl(152 40% 14% / 0.55) 35%,
+      hsl(42 38% 96% / 0.88) 100%
+    );
+  }
+  .page-backdrop-vignette {
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 120px hsl(152 50% 8% / 0.45);
+  }
+
+  .site-shell .pushkin-card,
+  .site-shell .page-header {
+    background: hsl(40 55% 99% / 0.88);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 40px rgba(12, 40, 28, 0.12);
+  }
+
+  .site-shell .page-header {
+    background: linear-gradient(
+      135deg,
+      hsl(152 42% 20% / 0.92),
+      hsl(152 36% 28% / 0.88)
+    );
+    border-color: hsl(42 70% 48% / 0.85);
   }
 
   /* === HEADER === */
