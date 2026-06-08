@@ -6,29 +6,13 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
+from app.services.vk_messages import welcome_text
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 VK_API_URL = "https://api.vk.com/method"
 _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
-
-PUSHKIN_WELCOME = (
-    "🪶 Портал Пушкинские Горы — ваш помощник в VK!\n\n"
-    "Меню как на сайте:\n"
-    "🏠 Главная · 🗺 Карта · 📋 Объявления\n"
-    "🛠 Услуги · ⚠️ Жалобы · 🤖 ИИ\n"
-    "📝 Регистрация для служб и организаций\n\n"
-    f"🌐 {_SITE}"
-)
-
-PUSHKIN_AI_HINT = (
-    "🤖 ИИ-помощник включён!\n\n"
-    "Могу всё: советы, тексты, идеи, расчёты.\n"
-    "Картинки — на сайте в разделе ИИ (Nano Banana, Flux…).\n"
-    "Лимит: {limit} сообщений/день.\n\n"
-    "«Выйти из ИИ» — обратно в меню."
-)
 
 
 async def vk_api_call(method: str, params: dict[str, Any]) -> dict:
@@ -95,15 +79,15 @@ def get_welcome_keyboard() -> dict:
         "inline": False,
         "buttons": [
             [
-                {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
-                {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
-            ],
-            [
-                {"action": {"type": "text", "label": "🛠 Услуги"}, "color": "primary"},
-                {"action": {"type": "text", "label": "⚠️ Жалобы"}, "color": "primary"},
-            ],
-            [
                 {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
+                {"action": {"type": "text", "label": "🛠 Услуги"}, "color": "primary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "⚠️ Жалобы"}, "color": "primary"},
                 {"action": {"type": "text", "label": "📝 Регистрация"}, "color": "secondary"},
             ],
             [
@@ -124,11 +108,15 @@ def get_ai_keyboard() -> dict:
         "buttons": [
             [
                 {"action": {"type": "text", "label": "🎨 Картинки на сайте"}, "color": "primary"},
+                {"action": {"type": "text", "label": "💡 Примеры вопросов"}, "color": "secondary"},
+            ],
+            [
                 {"action": {"type": "text", "label": "🚪 Выйти из ИИ"}, "color": "negative"},
+                {"action": {"type": "text", "label": "🏠 Меню"}, "color": "default"},
             ],
         ],
     }
 
 
 def get_welcome_message() -> str:
-    return PUSHKIN_WELCOME
+    return welcome_text()

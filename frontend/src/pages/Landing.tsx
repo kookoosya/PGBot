@@ -40,6 +40,7 @@ export function Landing() {
           <h2 className="hero-title">{BRAND.name}</h2>
           <p className="hero-tagline">{BRAND.tagline}</p>
           <p className="hero-desc">{BRAND.description}</p>
+          <p className="hero-free-note">✨ Объявления, услуги и жалобы — бесплатно · ИИ — {30} сообщений/день</p>
 
           {(stats.places > 0 || stats.ads > 0) && (
             <div className="stats-bar">

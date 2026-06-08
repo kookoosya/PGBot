@@ -550,6 +550,8 @@ export interface ClassifiedMarketingStats {
 
 export interface PaymentInfo {
   card_number: string;
+  card_holder?: string;
+  bank_name?: string;
   amount_suggested: number;
   message: string;
 }

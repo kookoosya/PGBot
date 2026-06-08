@@ -81,25 +81,18 @@ async def _count_user_ads(db: AsyncSession, phone: str, user_id: int | None = No
 
 
 async def get_classified_quota(db: AsyncSession, phone: str | None, user_id: int | None = None) -> dict:
-    free_limit = settings.CLASSIFIED_FREE_LIMIT
-    fee = settings.CLASSIFIED_PLACEMENT_FEE
     used = await _count_user_ads(db, phone, user_id) if phone else 0
-    free_remaining = max(0, free_limit - used)
-    requires_payment = free_remaining <= 0
     return {
-        "free_limit": free_limit,
+        "free_limit": 0,
         "free_used": used,
-        "free_remaining": free_remaining,
-        "requires_payment": requires_payment,
-        "amount": fee if requires_payment else 0,
+        "free_remaining": 0,
+        "requires_payment": False,
+        "amount": 0,
         "period_days": settings.CLASSIFIED_PERIOD_DAYS,
         "card_number": settings.PAYMENT_CARD_NUMBER,
         "message": (
-            f"Первые {free_limit} объявления — бесплатно на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
-            f"С {free_limit + 1}-го — {fee} ₽ за каждое объявление."
-            if not requires_payment
-            else f"Бесплатный лимит ({free_limit} шт.) исчерпан. "
-            f"Размещение: {fee} ₽ на {settings.CLASSIFIED_PERIOD_DAYS} дней."
+            f"Размещение объявлений бесплатно на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
+            "После модерации объявление появится на портале."
         ),
     }
 
@@ -326,17 +319,8 @@ async def create_ad(
         f"Модерация: {site}/admin/classifieds"
     )
 
-    if requires_payment:
-        msg = (
-            "Заявка принята! Объявление появится после проверки оплаты. "
-            f"Карта: {settings.PAYMENT_CARD_NUMBER} — {placement_fee} ₽."
-        )
-    else:
-        msg = (
-            f"Заявка принята бесплатно! (осталось бесплатных: {quota['free_remaining'] - 1} из {quota['free_limit']}). "
-            "Объявление появится после модерации."
-        )
-    return {"id": ad.id, "message": msg, "free": not requires_payment}
+    msg = "Заявка принята бесплатно! Объявление появится после модерации."
+    return {"id": ad.id, "message": msg, "free": True}
 
 
 @router.post("/{ad_id}/approve")

@@ -237,10 +237,15 @@ export function AIChat() {
       )}
 
       {payment && (
-        <div className="mt-6 pushkin-card p-6 text-sm">
-          <h3 className="font-semibold mb-2">💳 Поддержать портал</h3>
+        <div className="mt-6 pushkin-card p-6 text-sm ai-payment-box">
+          <h3 className="font-semibold mb-2">💳 Поддержать ИИ-помощник</h3>
+          <p className="text-muted-foreground mb-2">
+            Объявления, услуги и жалобы — <strong>бесплатно</strong>.
+            ИИ после дневного лимита работает за счёт добровольных переводов.
+          </p>
           <p className="text-muted-foreground mb-3">{payment.message}</p>
           <div className="payment-card-number">{payment.card_number}</div>
+          <p className="text-xs text-muted-foreground mt-2">{payment.card_holder} · {payment.bank_name}</p>
         </div>
       )}
     </div>

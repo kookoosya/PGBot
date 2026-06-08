@@ -35,7 +35,7 @@ async def format_ads_message(db: AsyncSession) -> str:
         return (
             "📋 Объявлений пока нет.\n\n"
             f"Подайте первым на сайте:\n{_SITE}/classifieds\n\n"
-            f"Первые {settings.CLASSIFIED_FREE_LIMIT} объявления — бесплатно!"
+            "✨ Размещение бесплатно"
         )
     lines = [f"📋 Свежие объявления ({len(ads)}):\n"]
     for ad in ads:
@@ -44,7 +44,7 @@ async def format_ads_message(db: AsyncSession) -> str:
         lines.append(f"• [{cat}] {ad.title}{price}")
         lines.append(f"  📞 {ad.phone}")
     lines.append(f"\nВсе объявления: {_SITE}/classifieds")
-    lines.append(f"Подать: {_SITE}/classifieds (3 бесплатно)")
+    lines.append(f"Подать бесплатно: {_SITE}/classifieds")
     return "\n".join(lines)
 
 

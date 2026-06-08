@@ -123,7 +123,7 @@ def get_payment_info() -> dict:
         "amount_suggested": settings.PAYMENT_AMOUNT_SUGGESTED,
         "contact_email": settings.PAYMENT_CONTACT_EMAIL,
         "message": (
-            f"Поддержите портал посёлка — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
-            "Перевод на карту помогает развивать сайт и ИИ."
+            f"ИИ-помощник работает за счёт добровольных переводов — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
+            "Объявления, услуги и жалобы на портале бесплатны."
         ),
     }

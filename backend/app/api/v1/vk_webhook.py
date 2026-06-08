@@ -22,7 +22,6 @@ from app.services.ai_chat import (
 )
 from app.services.issue_processor import process_incoming_message
 from app.services.vk import (
-    PUSHKIN_AI_HINT,
     get_ai_keyboard,
     get_welcome_keyboard,
     get_welcome_message,
@@ -34,6 +33,15 @@ from app.services.vk_bot import (
     subscribe_peer,
     unsubscribe_peer,
 )
+from app.services.vk_messages import (
+    ai_enter_text,
+    ai_limit_text,
+    ai_reply_footer,
+    box,
+    help_text,
+    looks_like_ai_question,
+    looks_like_complaint,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -41,6 +49,32 @@ router = APIRouter()
 
 _ai_mode_peers: set[int] = set()
 _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
+
+AI_EXAMPLES = (
+    "• Напиши объявление про дрова\n"
+    "• Что посмотреть в Пушкиногорье?\n"
+    "• Идеи для дачи на лето\n"
+    "• Как оформить жалобу в ЖКХ?"
+)
+
+
+async def _process_vk_ai(db: AsyncSession, peer_id: int, from_id: int, text: str) -> None:
+    identifier = make_identifier(None, None, vk_id=from_id)
+    used = await get_usage_today(db, identifier)
+    limit = settings.AI_VK_DAILY_LIMIT
+
+    if used >= limit:
+        await send_message(peer_id, ai_limit_text(get_payment_info()), keyboard=get_ai_keyboard())
+        return
+
+    reply = await chat_with_ai(text)
+    await increment_usage(db, identifier, "vk")
+    remaining = limit - used - 1
+    await send_message(
+        peer_id,
+        f"{reply}{ai_reply_footer(remaining)}",
+        keyboard=get_ai_keyboard(),
+    )
 
 
 async def _reply_places(
@@ -92,7 +126,11 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         peer_id = parsed["peer_id"]
         text_lower = text.lower()
 
-        if text_lower in ("начать", "start", "привет", "здравствуйте", "hello", "меню"):
+        menu_triggers = (
+            "начать", "start", "привет", "здравствуйте", "hello", "меню",
+            "🏠 меню", "главная", "🏠 главная",
+        )
+        if text_lower in menu_triggers:
             _ai_mode_peers.discard(peer_id)
             await send_message(peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
@@ -107,9 +145,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             _ai_mode_peers.discard(peer_id)
             await send_message(
                 peer_id,
-                f"🛠 Услуги посёлка — огород, дрова, покос, мастера:\n{_SITE}/services\n\n"
-                f"Объявления соседей: {_SITE}/classifieds\n"
-                f"Первые {settings.CLASSIFIED_FREE_LIMIT} объявления — бесплатно!",
+                box(
+                    "Услуги посёлка",
+                    f"Огород, дрова, покос, мастера с записью:\n{_SITE}/services\n\n"
+                    f"📋 Объявления соседей:\n{_SITE}/classifieds\n\n"
+                    "✨ Всё бесплатно",
+                ),
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -126,9 +167,13 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
 
         if text_lower in ("🤖 ии-помощник", "ии-помощник", "ии", "ai", "помощник"):
             _ai_mode_peers.add(peer_id)
+            await send_message(peer_id, ai_enter_text(), keyboard=get_ai_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("💡 примеры вопросов", "примеры"):
             await send_message(
                 peer_id,
-                PUSHKIN_AI_HINT.format(limit=settings.AI_VK_DAILY_LIMIT),
+                box("Примеры для ИИ", AI_EXAMPLES),
                 keyboard=get_ai_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -136,14 +181,17 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("🎨 картинки на сайте", "картинки", "нарисуй"):
             await send_message(
                 peer_id,
-                f"🎨 Генерация картинок на сайте:\n{_SITE}/ai\n\n"
-                "Модели: Nano Banana, Flux, Turbo, Gemini Imagen.\n"
-                "Опишите что нарисовать — и скачайте!",
+                box(
+                    "Генерация картинок",
+                    f"На сайте: {_SITE}/ai\n\n"
+                    "Модели: Nano Banana, Flux, Turbo, Gemini Imagen.\n"
+                    "Опишите сцену — и скачайте результат.",
+                ),
                 keyboard=get_ai_keyboard(),
             )
             return PlainTextResponse("ok")
 
-        if text_lower in ("🚪 выйти из ии", "выйти из ии", "выйти", "стоп"):
+        if text_lower in ("🚪 выйти из ии", "выйти из ии", "стоп"):
             _ai_mode_peers.discard(peer_id)
             await send_message(peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
@@ -152,10 +200,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             _ai_mode_peers.discard(peer_id)
             await send_message(
                 peer_id,
-                f"⚠️ Жалобы и обращения жителей:\n{_SITE}/complaints\n\n"
-                "Опишите проблему прямо здесь — примем заявку.\n"
-                "Или заполните форму на сайте.\n\n"
-                "«Мои обращения» — статус ваших заявок.",
+                box(
+                    "Жалобы жителей",
+                    f"Форма на сайте: {_SITE}/complaints\n\n"
+                    "Или опишите проблему прямо здесь — примем заявку.\n"
+                    "«Мои обращения» — статус ваших заявок.",
+                ),
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -164,11 +214,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             _ai_mode_peers.discard(peer_id)
             await send_message(
                 peer_id,
-                f"📝 Регистрация на портале:\n{_SITE}/register\n\n"
-                "🏠 Житель — быстрая регистрация\n"
-                "🏢 Организация — магазин, аптека, ИП\n"
-                "🏛 Администрация / ЖКХ — доступ к обращениям\n"
-                "💇 Мастер услуг — каталог",
+                box(
+                    "Регистрация",
+                    f"{_SITE}/register\n\n"
+                    "🏠 Житель\n🏢 Организация\n"
+                    "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
+                ),
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -176,8 +227,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("🌐 сайт", "сайт"):
             await send_message(
                 peer_id,
-                f"🌐 Портал посёлка:\n{_SITE}\n\n"
-                "Главная · Карта · Объявления · Услуги · Жалобы · ИИ",
+                box("Портал посёлка", f"{_SITE}\n\nГлавная · Карта · Объявления · Услуги · Жалобы · ИИ"),
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -185,8 +235,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("🗺 карта", "карта"):
             await send_message(
                 peer_id,
-                f"🗺 Карта — магазины, аптеки, кафе, АЗС, гостиницы:\n{_SITE}/map\n\n"
-                "Напишите: «аптека», «шиномонтаж», «заправка», «гостиница»",
+                box(
+                    "Карта посёлка",
+                    f"{_SITE}/map\n\n"
+                    "Магазины, аптеки, кафе, АЗС, гостиницы.\n"
+                    "Напишите: «аптека», «шиномонтаж», «заправка»",
+                ),
                 keyboard=get_welcome_keyboard(),
             )
             return PlainTextResponse("ok")
@@ -245,55 +299,43 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             return PlainTextResponse("ok")
 
         if text_lower in ("ℹ️ помощь", "помощь"):
-            await send_message(
-                peer_id,
-                "ℹ️ Бот = сайт в VK\n\n"
-                "🗺 Карта — магазины, аптеки, кафе\n"
-                "📋 Объявления — доска (3 бесплатно)\n"
-                "🛠 Услуги — мастера, огород, дрова\n"
-                "⚠️ Жалобы — опишите проблему или форма на сайте\n"
-                "🤖 ИИ — любые вопросы + картинки на сайте\n"
-                "📝 Регистрация — жители, организации, ЖКХ\n"
-                "🔔 Подписаться — уведомления о новых объявлениях\n\n"
-                f"🌐 {_SITE}",
-                keyboard=get_welcome_keyboard(),
-            )
+            await send_message(peer_id, help_text(), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if peer_id in _ai_mode_peers or text_lower.startswith("ии:"):
             msg = text[3:].strip() if text_lower.startswith("ии:") else text
-            identifier = make_identifier(None, None, vk_id=from_id)
-            used = await get_usage_today(db, identifier)
-            limit = settings.AI_VK_DAILY_LIMIT
-
-            if used >= limit:
-                payment = get_payment_info()
-                await send_message(
-                    peer_id,
-                    f"🪶 Лимит ИИ на сегодня ({limit}).\n"
-                    f"💳 Поддержка: {payment['card_number']}\n"
-                    f"Завтра лимит обновится!\n"
-                    f"Картинки: {_SITE}/ai",
-                    keyboard=get_ai_keyboard(),
-                )
+            if len(msg) < 2:
+                await send_message(peer_id, "Напишите вопрос — отвечу в режиме ИИ.", keyboard=get_ai_keyboard())
             else:
-                reply = await chat_with_ai(msg)
-                await increment_usage(db, identifier, "vk")
-                remaining = limit - used - 1
-                await send_message(
-                    peer_id,
-                    f"{reply}\n\n—\n💬 Осталось: {max(0, remaining)} · 🎨 Картинки: {_SITE}/ai",
-                    keyboard=get_ai_keyboard(),
-                )
+                await _process_vk_ai(db, peer_id, from_id, msg)
             return PlainTextResponse("ok")
 
-        try:
-            await process_incoming_message(
-                db, text=text, vk_id=from_id, peer_id=peer_id,
-                message_id=parsed.get("message_id"), photos=parsed.get("photos"),
-            )
-        except Exception as e:
-            logger.exception("Error processing VK message: %s", e)
-            await send_message(peer_id, "Ошибка. Напишите «помощь».", keyboard=get_welcome_keyboard())
+        if looks_like_ai_question(text) and not looks_like_complaint(text):
+            _ai_mode_peers.add(peer_id)
+            await _process_vk_ai(db, peer_id, from_id, text)
+            return PlainTextResponse("ok")
+
+        if looks_like_complaint(text) or parsed.get("photos"):
+            try:
+                await process_incoming_message(
+                    db, text=text, vk_id=from_id, peer_id=peer_id,
+                    message_id=parsed.get("message_id"), photos=parsed.get("photos"),
+                )
+            except Exception as e:
+                logger.exception("Error processing VK message: %s", e)
+                await send_message(peer_id, "Ошибка. Напишите «помощь».", keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        await send_message(
+            peer_id,
+            box(
+                "Не понял сообщение",
+                "Выберите кнопку меню или:\n"
+                "🤖 ИИ-помощник — любые вопросы\n"
+                "⚠️ Жалобы — опишите проблему подробно\n\n"
+                "«Меню» — вернуться к разделам",
+            ),
+            keyboard=get_welcome_keyboard(),
+        )
 
     return PlainTextResponse("ok")
