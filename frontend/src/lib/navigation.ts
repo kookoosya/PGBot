@@ -28,7 +28,7 @@ export const MAIN_SECTIONS: NavSection[] = [
   { to: "/", label: "Главная", icon: "🏠", end: true },
   { to: "/map", label: "Карта", icon: "🗺" },
   { to: "/classifieds", label: "Объявления", icon: "📋" },
-  { to: "/services", label: "Услуги", icon: "🛠", end: true },
+  { to: "/services", label: "Услуги", icon: "🛠" },
   { to: "/complaints", label: "Жалобы", icon: "⚠️" },
   { to: "/wishes", label: "Пожелания", icon: "💡" },
   { to: "/ai", label: "ИИ", icon: "🤖" },

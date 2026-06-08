@@ -211,6 +211,8 @@ export function MapPage() {
   const [offlineBusy, setOfflineBusy] = useState(false);
   const [offlineMsg, setOfflineMsg] = useState("");
   const [mapStats, setMapStats] = useState<MapStats | null>(null);
+  const [placesLoading, setPlacesLoading] = useState(true);
+  const [placesError, setPlacesError] = useState(false);
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
   const boundsPausedRef = useRef(false);
 
@@ -269,11 +271,14 @@ export function MapPage() {
       params.north = String(b.north);
       params.east = String(b.east);
     }
+    setPlacesLoading(true);
+    setPlacesError(false);
     api
       .getPlaces(params)
       .then((r) => {
         setPlaces(r.items);
         cachePlacesForOffline(r.items);
+        setPlacesLoading(false);
       })
       .catch(() => {
         const cached = getOfflinePlaces();
@@ -283,6 +288,11 @@ export function MapPage() {
             : cached;
           setPlaces(filtered);
           setOfflineMsg("Нет сети — показаны сохранённые точки.");
+          setPlacesLoading(false);
+        } else {
+          setPlaces([]);
+          setPlacesError(true);
+          setPlacesLoading(false);
         }
       });
   }, [category, shopsOnly, usefulOnly, search, isLodging]);
@@ -314,14 +324,19 @@ export function MapPage() {
 
   const openPlace = async (id: number) => {
     boundsPausedRef.current = true;
-    const detail = await api.getPlace(id);
-    setSelected(detail);
-    setHighlight(detail);
-    setTab("info");
-    setMsg("");
-    window.setTimeout(() => {
-      boundsPausedRef.current = false;
-    }, 800);
+    try {
+      const detail = await api.getPlace(id);
+      setSelected(detail);
+      setHighlight(detail);
+      setTab("info");
+      setMsg("");
+    } catch {
+      setMsg("Не удалось загрузить организацию. Попробуйте ещё раз.");
+    } finally {
+      window.setTimeout(() => {
+        boundsPausedRef.current = false;
+      }, 800);
+    }
   };
 
   const submitReview = async () => {
@@ -648,7 +663,11 @@ export function MapPage() {
           ) : (
             <div className="p-3 space-y-2">
               <p className="text-xs text-muted-foreground px-1">
-                {sortedPlaces.length > 0 ? `${sortedPlaces.length} на карте` : "Загрузка…"}
+                {placesLoading
+                  ? "Загрузка…"
+                  : placesError
+                    ? "Ошибка загрузки"
+                    : `${sortedPlaces.length} на карте`}
               </p>
               {sortedPlaces.map((p) => (
                 <button key={p.id} className="org-list-card" onClick={() => openPlace(p.id)}>
@@ -665,8 +684,16 @@ export function MapPage() {
                   </div>
                 </button>
               ))}
-              {sortedPlaces.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Загрузка организаций...</p>
+              {!placesLoading && placesError && (
+                <div className="text-center py-8 px-3">
+                  <p className="text-muted-foreground mb-3">Не удалось загрузить справочник</p>
+                  <Button size="sm" variant="outline" onClick={() => loadPlaces(boundsRef.current ?? undefined)}>
+                    Повторить
+                  </Button>
+                </div>
+              )}
+              {!placesLoading && !placesError && sortedPlaces.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">Ничего не найдено. Смените фильтр или поиск.</p>
               )}
             </div>
           )}

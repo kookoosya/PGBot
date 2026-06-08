@@ -33,6 +33,14 @@ from app.services.vk_bot import (
     subscribe_peer,
     unsubscribe_peer,
 )
+from app.services.vk_flows import (
+    clear_flow,
+    format_jobs_message,
+    format_routes_message,
+    handle_flow_message,
+    start_classified_flow,
+    start_wish_flow,
+)
 from app.services.vk_messages import (
     ai_enter_text,
     ai_limit_text,
@@ -78,10 +86,17 @@ async def _process_vk_ai(db: AsyncSession, peer_id: int, from_id: int, text: str
 
 
 async def _reply_places(
-    db: AsyncSession, peer_id: int, *, category: PlaceCategory | None = None, search: str | None = None,
+    db: AsyncSession,
+    peer_id: int,
+    *,
+    category: PlaceCategory | None = None,
+    categories: tuple[PlaceCategory, ...] | None = None,
+    search: str | None = None,
 ) -> None:
     query = select(Place).where(Place.is_active.is_(True))
-    if category:
+    if categories:
+        query = query.where(Place.category.in_(categories))
+    elif category:
         query = query.where(Place.category == category)
     if search:
         query = query.where(Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%"))
@@ -103,6 +118,55 @@ async def _reply_places(
             lines.append(f"  📞 {p.phone}")
     lines.append(f"\nВся карта: {_SITE}/map")
     await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+
+
+async def _try_map_keywords(db: AsyncSession, peer_id: int, text_lower: str) -> bool:
+    """Справочник карты важнее ИИ для запросов «где аптека»."""
+    if any(k in text_lower for k in ("гостиниц", "отель", "ночлег", "где жить", "проживан")):
+        await _reply_places(db, peer_id, category=PlaceCategory.HOTEL)
+        return True
+    if "аптек" in text_lower:
+        await _reply_places(db, peer_id, category=PlaceCategory.PHARMACY)
+        return True
+    if any(k in text_lower for k in ("магазин", "продукт", "пятёроч", "магнит", "супермаркет")):
+        await _reply_places(
+            db, peer_id,
+            categories=(PlaceCategory.SHOP, PlaceCategory.SUPERMARKET),
+        )
+        return True
+    if any(k in text_lower for k in ("кафе", "ресторан", "поесть")):
+        await _reply_places(
+            db, peer_id,
+            categories=(PlaceCategory.CAFE, PlaceCategory.RESTAURANT),
+        )
+        return True
+    if any(k in text_lower for k in ("банк", "банкомат", "сбер")):
+        await _reply_places(db, peer_id, category=PlaceCategory.BANK)
+        return True
+    if any(k in text_lower for k in ("больниц", "поликлин", "врач", "медиц")):
+        await _reply_places(db, peer_id, category=PlaceCategory.HOSPITAL)
+        return True
+    if any(k in text_lower for k in ("музей", "михайловск", "пушкин", "лавр", "монаст")):
+        await _reply_places(db, peer_id, category=PlaceCategory.CULTURE)
+        return True
+    if any(k in text_lower for k in ("такси", "извоз")):
+        result = await db.execute(
+            select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
+        )
+        services = result.scalars().all()
+        lines = ["🚕 Такси:\n"]
+        for t in services:
+            lines.append(f"• {t.name}: {t.phone}")
+        lines.append(f"\n{_SITE}/map")
+        await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+        return True
+    if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
+        await _reply_places(db, peer_id, category=PlaceCategory.TYRE)
+        return True
+    if any(k in text_lower for k in ("азс", "заправка", "бензин")):
+        await _reply_places(db, peer_id, category=PlaceCategory.GAS)
+        return True
+    return False
 
 
 @router.post("/callback")
@@ -132,7 +196,14 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         )
         if text_lower in menu_triggers:
             _ai_mode_peers.discard(peer_id)
+            clear_flow(peer_id)
             await send_message(peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        flow_reply = await handle_flow_message(db, peer_id, from_id, text)
+        if flow_reply:
+            _ai_mode_peers.discard(peer_id)
+            await send_message(peer_id, flow_reply, keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("📋 объявления", "объявления", "объявление", "доска"):
@@ -197,17 +268,30 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
+        if text_lower in ("💼 работа", "работа", "вакансии", "вакансия", "подработка"):
+            _ai_mode_peers.discard(peer_id)
+            msg = await format_jobs_message(db)
+            await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("🛤 маршруты", "маршруты", "маршрут", "куда сходить", "экскурсия"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(peer_id, format_routes_message(), keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("➕ объявление", "подать объявление", "добавить объявление", "разместить объявление"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(peer_id, start_classified_flow(peer_id), keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("вакансия работа",) or text_lower == "вакансию":
+            _ai_mode_peers.discard(peer_id)
+            await send_message(peer_id, start_classified_flow(peer_id, jobs=True), keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
         if text_lower in ("💡 пожелания", "пожелания", "предложения", "идея для сайта"):
             _ai_mode_peers.discard(peer_id)
-            await send_message(
-                peer_id,
-                box(
-                    "Пожелания жителей",
-                    f"Предложите улучшение портала:\n{_SITE}/wishes\n\n"
-                    "Идеи по дизайну, разделам, сервисам — всё сюда.",
-                ),
-                keyboard=get_welcome_keyboard(),
-            )
+            await send_message(peer_id, start_wish_flow(peer_id), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("🚕 такси", "такси"):
@@ -267,39 +351,11 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 box(
                     "Карта посёлка",
                     f"{_SITE}/map\n\n"
-                    "Магазины, аптеки, кафе, АЗС, гостиницы.\n"
-                    "Напишите: «аптека», «шиномонтаж», «заправка»",
+                    "Магазины, аптеки, кафе, АЗС, гостиницы, маршруты.\n"
+                    "Напишите: «аптека», «магазин», «заправка», «музей»",
                 ),
                 keyboard=get_welcome_keyboard(),
             )
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("гостиниц", "отель", "ночлег", "где жить", "проживан")):
-            await _reply_places(db, peer_id, category=PlaceCategory.HOTEL)
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("аптек", "магазин", "продукт")):
-            await _reply_places(db, peer_id, category=PlaceCategory.PHARMACY if "аптек" in text_lower else PlaceCategory.SHOP)
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("такси", "извоз")):
-            result = await db.execute(
-                select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
-            )
-            services = result.scalars().all()
-            lines = ["🚕 Такси:\n"]
-            for t in services:
-                lines.append(f"• {t.name}: {t.phone}")
-            lines.append(f"\n{_SITE}/map")
-            await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
-            await _reply_places(db, peer_id, category=PlaceCategory.TYRE)
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("азс", "заправка", "бензин")):
-            await _reply_places(db, peer_id, category=PlaceCategory.GAS)
             return PlainTextResponse("ok")
 
         if text_lower in ("📋 мои обращения", "мои обращения"):
@@ -312,7 +368,11 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             )
             issues = result.scalars().all()
             if not issues:
-                await send_message(peer_id, "📋 Обращений пока нет. Опишите проблему — приму заявку!")
+                await send_message(
+                    peer_id,
+                    "📋 Обращений пока нет. Опишите проблему — приму заявку!",
+                    keyboard=get_welcome_keyboard(),
+                )
             else:
                 status_emoji = {
                     IssueStatus.NEW: "🆕", IssueStatus.UNDER_REVIEW: "🔍",
@@ -331,6 +391,9 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(peer_id, help_text(), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
+        if await _try_map_keywords(db, peer_id, text_lower):
+            return PlainTextResponse("ok")
+
         if peer_id in _ai_mode_peers or text_lower.startswith("ии:"):
             msg = text[3:].strip() if text_lower.startswith("ии:") else text
             if len(msg) < 2:
@@ -344,10 +407,14 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await _process_vk_ai(db, peer_id, from_id, text)
             return PlainTextResponse("ok")
 
-        if looks_like_complaint(text) or parsed.get("photos"):
+        complaint_text = text.strip()
+        if parsed.get("photos") and len(complaint_text) < 5:
+            complaint_text = "Фото проблемы (VK)"
+
+        if looks_like_complaint(complaint_text) or parsed.get("photos"):
             try:
                 await process_incoming_message(
-                    db, text=text, vk_id=from_id, peer_id=peer_id,
+                    db, text=complaint_text, vk_id=from_id, peer_id=peer_id,
                     message_id=parsed.get("message_id"), photos=parsed.get("photos"),
                 )
             except Exception as e:

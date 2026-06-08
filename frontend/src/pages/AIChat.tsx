@@ -45,8 +45,10 @@ export function AIChat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const limitReached = usage !== null && usage.remaining <= 0;
+
   const send = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || limitReached) return;
     const userMsg = input.trim();
     setInput("");
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
@@ -117,6 +119,13 @@ export function AIChat() {
         </div>
       )}
 
+      {limitReached && (
+        <div className="ai-limits-note" role="status">
+          <strong>Лимит на сегодня исчерпан</strong>
+          <p>Бесплатные сообщения обновятся завтра. Картинки — во вкладке «Картинки».</p>
+        </div>
+      )}
+
       <div className="flex gap-2 mb-4">
         <button type="button" className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`} onClick={() => setTab("chat")}>
           💬 Чат
@@ -166,9 +175,9 @@ export function AIChat() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
                   maxLength={1000}
-                  disabled={loading}
+                  disabled={loading || limitReached}
                 />
-                <Button onClick={send} disabled={loading || !input.trim()}>→</Button>
+                <Button onClick={send} disabled={loading || limitReached || !input.trim()}>→</Button>
               </div>
             </div>
           </div>

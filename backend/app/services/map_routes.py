@@ -47,9 +47,9 @@ MAP_ROUTES: list[dict] = [
             },
             {
                 "name": "Пятёрочка",
-                "address": "ул. Лермонтова, 10",
-                "latitude": 57.0275,
-                "longitude": 28.9085,
+                "address": "ул. Ленина, 20А",
+                "latitude": 57.0264,
+                "longitude": 28.9106,
             },
         ],
     },
