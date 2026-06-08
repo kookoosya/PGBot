@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,7 +106,8 @@ export function Classifieds() {
         <p className="m-0 text-sm">
           Первые <strong>{payment?.free_limit ?? 3} объявления бесплатно</strong> на {payment?.period_days ?? 30} дней.
           Дальше — <strong>{payment?.amount ?? 150} ₽</strong> за каждое.
-          Услуги (огород, дрова, мастера) — на <a href="/services" className="text-primary hover:underline">странице «Услуги»</a>.
+          Услуги (огород, дрова, мастера) — на{" "}
+          <Link to="/services" className="text-primary hover:underline">странице «Услуги»</Link>.
         </p>
       </div>
 

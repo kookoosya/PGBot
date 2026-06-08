@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUserAuth } from "@/lib/userAuth";
@@ -8,13 +8,12 @@ import { api } from "@/lib/api";
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export function ProviderCabinet() {
-  const { user, loading, login, logout } = useUserAuth();
+  const { user, loading, logout } = useUserAuth();
   const [profile, setProfile] = useState<Awaited<ReturnType<typeof api.getMyProviderProfile>> | null>(null);
   const [appointments, setAppointments] = useState<Awaited<ReturnType<typeof api.getMyAppointments>>>([]);
   const [busyBlocks, setBusyBlocks] = useState<Awaited<ReturnType<typeof api.getMyBusyBlocks>>>([]);
   const [schedule, setSchedule] = useState<{ day_of_week: number; start_time: string; end_time: string; is_working: boolean }[]>([]);
   const [busyForm, setBusyForm] = useState({ block_date: "", start_time: "12:00", end_time: "14:00", reason: "Занят" });
-  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [msg, setMsg] = useState("");
   const [tab, setTab] = useState<"schedule" | "busy" | "bookings">("schedule");
 
@@ -37,24 +36,11 @@ export function ProviderCabinet() {
   if (loading) return <div className="p-8 text-center">Загрузка...</div>;
 
   if (!user) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16">
-        <h2 className="text-2xl font-bold text-center mb-2">Кабинет мастера</h2>
-        <p className="text-center text-sm text-muted-foreground mb-6">
-          Для тех, кто оказывает услуги: маникюр, стрижки, ремонт. Здесь расписание и записи клиентов.
-        </p>
-        <form onSubmit={async (e) => { e.preventDefault(); await login(loginForm.username, loginForm.password); }} className="pushkin-card p-6 space-y-4">
-          <Input placeholder="Логин" value={loginForm.username} onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })} />
-          <Input type="password" placeholder="Пароль" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
-          <Button type="submit" className="w-full">Войти</Button>
-          <Link to="/services/register" className="block text-center text-sm text-primary hover:underline">Нет аккаунта? Зарегистрироваться</Link>
-        </form>
-      </div>
-    );
+    return <Navigate to="/cabinet/login?next=/services/cabinet" replace />;
   }
 
   if (user.role !== "service_provider") {
-    return <Navigate to="/services" replace />;
+    return <Navigate to="/cabinet" replace />;
   }
 
   if (user && !profile) {

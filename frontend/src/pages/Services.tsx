@@ -102,7 +102,10 @@ export function Services() {
     <div className="page-section max-w-5xl">
       <PageHeader icon="🛠" title="Услуги посёлка" subtitle={PUSHKIN_QUOTES.services}>
         <Link to="/classifieds" className="btn-hero-secondary text-sm">Подать объявление</Link>
-        <Link to="/services/register" className="btn-hero-secondary text-sm">Стать мастером</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/services/cabinet" className="btn-hero-secondary text-sm">Кабинет мастера</Link>
+          <Link to="/services/register" className="btn-hero-secondary text-sm">Стать мастером</Link>
+        </div>
       </PageHeader>
 
       <div className="filter-bar mb-6">

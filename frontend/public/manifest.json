@@ -2,7 +2,7 @@
   "name": "Пушкинские Горы — портал посёлка",
   "short_name": "Пушкинские Горы",
   "description": "Карта, проживание, объявления посёлка",
-  "start_url": "/map",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f0e6",
   "theme_color": "#1a4d3a",

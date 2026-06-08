@@ -9,6 +9,7 @@ import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
 import { RegisterHub } from "./pages/RegisterHub";
 import { UserLogin } from "./pages/UserLogin";
+import { NotFound } from "./pages/NotFound";
 
 const MapPage = lazy(() => import("./pages/Map").then((m) => ({ default: m.MapPage })));
 const AIChat = lazy(() => import("./pages/AIChat").then((m) => ({ default: m.AIChat })));
@@ -94,6 +95,7 @@ export default function App() {
             </OfficialRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       <Route path="/admin/login" element={<Login />} />

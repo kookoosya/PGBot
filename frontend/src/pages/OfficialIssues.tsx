@@ -64,8 +64,11 @@ export function OfficialIssues() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link to="/">
+            <Button variant="outline" size="sm">На главную</Button>
+          </Link>
           <Link to="/complaints">
-            <Button variant="outline" size="sm">На сайт</Button>
+            <Button variant="outline" size="sm">Форма жалобы</Button>
           </Link>
           <Button variant="outline" size="sm" onClick={logout}>Выйти</Button>
         </div>

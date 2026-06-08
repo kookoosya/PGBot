@@ -48,9 +48,12 @@ export function Register() {
             Суперадминистратор проверит данные и активирует аккаунт.
             Вы получите доступ после одобрения.
           </p>
-          <Link to="/" className="inline-block mt-6 text-primary hover:underline">
-            ← На главную
-          </Link>
+          <div className="flex flex-wrap gap-4 justify-center mt-6">
+            <Link to="/cabinet/login?next=/official" className="text-primary hover:underline font-medium">
+              Войти после одобрения →
+            </Link>
+            <Link to="/" className="text-muted-foreground hover:underline">На главную</Link>
+          </div>
         </div>
       </div>
     );

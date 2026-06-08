@@ -63,7 +63,12 @@ export function ServiceRegister() {
         <span className="text-5xl">✅</span>
         <h2 className="text-2xl font-bold mt-4">Заявка отправлена!</h2>
         <p className="text-muted-foreground mt-4">После проверки вы появитесь в каталоге мастеров.</p>
-        <Link to="/services" className="text-primary hover:underline mt-4 inline-block">← К услугам</Link>
+        <div className="flex flex-wrap gap-4 justify-center mt-6">
+          <Link to="/cabinet/login?next=/services/cabinet" className="text-primary hover:underline font-medium">
+            Войти после одобрения →
+          </Link>
+          <Link to="/services" className="text-muted-foreground hover:underline">К услугам</Link>
+        </div>
       </div>
     );
   }
@@ -71,7 +76,10 @@ export function ServiceRegister() {
   return (
     <div className="mx-auto max-w-xl px-6 py-12">
       <h2 className="text-3xl font-bold text-center mb-2">Регистрация мастера</h2>
-      <p className="text-center text-muted-foreground mb-8">Маникюр, стрижки, брови и другие услуги</p>
+      <p className="text-center text-muted-foreground mb-2">Маникюр, стрижки, брови и другие услуги</p>
+      <p className="text-center text-sm mb-8">
+        <Link to="/register" className="text-primary hover:underline">← Все варианты регистрации</Link>
+      </p>
       <Card className="pushkin-card">
         <CardHeader><CardTitle>Ваши данные</CardTitle></CardHeader>
         <CardContent>

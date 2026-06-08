@@ -175,17 +175,14 @@ export function Complaints() {
           <div className="pushkin-card p-6">
             <h3 className="font-bold text-lg mb-3">🏛 Для служб и организаций</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Администрация, ЖКХ, управляющие компании и другие организации могут зарегистрироваться
-              и получить доступ к обращениям жителей после проверки.
+              Администрация, ЖКХ и организации регистрируются на портале и после проверки
+              получают доступ к обращениям жителей.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Link to="/register/official">
-                <Button size="sm">Регистрация службы</Button>
+              <Link to="/register">
+                <Button size="sm">Регистрация</Button>
               </Link>
-              <Link to="/register/organization">
-                <Button size="sm" variant="outline">Регистрация организации</Button>
-              </Link>
-              <Link to="/cabinet/login">
+              <Link to="/cabinet/login?next=/official">
                 <Button size="sm" variant="outline">Вход для служб</Button>
               </Link>
             </div>

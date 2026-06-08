@@ -47,7 +47,10 @@ export function RegisterOrganization() {
           Мы проверим организацию и ответственное лицо. После одобрения вы сможете войти в личный кабинет
           и управлять информацией о своём бизнесе на портале.
         </p>
-        <Link to="/" className="inline-block mt-6 text-primary hover:underline">На главную</Link>
+        <div className="flex flex-wrap gap-4 justify-center mt-6">
+          <Link to="/cabinet/login" className="text-primary hover:underline font-medium">Войти после одобрения →</Link>
+          <Link to="/" className="text-muted-foreground hover:underline">На главную</Link>
+        </div>
       </div>
     );
   }

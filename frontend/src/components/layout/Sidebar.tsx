@@ -27,7 +27,7 @@ const navItems = [
   { to: "/admin/marketing", icon: TrendingUp, label: "Статистика объявлений" },
   { to: "/admin/visits", icon: Eye, label: "Посещения сайта" },
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
-  { to: "/admin/classifieds", icon: Megaphone, label: "Объявления" },
+  { to: "/admin/classifieds", icon: Megaphone, label: "Модерация объявлений" },
   { to: "/admin/proposals", icon: Lock, label: "Предложения" },
   { to: "/admin/audit", icon: FileText, label: "Аудит" },
   { to: "/admin/settings", icon: Settings, label: "Настройки" },

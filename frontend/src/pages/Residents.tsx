@@ -17,7 +17,7 @@ export function Residents() {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold">Жители</h2>
-        <p className="text-muted-foreground">Зарегистрированные жители через ВКонтакте</p>
+        <p className="text-muted-foreground">Жители с сайта и VK-бота</p>
       </div>
 
       <Card>

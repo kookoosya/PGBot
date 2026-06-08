@@ -2,15 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { VillageGallery } from "@/components/VillageGallery";
 import { BRAND } from "@/lib/branding";
+import { MAIN_SECTIONS } from "@/lib/navigation";
 import { api } from "@/lib/api";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
-const features = [
-  { icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги — от соседей", to: "/classifieds" },
-  { icon: "🛠", title: "Услуги", desc: "Огород, дрова, покос, мастера — всё в одном месте", to: "/services" },
-  { icon: "🗺", title: "Карта", desc: "Магазины, аптеки, такси, гостиницы", to: "/map" },
-  { icon: "🤖", title: "ИИ-помощник", desc: "Вопросы о посёлке и быте", to: "/ai" },
-  { icon: "👤", title: "Регистрация", desc: "Жители, организации, службы", to: "/register" },
+const extraFeatures = [
+  { icon: "📅", title: "Мастерам", desc: "Расписание, записи клиентов, кабинет", to: "/services/cabinet" },
+  { icon: "✍️", title: "Регистрация", desc: "Жители, организации, ЖКХ, мастера", to: "/register" },
 ];
 
 export function Landing() {
@@ -20,6 +18,16 @@ export function Landing() {
     api.getMapStats().then((s) => setStats((st) => ({ ...st, places: s.total_places }))).catch(() => {});
     api.getClassifieds().then((r) => setStats((st) => ({ ...st, ads: r.total }))).catch(() => {});
   }, []);
+
+  const features = [
+    ...MAIN_SECTIONS.filter((s) => s.to !== "/").map((s) => ({
+      icon: s.icon,
+      title: s.label,
+      desc: sectionDesc[s.to] || "",
+      to: s.to,
+    })),
+    ...extraFeatures,
+  ];
 
   return (
     <div className="landing-page">
@@ -31,9 +39,7 @@ export function Landing() {
           <p className="hero-quote">{PUSHKIN_QUOTES.home}</p>
           <h2 className="hero-title">{BRAND.name}</h2>
           <p className="hero-tagline">{BRAND.tagline}</p>
-          <p className="hero-desc">
-            Карта, объявления, услуги мастеров — для жителей и гостей Пушкиногорья.
-          </p>
+          <p className="hero-desc">{BRAND.description}</p>
 
           {(stats.places > 0 || stats.ads > 0) && (
             <div className="stats-bar">
@@ -51,6 +57,7 @@ export function Landing() {
           <div className="hero-actions">
             <Link to="/map" className="btn-hero-primary">🗺 Карта</Link>
             <Link to="/classifieds" className="btn-hero-secondary">📋 Объявления</Link>
+            <Link to="/complaints" className="btn-hero-secondary">⚠️ Жалобы</Link>
             <Link to="/register" className="btn-hero-secondary">✍️ Регистрация</Link>
           </div>
         </div>
@@ -59,10 +66,13 @@ export function Landing() {
       <section className="section-alt">
         <div className="page-section">
           <h3 className="section-title animate-in">Разделы портала</h3>
+          <p className="text-center text-muted-foreground mb-8 max-w-xl mx-auto">
+            Всё в одном месте — как на сайте, так и в VK-боте
+          </p>
           <div className="feature-grid">
             {features.map((f, i) => (
               <Link
-                key={f.title}
+                key={f.to}
                 to={f.to}
                 className="feature-card no-underline text-inherit animate-in"
                 style={{ animationDelay: `${i * 60}ms` }}
@@ -81,3 +91,11 @@ export function Landing() {
     </div>
   );
 }
+
+const sectionDesc: Record<string, string> = {
+  "/map": "Магазины, аптеки, такси, гостиницы",
+  "/classifieds": "Дрова, вакансии, услуги — от соседей",
+  "/services": "Огород, дрова, покос, мастера с записью",
+  "/complaints": "Сообщить о проблеме — ЖКХ, дороги, освещение",
+  "/ai": "Вопросы о посёлке, тексты, идеи, картинки",
+};

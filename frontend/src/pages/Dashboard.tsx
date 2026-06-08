@@ -81,7 +81,7 @@ export function Dashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Последние обращения</CardTitle>
-          <Link to="/issues" className="text-sm text-primary hover:underline">
+          <Link to="/admin/issues" className="text-sm text-primary hover:underline">
             Все обращения →
           </Link>
         </CardHeader>

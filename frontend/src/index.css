@@ -158,6 +158,9 @@
     border-bottom: 4px solid hsl(152 48% 18%);
     box-shadow: inset 0 1px 0 hsl(42 85% 75%);
   }
+  @media (max-width: 767px) {
+    .pushkin-tab-bar-top-desktop { display: none; }
+  }
 
   .pushkin-tab-inner {
     @apply mx-auto max-w-6xl;

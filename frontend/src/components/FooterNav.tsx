@@ -1,24 +1,28 @@
 import { Link } from "react-router-dom";
-
-const links = [
-  { to: "/", label: "Главная", icon: "🏠" },
-  { to: "/map", label: "Карта", icon: "🗺" },
-  { to: "/classifieds", label: "Объявления", icon: "📋" },
-  { to: "/services", label: "Услуги", icon: "💇" },
-  { to: "/ai", label: "ИИ", icon: "🤖" },
-  { to: "/cabinet", label: "Кабинет", icon: "👤" },
-  { to: "/register", label: "Регистрация", icon: "✍️" },
-];
+import { MAIN_SECTIONS, getUserHomeLabel, getUserHomePath } from "@/lib/navigation";
+import { useUserAuth } from "@/lib/userAuth";
 
 export function FooterNav() {
+  const { user } = useUserAuth();
+
   return (
     <nav className="footer-nav" aria-label="Навигация в подвале">
-      {links.map(({ to, label, icon }) => (
+      {MAIN_SECTIONS.map(({ to, label, icon }) => (
         <Link key={to} to={to} className="footer-nav-link">
           <span>{icon}</span>
           {label}
         </Link>
       ))}
+      <Link to={getUserHomePath(user)} className="footer-nav-link">
+        <span>👤</span>
+        {user ? getUserHomeLabel(user) : "Вход"}
+      </Link>
+      {!user && (
+        <Link to="/register" className="footer-nav-link">
+          <span>✍️</span>
+          Регистрация
+        </Link>
+      )}
     </nav>
   );
 }

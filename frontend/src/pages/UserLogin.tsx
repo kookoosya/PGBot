@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
+import { getUserHomePath } from "@/lib/navigation";
+import { useUserAuth } from "@/lib/userAuth";
 
 export function UserLogin() {
   const [username, setUsername] = useState("");
@@ -15,8 +16,7 @@ export function UserLogin() {
   const next = searchParams.get("next");
 
   if (user) {
-    const dest = next || (isOfficialUser(user) ? "/official" : "/cabinet");
-    return <Navigate to={dest} replace />;
+    return <Navigate to={next || getUserHomePath(user)} replace />;
   }
 
   const submit = async (e: React.FormEvent) => {
@@ -25,8 +25,7 @@ export function UserLogin() {
     setLoading(true);
     try {
       const me = await login(username, password);
-      const dest = next || (isOfficialUser(me) ? "/official" : "/cabinet");
-      navigate(dest);
+      navigate(next || getUserHomePath(me));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка входа");
     } finally {
