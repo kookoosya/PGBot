@@ -51,6 +51,7 @@ from app.services.vk_messages import (
     looks_like_ai_question,
     looks_like_complaint,
 )
+from app.services.weather_service import (
     WeatherFetchError,
     format_weather_vk_current,
     format_weather_vk_hourly,
