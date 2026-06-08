@@ -178,28 +178,9 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
 
 
 async def seed_pushkin_landmarks(db: AsyncSession) -> int:
-    """Seed key Pushkinogorsky landmarks if not present."""
-    landmarks = [
-        ("Музей-заповедник А.С. Пушкина «Михайловское»", PlaceCategory.CULTURE, 57.028, 28.908, "Пушкиногорский р-н, с. Пушкинские Горы"),
-        ("Государственный музей-заповедник А.С. Пушкина", PlaceCategory.CULTURE, 57.027, 28.909, "Пушкинские Горы, ул. Красноармейская"),
-        ("Свято-Успенская Пушкиногорская лавра", PlaceCategory.CULTURE, 57.025, 28.912, "Пушкинские Горы"),
-        ("Администрация Пушкиногорского района", PlaceCategory.GOVERNMENT, 57.026, 28.911, "Пушкинские Горы, пл. Ленина"),
-        ("Пушкиногорская ЦРБ", PlaceCategory.HOSPITAL, 57.024, 28.915, "Пушкинские Горы"),
-        ("Магазин «Пятёрочка»", PlaceCategory.SUPERMARKET, 57.027, 28.910, "Пушкинские Горы, ул. Красноармейская"),
-        ("Магазин «Магнит»", PlaceCategory.SUPERMARKET, 57.026, 28.908, "Пушкинские Горы"),
-        ("Аптека", PlaceCategory.PHARMACY, 57.0265, 28.9095, "Пушкинские Горы, центр"),
-        ("Автовокзал Пушкинские Горы", PlaceCategory.TRANSPORT, 57.028, 28.905, "Пушкинские Горы"),
-        ("Сбербанк", PlaceCategory.BANK, 57.0268, 28.9105, "Пушкинские Горы"),
-    ]
-    count = 0
-    for name, cat, lat, lng, addr in landmarks:
-        result = await db.execute(select(Place).where(Place.name == name, Place.address == addr))
-        if not result.scalars().first():
-            db.add(Place(
-                name=name, category=cat, latitude=lat, longitude=lng,
-                address=addr, description=f"Пушкиногорский район — {PLACE_CATEGORY_LABELS.get(cat, '')}",
-                external_source="seed",
-            ))
-            count += 1
+    """Устаревший seed отключён — все точки в pushkin_places_seed.py (reference)."""
+    legacy = await db.execute(select(Place).where(Place.external_source == "seed"))
+    for place in legacy.scalars().all():
+        place.is_active = False
     await db.flush()
-    return count
+    return 0

@@ -69,6 +69,31 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             reason = "deprecated_address"
         elif place.category == PlaceCategory.GAS and "пропан" in _norm_name(place.name):
             reason = "propane_not_petrol"
+        elif place.external_source == "seed":
+            reason = "legacy_seed"
+        elif place.external_source in ("osm", "yandex") and place.category in (
+            PlaceCategory.SUPERMARKET,
+            PlaceCategory.PHARMACY,
+            PlaceCategory.GAS,
+        ):
+            brand = _norm_name(place.name)
+            for ref in reference:
+                if place.category != ref.category:
+                    continue
+                if _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) > 0.5:
+                    continue
+                ref_name = _norm_name(ref.name)
+                if (
+                    ("пятёрочка" in brand or "пятерочка" in brand) and "пятёрочка" in ref_name
+                ) or (
+                    ("магнит" in brand) and "магнит" in ref_name
+                ) or (
+                    ("аптека" in brand) and "аптека" in ref_name
+                ) or (
+                    place.category == PlaceCategory.GAS and ref.category == PlaceCategory.GAS
+                ):
+                    reason = "brand_duplicate_ref"
+                    break
         elif place.external_source == "osm":
             name_l = _norm_name(place.name)
             if any(skip in name_l for skip in SKIP_OSM_NAMES):
