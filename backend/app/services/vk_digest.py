@@ -16,6 +16,7 @@ from app.models.enums import (
 )
 from app.models.vk_subscriber import VkSubscriber
 from app.services.vk import send_message, get_welcome_keyboard
+from app.services.weather_service import WeatherFetchError, format_weather_digest_lines, get_weather
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -62,6 +63,14 @@ async def send_daily_digest(db: AsyncSession) -> int:
     )).scalar() or 0
 
     jobs_count = sum(1 for a in recent_ads if a.category in JOB_CLASSIFIED_CATEGORIES)
+
+    weather_lines: list[str] = []
+    try:
+        weather = await get_weather()
+        weather_lines = format_weather_digest_lines(weather)
+    except WeatherFetchError:
+        logger.warning("Daily digest: weather unavailable")
+
     sent = 0
 
     for sub in subs:
@@ -71,9 +80,14 @@ async def send_daily_digest(db: AsyncSession) -> int:
         relevant = [a for a in recent_ads if _subscriber_wants_category(sub, a.category)]
         lines = [
             "🪶 Сводка за сутки\n",
+        ]
+        if weather_lines:
+            lines.extend(weather_lines)
+            lines.append("")
+        lines.extend([
             f"📋 Всего на доске: {total_count}",
             f"🆕 За 24 ч: {len(relevant)} по вашей подписке",
-        ]
+        ])
         if jobs_count and (sub.categories or "all").lower() in ("all", "jobs"):
             lines.append(f"💼 Вакансий за сутки: {jobs_count}")
 

@@ -378,3 +378,19 @@ def looks_like_hourly_weather(text_lower: str) -> bool:
         "на день",
     )
     return any(marker in text_lower for marker in markers)
+
+
+def format_weather_digest_lines(snapshot: WeatherSnapshot) -> list[str]:
+    """Compact weather block for the daily VK digest."""
+    cur = snapshot.current
+    lines = [
+        f"🌤 Сейчас: {cur.icon} {cur.temperature:+.0f}°C, {cur.description.lower()}",
+        f"Ощущается {cur.apparent_temperature:+.0f}°C · ветер {cur.wind_speed:.0f} м/с",
+    ]
+    if snapshot.hourly:
+        parts = [
+            f"{hour.hour_label} {hour.icon}{hour.temperature:+.0f}°"
+            for hour in snapshot.hourly[:4]
+        ]
+        lines.append("Ближайшие часы: " + " · ".join(parts))
+    return lines

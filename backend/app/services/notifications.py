@@ -50,27 +50,49 @@ async def notify_owner(message: str) -> None:
 
 
 ISSUE_STATUS_LABELS = {
-    "new": "🆕 Новая",
-    "under_review": "🔍 На рассмотрении",
-    "assigned": "👤 Назначена",
-    "in_progress": "🔧 В работе",
-    "resolved": "✅ Решена",
-    "rejected": "❌ Отклонена",
-    "archived": "📦 В архиве",
+    "NEW": "🆕 Новая",
+    "UNDER_REVIEW": "🔍 На рассмотрении",
+    "ASSIGNED": "👤 Назначена",
+    "IN_PROGRESS": "🔧 В работе",
+    "RESOLVED": "✅ Решена",
+    "REJECTED": "❌ Отклонена",
+    "ARCHIVED": "📦 В архиве",
+}
+
+ISSUE_STATUS_TEXT = {
+    "NEW": "Новая",
+    "UNDER_REVIEW": "На рассмотрении",
+    "ASSIGNED": "Назначена",
+    "IN_PROGRESS": "В работе",
+    "RESOLVED": "Решена",
+    "REJECTED": "Отклонена",
+    "ARCHIVED": "В архиве",
 }
 
 
-async def notify_issue_status(issue) -> bool:
+def issue_status_label(status: str | None) -> str:
+    if not status:
+        return "—"
+    return ISSUE_STATUS_LABELS.get(status, status)
+
+
+def issue_status_text(status: str | None) -> str:
+    if not status:
+        return "—"
+    return ISSUE_STATUS_TEXT.get(status, status)
+
+
+async def notify_issue_status(issue, *, previous_status: str | None = None) -> bool:
     """Уведомить автора жалобы в VK об изменении статуса."""
     peer_id = getattr(issue, "vk_peer_id", None)
     if not peer_id:
         return False
     status = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
-    label = ISSUE_STATUS_LABELS.get(status, status)
     lines = [
-        f"📋 Обращение #{issue.id}",
-        f"Статус: {label}",
+        f"📋 Ваше обращение #{issue.id} перешло в статус «{issue_status_text(status)}»",
     ]
+    if previous_status and previous_status != status:
+        lines.insert(1, f"Было: {issue_status_label(previous_status)}")
     if issue.resolution_text:
         lines.append(f"\nОтвет:\n{issue.resolution_text[:500]}")
     lines.append(f"\n🌐 {public_site_url()}/complaints")

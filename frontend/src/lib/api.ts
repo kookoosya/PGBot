@@ -229,6 +229,15 @@ class ApiClient {
     return this.request<WeatherResponse>("/weather");
   }
 
+  getToday() {
+    return this.request<TodayResponse>("/public/today");
+  }
+
+  getMyIssues(params?: Record<string, string>) {
+    const query = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<IssueMyListResponse>(`/issues/my${query}`);
+  }
+
   getPlaces(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<PlaceListResponse>(`/places${query}`);
@@ -446,6 +455,21 @@ export interface Issue {
     duplicate_probability: number | null;
     suggested_department: string | null;
   } | null;
+  status_timeline?: IssueStatusEvent[];
+}
+
+export interface IssueStatusEvent {
+  status: string;
+  label: string;
+  at: string;
+  previous_status: string | null;
+}
+
+export interface IssueMyListResponse {
+  items: Issue[];
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface IssueListResponse {
@@ -852,5 +876,27 @@ export interface WeatherResponse {
   updated_at: string;
   current: WeatherCurrent;
   hourly: WeatherHourlyItem[];
+  cache_ttl_seconds: number;
+}
+
+export interface TodayClassifiedSnippet {
+  id: number;
+  title: string;
+  category_label: string;
+  created_at: string;
+}
+
+export interface TodayMapSnippet {
+  total_places: number;
+  total_reviews: number;
+  active_taxi_count: number;
+  route_count: number;
+}
+
+export interface TodayResponse {
+  weather: WeatherResponse | null;
+  latest_classified: TodayClassifiedSnippet | null;
+  map: TodayMapSnippet;
+  updated_at: string;
   cache_ttl_seconds: number;
 }

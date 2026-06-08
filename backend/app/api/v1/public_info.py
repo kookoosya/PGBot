@@ -1,6 +1,12 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.database import get_db
+from app.schemas.today import TodayResponse
+from app.services.today_service import build_today_snapshot
 
 router = APIRouter()
 settings = get_settings()
@@ -31,3 +37,10 @@ async def public_info():
         "map_url": f"{site}/map",
         "yandex_maps_add_org": "https://yandex.ru/sprav/add",
     }
+
+
+@router.get("/today", response_model=TodayResponse)
+async def today_in_village(db: Annotated[AsyncSession, Depends(get_db)]):
+    """Aggregated landing snapshot: weather, latest ad, map stats."""
+    snapshot = await build_today_snapshot(db)
+    return snapshot.to_response()

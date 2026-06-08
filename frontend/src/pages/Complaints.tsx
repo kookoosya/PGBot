@@ -35,7 +35,7 @@ export function Complaints() {
       setMyIssues([]);
       return;
     }
-    api.getIssues({ page_size: "10" })
+    api.getMyIssues({ limit: "10" })
       .then((r) => setMyIssues(r.items))
       .catch(() => setMyIssues([]));
   }, [user]);
@@ -67,7 +67,7 @@ export function Complaints() {
       setMsg(`Обращение #${issue.id} принято! Статус: на рассмотрении.`);
       setForm((f) => ({ ...f, description: "", address: "" }));
       if (user) {
-        const r = await api.getIssues({ page_size: "10" });
+        const r = await api.getMyIssues({ limit: "10" });
         setMyIssues(r.items);
       }
     } catch (err) {
@@ -223,6 +223,24 @@ export function Complaints() {
                       <p className="text-sm mt-2">
                         {issue.ai_analysis?.summary || issue.description}
                       </p>
+                      {issue.status_timeline && issue.status_timeline.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            История статусов
+                          </p>
+                          <ol className="issue-status-timeline">
+                            {issue.status_timeline.map((event, index) => (
+                              <li key={`${event.at}-${event.status}-${index}`}>
+                                <span className="issue-status-timeline-dot" aria-hidden />
+                                <div>
+                                  <p className="issue-status-timeline-label">{event.label}</p>
+                                  <p className="issue-status-timeline-date">{formatDate(event.at)}</p>
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
                       {issue.resolution_text && (
                         <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm">
                           <strong className="text-emerald-800">Ответ службы:</strong>

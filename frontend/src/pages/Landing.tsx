@@ -1,23 +1,15 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PushkinVersesSection } from "@/components/PushkinVersesSection";
+import { TodayInVillage } from "@/components/TodayInVillage";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
 import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
-import { WeatherWidgetDetailed } from "@/components/weather/WeatherWidgetDetailed";
 import { BRAND } from "@/lib/branding";
-import { api } from "@/lib/api";
 import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 
 export function Landing() {
-  const [placesCount, setPlacesCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    api.getMapStats().then((s) => setPlacesCount(s.total_places)).catch(() => {});
-  }, []);
-
   return (
     <div className="landing-epic">
       <section className="epic-hero">
@@ -44,23 +36,6 @@ export function Landing() {
               <WeatherWidgetCompact variant="inline" />
             </div>
 
-            {placesCount != null && (
-              <div className="epic-stats-row">
-                <div className="epic-stat-card epic-stat-card-static">
-                  <strong>{placesCount}</strong>
-                  <span>организаций на карте</span>
-                </div>
-                <div className="epic-stat-card epic-stat-card-static">
-                  <strong>0 ₽</strong>
-                  <span>объявления и вакансии</span>
-                </div>
-                <div className="epic-stat-card epic-stat-card-static">
-                  <strong>24/7</strong>
-                  <span>ИИ и ВК-бот</span>
-                </div>
-              </div>
-            )}
-
             <div className="epic-cta-row">
               <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
                 🗺 Открыть карту
@@ -71,7 +46,7 @@ export function Landing() {
       </section>
 
       <section className="page-section max-w-5xl mx-auto px-4">
-        <WeatherWidgetDetailed />
+        <TodayInVillage />
       </section>
 
       <section className="epic-vk-section">

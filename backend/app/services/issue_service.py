@@ -19,11 +19,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.audit_log import AuditLog
 from app.models.enums import IssueStatus
 from app.models.issue import Issue, IssueComment
 from app.models.user import User
 from app.services.audit import log_action
-from app.services.notifications import notify_issue_status
+from app.services.notifications import issue_status_label, notify_issue_status
 from app.services.service_errors import ServiceError
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,18 @@ _ISSUE_LIST_LOADS = (
     selectinload(Issue.photos),
     selectinload(Issue.ai_analysis),
 )
+
+_STATUS_AUDIT_ACTIONS = frozenset({"status_change", "reopen_issue", "archive_issue"})
+
+
+@dataclass(frozen=True, slots=True)
+class IssueStatusEvent:
+    """Single status transition visible to the resident."""
+
+    status: str
+    label: str
+    at: str
+    previous_status: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,11 +107,11 @@ async def _safe_audit(
         return False
 
 
-async def _safe_notify_status(issue: Issue) -> bool:
+async def _safe_notify_status(issue: Issue, *, previous_status: str | None = None) -> bool:
     """Notify resident in VK about status change; return ``True`` on success."""
     peer_id = getattr(issue, "vk_peer_id", None)
     try:
-        await notify_issue_status(issue)
+        await notify_issue_status(issue, previous_status=previous_status)
         return True
     except Exception:
         logger.exception(
@@ -129,6 +142,10 @@ async def _change_issue_status(
 ) -> Issue:
     """Shared status transition: mutate issue, audit, optional VK notify."""
     previous = issue.status
+    if _status_value(previous) == status.value:
+        logger.debug("Issue #%s status unchanged (%s), skipping transition", issue.id, status.value)
+        return issue
+
     issue.status = status
 
     if resolution_text:
@@ -160,7 +177,7 @@ async def _change_issue_status(
             actor.actor_id,
         )
     if notify:
-        notified = await _safe_notify_status(issue)
+        notified = await _safe_notify_status(issue, previous_status=_status_value(previous))
         if not notified:
             logger.warning(
                 "Issue #%s status changed to %s but resident was not notified (peer_id=%s)",
@@ -234,6 +251,124 @@ async def get_issues_for_user(
         safe_limit,
     )
     return issues
+
+
+async def get_issue_status_timeline(db: AsyncSession, issue: Issue) -> list[IssueStatusEvent]:
+    """Build resident-visible status history from audit logs and creation time."""
+    try:
+        result = await db.execute(
+            select(AuditLog)
+            .where(
+                AuditLog.entity_type == "issue",
+                AuditLog.entity_id == issue.id,
+                AuditLog.action.in_(_STATUS_AUDIT_ACTIONS),
+            )
+            .order_by(AuditLog.created_at.asc())
+        )
+        entries = list(result.scalars().all())
+    except Exception:
+        logger.exception("Failed to load status timeline for issue #%s", issue.id)
+        raise
+
+    events: list[IssueStatusEvent] = []
+    for entry in entries:
+        details = entry.details or {}
+        status = details.get("status")
+        if not status:
+            continue
+        events.append(
+            IssueStatusEvent(
+                status=str(status),
+                label=issue_status_label(str(status)),
+                at=entry.created_at.isoformat(),
+                previous_status=details.get("previous_status"),
+            )
+        )
+
+    if not events:
+        created_status = _status_value(issue.status)
+        events.append(
+            IssueStatusEvent(
+                status=created_status,
+                label=issue_status_label(created_status),
+                at=issue.created_at.isoformat(),
+            )
+        )
+    elif events[0].previous_status is None and events[0].status != IssueStatus.NEW.value:
+        events.insert(
+            0,
+            IssueStatusEvent(
+                status=IssueStatus.NEW.value,
+                label=issue_status_label(IssueStatus.NEW.value),
+                at=issue.created_at.isoformat(),
+            ),
+        )
+
+    return events
+
+
+async def get_status_timelines_for_issues(
+    db: AsyncSession,
+    issues: list[Issue],
+) -> dict[int, list[IssueStatusEvent]]:
+    """Batch-load status timelines for a list of issues."""
+    if not issues:
+        return {}
+
+    issue_ids = [issue.id for issue in issues]
+    try:
+        result = await db.execute(
+            select(AuditLog)
+            .where(
+                AuditLog.entity_type == "issue",
+                AuditLog.entity_id.in_(issue_ids),
+                AuditLog.action.in_(_STATUS_AUDIT_ACTIONS),
+            )
+            .order_by(AuditLog.created_at.asc())
+        )
+        entries = list(result.scalars().all())
+    except Exception:
+        logger.exception("Failed to batch-load issue status timelines")
+        raise
+
+    by_issue: dict[int, list[IssueStatusEvent]] = {issue_id: [] for issue_id in issue_ids}
+    for entry in entries:
+        if entry.entity_id is None:
+            continue
+        details = entry.details or {}
+        status = details.get("status")
+        if not status:
+            continue
+        by_issue.setdefault(entry.entity_id, []).append(
+            IssueStatusEvent(
+                status=str(status),
+                label=issue_status_label(str(status)),
+                at=entry.created_at.isoformat(),
+                previous_status=details.get("previous_status"),
+            )
+        )
+
+    for issue in issues:
+        events = by_issue.get(issue.id, [])
+        if not events:
+            created_status = _status_value(issue.status)
+            by_issue[issue.id] = [
+                IssueStatusEvent(
+                    status=created_status,
+                    label=issue_status_label(created_status),
+                    at=issue.created_at.isoformat(),
+                )
+            ]
+        elif events[0].previous_status is None and events[0].status != IssueStatus.NEW.value:
+            events.insert(
+                0,
+                IssueStatusEvent(
+                    status=IssueStatus.NEW.value,
+                    label=issue_status_label(IssueStatus.NEW.value),
+                    at=issue.created_at.isoformat(),
+                ),
+            )
+    return by_issue
 
 
 async def update_issue_status(

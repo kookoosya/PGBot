@@ -25,8 +25,11 @@ from app.schemas.issue import (
     IssueCommentResponse,
     IssueCreate,
     IssueListResponse,
+    IssueMyListResponse,
+    IssueMyResponse,
     IssueReopen,
     IssueResponse,
+    IssueStatusEventResponse,
     IssueStatusUpdate,
     IssueUpdate,
 )
@@ -40,6 +43,7 @@ from app.services.issue_service import (
     archive_issue,
     get_issue_details,
     get_issues_for_user,
+    get_status_timelines_for_issues,
     reopen_issue,
     resolve_issue,
     update_issue_status,
@@ -57,6 +61,21 @@ JKH_CATEGORIES = {
 
 def _issue_to_response(issue: Issue) -> IssueResponse:
     return IssueResponse.model_validate(issue)
+
+
+def _issue_to_my_response(issue: Issue, timeline) -> IssueMyResponse:
+    return IssueMyResponse(
+        **_issue_to_response(issue).model_dump(),
+        status_timeline=[
+            IssueStatusEventResponse(
+                status=event.status,
+                label=event.label,
+                at=event.at,
+                previous_status=event.previous_status,
+            )
+            for event in timeline
+        ],
+    )
 
 
 def _official_category_filter(user: User):
@@ -184,7 +203,7 @@ async def list_issues(
     )
 
 
-@router.get("/my", response_model=IssueListResponse)
+@router.get("/my", response_model=IssueMyListResponse)
 async def my_issues(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
@@ -200,8 +219,12 @@ async def my_issues(
         status=status_filter,
         limit=limit,
     )
-    return IssueListResponse(
-        items=[_issue_to_response(i) for i in issues],
+    timelines = await get_status_timelines_for_issues(db, issues)
+    return IssueMyListResponse(
+        items=[
+            _issue_to_my_response(issue, timelines.get(issue.id, []))
+            for issue in issues
+        ],
         total=len(issues),
         page=1,
         page_size=limit,

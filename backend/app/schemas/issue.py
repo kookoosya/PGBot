@@ -91,6 +91,24 @@ class IssueResponse(BaseModel):
     ai_analysis: AIAnalysisResponse | None = None
 
 
+class IssueStatusEventResponse(BaseModel):
+    status: str
+    label: str
+    at: str
+    previous_status: str | None = None
+
+
+class IssueMyResponse(IssueResponse):
+    status_timeline: list[IssueStatusEventResponse] = Field(default_factory=list)
+
+
+class IssueMyListResponse(BaseModel):
+    items: list[IssueMyResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 class IssueListResponse(BaseModel):
     items: list[IssueResponse]
     total: int

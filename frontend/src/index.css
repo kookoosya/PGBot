@@ -2142,4 +2142,181 @@
     font-size: 0.6875rem;
     color: hsl(var(--muted-foreground));
   }
+
+  /* Today in village */
+  .today-panel {
+    margin: 2rem auto 2.5rem;
+    padding: 1.5rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.94);
+    box-shadow: 0 12px 40px hsl(152 48% 12% / 0.06);
+  }
+  .today-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .today-kicker {
+    margin: 0 0 0.25rem;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .today-panel-head h2 {
+    margin: 0;
+    font-size: 1.625rem;
+  }
+  .today-updated,
+  .today-muted {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+  }
+  .today-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 768px) {
+    .today-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .today-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    min-height: 100%;
+  }
+  .today-card-title {
+    margin: 0;
+    font-size: 1rem;
+    color: hsl(var(--forest));
+  }
+  .today-weather-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .today-weather-icon { font-size: 2rem; }
+  .today-weather-temp {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+  .today-weather-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .today-weather-meta {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .today-hourly-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .today-hour-chip {
+    font-size: 0.6875rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: hsl(var(--secondary) / 0.8);
+    white-space: nowrap;
+  }
+  .today-ad-category {
+    margin: 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .today-ad-link {
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+    line-height: 1.35;
+  }
+  .today-ad-link:hover { text-decoration: underline; }
+  .today-ad-date {
+    margin: 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .today-map-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin: 0;
+  }
+  .today-map-stats div {
+    padding: 0.55rem 0.65rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    background: hsl(var(--secondary) / 0.55);
+  }
+  .today-map-stats dt {
+    margin: 0;
+    font-size: 0.6875rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .today-map-stats dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    font-size: 1.125rem;
+  }
+  .today-card-action {
+    margin-top: auto;
+    font-size: 0.875rem;
+    color: hsl(var(--forest));
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .today-card-action:hover { text-decoration: underline; }
+
+  .issue-status-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.65rem;
+  }
+  .issue-status-timeline li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.65rem;
+    align-items: start;
+  }
+  .issue-status-timeline-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-top: 0.35rem;
+    border-radius: 999px;
+    background: hsl(var(--gold));
+    box-shadow: 0 0 0 3px hsl(var(--gold) / 0.2);
+  }
+  .issue-status-timeline-label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .issue-status-timeline-date {
+    margin: 0.1rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
 }
