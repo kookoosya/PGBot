@@ -316,22 +316,29 @@ async def _create_and_send_notification(
         message=f"Новое обращение #{issue.id}: {summary}",
     )
     db.add(notification)
-    await notify_owner(owner_message)
+
+    try:
+        await notify_owner(owner_message)
+    except Exception:
+        logger.exception("Owner notification failed for issue #%s", issue.id)
 
     if notif_priority == NotificationPriority.HIGH:
         dept_chat = department.telegram_chat_id if department else None
-        sent = await notify_about_issue(
-            issue.id,
-            summary,
-            category,
-            priority,
-            issue.address,
-            dept_chat,
-            notif_priority,
-        )
-        if sent:
-            notification.status = NotificationStatus.SENT
-            notification.sent_at = datetime.now(timezone.utc)
+        try:
+            sent = await notify_about_issue(
+                issue.id,
+                summary,
+                category,
+                priority,
+                issue.address,
+                dept_chat,
+                notif_priority,
+            )
+            if sent:
+                notification.status = NotificationStatus.SENT
+                notification.sent_at = datetime.now(timezone.utc)
+        except Exception:
+            logger.exception("Telegram notification failed for issue #%s", issue.id)
 
 
 def _attach_vk_photos(db: AsyncSession, issue_id: int, photos: list[dict] | None) -> None:
