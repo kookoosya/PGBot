@@ -5,7 +5,10 @@ from urllib.parse import quote
 
 import httpx
 
+from app.config import get_settings
+
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 POLLINATIONS_TEXT_URL = "https://gen.pollinations.ai/text"
 POLLINATIONS_IMAGE_URL = "https://gen.pollinations.ai/image"
@@ -23,20 +26,35 @@ async def pollinations_text(prompt: str, timeout: float = 90.0) -> str | None:
         user_part = text.rsplit("Пользователь:", 1)[-1].split("Ассистент:")[0].strip()
     short = f"Answer in Russian helpfully: {user_part[:280]}"
 
+    key_q = _pollinations_key_param()
+    headers = _pollinations_headers()
+
     for candidate in (short, user_part[:120]):
         if len(candidate) < 8:
             continue
         for base in (POLLINATIONS_TEXT_URL, "https://text.pollinations.ai"):
-            url = f"{base}/{quote(candidate)}"
+            url = f"{base}/{quote(candidate)}{'?' + key_q[1:] if key_q else ''}"
             try:
                 async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-                    resp = await client.get(url)
+                    resp = await client.get(url, headers=headers)
                     body = resp.text.strip()
                     if resp.status_code == 200 and body and not body.startswith("{"):
                         return body
             except Exception as exc:
                 logger.warning("Pollinations text failed: %s", exc)
     return None
+
+
+def _pollinations_headers() -> dict[str, str]:
+    key = settings.POLLINATIONS_API_KEY.strip()
+    if not key:
+        return {}
+    return {"Authorization": f"Bearer {key}"}
+
+
+def _pollinations_key_param() -> str:
+    key = settings.POLLINATIONS_API_KEY.strip()
+    return f"&key={quote(key)}" if key else ""
 
 
 async def pollinations_image_bytes(
@@ -50,17 +68,28 @@ async def pollinations_image_bytes(
     text = prompt.strip()[:500]
     if not text:
         return None
-    url = (
-        f"{POLLINATIONS_IMAGE_URL}/{quote(text)}"
-        f"?model={model}&width={width}&height={height}&nologo=true&enhance=true"
-    )
-    try:
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            resp = await client.get(url)
-            ctype = resp.headers.get("content-type", "")
-            if resp.status_code == 200 and ctype.startswith("image/"):
-                return resp.content
-            logger.warning("Pollinations image HTTP %s ctype=%s", resp.status_code, ctype)
-    except Exception as exc:
-        logger.error("Pollinations image failed: %s", exc)
+
+    key_q = _pollinations_key_param()
+    headers = _pollinations_headers()
+    urls = [
+        (
+            f"{POLLINATIONS_IMAGE_URL}/{quote(text)}"
+            f"?model={model}&width={width}&height={height}&nologo=true&enhance=true{key_q}"
+        ),
+        (
+            f"https://image.pollinations.ai/prompt/{quote(text)}"
+            f"?model={model}&width={width}&height={height}&nologo=true{key_q}"
+        ),
+    ]
+
+    for url in urls:
+        try:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+                resp = await client.get(url, headers=headers)
+                ctype = resp.headers.get("content-type", "")
+                if resp.status_code == 200 and ctype.startswith("image/"):
+                    return resp.content
+                logger.warning("Pollinations image HTTP %s ctype=%s url=%s", resp.status_code, ctype, url[:80])
+        except Exception as exc:
+            logger.error("Pollinations image failed: %s", exc)
     return None

@@ -28,6 +28,7 @@ export function AIChat() {
   const [chatModel, setChatModel] = useState("pollinations");
   const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [imageProvider, setImageProvider] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -73,12 +74,14 @@ export function AIChat() {
     setImageLoading(true);
     setImageError("");
     setGeneratedImage(null);
+    setImageProvider(null);
     try {
       const res = await api.generateAIImage(imagePrompt.trim(), imageModel);
       if (res.error || !res.url) {
         setImageError(res.error || "Не удалось сгенерировать");
       } else {
-        setGeneratedImage(res.url);
+        setGeneratedImage(`${res.url}?t=${Date.now()}`);
+        setImageProvider(res.provider || null);
       }
       api.getAIUsage().then(setUsage).catch(console.error);
     } catch (e) {
@@ -225,11 +228,32 @@ export function AIChat() {
           <Button className="w-full" onClick={generateImage} disabled={imageLoading || !imagePrompt.trim()}>
             {imageLoading ? "Рисую…" : "🎨 Сгенерировать"}
           </Button>
+          {imageLoading && (
+            <div className="w-full aspect-[4/3] rounded-lg border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center text-sm text-muted-foreground animate-pulse">
+              Генерация может занять до минуты…
+            </div>
+          )}
           {imageError && <p className="text-sm text-red-600">{imageError}</p>}
           {generatedImage && (
             <div className="space-y-2">
-              <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border" />
-              <a href={generatedImage} download="pushkin-ai.png" className="btn-hero-secondary text-sm inline-block no-underline">
+              {imageProvider && (
+                <p className="text-xs text-muted-foreground m-0">
+                  {imageProvider === "pollinations" && "✨ Сгенерировано Flux/Turbo (Pollinations)"}
+                  {imageProvider === "google" && "✨ Сгенерировано Gemini Imagen"}
+                  {imageProvider === "local-poster" &&
+                    "🪶 Локальная иллюстрация — внешний генератор недоступен. Добавьте POLLINATIONS_API_KEY для реальных картинок."}
+                  {imageProvider !== "pollinations" &&
+                    imageProvider !== "google" &&
+                    imageProvider !== "local-poster" &&
+                    `Источник: ${imageProvider}`}
+                </p>
+              )}
+              <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border shadow-md" />
+              <a
+                href={generatedImage.split("?")[0]}
+                download="pushkin-ai.jpg"
+                className="btn-hero-secondary text-sm inline-block no-underline"
+              >
                 Скачать
               </a>
             </div>

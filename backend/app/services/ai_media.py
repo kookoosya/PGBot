@@ -5,6 +5,7 @@ import logging
 from app.config import get_settings
 from app.services.ai_image_fallback import save_fallback_image
 from app.services.ai_image_store import save_image
+from app.services.ai_prompt_translate import image_prompt_english
 from app.services.ai_providers import pollinations_image_bytes
 
 logger = logging.getLogger(__name__)
@@ -41,11 +42,17 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
             return result
 
     poll_model = POLLINATIONS_MODEL_MAP.get(model, "flux")
-    # Короткий англ. промпт — VPS IP часто блокирует длинные запросы
-    short_prompt = " ".join(prompt.split()[:5]) or "village art"
-    data = await pollinations_image_bytes(short_prompt, model=poll_model, width=width, height=height)
+    en_prompt = image_prompt_english(prompt)
+    data = await pollinations_image_bytes(en_prompt, model=poll_model, width=width, height=height)
+    if not data and en_prompt != prompt:
+        data = await pollinations_image_bytes(prompt[:200], model=poll_model, width=width, height=height)
     if not data:
-        data = await pollinations_image_bytes("art illustration", model="flux", width=width, height=height)
+        data = await pollinations_image_bytes(
+            "russian village landscape wooden house snow, cinematic illustration",
+            model="flux",
+            width=width,
+            height=height,
+        )
     if not data:
         fallback_id = save_fallback_image(prompt)
         if fallback_id:

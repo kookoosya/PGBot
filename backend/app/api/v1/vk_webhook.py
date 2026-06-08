@@ -183,9 +183,10 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 peer_id,
                 box(
                     "Генерация картинок",
-                    f"На сайте: {_SITE}/ai\n\n"
-                    "Модели: Nano Banana, Flux, Turbo, Gemini Imagen.\n"
-                    "Опишите сцену — и скачайте результат.",
+                    f"На сайте: {_SITE}/ai → вкладка «Картинки»\n\n"
+                    "Модели: Flux, Turbo, Nano Banana.\n"
+                    "Пример: «Уютная изба в снегу» или «Усадьба на закате».\n"
+                    "Опишите сцену на русском — скачайте результат.",
                 ),
                 keyboard=get_ai_keyboard(),
             )

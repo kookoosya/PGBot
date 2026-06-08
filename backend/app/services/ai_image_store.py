@@ -24,8 +24,19 @@ def save_image(data: bytes, ext: str = "jpg") -> str:
 
 def image_path(image_id: str) -> Path | None:
     ensure_dir()
-    for ext in ("jpg", "jpeg", "png", "webp"):
+    for ext in ("jpg", "jpeg", "png", "webp", "svg"):
         p = IMAGE_DIR / f"{image_id}.{ext}"
         if p.is_file():
             return p
     return None
+
+
+def image_media_type(path: Path) -> str:
+    ext = path.suffix.lower()
+    return {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".svg": "image/svg+xml",
+    }.get(ext, "application/octet-stream")

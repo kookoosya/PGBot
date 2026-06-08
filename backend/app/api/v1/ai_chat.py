@@ -24,7 +24,7 @@ from app.services.ai_chat import (
     increment_usage,
     make_identifier,
 )
-from app.services.ai_image_store import image_path
+from app.services.ai_image_store import image_media_type, image_path
 from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
 
 router = APIRouter()
@@ -122,7 +122,7 @@ async def serve_generated_image(image_id: str):
     path = image_path(image_id)
     if not path:
         raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(path, media_type="image/jpeg")
+    return FileResponse(path, media_type=image_media_type(path))
 
 
 @router.post("/generate-image", response_model=ImageResponse)
