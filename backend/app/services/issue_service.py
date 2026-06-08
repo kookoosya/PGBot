@@ -1,7 +1,11 @@
-"""Issue management operations — extracted from the API layer.
+"""Issue lifecycle operations — reads and updates on existing issues.
 
-Creation and AI analysis live in ``issue_processor``; this module covers
-reads and lifecycle updates on existing issues.
+Creation and AI analysis live in ``issue_processor``.
+
+Public API: ``get_issue_details``, ``get_issues_for_user``, ``update_issue_status``,
+``resolve_issue``, ``reopen_issue``, ``archive_issue``, ``assign_issue``, ``add_issue_comment``.
+
+Errors: ``IssueNotFoundError``, ``IssueValidationError`` (subclasses of ``ServiceError``).
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ from app.models.issue import Issue, IssueComment
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.notifications import notify_issue_status
+from app.services.service_errors import ServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -45,22 +50,18 @@ class IssueActorContext:
     ip_address: Optional[str] = None
 
 
-class IssueNotFoundError(Exception):
+class IssueNotFoundError(ServiceError):
     """Business error when an issue cannot be loaded."""
 
-    def __init__(self, detail: str = "Issue not found", *, status_code: int = 404) -> None:
-        super().__init__(detail)
-        self.detail = detail
-        self.status_code = status_code
+    def __init__(self, detail: str = "Issue not found") -> None:
+        super().__init__(detail, status_code=404)
 
 
-class IssueValidationError(Exception):
+class IssueValidationError(ServiceError):
     """Business validation failure for issue lifecycle actions."""
 
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
-        super().__init__(detail)
-        self.detail = detail
-        self.status_code = status_code
+        super().__init__(detail, status_code=status_code)
 
 
 async def _safe_audit(

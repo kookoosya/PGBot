@@ -1,4 +1,14 @@
-"""Place search and details — extracted from the API layer."""
+"""Place search, details, reviews, complaints and map stats.
+
+Public API
+----------
+- ``search_places`` / ``get_place_details`` — read paths
+- ``create_place_complaint`` / ``add_place_review`` — write paths
+- ``list_active_taxi`` / ``get_map_stats`` — map dashboard
+- ``build_place_response`` / ``build_complaint_response`` — response mappers
+
+Errors: ``PlaceNotFoundError``, ``PlaceValidationError`` (subclasses of ``ServiceError``).
+"""
 
 from __future__ import annotations
 
@@ -38,6 +48,7 @@ from app.services.map_routes import get_map_routes
 from app.services.notify_utils import safe_notify_owner
 from app.services.pagination_utils import normalize_pagination
 from app.services.schedule import format_opening_hours
+from app.services.service_errors import ServiceError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -223,22 +234,18 @@ class MapStatsResult:
         )
 
 
-class PlaceNotFoundError(Exception):
+class PlaceNotFoundError(ServiceError):
     """Business error when a place cannot be loaded."""
 
-    def __init__(self, detail: str = "Место не найдено", *, status_code: int = 404) -> None:
-        super().__init__(detail)
-        self.detail = detail
-        self.status_code = status_code
+    def __init__(self, detail: str = "Место не найдено") -> None:
+        super().__init__(detail, status_code=404)
 
 
-class PlaceValidationError(Exception):
+class PlaceValidationError(ServiceError):
     """Business validation failure for place actions."""
 
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
-        super().__init__(detail)
-        self.detail = detail
-        self.status_code = status_code
+        super().__init__(detail, status_code=status_code)
 
 
 def _radius_bbox(radius_km: float) -> tuple[float, float, float, float]:

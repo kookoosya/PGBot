@@ -15,6 +15,7 @@ from app.core.deps import (
     is_owner_user,
     require_owner_or_official,
 )
+from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
 from app.models.enums import IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue
@@ -289,7 +290,7 @@ async def reopen_issue_endpoint(
             target_status=data.target_status,
         )
     except IssueValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+        raise_http_for_service_error(exc)
     return _issue_to_response(issue)
 
 

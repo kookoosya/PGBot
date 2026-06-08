@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_optional_user, require_owner
+from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import (
@@ -132,8 +133,8 @@ async def list_places(
 async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         detail = await get_place_details(db, place_id)
-    except PlaceNotFoundError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except (PlaceNotFoundError, PlaceValidationError) as exc:
+        raise_http_for_service_error(exc)
     return detail.response
 
 
@@ -157,10 +158,8 @@ async def add_review(
             ),
             user=current_user,
         )
-    except PlaceNotFoundError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-    except PlaceValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except (PlaceNotFoundError, PlaceValidationError) as exc:
+        raise_http_for_service_error(exc)
     return PlaceReviewResponse.model_validate(result.review)
 
 
@@ -187,10 +186,8 @@ async def add_complaint(
             ),
             user=current_user,
         )
-    except PlaceNotFoundError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-    except PlaceValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except (PlaceNotFoundError, PlaceValidationError) as exc:
+        raise_http_for_service_error(exc)
     return build_complaint_response(
         result.complaint,
         owner_notified=result.owner_notified,

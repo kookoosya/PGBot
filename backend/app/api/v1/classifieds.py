@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.core.deps import get_client_ip, get_optional_user, require_owner
+from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.classified import ClassifiedAd
@@ -232,7 +233,7 @@ async def create_ad(
             user=current_user,
         )
     except ClassifiedValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+        raise_http_for_service_error(exc)
 
     return {"id": result.ad.id, "message": result.message, "free": result.free}
 
@@ -252,7 +253,7 @@ async def approve_ad(
             actor=_classified_actor(request, owner),
         )
     except ClassifiedValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+        raise_http_for_service_error(exc)
 
     return {"message": result.message, "subscribers_notified": result.subscribers_notified}
 
@@ -272,7 +273,7 @@ async def reject_ad(
             actor=_classified_actor(request, owner),
         )
     except ClassifiedValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+        raise_http_for_service_error(exc)
 
     return {"message": result.message}
 
@@ -283,6 +284,6 @@ async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depen
     try:
         ad = await increment_ad_views(db, ad_id)
     except ClassifiedValidationError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+        raise_http_for_service_error(exc)
 
     return _to_response(ad)

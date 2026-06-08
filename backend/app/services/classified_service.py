@@ -1,4 +1,10 @@
-"""Classified ads — creation, moderation, search and quota (extracted from API layer)."""
+"""Classified ads — creation, moderation, search, quota and marketing stats.
+
+Public API: ``search_classifieds``, ``increment_ad_views``, ``create_classified_ad``,
+``moderate_classified_ad``, ``get_classified_quota``, ``build_marketing_stats``.
+
+Errors: ``ClassifiedValidationError``, ``ClassifiedNotFoundError`` (subclasses of ``ServiceError``).
+"""
 
 from __future__ import annotations
 
@@ -30,6 +36,7 @@ from app.services.ip_abuse import contains_suspicious_link
 from app.services.notify_utils import safe_notify_owner
 from app.services.pagination_utils import normalize_pagination
 from app.services.site_urls import public_site_url
+from app.services.service_errors import ServiceError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -159,13 +166,11 @@ class ModerationResult:
     audit_logged: bool = True
 
 
-class ClassifiedValidationError(Exception):
+class ClassifiedValidationError(ServiceError):
     """Business validation failure when creating or loading an ad."""
 
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
-        super().__init__(detail)
-        self.detail = detail
-        self.status_code = status_code
+        super().__init__(detail, status_code=status_code)
 
 
 class ClassifiedNotFoundError(ClassifiedValidationError):
