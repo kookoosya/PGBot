@@ -267,7 +267,7 @@ async def openrouter_image_bytes(
                     "model": or_model,
                     "messages": [{"role": "user", "content": user_prompt}],
                     "modalities": ["image", "text"],
-                    "max_tokens": 1024,
+                    "max_tokens": 256,
                 },
             )
             if resp.status_code != 200:
