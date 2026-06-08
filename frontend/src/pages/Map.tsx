@@ -16,7 +16,8 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
-import { api, Place, PlaceDetail, ComplaintType, TaxiService } from "@/lib/api";
+import { api, MapStats, Place, PlaceDetail, ComplaintType, TaxiService } from "@/lib/api";
+import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const CENTER: [number, number] = [57.0267, 28.91];
@@ -37,18 +38,25 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: "#1a5c3a",
 };
 
-const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const SAT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-
 function makeIcon(category: string, rating: number) {
   const color = CATEGORY_COLORS[category] || "#1a5c3a";
-  const star = rating > 0 ? `<span style="font-size:8px;color:#ffd700">★${rating.toFixed(1)}</span>` : "";
+  const top = rating >= 4.5 ? " map-marker-top" : "";
+  const star = rating > 0 ? `<span class="map-marker-star">★${rating.toFixed(1)}</span>` : "";
   return L.divIcon({
     className: "",
-    html: `<div class="map-marker-pin" style="background:${color}">${CATEGORY_ICONS[category] || "📍"}${star}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
+    html: `<div class="map-marker-pin${top}" style="--pin-color:${color}"><span class="map-marker-emoji">${CATEGORY_ICONS[category] || "📍"}</span>${star}</div>`,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19],
   });
+}
+
+function formatSyncAge(iso: string | null): string {
+  if (!iso) return "обновляется…";
+  const diff = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 1) return "только что";
+  if (hours < 24) return `${hours} ч. назад`;
+  return `${Math.floor(hours / 24)} дн. назад`;
 }
 
 function RatingBadge({ place }: { place: Place | PlaceDetail }) {
@@ -170,6 +178,7 @@ export function MapPage() {
   const [offlineReady, setOfflineReady] = useState(isOfflineMapReady());
   const [offlineBusy, setOfflineBusy] = useState(false);
   const [offlineMsg, setOfflineMsg] = useState("");
+  const [mapStats, setMapStats] = useState<MapStats | null>(null);
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
   const boundsPausedRef = useRef(false);
 
@@ -178,6 +187,7 @@ export function MapPage() {
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
+    api.getMapStats().then(setMapStats).catch(console.error);
   }, []);
 
   const isLodging = category === "hotel";
@@ -323,9 +333,9 @@ export function MapPage() {
           <MapContainer center={CENTER} zoom={14} className="map-canvas z-0" scrollWheelZoom>
             <TileLayer
               attribution={mapStyle === "scheme"
-                ? '&copy; <a href="https://www.openstreetmap.org/">OSM</a> · данные Яндекс/справочник'
-                : '&copy; Esri'}
-              url={mapStyle === "scheme" ? OSM_TILES : SAT_TILES}
+                ? "© OpenStreetMap · справочник посёлка"
+                : "© Esri"}
+              url={mapStyle === "scheme" ? MAP_TILE_OSM : MAP_TILE_SAT}
             />
             <MapEvents onBounds={loadPlaces} pausedRef={boundsPausedRef} />
             <ClusterLayer places={places} onSelect={openPlace} />
@@ -341,10 +351,22 @@ export function MapPage() {
             </button>
           </div>
 
+          {mapStats && (
+            <div className="map-stats-overlay">
+              <p className="font-bold m-0 text-sm">📍 {mapStats.total_places} организаций</p>
+              <p className="text-xs text-muted-foreground m-0 mt-1">
+                Обновлено: {formatSyncAge(mapStats.last_sync)}
+              </p>
+              <p className="text-xs text-muted-foreground m-0 mt-0.5">
+                Справочник + OpenStreetMap каждые 6 ч
+              </p>
+            </div>
+          )}
+
         </div>
 
-        <div className="w-full lg:w-[420px] border-l bg-card overflow-y-auto map-sidebar">
-          <div className="p-4 space-y-3 border-b sticky top-0 bg-card z-10">
+        <div className="w-full lg:w-[420px] border-l map-sidebar map-sidebar-glass overflow-y-auto">
+          <div className="p-4 space-y-3 border-b sticky top-0 map-sidebar-head z-10">
             <input
               className="w-full rounded-md border px-3 py-2 text-sm"
               placeholder="Поиск организации..."

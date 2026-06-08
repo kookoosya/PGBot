@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     MAP_CENTER_LAT: float = 57.0267
     MAP_CENTER_LNG: float = 28.9100
     MAP_SYNC_RADIUS_KM: float = 15.0
-    MAP_AUTO_SYNC_HOURS: int = 24
+    MAP_AUTO_SYNC_HOURS: int = 6
 
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""

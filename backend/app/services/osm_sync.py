@@ -92,21 +92,31 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
     query = OVERPASS_QUERY.format(bbox=BBOX)
     synced = created = updated = 0
 
-    try:
-        async with httpx.AsyncClient(timeout=90) as client:
-            response = await client.post(
-                "https://overpass-api.de/api/interpreter",
-                content=query,
-                headers={
-                    "Content-Type": "text/plain; charset=utf-8",
-                    "User-Agent": "NarodnyKontrol-PushkinGory/1.0 (contact: support@pushkinskie-gory.local)",
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-    except Exception as e:
-        logger.error("OSM sync failed: %s", e)
-        return {"error": str(e), "synced": 0}
+    overpass_urls = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://lz4.overpass-api.de/api/interpreter",
+    ]
+    data = None
+    last_error = None
+    headers = {
+        "Content-Type": "text/plain; charset=utf-8",
+        "User-Agent": "NarodnyKontrol-PushkinGory/1.0 (contact: support@pushkinskie-gory.local)",
+    }
+    async with httpx.AsyncClient(timeout=90) as client:
+        for url in overpass_urls:
+            try:
+                response = await client.post(url, content=query, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                logger.info("OSM sync via %s", url)
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning("Overpass %s failed: %s", url, e)
+    if data is None:
+        logger.error("OSM sync failed on all mirrors: %s", last_error)
+        return {"error": str(last_error), "synced": 0}
 
     now = datetime.now(timezone.utc)
 

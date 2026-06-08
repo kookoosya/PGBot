@@ -32,31 +32,38 @@ export function Landing() {
   return (
     <div className="landing-page">
       <section className="pushkin-gradient hero-section">
+        <div className="hero-orbs" aria-hidden>
+          <div className="hero-orb hero-orb-1" />
+          <div className="hero-orb hero-orb-2" />
+          <div className="hero-orb hero-orb-3" />
+        </div>
         <div className="hero-glow" aria-hidden />
         <div className="absolute inset-0 opacity-10 feather-pattern" />
         <div className="hero-content animate-hero">
-          <p className="hero-badge">🪶 {BRAND.district}</p>
+          <p className="hero-badge">🪶 {BRAND.district} · живой портал посёлка</p>
           <p className="hero-quote">{PUSHKIN_QUOTES.home}</p>
           <h2 className="hero-title">{BRAND.name}</h2>
           <p className="hero-tagline">{BRAND.tagline}</p>
           <p className="hero-desc">{BRAND.description}</p>
           <p className="hero-free-note">✨ Объявления, услуги и жалобы — бесплатно · ИИ — {30} сообщений/день</p>
 
-          {(stats.places > 0 || stats.ads > 0) && (
-            <div className="stats-bar">
-              {stats.places > 0 && (
-                <Link to="/map" className="stat-pill">
-                  <strong>{stats.places}</strong> на карте
-                </Link>
-              )}
-              <Link to="/classifieds" className="stat-pill">
-                <strong>{stats.ads}</strong> объявлений
-              </Link>
-            </div>
-          )}
+          <div className="stats-bar">
+            <Link to="/map" className="stat-pill">
+              <strong>{stats.places || "…"}</strong> на карте
+            </Link>
+            <Link to="/classifieds" className="stat-pill">
+              <strong>{stats.ads}</strong> объявлений
+            </Link>
+          </div>
+
+          <div className="hero-trust-strip">
+            <span className="hero-trust-item">🗺 Карта обновляется каждые 6 ч</span>
+            <span className="hero-trust-item">📱 Работает без VPN</span>
+            <span className="hero-trust-item">🤖 Дублируется в VK-боте</span>
+          </div>
 
           <div className="hero-actions">
-            <Link to="/map" className="btn-hero-primary">🗺 Карта</Link>
+            <Link to="/map" className="btn-hero-primary">🗺 Карта посёлка</Link>
             <Link to="/classifieds" className="btn-hero-secondary">📋 Объявления</Link>
             <Link to="/complaints" className="btn-hero-secondary">⚠️ Жалобы</Link>
             <Link to="/register" className="btn-hero-secondary">✍️ Регистрация</Link>

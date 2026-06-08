@@ -1,5 +1,5 @@
-const CACHE = "pgbot-shell-v2";
-const TILE_CACHE = "pgbot-map-tiles-v2";
+const CACHE = "pgbot-shell-v3";
+const TILE_CACHE = "pgbot-map-tiles-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -23,7 +23,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  if (url.hostname === "tile.openstreetmap.org") {
+  if (url.pathname.startsWith("/tiles/osm/")) {
     event.respondWith(
       caches.open(TILE_CACHE).then(async (cache) => {
         const cached = await cache.match(event.request);

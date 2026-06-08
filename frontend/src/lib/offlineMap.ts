@@ -1,4 +1,5 @@
 import type { Place } from "./api";
+import { osmTileUrl } from "./mapTiles";
 
 const CACHE_KEY = "pgbot_map_offline_v1";
 const CACHE_TS_KEY = "pgbot_map_offline_ts";
@@ -120,7 +121,7 @@ function tileUrlsForBounds(
   for (let x = xMin; x <= xMax; x++) {
     for (let y = yMin; y <= yMax; y++) {
       const cx = ((x % n) + n) % n;
-      urls.push(`https://tile.openstreetmap.org/${zoom}/${cx}/${y}.png`);
+      urls.push(osmTileUrl(zoom, cx, y));
     }
   }
   return urls;
