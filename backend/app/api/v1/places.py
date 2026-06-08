@@ -1,13 +1,14 @@
 import math
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import (
     MAP_REPORT_LABELS,
@@ -191,7 +192,7 @@ async def map_stats(db: Annotated[AsyncSession, Depends(get_db)]):
 async def list_places(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: PlaceCategory | None = None,
-    search: str | None = None,
+    search: str | None = Query(None, max_length=100),
     shops_only: bool = False,
     useful_only: bool = False,
     min_rating: float | None = Query(None, ge=0, le=5),
@@ -278,8 +279,10 @@ async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)])
 
 
 @router.post("/{place_id}/reviews", response_model=PlaceReviewResponse, status_code=201)
+@limiter.limit("20/hour")
 async def add_review(
     place_id: int,
+    request: Request,
     data: PlaceReviewCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
@@ -311,8 +314,10 @@ async def add_review(
 
 
 @router.post("/{place_id}/complaints", response_model=PlaceComplaintResponse, status_code=201)
+@limiter.limit("10/hour")
 async def add_complaint(
     place_id: int,
+    request: Request,
     data: PlaceComplaintCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,

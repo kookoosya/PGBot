@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
@@ -16,6 +17,7 @@ from app.models.enums import (
     JOB_CLASSIFIED_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
 )
+from app.services.ip_abuse import contains_suspicious_link
 from app.services.classified_antifraud import (
     check_phone_rate_limit,
     check_recent_duplicate,
@@ -214,7 +216,7 @@ async def list_categories():
 async def list_ads(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: ClassifiedCategory | None = None,
-    search: str | None = None,
+    search: str | None = Query(None, max_length=100),
     services_only: bool = False,
     jobs_only: bool = False,
     page: int = Query(1, ge=1),
@@ -281,7 +283,9 @@ async def list_pending(
 
 
 @router.post("", status_code=201)
+@limiter.limit(settings.CLASSIFIED_RATE_LIMIT)
 async def create_ad(
+    request: Request,
     data: ClassifiedCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
@@ -313,6 +317,9 @@ async def create_ad(
     dup_err = await check_recent_duplicate(db, data.phone, data.title)
     if dup_err:
         raise HTTPException(status_code=400, detail=dup_err)
+
+    if contains_suspicious_link(data.contact_telegram, data.contact_vk, data.address):
+        raise HTTPException(status_code=400, detail="Ссылки в контактах не допускаются — укажите телефон.")
 
     quota = await get_classified_quota(db, data.phone, current_user.id if current_user else None)
     requires_payment = quota["requires_payment"]
@@ -415,7 +422,8 @@ async def reject_ad(
 
 
 @router.get("/{ad_id}")
-async def get_ad(ad_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
+@limiter.limit("60/minute")
+async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
         select(ClassifiedAd).where(
             ClassifiedAd.id == ad_id,

@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.router import api_router
 from app.config import get_settings
@@ -60,6 +61,8 @@ def _validate_security_config() -> None:
     )
     if not settings.DEBUG and weak_secret:
         raise RuntimeError("SECRET_KEY must be set to a strong random value in production")
+    if settings.VK_GROUP_TOKEN and not settings.VK_SECRET_KEY:
+        raise RuntimeError("VK_SECRET_KEY must be set when VK_GROUP_TOKEN is configured")
 
 
 @asynccontextmanager
@@ -78,13 +81,14 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
+    docs_url="/api/docs" if settings.DEBUG else None,
+    redoc_url="/api/redoc" if settings.DEBUG else None,
+    openapi_url="/api/openapi.json" if settings.DEBUG else None,
 )
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
@@ -106,8 +110,7 @@ async def health(request: Request):
 
 @app.get("/")
 async def root():
-    return {
-        "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "docs": "/api/docs",
-    }
+    payload = {"app": settings.APP_NAME, "version": settings.APP_VERSION}
+    if settings.DEBUG:
+        payload["docs"] = "/api/docs"
+    return payload

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import IssueStatus, PlaceCategory
 from app.models.issue import Issue
@@ -182,6 +183,7 @@ async def _try_map_keywords(db: AsyncSession, peer_id: int, text_lower: str) -> 
 
 
 @router.post("/callback")
+@limiter.limit(settings.VK_CALLBACK_RATE_LIMIT)
 async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     body: dict[str, Any] = await request.json()
     event_type = body.get("type")
@@ -190,8 +192,10 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         return PlainTextResponse(settings.VK_CONFIRMATION_CODE)
 
     if event_type == "message_new":
-        if settings.VK_SECRET_KEY and body.get("secret") != settings.VK_SECRET_KEY:
-            return PlainTextResponse("ok")
+        if settings.VK_GROUP_TOKEN:
+            if not settings.VK_SECRET_KEY or body.get("secret") != settings.VK_SECRET_KEY:
+                logger.warning("VK webhook rejected: invalid or missing secret")
+                return PlainTextResponse("ok")
 
         parsed = parse_vk_message(body)
         if not parsed:

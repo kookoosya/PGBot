@@ -56,7 +56,14 @@ class Settings(BaseSettings):
     )
 
     # Rate limiting
-    RATE_LIMIT: str = "100/minute"
+    RATE_LIMIT: str = "120/minute"
+    ISSUE_RATE_LIMIT: str = "6/hour"
+    CLASSIFIED_RATE_LIMIT: str = "12/hour"
+    AI_CHAT_RATE_LIMIT: str = "40/hour"
+    AI_IMAGE_RATE_LIMIT: str = "15/hour"
+    BOOKING_RATE_LIMIT: str = "8/hour"
+    FEEDBACK_RATE_LIMIT: str = "8/hour"
+    VK_CALLBACK_RATE_LIMIT: str = "120/minute"
 
     # Duplicate threshold
     DUPLICATE_THRESHOLD: float = 0.80
@@ -67,7 +74,7 @@ class Settings(BaseSettings):
     AI_MAX_MESSAGE_LENGTH: int = 1000
 
     # Payment / support (card transfer)
-    PAYMENT_CARD_NUMBER: str = "2204240170359972"
+    PAYMENT_CARD_NUMBER: str = ""
     PAYMENT_CARD_HOLDER: str = "Портал ПГ"
     PAYMENT_BANK_NAME: str = "Сбербанк"
     PAYMENT_DESCRIPTION: str = "Портал посёлка ПГ"

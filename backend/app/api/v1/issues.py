@@ -6,6 +6,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.core.deps import (
     can_manage_issues,
     get_client_ip,
@@ -28,10 +29,12 @@ from app.schemas.issue import (
     IssueStatusUpdate,
     IssueUpdate,
 )
+from app.core.rate_limit import limiter
 from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
 
 router = APIRouter()
+settings = get_settings()
 
 JKH_CATEGORIES = {
     IssueCategory.UTILITIES,
@@ -69,11 +72,16 @@ def _can_view_issue(user: User, issue: Issue) -> bool:
 
 
 @router.post("", response_model=IssueResponse, status_code=201)
+@limiter.limit(settings.ISSUE_RATE_LIMIT)
 async def create_issue(
+    request: Request,
     data: IssueCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)],
 ):
+    if data.website_url:
+        raise HTTPException(status_code=400, detail="Не удалось отправить форму. Обновите страницу.")
+
     if not current_user and (not data.phone or not data.full_name):
         raise HTTPException(
             status_code=400,

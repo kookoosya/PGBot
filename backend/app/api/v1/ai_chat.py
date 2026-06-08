@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.core.deps import get_client_ip
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.schemas.ai import (
     AIStatusResponse,
@@ -73,6 +74,7 @@ async def get_usage(request: Request, db: Annotated[AsyncSession, Depends(get_db
 
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit(settings.AI_CHAT_RATE_LIMIT)
 async def public_chat(
     data: ChatRequest,
     request: Request,
@@ -88,15 +90,23 @@ async def public_chat(
 
     if used >= limit:
         payment = get_payment_info()
-        return ChatResponse(
-            reply=(
+        if payment["card_number"]:
+            limit_reply = (
                 f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
                 f"ИИ-помощник работает за счёт добровольных пожертвований.\n\n"
                 f"💳 Перевод: {payment['card_number']}\n"
                 f"Получатель: {payment['card_holder']}\n"
                 f"Сумма: от {payment['amount_suggested']} ₽\n\n"
                 f"Завтра лимит обновится!"
-            ),
+            )
+        else:
+            limit_reply = (
+                f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
+                f"{payment['message']}\n\n"
+                f"Завтра лимит обновится!"
+            )
+        return ChatResponse(
+            reply=limit_reply,
             remaining=0,
             daily_limit=limit,
             limit_reached=True,
@@ -128,6 +138,7 @@ async def serve_generated_image(image_id: str):
 
 
 @router.post("/generate-image", response_model=ImageResponse)
+@limiter.limit(settings.AI_IMAGE_RATE_LIMIT)
 async def generate_image_endpoint(
     data: ImageRequest,
     request: Request,

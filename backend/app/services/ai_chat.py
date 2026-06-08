@@ -146,15 +146,24 @@ async def chat_with_ai(message: str, history: list[dict] | None = None, model_id
 
 
 def get_payment_info() -> dict:
+    card = (settings.PAYMENT_CARD_NUMBER or "").strip()
+    if card:
+        payment_hint = (
+            f"ИИ-помощник работает за счёт добровольных переводов — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
+            "Объявления, услуги и жалобы на портале бесплатны."
+        )
+    else:
+        payment_hint = (
+            "ИИ-помощник работает за счёт добровольных пожертвований. "
+            f"Реквизиты уточняйте по {settings.PAYMENT_CONTACT_EMAIL}. "
+            "Объявления, услуги и жалобы на портале бесплатны."
+        )
     return {
-        "card_number": settings.PAYMENT_CARD_NUMBER,
+        "card_number": card,
         "card_holder": settings.PAYMENT_CARD_HOLDER,
         "bank_name": settings.PAYMENT_BANK_NAME,
         "description": settings.PAYMENT_DESCRIPTION,
         "amount_suggested": settings.PAYMENT_AMOUNT_SUGGESTED,
         "contact_email": settings.PAYMENT_CONTACT_EMAIL,
-        "message": (
-            f"ИИ-помощник работает за счёт добровольных переводов — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
-            "Объявления, услуги и жалобы на портале бесплатны."
-        ),
+        "message": payment_hint,
     }

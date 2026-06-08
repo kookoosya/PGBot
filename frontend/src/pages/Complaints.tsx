@@ -20,6 +20,7 @@ export function Complaints() {
     category: "",
     full_name: "",
     phone: "",
+    website_url: "",
   });
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
@@ -60,6 +61,7 @@ export function Complaints() {
         category: form.category || undefined,
         full_name: user ? undefined : form.full_name,
         phone: user ? undefined : form.phone,
+        website_url: form.website_url || undefined,
       });
       setMsgType("ok");
       setMsg(`Обращение #${issue.id} принято! Статус: на рассмотрении.`);
@@ -151,6 +153,17 @@ export function Complaints() {
                   minLength={5}
                 />
               </div>
+
+              <input
+                type="text"
+                name="website_url"
+                value={form.website_url}
+                onChange={(e) => setForm((f) => ({ ...f, website_url: e.target.value }))}
+                className="honeypot-field"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
 
               {msg && (
                 <p className={`text-sm ${msgType === "ok" ? "text-green-700" : "text-destructive"}`}>

@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
+from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.models.department import Department
 from app.models.enums import UserRole
@@ -53,10 +54,24 @@ async def seed() -> None:
         await db.flush()
 
         admin_username = os.getenv("SUPER_ADMIN_USERNAME", "admin")
-        admin_password = os.getenv("SUPER_ADMIN_PASSWORD", "admin123")
+        admin_password = os.getenv("SUPER_ADMIN_PASSWORD", "")
 
         result = await db.execute(select(User).where(User.username == admin_username))
         if not result.scalar_one_or_none():
+            if not admin_password:
+                if settings.DEBUG:
+                    admin_password = "admin123"
+                else:
+                    print("SUPER_ADMIN_PASSWORD must be set in production")
+                    sys.exit(1)
+            elif admin_password == "admin123" and not settings.DEBUG:
+                print("Refusing default admin123 password in production")
+                sys.exit(1)
+            else:
+                ok, msg = validate_password(admin_password)
+                if not ok and not settings.DEBUG:
+                    print(f"Weak SUPER_ADMIN_PASSWORD: {msg}")
+                    sys.exit(1)
             role_result = await db.execute(select(Role).where(Role.name == UserRole.SUPER_ADMIN))
             role = role_result.scalar_one()
             db.add(User(

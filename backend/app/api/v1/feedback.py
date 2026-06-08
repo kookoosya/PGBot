@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.deps import get_client_ip, require_owner
 from app.core.rate_limit import limiter
 from app.database import get_db
@@ -13,6 +14,7 @@ from app.models.user import User
 from app.schemas.feedback import FeedbackCreate, FeedbackItem, FeedbackListResponse
 
 router = APIRouter()
+settings = get_settings()
 
 
 def _visitor_key(ip: str, user_agent: str | None) -> str:
@@ -21,7 +23,7 @@ def _visitor_key(ip: str, user_agent: str | None) -> str:
 
 
 @router.post("", response_model=FeedbackItem, status_code=201)
-@limiter.limit("8/hour")
+@limiter.limit(settings.FEEDBACK_RATE_LIMIT)
 async def submit_feedback(
     data: FeedbackCreate,
     request: Request,

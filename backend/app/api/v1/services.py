@@ -8,6 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.core.deps import get_current_user, require_owner
 from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
@@ -41,6 +42,7 @@ from app.services.schedule import (
 )
 
 router = APIRouter()
+settings = get_settings()
 
 
 def _service_resp(s: ProviderService) -> ProviderServiceResponse:
@@ -246,7 +248,11 @@ async def get_provider(provider_id: int, db: Annotated[AsyncSession, Depends(get
     result = await db.execute(
         select(ServiceProvider)
         .options(selectinload(ServiceProvider.services), selectinload(ServiceProvider.schedule))
-        .where(ServiceProvider.id == provider_id)
+        .where(
+            ServiceProvider.id == provider_id,
+            ServiceProvider.is_active.is_(True),
+            ServiceProvider.verification_status == VerificationStatus.APPROVED,
+        )
     )
     p = result.scalar_one_or_none()
     if not p:
@@ -281,7 +287,11 @@ async def get_slots(
     if not service:
         raise HTTPException(404, "Услуга не найдена")
 
-    prov_result = await db.execute(select(ServiceProvider).where(ServiceProvider.id == provider_id))
+    prov_result = await db.execute(select(ServiceProvider).where(
+        ServiceProvider.id == provider_id,
+        ServiceProvider.is_active.is_(True),
+        ServiceProvider.verification_status == VerificationStatus.APPROVED,
+    ))
     provider = prov_result.scalar_one_or_none()
     if not provider:
         raise HTTPException(404, "Мастер не найден")
@@ -297,7 +307,9 @@ async def get_slots(
 
 
 @router.post("/providers/{provider_id}/book", response_model=AppointmentResponse, status_code=201)
+@limiter.limit(settings.BOOKING_RATE_LIMIT)
 async def book_appointment(
+    request: Request,
     provider_id: int,
     data: BookAppointmentRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -313,7 +325,9 @@ async def book_appointment(
         raise HTTPException(404, "Услуга не найдена")
 
     prov_result = await db.execute(select(ServiceProvider).where(
-        ServiceProvider.id == provider_id, ServiceProvider.is_active.is_(True)
+        ServiceProvider.id == provider_id,
+        ServiceProvider.is_active.is_(True),
+        ServiceProvider.verification_status == VerificationStatus.APPROVED,
     ))
     provider = prov_result.scalar_one_or_none()
     if not provider:

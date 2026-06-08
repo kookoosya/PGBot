@@ -40,11 +40,12 @@ class IssueCommentResponse(BaseModel):
 
 
 class IssueCreate(BaseModel):
-    description: str = Field(min_length=5)
-    address: str | None = None
+    description: str = Field(min_length=5, max_length=5000)
+    address: str | None = Field(None, max_length=500)
     category: IssueCategory | None = None
-    full_name: str | None = None
-    phone: str | None = None
+    full_name: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=20)
+    website_url: str | None = Field(None, max_length=200)
 
 
 class IssueUpdate(BaseModel):

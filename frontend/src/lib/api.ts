@@ -65,6 +65,7 @@ class ApiClient {
     category?: string;
     full_name?: string;
     phone?: string;
+    website_url?: string;
   }) {
     return this.request<Issue>("/issues", {
       method: "POST",

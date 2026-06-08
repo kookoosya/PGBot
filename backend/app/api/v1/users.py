@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_user, require_owner
+from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import UserRole
@@ -49,6 +50,10 @@ async def create_user(
     role = role_result.scalar_one_or_none()
     if not role:
         raise HTTPException(status_code=400, detail="Invalid role")
+
+    ok, msg = validate_password(data.password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
 
     user = User(
         username=data.username,

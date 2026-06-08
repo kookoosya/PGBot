@@ -2,13 +2,13 @@ from pydantic import BaseModel, Field
 
 
 class ChatMessage(BaseModel):
-    role: str
-    content: str
+    role: str = Field(max_length=20)
+    content: str = Field(max_length=2000)
 
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
-    history: list[ChatMessage] = []
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
     model: str | None = None
 
 
