@@ -96,7 +96,12 @@ def _fallback_analysis(text: str) -> dict:
     }
 
 
-async def analyze_issue(text: str, existing_issues_context: str = "") -> dict:
+class GeminiAnalysisError(Exception):
+    """Gemini API call failed (transient or permanent)."""
+
+
+async def request_gemini_analysis(text: str, existing_issues_context: str = "") -> dict:
+    """Call Gemini when configured; raises GeminiAnalysisError on API failure."""
     context = ""
     if existing_issues_context:
         context = f"Существующие похожие обращения:\n{existing_issues_context}"
@@ -122,6 +127,13 @@ async def analyze_issue(text: str, existing_issues_context: str = "") -> dict:
             result["priority"] = Priority.MEDIUM.value
 
         return result
-    except Exception as e:
-        logger.error("Gemini analysis failed: %s", e)
+    except Exception as exc:
+        raise GeminiAnalysisError(str(exc)) from exc
+
+
+async def analyze_issue(text: str, existing_issues_context: str = "") -> dict:
+    try:
+        return await request_gemini_analysis(text, existing_issues_context)
+    except GeminiAnalysisError as exc:
+        logger.error("Gemini analysis failed: %s", exc)
         return _fallback_analysis(text)

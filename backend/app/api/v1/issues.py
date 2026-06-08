@@ -18,7 +18,7 @@ from app.core.deps import (
 )
 from app.database import get_db
 from app.models.enums import IssueCategory, IssueStatus, UserRole
-from app.models.issue import Issue, IssueComment
+from app.models.issue import Issue
 from app.models.user import User
 from app.schemas.issue import (
     IssueCommentCreate,
@@ -32,6 +32,7 @@ from app.schemas.issue import (
 from app.core.rate_limit import limiter
 from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
+from app.services.issue_service import add_issue_comment, update_issue_status as apply_issue_status
 
 router = APIRouter()
 settings = get_settings()
@@ -231,22 +232,14 @@ async def update_issue_status(
     if not _can_view_issue(current_user, issue):
         raise HTTPException(status_code=403, detail="Access denied")
 
-    issue.status = data.status
-    if data.resolution_text:
-        issue.resolution_text = data.resolution_text
-    if data.status == IssueStatus.RESOLVED:
-        issue.resolved_at = datetime.now(timezone.utc)
-
-    await log_action(
-        db, "status_change", "issue", issue.id,
-        user_id=current_user.id,
-        details={"status": data.status.value, "resolution": data.resolution_text},
+    await apply_issue_status(
+        db,
+        issue,
+        status=data.status,
+        resolution_text=data.resolution_text,
+        actor_id=current_user.id,
         ip_address=get_client_ip(request),
     )
-
-    from app.services.notifications import notify_issue_status
-    await notify_issue_status(issue)
-
     return _issue_to_response(issue)
 
 
@@ -264,12 +257,11 @@ async def add_comment(
     if not _can_view_issue(current_user, issue):
         raise HTTPException(status_code=403, detail="Access denied")
 
-    comment = IssueComment(
-        issue_id=issue_id,
-        author_id=current_user.id,
+    comment = await add_issue_comment(
+        db,
+        issue,
+        author=current_user,
         text=data.text,
         is_internal=data.is_internal and can_manage_issues(current_user),
     )
-    db.add(comment)
-    await db.flush()
     return IssueCommentResponse.model_validate(comment)
