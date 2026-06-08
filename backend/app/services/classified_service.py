@@ -239,7 +239,7 @@ async def get_classified_quota(
     phone: Optional[str],
     user_id: Optional[int] = None,
 ) -> dict[str, Any]:
-    """Return placement quota info for a phone / logged-in user."""
+    """Return placement quota info for a phone or logged-in user."""
     used = 0
     if phone:
         try:
@@ -342,7 +342,10 @@ async def search_classifieds(
 
 
 async def increment_ad_views(db: AsyncSession, ad_id: int) -> ClassifiedAd:
-    """Increment the view counter for an active, approved ad."""
+    """Increment the view counter for an active, approved ad.
+
+    Raises ``ClassifiedNotFoundError`` when the ad is missing or not public.
+    """
     try:
         result = await db.execute(
             select(ClassifiedAd).where(

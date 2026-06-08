@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_optional_user, require_owner
@@ -14,8 +13,6 @@ from app.models.enums import (
     PlaceCategory,
     ShopComplaintType,
 )
-from app.models.place import Place
-from app.models.taxi import TaxiService
 from app.models.user import User
 from app.schemas.place import (
     MapStatsResponse,
@@ -43,6 +40,7 @@ from app.services.place_service import (
     create_place_complaint,
     get_map_stats,
     get_place_details,
+    list_active_taxi,
     search_places,
 )
 from app.services.yandex_sync import sync_places_from_yandex
@@ -79,12 +77,8 @@ async def list_map_routes():
 
 @router.get("/taxi", response_model=list[TaxiServiceResponse])
 async def list_taxi(db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(
-        select(TaxiService)
-        .where(TaxiService.is_active.is_(True))
-        .order_by(TaxiService.sort_order, TaxiService.rating.desc())
-    )
-    return [TaxiServiceResponse.model_validate(t) for t in result.scalars().all()]
+    taxis = await list_active_taxi(db)
+    return [TaxiServiceResponse.model_validate(t) for t in taxis]
 
 
 @router.get("/map/stats", response_model=MapStatsResponse)
@@ -197,7 +191,10 @@ async def add_complaint(
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     except PlaceValidationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-    return build_complaint_response(result.complaint)
+    return build_complaint_response(
+        result.complaint,
+        owner_notified=result.owner_notified,
+    )
 
 
 @router.post("/sync")

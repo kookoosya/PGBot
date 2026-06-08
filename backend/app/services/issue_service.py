@@ -279,7 +279,10 @@ async def reopen_issue(
     actor: IssueActorContext,
     target_status: IssueStatus = IssueStatus.UNDER_REVIEW,
 ) -> Issue:
-    """Reopen a closed issue — set status to ``NEW`` or ``UNDER_REVIEW`` and clear ``resolved_at``."""
+    """Reopen a closed issue — set status to ``NEW`` or ``UNDER_REVIEW``.
+
+    Raises ``IssueValidationError`` when ``target_status`` is not allowed.
+    """
     if target_status not in _REOPEN_TARGET_STATUSES:
         raise IssueValidationError(
             f"target_status must be NEW or UNDER_REVIEW, got {target_status!r}"

@@ -72,6 +72,7 @@ class PlaceComplaintResponse(BaseModel):
     price_charged: str | None
     status: str
     created_at: datetime
+    owner_notified: bool | None = None
 
 
 class MapBoundsQuery(BaseModel):

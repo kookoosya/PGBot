@@ -412,7 +412,11 @@ async def _recalculate_place_rating(db: AsyncSession, place: Place) -> None:
         raise
 
 
-def build_complaint_response(complaint: PlaceComplaint) -> PlaceComplaintResponse:
+def build_complaint_response(
+    complaint: PlaceComplaint,
+    *,
+    owner_notified: bool | None = None,
+) -> PlaceComplaintResponse:
     """Map a ``PlaceComplaint`` ORM instance to ``PlaceComplaintResponse``."""
     return PlaceComplaintResponse(
         id=complaint.id,
@@ -423,6 +427,7 @@ def build_complaint_response(complaint: PlaceComplaint) -> PlaceComplaintRespons
         price_charged=complaint.price_charged,
         status=complaint.status,
         created_at=complaint.created_at,
+        owner_notified=owner_notified,
     )
 
 
@@ -792,6 +797,23 @@ async def add_place_review(
         user_id,
     )
     return PlaceReviewResult(review=review, place=place)
+
+
+async def list_active_taxi(db: AsyncSession) -> list[TaxiService]:
+    """Return active taxi services sorted by ``sort_order`` and rating."""
+    try:
+        result = await db.execute(
+            select(TaxiService)
+            .where(TaxiService.is_active.is_(True))
+            .order_by(TaxiService.sort_order, TaxiService.rating.desc())
+        )
+        items = list(result.scalars().all())
+    except Exception:
+        logger.exception("Failed to load active taxi services")
+        raise
+
+    logger.debug("Loaded %s active taxi service(s)", len(items))
+    return items
 
 
 async def get_map_stats(db: AsyncSession) -> MapStatsResult:
