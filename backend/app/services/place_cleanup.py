@@ -71,29 +71,27 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             reason = "propane_not_petrol"
         elif place.external_source == "seed":
             reason = "legacy_seed"
-        elif place.external_source in ("osm", "yandex") and place.category in (
-            PlaceCategory.SUPERMARKET,
-            PlaceCategory.PHARMACY,
-            PlaceCategory.GAS,
-        ):
+        elif place.external_source in ("osm", "yandex"):
             brand = _norm_name(place.name)
-            for ref in reference:
-                if place.category != ref.category:
-                    continue
-                if _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) > 0.5:
-                    continue
-                ref_name = _norm_name(ref.name)
-                if (
-                    ("пятёрочка" in brand or "пятерочка" in brand) and "пятёрочка" in ref_name
-                ) or (
-                    ("магнит" in brand) and "магнит" in ref_name
-                ) or (
-                    ("аптека" in brand) and "аптека" in ref_name
-                ) or (
-                    place.category == PlaceCategory.GAS and ref.category == PlaceCategory.GAS
-                ):
-                    reason = "brand_duplicate_ref"
-                    break
+            ref_brands = {_norm_name(r.name) for r in reference}
+            has_pyaterochka = any("пятёрочка" in b or "пятерочка" in b for b in ref_brands)
+            has_magnit = any("магнит" in b for b in ref_brands)
+            has_apteka = any("аптека" in b for b in ref_brands)
+            has_gas = any(r.category == PlaceCategory.GAS for r in reference)
+            if has_pyaterochka and ("пятёрочка" in brand or "пятерочка" in brand):
+                reason = "brand_duplicate_ref"
+            elif has_magnit and "магнит" in brand and place.category == PlaceCategory.SUPERMARKET:
+                reason = "brand_duplicate_ref"
+            elif has_apteka and "аптека" in brand and place.category == PlaceCategory.PHARMACY:
+                reason = "brand_duplicate_ref"
+            elif has_gas and place.category == PlaceCategory.GAS:
+                reason = "brand_duplicate_ref"
+            elif place.category in (
+                PlaceCategory.SUPERMARKET,
+                PlaceCategory.PHARMACY,
+                PlaceCategory.GAS,
+            ) and not place.address:
+                reason = "unverified_no_address"
         elif place.external_source == "osm":
             name_l = _norm_name(place.name)
             if any(skip in name_l for skip in SKIP_OSM_NAMES):
