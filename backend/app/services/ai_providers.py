@@ -12,18 +12,30 @@ POLLINATIONS_IMAGE_URL = "https://gen.pollinations.ai/image"
 
 
 async def pollinations_text(prompt: str, timeout: float = 90.0) -> str | None:
-    """Текст через gen.pollinations.ai (без ключа)."""
+    """Короткий запрос через Pollinations (с VPS работают только простые фразы)."""
     text = prompt.strip()[:4000]
     if not text:
         return None
-    url = f"{POLLINATIONS_TEXT_URL}/{quote(text)}"
-    try:
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            resp = await client.get(url)
-            if resp.status_code == 200 and resp.text.strip():
-                return resp.text.strip()
-    except Exception as exc:
-        logger.warning("Pollinations text failed: %s", exc)
+
+    # Извлекаем суть — длинный system prompt API отклоняет
+    user_part = text
+    if "Пользователь:" in text:
+        user_part = text.rsplit("Пользователь:", 1)[-1].split("Ассистент:")[0].strip()
+    short = f"Answer in Russian helpfully: {user_part[:280]}"
+
+    for candidate in (short, user_part[:120]):
+        if len(candidate) < 8:
+            continue
+        for base in (POLLINATIONS_TEXT_URL, "https://text.pollinations.ai"):
+            url = f"{base}/{quote(candidate)}"
+            try:
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+                    resp = await client.get(url)
+                    body = resp.text.strip()
+                    if resp.status_code == 200 and body and not body.startswith("{"):
+                        return body
+            except Exception as exc:
+                logger.warning("Pollinations text failed: %s", exc)
     return None
 
 

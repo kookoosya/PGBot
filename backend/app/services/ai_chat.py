@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.ai_usage import AIUsage
+from app.services.ai_local import local_chat_reply
 from app.services.ai_providers import pollinations_text
 
 logger = logging.getLogger(__name__)
@@ -124,12 +125,7 @@ async def chat_with_ai(message: str, history: list[dict] | None = None, model_id
             poll_text += f"\n\n🪶 {random.choice(PUSHKIN_QUOTES)}"
         return poll_text
 
-    quote = random.choice(PUSHKIN_QUOTES)
-    return (
-        f"🪶 {quote}\n\n"
-        "Сейчас не удалось получить ответ от ИИ. Попробуйте ещё раз через минуту "
-        "или выберите модель «Pollinations (резерв)»."
-    )
+    return local_chat_reply(message)
 
 
 def get_payment_info() -> dict:
