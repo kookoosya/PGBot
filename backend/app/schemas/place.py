@@ -91,6 +91,12 @@ class MapStatsResponse(BaseModel):
     by_category: dict[str, int]
     last_sync: datetime | None
     center: dict[str, float]
+    total_reviews: int = 0
+    total_complaints: int = 0
+    active_complaints: int = 0
+    avg_rating_by_category: dict[str, float] = Field(default_factory=dict)
+    active_taxi_count: int = 0
+    route_count: int = 0
 
 
 class TaxiServiceResponse(BaseModel):

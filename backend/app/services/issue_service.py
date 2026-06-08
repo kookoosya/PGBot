@@ -45,6 +45,15 @@ class IssueActorContext:
     ip_address: Optional[str] = None
 
 
+class IssueNotFoundError(Exception):
+    """Business error when an issue cannot be loaded."""
+
+    def __init__(self, detail: str = "Issue not found", *, status_code: int = 404) -> None:
+        super().__init__(detail)
+        self.detail = detail
+        self.status_code = status_code
+
+
 async def _safe_audit(
     db: AsyncSession,
     action: str,

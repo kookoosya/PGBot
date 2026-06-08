@@ -168,6 +168,13 @@ class ClassifiedValidationError(Exception):
         self.status_code = status_code
 
 
+class ClassifiedNotFoundError(ClassifiedValidationError):
+    """Raised when a classified ad cannot be found (HTTP 404)."""
+
+    def __init__(self, detail: str = "Объявление не найдено") -> None:
+        super().__init__(detail, status_code=404)
+
+
 def _normalize_pagination(
     *,
     page: int,
@@ -216,7 +223,15 @@ async def _count_user_ads(
     else:
         filters.append(ClassifiedAd.phone == phone)
     q = select(func.count(ClassifiedAd.id)).where(*filters)
-    return (await db.execute(q)).scalar() or 0
+    try:
+        return (await db.execute(q)).scalar() or 0
+    except Exception:
+        logger.exception(
+            "Failed to count classified ads for phone=%r user_id=%s",
+            phone,
+            user_id,
+        )
+        raise
 
 
 async def get_classified_quota(
@@ -338,7 +353,7 @@ async def increment_ad_views(db: AsyncSession, ad_id: int) -> ClassifiedAd:
         )
         ad = result.scalar_one_or_none()
         if ad is None:
-            raise ClassifiedValidationError("Объявление не найдено", status_code=404)
+            raise ClassifiedNotFoundError()
 
         ad.views_count += 1
     except ClassifiedValidationError:
@@ -667,7 +682,7 @@ async def moderate_classified_ad(
         logger.exception("Failed to load classified ad #%s for moderation", ad_id)
         raise
     if not ad:
-        raise ClassifiedValidationError("Объявление не найдено", status_code=404)
+        raise ClassifiedNotFoundError()
 
     if action == "approve":
         ad.is_active = True

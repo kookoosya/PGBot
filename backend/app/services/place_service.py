@@ -6,7 +6,8 @@ import logging
 import math
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
-from typing import Any, Literal, Optional
+from datetime import datetime
+from typing import Any, Literal, Optional, TypedDict
 
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,13 +26,16 @@ from app.models.enums import (
 )
 from app.models.issue import Issue
 from app.models.place import Place, PlaceComplaint, PlaceReview
+from app.models.taxi import TaxiService
 from app.models.user import User
 from app.schemas.place import (
+    MapStatsResponse,
     PlaceComplaintResponse,
     PlaceDetailResponse,
     PlaceResponse,
     PlaceReviewResponse,
 )
+from app.services.map_routes import get_map_routes
 from app.services.notifications import notify_owner
 from app.services.pagination_utils import normalize_pagination
 from app.services.schedule import format_opening_hours
@@ -40,6 +44,14 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 PlaceSortField = Literal["rating", "name"]
+
+
+class PlaceRatingMeta(TypedDict):
+    """Display rating fields attached to place API responses."""
+
+    display_rating: float
+    display_review_count: int
+    rating_source: str | None
 
 SHOP_CATEGORIES = {
     PlaceCategory.SHOP,
@@ -177,6 +189,38 @@ class PlaceReviewResult:
 
     review: PlaceReview
     place: Place
+
+
+@dataclass(frozen=True, slots=True)
+class MapStatsResult:
+    """Aggregated map dashboard statistics."""
+
+    total_places: int
+    by_category: dict[str, int]
+    last_sync: datetime | None
+    center_lat: float
+    center_lng: float
+    total_reviews: int
+    total_complaints: int
+    active_complaints: int
+    avg_rating_by_category: dict[str, float]
+    active_taxi_count: int
+    route_count: int
+
+    def to_response(self) -> MapStatsResponse:
+        """Serialize to the public API schema."""
+        return MapStatsResponse(
+            total_places=self.total_places,
+            by_category=self.by_category,
+            last_sync=self.last_sync,
+            center={"lat": self.center_lat, "lng": self.center_lng},
+            total_reviews=self.total_reviews,
+            total_complaints=self.total_complaints,
+            active_complaints=self.active_complaints,
+            avg_rating_by_category=self.avg_rating_by_category,
+            active_taxi_count=self.active_taxi_count,
+            route_count=self.route_count,
+        )
 
 
 class PlaceNotFoundError(Exception):
@@ -337,7 +381,7 @@ def build_complaint_response(complaint: PlaceComplaint) -> PlaceComplaintRespons
     )
 
 
-def place_rating_meta(place: Place) -> dict[str, Any]:
+def place_rating_meta(place: Place) -> PlaceRatingMeta:
     """Return display rating fields for API responses."""
     if place.external_rating > 0:
         source = "yandex" if place.external_source == "yandex" else "reference"
@@ -692,3 +736,84 @@ async def add_place_review(
         user_id,
     )
     return PlaceReviewResult(review=review, place=place)
+
+
+async def get_map_stats(db: AsyncSession) -> MapStatsResult:
+    """Collect map dashboard statistics for active places and related entities."""
+    active_filter = Place.is_active.is_(True)
+    try:
+        total_places = (
+            await db.execute(select(func.count(Place.id)).where(active_filter))
+        ).scalar() or 0
+
+        cat_rows = await db.execute(
+            select(Place.category, func.count(Place.id))
+            .where(active_filter)
+            .group_by(Place.category)
+        )
+        by_category = {
+            PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): row[1]
+            for row in cat_rows.all()
+        }
+
+        rating_rows = await db.execute(
+            select(Place.category, func.avg(EFFECTIVE_RATING))
+            .where(active_filter, EFFECTIVE_RATING > 0)
+            .group_by(Place.category)
+        )
+        avg_rating_by_category = {
+            PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): round(float(row[1]), 1)
+            for row in rating_rows.all()
+            if row[1] is not None
+        }
+
+        total_reviews = (
+            await db.execute(
+                select(func.count(PlaceReview.id))
+                .join(Place, PlaceReview.place_id == Place.id)
+                .where(active_filter)
+            )
+        ).scalar() or 0
+
+        total_complaints = (
+            await db.execute(select(func.count(PlaceComplaint.id)))
+        ).scalar() or 0
+        active_complaints = (
+            await db.execute(
+                select(func.count(PlaceComplaint.id)).where(PlaceComplaint.status == "new")
+            )
+        ).scalar() or 0
+
+        active_taxi_count = (
+            await db.execute(
+                select(func.count(TaxiService.id)).where(TaxiService.is_active.is_(True))
+            )
+        ).scalar() or 0
+
+        last_sync = (await db.execute(select(func.max(Place.last_synced_at)))).scalar()
+    except Exception:
+        logger.exception("Failed to build map stats")
+        raise
+
+    route_count = len(get_map_routes())
+    logger.debug(
+        "Map stats: places=%s reviews=%s complaints=%s taxi=%s routes=%s",
+        total_places,
+        total_reviews,
+        total_complaints,
+        active_taxi_count,
+        route_count,
+    )
+    return MapStatsResult(
+        total_places=total_places,
+        by_category=by_category,
+        last_sync=last_sync,
+        center_lat=settings.MAP_CENTER_LAT,
+        center_lng=settings.MAP_CENTER_LNG,
+        total_reviews=total_reviews,
+        total_complaints=total_complaints,
+        active_complaints=active_complaints,
+        avg_rating_by_category=avg_rating_by_category,
+        active_taxi_count=active_taxi_count,
+        route_count=route_count,
+    )

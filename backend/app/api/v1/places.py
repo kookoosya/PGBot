@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
 from app.core.rate_limit import limiter
 from app.database import get_db
@@ -42,13 +41,13 @@ from app.services.place_service import (
     build_complaint_response,
     build_place_response,
     create_place_complaint,
+    get_map_stats,
     get_place_details,
     search_places,
 )
 from app.services.yandex_sync import sync_places_from_yandex
 
 router = APIRouter()
-settings = get_settings()
 
 
 @router.get("/categories")
@@ -90,20 +89,8 @@ async def list_taxi(db: Annotated[AsyncSession, Depends(get_db)]):
 
 @router.get("/map/stats", response_model=MapStatsResponse)
 async def map_stats(db: Annotated[AsyncSession, Depends(get_db)]):
-    total = (await db.execute(select(func.count(Place.id)).where(Place.is_active.is_(True)))).scalar() or 0
-    cat_result = await db.execute(
-        select(Place.category, func.count(Place.id))
-        .where(Place.is_active.is_(True))
-        .group_by(Place.category)
-    )
-    by_cat = {PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): row[1] for row in cat_result.all()}
-    last = (await db.execute(select(func.max(Place.last_synced_at)))).scalar()
-    return MapStatsResponse(
-        total_places=total,
-        by_category=by_cat,
-        last_sync=last,
-        center={"lat": settings.MAP_CENTER_LAT, "lng": settings.MAP_CENTER_LNG},
-    )
+    stats = await get_map_stats(db)
+    return stats.to_response()
 
 
 @router.get("", response_model=PlaceListResponse)
