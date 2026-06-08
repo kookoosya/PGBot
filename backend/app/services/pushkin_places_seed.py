@@ -15,20 +15,20 @@ from app.models.taxi import TaxiService
 
 # name, category, lat, lng, address, phone, hours, yandex_rating, review_count, website, note
 VILLAGE_PLACES: list[tuple] = [
-    # —— Продукты (5ka.ru, magnit.ru) ——
+    # —— Продукты (Яндекс Карты, 5ka.ru, magnit.ru) ——
     (
-        "Пятёрочка", PlaceCategory.SUPERMARKET, 57.0275, 28.9085,
-        "ул. Лермонтова, 10", "8-800-555-55-05", "ежедневно 08:00–23:00", 0, 0,
+        "Пятёрочка", PlaceCategory.SUPERMARKET, 57.0264, 28.9106,
+        "ул. Ленина, 20А", "8-800-555-55-05", "ежедневно 08:00–23:00", 0, 0,
         "https://5ka.ru", None,
     ),
     (
-        "Магнит", PlaceCategory.SUPERMARKET, 57.0268, 28.9095,
-        "ул. Лермонтова, 42", "8-800-200-90-02", "ежедневно", 0, 0,
+        "Магнит", PlaceCategory.SUPERMARKET, 57.0261, 28.9112,
+        "ул. Ленина, 42", "8-800-200-90-02", "ежедневно до 22:00", 0, 0,
         "https://magnit.ru", None,
     ),
     (
         "Магнит", PlaceCategory.SUPERMARKET, 57.0258, 28.9125,
-        "ул. Новоржевская, 25", "8-800-200-90-02", "ежедневно", 0, 0,
+        "ул. Новоржевская, 25", "8-800-200-90-02", "ежедневно до 22:00", 0, 0,
         "https://magnit.ru", None,
     ),
     # —— Аптеки (zdravcity.ru, zoon.ru) ——
@@ -143,6 +143,8 @@ DEPRECATED_ADDRESS_PARTS = (
     "красноармейская, 8",
     "новоржевская, 30",
     "новоржевская, 18",
+    "лермонтова, 10",
+    "лермонтова, 42",
 )
 
 TAXI_SEED = [

@@ -4,29 +4,35 @@ import { VillageGallery } from "@/components/VillageGallery";
 import { VkBotLink } from "@/components/VkBotLink";
 import { BRAND } from "@/lib/branding";
 import { MAIN_SECTIONS } from "@/lib/navigation";
-import { api } from "@/lib/api";
+import { api, ClassifiedAd } from "@/lib/api";
+import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { PUSHKIN_QUOTES, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 
 const highlights = [
-  { n: "01", icon: "🗺", title: "Живая карта", desc: "Магазины, аптеки, такси, гостиницы — обновление каждые 6 часов", to: "/map", tone: "emerald" },
-  { n: "02", icon: "📋", title: "Объявления", desc: "Дрова, вакансии, услуги от соседей — бесплатно", to: "/classifieds", tone: "gold" },
+  { n: "01", icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — бесплатно, без регистрации", to: "/classifieds", tone: "gold" },
+  { n: "02", icon: "💼", title: "Работа", desc: "Вакансии и подработка от местных работодателей", to: "/classifieds?jobs=1", tone: "emerald" },
   { n: "03", icon: "⚠️", title: "Жалобы", desc: "Дороги, ЖКХ, освещение — официальный канал для жителей", to: "/complaints", tone: "rose" },
   { n: "04", icon: "🤖", title: "ИИ-помощник", desc: "30 сообщений в день — тексты, идеи, ответы о посёлке", to: "/ai", tone: "violet" },
 ];
 
 export function Landing() {
-  const [stats, setStats] = useState({ places: 0, ads: 0, loaded: false });
+  const [stats, setStats] = useState({ places: 0, ads: 0, jobs: 0, loaded: false });
+  const [jobAds, setJobAds] = useState<ClassifiedAd[]>([]);
 
   useEffect(() => {
     Promise.all([
       api.getMapStats().then((s) => s.total_places).catch(() => 0),
       api.getClassifieds().then((r) => r.total).catch(() => 0),
-    ]).then(([places, ads]) => setStats({ places, ads, loaded: true }));
+      api.getClassifieds({ jobs_only: "true", page_size: "4" }).then((r) => r).catch(() => ({ items: [], total: 0 })),
+    ]).then(([places, ads, jobsRes]) => {
+      setStats({ places, ads, jobs: jobsRes.total, loaded: true });
+      setJobAds(jobsRes.items);
+    });
   }, []);
 
-  const quickSections = MAIN_SECTIONS.filter((s) => s.to !== "/");
+  const quickSections = MAIN_SECTIONS.filter((s) => s.to !== "/" && s.to !== "/map");
 
   return (
     <div className="landing-epic">
@@ -51,26 +57,25 @@ export function Landing() {
             <p className="epic-lead">{BRAND.description}</p>
 
             <div className="epic-stats-row">
-              <Link to="/map" className="epic-stat-card">
-                <strong>{stats.loaded ? stats.places : "…"}</strong>
-                <span>организаций на карте</span>
-              </Link>
-              <Link to="/classifieds" className="epic-stat-card">
+              <div className="epic-stat-card epic-stat-card-static">
                 <strong>{stats.loaded ? stats.ads : "…"}</strong>
                 <span>объявлений соседей</span>
-              </Link>
+              </div>
               <div className="epic-stat-card epic-stat-card-static">
-                <strong>6 ч</strong>
-                <span>обновление справочника</span>
+                <strong>{stats.loaded ? stats.jobs : "…"}</strong>
+                <span>вакансий сейчас</span>
+              </div>
+              <div className="epic-stat-card epic-stat-card-static">
+                <strong>🆓</strong>
+                <span>без регистрации</span>
               </div>
             </div>
 
             <div className="epic-cta-row">
-              <Link to="/map" className="epic-btn epic-btn-primary">🗺 Открыть карту</Link>
-              <Link to="/classifieds" className="epic-btn epic-btn-glass">📋 Объявления</Link>
-              <Link to="/complaints" className="epic-btn epic-btn-glass">⚠️ Подать жалобу</Link>
+              <Link to="/classifieds" className="epic-btn epic-btn-primary">📋 Подать объявление</Link>
+              <Link to="/classifieds?jobs=1" className="epic-btn epic-btn-glass">💼 Работа</Link>
+              <Link to="/complaints" className="epic-btn epic-btn-glass">⚠️ Жалоба</Link>
             </div>
-
           </div>
 
           <div className="epic-hero-panel animate-in">
@@ -82,10 +87,6 @@ export function Landing() {
                   <span className="epic-panel-text">{s.label}</span>
                 </Link>
               ))}
-              <Link to="/register" className="epic-panel-tile epic-panel-tile-accent">
-                <span className="epic-panel-icon">✍️</span>
-                <span className="epic-panel-text">Регистрация</span>
-              </Link>
             </div>
             <div className="epic-panel-vk">
               <VkBotLink />
@@ -98,8 +99,8 @@ export function Landing() {
         <div className="page-section">
           <div className="epic-section-head">
             <p className="epic-section-kicker">Всё в одном месте</p>
-            <h2 className="epic-section-title">Портал, который реально работает</h2>
-            <p className="epic-section-desc">Карта, объявления, услуги, жалобы и ИИ — на сайте и в VK-боте</p>
+            <h2 className="epic-section-title">Портал для жителей и гостей</h2>
+            <p className="epic-section-desc">Объявления, работа, услуги, жалобы и ИИ — на сайте и в VK-боте</p>
           </div>
 
           <div className="epic-bento">
@@ -121,14 +122,48 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="epic-strip">
-        <div className="page-section epic-strip-inner">
-          <div>
-            <p className="epic-strip-kicker">Для туристов и жителей</p>
-            <h2 className="epic-strip-title">Карта посёлка с рейтингами и маршрутами</h2>
-            <p className="epic-strip-desc">Аптеки, магазины, кафе, такси, гостиницы — с отзывами и кнопкой «Построить маршрут»</p>
+      <section className="epic-jobs-section">
+        <div className="page-section">
+          <div className="epic-jobs-head">
+            <div>
+              <p className="epic-section-kicker">Работа в посёлке</p>
+              <h2 className="epic-section-title epic-jobs-title">Вакансии и подработка</h2>
+              <p className="epic-section-desc epic-jobs-desc">
+                Местные работодатели — без посредников. Разместить вакансию можно бесплатно, регистрация не нужна.
+              </p>
+            </div>
+            <Link to="/classifieds?jobs=1" className="epic-btn epic-btn-primary">Все вакансии</Link>
           </div>
-          <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">Смотреть на карте</Link>
+
+          <div className="epic-jobs-grid">
+            {jobAds.map((ad) => {
+              const visual = getCategoryVisual(ad.category);
+              return (
+                <article key={ad.id} className="epic-job-card">
+                  <div className="epic-job-icon" style={{ background: visual.gradient }}>
+                    {visual.icon}
+                  </div>
+                  <div className="epic-job-body">
+                    <span className="epic-job-badge">{ad.category_label}</span>
+                    <h3 className="epic-job-title">{ad.title}</h3>
+                    <p className="epic-job-desc">{ad.description.slice(0, 120)}{ad.description.length > 120 ? "…" : ""}</p>
+                    {ad.price != null && (
+                      <p className="epic-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
+                    )}
+                    <p className="epic-job-contact">
+                      📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">{ad.phone}</a>
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+            {jobAds.length === 0 && (
+              <div className="epic-job-empty">
+                <p>Пока нет опубликованных вакансий.</p>
+                <Link to="/classifieds?jobs=1" className="epic-btn epic-btn-glass">Разместить первую</Link>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

@@ -267,7 +267,8 @@ async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)])
         recent_complaints=[
             PlaceComplaintResponse(
                 id=c.id, complaint_type=c.complaint_type,
-                complaint_label=SHOP_COMPLAINT_LABELS.get(c.complaint_type, c.complaint_type),
+                complaint_label=MAP_REPORT_LABELS.get(c.complaint_type)
+                or SHOP_COMPLAINT_LABELS.get(c.complaint_type, c.complaint_type),
                 description=c.description, price_tagged=c.price_tagged,
                 price_charged=c.price_charged, status=c.status, created_at=c.created_at,
             )

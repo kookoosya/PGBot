@@ -13,7 +13,15 @@ from app.models.enums import (
     CLASSIFIED_LABELS,
     ClassifiedCategory,
     ClassifiedPaymentStatus,
+    JOB_CLASSIFIED_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
+)
+from app.services.classified_antifraud import (
+    check_phone_rate_limit,
+    check_recent_duplicate,
+    find_scam_phrase,
+    normalize_phone,
+    validate_phone,
 )
 from app.models.user import User
 from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
@@ -35,6 +43,8 @@ class ClassifiedCreate(BaseModel):
     contact_vk: str | None = Field(None, max_length=100)
     payment_confirmed: bool = False
     payment_reference: str | None = Field(None, max_length=200)
+    website_url: str | None = Field(None, max_length=200)
+    agree_rules: bool = False
 
 
 class ClassifiedResponse(BaseModel):
@@ -206,6 +216,7 @@ async def list_ads(
     category: ClassifiedCategory | None = None,
     search: str | None = None,
     services_only: bool = False,
+    jobs_only: bool = False,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
@@ -215,6 +226,8 @@ async def list_ads(
     )
     if services_only:
         query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
+    if jobs_only:
+        query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
     if category:
         query = query.where(ClassifiedAd.category == category)
     if search:
@@ -273,6 +286,34 @@ async def create_ad(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
 ):
+    if data.website_url:
+        raise HTTPException(status_code=400, detail="Не удалось отправить форму. Обновите страницу.")
+
+    if not data.agree_rules:
+        raise HTTPException(
+            status_code=400,
+            detail="Подтвердите, что объявление честное и без предоплаты незнакомцам",
+        )
+
+    phone_err = validate_phone(data.phone)
+    if phone_err:
+        raise HTTPException(status_code=400, detail=phone_err)
+
+    scam = find_scam_phrase(f"{data.title} {data.description}")
+    if scam:
+        raise HTTPException(
+            status_code=400,
+            detail="Текст похож на мошенническую схему. Уберите требование предоплаты или перевода.",
+        )
+
+    rate_err = await check_phone_rate_limit(db, data.phone)
+    if rate_err:
+        raise HTTPException(status_code=429, detail=rate_err)
+
+    dup_err = await check_recent_duplicate(db, data.phone, data.title)
+    if dup_err:
+        raise HTTPException(status_code=400, detail=dup_err)
+
     quota = await get_classified_quota(db, data.phone, current_user.id if current_user else None)
     requires_payment = quota["requires_payment"]
     placement_fee = settings.CLASSIFIED_PLACEMENT_FEE if requires_payment else 0
@@ -290,7 +331,7 @@ async def create_ad(
         description=data.description,
         price=data.price,
         price_unit=data.price_unit,
-        phone=data.phone,
+        phone=data.phone.strip(),
         author_name=data.author_name,
         address=data.address,
         contact_telegram=data.contact_telegram,

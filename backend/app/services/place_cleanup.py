@@ -17,7 +17,12 @@ SKIP_OSM_NAMES = {
     "ozon", "wildberries", "сдэк", "cdek", "pickpoint", "boxberry",
     "exclusive palace", "пункт выдачи", "постамат", "пропан",
 }
-DEPRECATED_ADDRESS_PARTS = ("строителей, 1-б", "строителей, 1")
+DEPRECATED_ADDRESS_PARTS = (
+    "строителей, 1-б",
+    "строителей, 1",
+    "лермонтова, 10",
+    "лермонтова, 42",
+)
 SKIP_OSM_SHOPS = {"parcel_locker", "outpost", "kiosk", "ticket", "lottery"}
 SKIP_OSM_AMENITIES = {"parcel_locker", "vending_machine"}
 

@@ -88,6 +88,11 @@ SERVICE_CLASSIFIED_CATEGORIES = {
     ClassifiedCategory.OTHER,
 }
 
+JOB_CLASSIFIED_CATEGORIES = {
+    ClassifiedCategory.JOB,
+    ClassifiedCategory.CONSTRUCTION_VACANCY,
+}
+
 
 class ClassifiedPaymentStatus(str, enum.Enum):
     PENDING = "pending"

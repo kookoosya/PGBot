@@ -1721,26 +1721,82 @@
     color: hsl(152 45% 22%);
   }
 
-  .epic-strip {
-    background: linear-gradient(135deg, hsl(152 48% 16%), hsl(152 40% 24%) 55%, hsl(350 38% 26%));
+  .epic-jobs-section {
+    background: linear-gradient(180deg, hsl(42 42% 98%), hsl(152 28% 96%));
+    border-top: 1px solid hsl(152 25% 85%);
+    padding: 3rem 0 4rem;
+  }
+  .epic-jobs-head {
+    @apply flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8;
+  }
+  .epic-jobs-title { @apply text-left m-0; }
+  .epic-jobs-desc { @apply text-left m-0 max-w-xl; }
+  .epic-jobs-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+  .epic-job-card {
+    @apply flex gap-4 rounded-2xl p-5 transition;
+    background: hsl(var(--card));
+    border: 2px solid hsl(152 25% 88%);
+    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.06);
+  }
+  .epic-job-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(152 35% 72%);
+    box-shadow: 0 14px 32px rgba(12, 40, 28, 0.1);
+  }
+  .epic-job-icon {
+    @apply flex items-center justify-center shrink-0 rounded-xl text-2xl;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .epic-job-body { @apply flex-1 min-w-0; }
+  .epic-job-badge {
+    @apply inline-block text-xs font-bold uppercase tracking-wide mb-1;
+    color: hsl(152 40% 30%);
+  }
+  .epic-job-title { @apply font-bold text-lg m-0 mb-1; }
+  .epic-job-desc { @apply text-sm text-muted-foreground m-0 leading-relaxed; }
+  .epic-job-pay { @apply text-sm font-semibold mt-2 mb-0; color: hsl(42 70% 35%); }
+  .epic-job-contact { @apply text-sm mt-2 mb-0; }
+  .epic-job-empty {
+    @apply col-span-full text-center py-10 rounded-2xl;
+    background: hsl(42 40% 97%);
+    border: 2px dashed hsl(152 25% 82%);
+  }
+
+  .classified-quick-filters {
+    @apply flex flex-wrap gap-2;
+  }
+  .classified-quick-btn {
+    @apply px-4 py-2 rounded-full text-sm font-semibold transition;
+    background: hsl(42 35% 96%);
+    border: 2px solid hsl(152 20% 85%);
+    color: hsl(var(--foreground));
+  }
+  .classified-quick-btn:hover {
+    border-color: hsl(152 35% 65%);
+  }
+  .classified-quick-btn-active {
+    background: hsl(152 40% 18%);
+    border-color: hsl(152 40% 18%);
     color: hsl(42 90% 94%);
-    border-top: 4px solid hsl(42 80% 52%);
-    border-bottom: 4px solid hsl(42 80% 52%);
   }
-  .epic-strip-inner {
-    @apply flex flex-col md:flex-row md:items-center md:justify-between gap-6;
+  .classified-jobs-list { @apply mt-6; }
+
+  .antifraud-note {
+    @apply rounded-xl px-4 py-3;
+    background: hsl(350 45% 96%);
+    border: 1px solid hsl(350 35% 85%);
+    color: hsl(350 40% 28%);
   }
-  .epic-strip-kicker {
-    @apply text-xs font-bold uppercase tracking-[0.16em] m-0;
-    color: hsl(42 80% 70%);
-  }
-  .epic-strip-title {
-    @apply text-2xl md:text-3xl font-bold mt-2 mb-2 m-0;
-    font-family: "Playfair Display", Georgia, serif;
-  }
-  .epic-strip-desc {
-    @apply m-0 max-w-xl text-sm md:text-base;
-    color: hsl(42 50% 90% / 0.88);
+  .honeypot-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
   }
 
   @keyframes epicKenBurns {
