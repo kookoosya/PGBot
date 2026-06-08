@@ -4,16 +4,18 @@
 
 На VPS в `/opt/pgbot/.env` часто остаётся **заглушка** `GEMINI_API_KEY=your-gemini-api-key` из примера — это **не настоящий ключ**.
 
-Pollinations (Flux, картинки + чат) требует отдельный ключ: `POLLINATIONS_API_KEY`.
+Pollinations (Flux, картинки + чат) использует `POLLINATIONS_API_KEY` (`sk_...` / `pk_...` с [enter.pollinations.ai](https://enter.pollinations.ai), либо ключ Google AI Studio `AQ....` для чата).
 
 ## Быстрая настройка (рекомендуется)
 
-1. Зарегистрируйтесь на [enter.pollinations.ai](https://enter.pollinations.ai)
-2. Создайте **Secret key** (`sk_...`)
-3. Добавьте в `.deploy.env` в корне репозитория:
+1. Зарегистрируйтесь на [enter.pollinations.ai](https://enter.pollinations.ai) и создайте **Secret key** (`sk_...`),  
+   **или** используйте ключ с [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (`AQ....`) — он работает для чата Pollinations.
+2. Добавьте в `.deploy.env` в корне репозитория:
 
 ```env
 POLLINATIONS_API_KEY=sk_ваш_ключ
+# или для чата через Google-ключ:
+# POLLINATIONS_API_KEY=AQ....
 ```
 
 4. Задеплойте: `bash scripts/remote-deploy.sh`

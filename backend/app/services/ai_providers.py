@@ -46,15 +46,27 @@ OPENROUTER_IMAGE_MODELS = {
 }
 
 
+def _pollinations_key() -> str:
+    return settings.POLLINATIONS_API_KEY.strip()
+
+
 def _pollinations_headers() -> dict[str, str]:
-    key = settings.POLLINATIONS_API_KEY.strip()
+    key = _pollinations_key()
     if not key:
         return {}
-    return {"Authorization": f"Bearer {key}"}
+    # sk_/pk_ — Bearer; ключи AQ.* надёжнее только через ?key=
+    if key.startswith(("sk_", "pk_")):
+        return {"Authorization": f"Bearer {key}"}
+    return {}
+
+
+def _pollinations_key_query() -> str:
+    key = _pollinations_key()
+    return f"?key={quote(key)}" if key else ""
 
 
 def _pollinations_key_param() -> str:
-    key = settings.POLLINATIONS_API_KEY.strip()
+    key = _pollinations_key()
     return f"&key={quote(key)}" if key else ""
 
 
@@ -83,10 +95,12 @@ async def pollinations_chat(
 
     poll_model = POLLINATIONS_CHAT_MODELS.get(model_id, model_id)
 
+    chat_url = f"{POLLINATIONS_CHAT_URL}{_pollinations_key_query()}"
+
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             resp = await client.post(
-                POLLINATIONS_CHAT_URL,
+                chat_url,
                 headers={**_pollinations_headers(), "Content-Type": "application/json"},
                 json={"model": poll_model, "messages": messages, "max_tokens": 1800},
             )

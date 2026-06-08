@@ -21,7 +21,9 @@ def is_valid_gemini_key(key: str) -> bool:
 
 def is_valid_pollinations_key(key: str) -> bool:
     k = key.strip()
-    return bool(k) and (k.startswith("sk_") or k.startswith("pk_"))
+    if not k or _looks_like_placeholder(k):
+        return False
+    return k.startswith(("sk_", "pk_", "AQ."))
 
 
 def is_valid_openrouter_key(key: str) -> bool:
