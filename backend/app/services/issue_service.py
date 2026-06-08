@@ -92,6 +92,7 @@ async def _safe_notify_status(issue: Issue) -> bool:
 
 
 def _status_value(status: IssueStatus | str) -> str:
+    """Return enum value as string for logging and audit payloads."""
     return status.value if isinstance(status, IssueStatus) else str(status)
 
 

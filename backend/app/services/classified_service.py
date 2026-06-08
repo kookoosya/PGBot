@@ -28,6 +28,7 @@ from app.services.classified_antifraud import (
 )
 from app.services.ip_abuse import contains_suspicious_link
 from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
+from app.services.pagination_utils import normalize_pagination
 from app.services.site_urls import public_site_url
 
 logger = logging.getLogger(__name__)
@@ -174,18 +175,14 @@ def _normalize_pagination(
     total: int,
     offset: Optional[int] = None,
 ) -> tuple[int, int, int, int, bool, bool]:
-    """Return clamped page, offset, total_pages, has_prev, has_next."""
-    safe_page_size = max(1, min(page_size, 100))
-    total_pages = max(1, (total + safe_page_size - 1) // safe_page_size) if total else 1
-    if offset is not None:
-        safe_offset = max(0, offset)
-        safe_page = safe_offset // safe_page_size + 1
-    else:
-        safe_page = max(1, min(page, total_pages))
-        safe_offset = (safe_page - 1) * safe_page_size
-    has_prev = safe_offset > 0
-    has_next = safe_offset + safe_page_size < total
-    return safe_page, safe_offset, safe_page_size, total_pages, has_prev, has_next
+    """Return clamped pagination metadata for classified search."""
+    return normalize_pagination(
+        page=page,
+        page_size=page_size,
+        total=total,
+        offset=offset,
+        max_page_size=100,
+    )
 
 
 def _apply_search_sort(
@@ -207,6 +204,7 @@ async def _count_user_ads(
     phone: str,
     user_id: Optional[int] = None,
 ) -> int:
+    """Count pending and approved ads for a phone or user."""
     filters: list[Any] = [
         ClassifiedAd.payment_status.in_([
             ClassifiedPaymentStatus.PENDING,

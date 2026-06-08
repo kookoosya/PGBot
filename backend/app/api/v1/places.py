@@ -12,14 +12,10 @@ from app.models.enums import (
     MAP_REPORT_LABELS,
     PLACE_CATEGORY_LABELS,
     SHOP_COMPLAINT_LABELS,
-    IssueCategory,
-    IssueStatus,
     PlaceCategory,
-    Priority,
     ShopComplaintType,
 )
-from app.models.issue import Issue
-from app.models.place import Place, PlaceComplaint, PlaceReview
+from app.models.place import Place
 from app.models.taxi import TaxiService
 from app.models.user import User
 from app.schemas.place import (
@@ -28,7 +24,6 @@ from app.schemas.place import (
     PlaceComplaintResponse,
     PlaceDetailResponse,
     PlaceListResponse,
-    PlaceResponse,
     PlaceReviewCreate,
     PlaceReviewResponse,
     TaxiServiceResponse,
@@ -37,10 +32,16 @@ from app.services.map_routes import get_map_routes
 from app.services.map_sync import sync_all_map_data
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
 from app.services.place_service import (
+    PlaceComplaintInput,
     PlaceNotFoundError,
+    PlaceReviewInput,
     PlaceSearchParams,
     PlaceSortField,
+    PlaceValidationError,
+    add_place_review,
+    build_complaint_response,
     build_place_response,
+    create_place_complaint,
     get_place_details,
     search_places,
 )
@@ -164,30 +165,22 @@ async def add_review(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
 ):
-    result = await db.execute(select(Place).where(Place.id == place_id))
-    place = result.scalar_one_or_none()
-    if not place:
-        raise HTTPException(status_code=404, detail="Место не найдено")
-
-    review = PlaceReview(
-        place_id=place_id,
-        rating=data.rating,
-        text=data.text,
-        author_name=data.author_name or (current_user.full_name if current_user else "Житель"),
-        user_id=current_user.id if current_user else None,
-    )
-    db.add(review)
-    await db.flush()
-
-    avg_result = await db.execute(
-        select(func.avg(PlaceReview.rating), func.count(PlaceReview.id))
-        .where(PlaceReview.place_id == place_id)
-    )
-    avg_row = avg_result.one()
-    place.avg_rating = round(float(avg_row[0] or 0), 1)
-    place.review_count = avg_row[1] or 0
-
-    return PlaceReviewResponse.model_validate(review)
+    try:
+        result = await add_place_review(
+            db,
+            place_id,
+            PlaceReviewInput(
+                rating=data.rating,
+                text=data.text,
+                author_name=data.author_name,
+            ),
+            user=current_user,
+        )
+    except PlaceNotFoundError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except PlaceValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return PlaceReviewResponse.model_validate(result.review)
 
 
 @router.post("/{place_id}/complaints", response_model=PlaceComplaintResponse, status_code=201)
@@ -199,67 +192,25 @@ async def add_complaint(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
 ):
-    result = await db.execute(select(Place).where(Place.id == place_id))
-    place = result.scalar_one_or_none()
-    if not place:
-        raise HTTPException(status_code=404, detail="Место не найдено")
-
-    complaint = PlaceComplaint(
-        place_id=place_id,
-        complaint_type=data.complaint_type,
-        description=data.description,
-        price_tagged=data.price_tagged,
-        price_charged=data.price_charged,
-        receipt_info=data.receipt_info,
-        author_name=data.author_name or (current_user.full_name if current_user else "Житель"),
-        user_id=current_user.id if current_user else None,
-    )
-    db.add(complaint)
-    place.complaint_count += 1
-
-    type_label = MAP_REPORT_LABELS.get(data.complaint_type) or SHOP_COMPLAINT_LABELS.get(
-        data.complaint_type, data.complaint_type
-    )
-    is_map_report = data.complaint_type in MAP_REPORT_LABELS
-    issue_desc = (
-        f"{'Ошибка на карте' if is_map_report else 'Жалоба'}: {place.name} ({place.address or ''})\n"
-        f"Тип: {type_label}\n"
-        f"{data.description}"
-    )
-    if data.price_tagged or data.price_charged:
-        issue_desc += f"\nЦена на ценнике: {data.price_tagged or '—'}, на кассе: {data.price_charged or '—'}"
-
-    issue = Issue(
-        title=f"{'Карта' if is_map_report else 'Жалоба'}: {place.name}",
-        description=issue_desc,
-        status=IssueStatus.NEW,
-        category=IssueCategory.OTHER,
-        priority=Priority.MEDIUM,
-        address=place.address,
-        latitude=place.latitude,
-        longitude=place.longitude,
-        resident_id=current_user.id if current_user else None,
-    )
-    db.add(issue)
-    await db.flush()
-    complaint.issue_id = issue.id
-
-    from app.services.notifications import notify_owner
-    await notify_owner(
-        f"⚠️ Жалоба на организацию\n\n"
-        f"«{place.name}» — {place.address or 'адрес не указан'}\n"
-        f"{SHOP_COMPLAINT_LABELS.get(data.complaint_type, data.complaint_type)}\n"
-        f"{data.description[:300]}"
-    )
-
-    return PlaceComplaintResponse(
-        id=complaint.id, complaint_type=complaint.complaint_type,
-        complaint_label=MAP_REPORT_LABELS.get(complaint.complaint_type)
-        or SHOP_COMPLAINT_LABELS.get(complaint.complaint_type, ""),
-        description=complaint.description, price_tagged=complaint.price_tagged,
-        price_charged=complaint.price_charged, status=complaint.status,
-        created_at=complaint.created_at,
-    )
+    try:
+        result = await create_place_complaint(
+            db,
+            place_id,
+            PlaceComplaintInput(
+                complaint_type=data.complaint_type,
+                description=data.description,
+                price_tagged=data.price_tagged,
+                price_charged=data.price_charged,
+                receipt_info=data.receipt_info,
+                author_name=data.author_name,
+            ),
+            user=current_user,
+        )
+    except PlaceNotFoundError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except PlaceValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return build_complaint_response(result.complaint)
 
 
 @router.post("/sync")

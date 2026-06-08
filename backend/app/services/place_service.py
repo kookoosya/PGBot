@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 from typing import Any, Literal, Optional
 
@@ -16,15 +17,23 @@ from app.models.enums import (
     MAP_REPORT_LABELS,
     PLACE_CATEGORY_LABELS,
     SHOP_COMPLAINT_LABELS,
+    IssueCategory,
+    IssueStatus,
     PlaceCategory,
+    Priority,
+    ShopComplaintType,
 )
+from app.models.issue import Issue
 from app.models.place import Place, PlaceComplaint, PlaceReview
+from app.models.user import User
 from app.schemas.place import (
     PlaceComplaintResponse,
     PlaceDetailResponse,
     PlaceResponse,
     PlaceReviewResponse,
 )
+from app.services.notifications import notify_owner
+from app.services.pagination_utils import normalize_pagination
 from app.services.schedule import format_opening_hours
 
 logger = logging.getLogger(__name__)
@@ -77,6 +86,36 @@ _PLACE_DETAIL_LOADS = (
 _MAX_PAGE_SIZE = 500
 _REVIEWS_LIMIT = 10
 _COMPLAINTS_LIMIT = 5
+_REVIEW_DUPLICATE_HOURS = 24
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceActorContext:
+    """Actor submitting a place review or complaint."""
+
+    actor_id: Optional[int] = None
+    ip_address: Optional[str] = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceComplaintInput:
+    """Validated payload for creating a place complaint."""
+
+    complaint_type: ShopComplaintType
+    description: str
+    price_tagged: Optional[str] = None
+    price_charged: Optional[str] = None
+    receipt_info: Optional[str] = None
+    author_name: Optional[str] = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceReviewInput:
+    """Validated payload for creating a place review."""
+
+    rating: int
+    text: Optional[str] = None
+    author_name: Optional[str] = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,10 +162,36 @@ class PlaceDetailResult:
     response: PlaceDetailResponse
 
 
+@dataclass(frozen=True, slots=True)
+class PlaceComplaintResult:
+    """Result of submitting a place complaint."""
+
+    complaint: PlaceComplaint
+    issue: Issue
+    owner_notified: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceReviewResult:
+    """Result of submitting a place review."""
+
+    review: PlaceReview
+    place: Place
+
+
 class PlaceNotFoundError(Exception):
     """Business error when a place cannot be loaded."""
 
     def __init__(self, detail: str = "Место не найдено", *, status_code: int = 404) -> None:
+        super().__init__(detail)
+        self.detail = detail
+        self.status_code = status_code
+
+
+class PlaceValidationError(Exception):
+    """Business validation failure for place actions."""
+
+    def __init__(self, detail: str, *, status_code: int = 400) -> None:
         super().__init__(detail)
         self.detail = detail
         self.status_code = status_code
@@ -157,20 +222,119 @@ def _normalize_pagination(
     page_size: int,
     total: int,
     offset: Optional[int] = None,
-    max_page_size: int = _MAX_PAGE_SIZE,
 ) -> tuple[int, int, int, int, bool, bool]:
-    """Return clamped page, offset, page_size, total_pages, has_prev, has_next."""
-    safe_page_size = max(1, min(page_size, max_page_size))
-    total_pages = max(1, (total + safe_page_size - 1) // safe_page_size) if total else 1
-    if offset is not None:
-        safe_offset = max(0, offset)
-        safe_page = safe_offset // safe_page_size + 1
-    else:
-        safe_page = max(1, min(page, total_pages))
-        safe_offset = (safe_page - 1) * safe_page_size
-    has_prev = safe_offset > 0
-    has_next = safe_offset + safe_page_size < total
-    return safe_page, safe_offset, safe_page_size, total_pages, has_prev, has_next
+    """Return clamped pagination metadata for place search."""
+    return normalize_pagination(
+        page=page,
+        page_size=page_size,
+        total=total,
+        offset=offset,
+        max_page_size=_MAX_PAGE_SIZE,
+    )
+
+
+async def _load_place(db: AsyncSession, place_id: int) -> Place:
+    """Load a place by id or raise ``PlaceNotFoundError``."""
+    try:
+        result = await db.execute(select(Place).where(Place.id == place_id))
+        place = result.scalar_one_or_none()
+    except Exception:
+        logger.exception("Failed to load place #%s", place_id)
+        raise
+    if place is None:
+        raise PlaceNotFoundError()
+    return place
+
+
+async def _safe_notify_owner(message: str, *, context: str, place_id: int) -> bool:
+    """Notify site owner; return ``True`` on success."""
+    try:
+        await notify_owner(message)
+        return True
+    except Exception:
+        logger.exception(
+            "Owner notification failed for place #%s during %s",
+            place_id,
+            context,
+        )
+        return False
+
+
+def _resolve_author_name(data_author: Optional[str], user: Optional[User]) -> str:
+    if data_author:
+        return data_author
+    if user and user.full_name:
+        return user.full_name
+    return "Житель"
+
+
+async def _check_duplicate_review(
+    db: AsyncSession,
+    place_id: int,
+    *,
+    user_id: Optional[int],
+    author_name: str,
+) -> None:
+    """Reject duplicate reviews from the same user or anonymous author."""
+    if user_id is not None:
+        existing = await db.execute(
+            select(PlaceReview.id)
+            .where(PlaceReview.place_id == place_id, PlaceReview.user_id == user_id)
+            .limit(1)
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise PlaceValidationError(
+                "Вы уже оставляли отзыв об этом месте",
+                status_code=409,
+            )
+        return
+
+    since = datetime.now(timezone.utc) - timedelta(hours=_REVIEW_DUPLICATE_HOURS)
+    recent = await db.execute(
+        select(PlaceReview.id)
+        .where(
+            PlaceReview.place_id == place_id,
+            PlaceReview.user_id.is_(None),
+            PlaceReview.author_name == author_name,
+            PlaceReview.created_at >= since,
+        )
+        .limit(1)
+    )
+    if recent.scalar_one_or_none() is not None:
+        raise PlaceValidationError(
+            "Отзыв с этим именем уже отправляли недавно — попробуйте позже",
+            status_code=429,
+        )
+
+
+async def _recalculate_place_rating(db: AsyncSession, place: Place) -> None:
+    """Update ``avg_rating`` and ``review_count`` from persisted reviews."""
+    try:
+        avg_result = await db.execute(
+            select(func.avg(PlaceReview.rating), func.count(PlaceReview.id)).where(
+                PlaceReview.place_id == place.id
+            )
+        )
+        avg_row = avg_result.one()
+        place.avg_rating = round(float(avg_row[0] or 0), 1)
+        place.review_count = avg_row[1] or 0
+    except Exception:
+        logger.exception("Failed to recalculate rating for place #%s", place.id)
+        raise
+
+
+def build_complaint_response(complaint: PlaceComplaint) -> PlaceComplaintResponse:
+    """Map a ``PlaceComplaint`` ORM instance to ``PlaceComplaintResponse``."""
+    return PlaceComplaintResponse(
+        id=complaint.id,
+        complaint_type=complaint.complaint_type,
+        complaint_label=_complaint_label(complaint),
+        description=complaint.description,
+        price_tagged=complaint.price_tagged,
+        price_charged=complaint.price_charged,
+        status=complaint.status,
+        created_at=complaint.created_at,
+    )
 
 
 def place_rating_meta(place: Place) -> dict[str, Any]:
@@ -383,3 +547,148 @@ async def get_place_details(db: AsyncSession, place_id: int) -> PlaceDetailResul
         recent_complaints=recent_complaints,
         response=response,
     )
+
+
+async def create_place_complaint(
+    db: AsyncSession,
+    place_id: int,
+    data: PlaceComplaintInput,
+    *,
+    user: Optional[User] = None,
+) -> PlaceComplaintResult:
+    """Create a place complaint, linked issue and notify the site owner."""
+    place = await _load_place(db, place_id)
+    author_name = _resolve_author_name(data.author_name, user)
+    user_id = user.id if user else None
+
+    complaint = PlaceComplaint(
+        place_id=place_id,
+        complaint_type=data.complaint_type,
+        description=data.description,
+        price_tagged=data.price_tagged,
+        price_charged=data.price_charged,
+        receipt_info=data.receipt_info,
+        author_name=author_name,
+        user_id=user_id,
+    )
+
+    type_label = MAP_REPORT_LABELS.get(data.complaint_type) or SHOP_COMPLAINT_LABELS.get(
+        data.complaint_type,
+        data.complaint_type,
+    )
+    is_map_report = data.complaint_type in MAP_REPORT_LABELS
+    issue_desc = (
+        f"{'Ошибка на карте' if is_map_report else 'Жалоба'}: {place.name} ({place.address or ''})\n"
+        f"Тип: {type_label}\n"
+        f"{data.description}"
+    )
+    if data.price_tagged or data.price_charged:
+        issue_desc += (
+            f"\nЦена на ценнике: {data.price_tagged or '—'}, "
+            f"на кассе: {data.price_charged or '—'}"
+        )
+
+    issue = Issue(
+        title=f"{'Карта' if is_map_report else 'Жалоба'}: {place.name}",
+        description=issue_desc,
+        status=IssueStatus.NEW,
+        category=IssueCategory.OTHER,
+        priority=Priority.MEDIUM,
+        address=place.address,
+        latitude=place.latitude,
+        longitude=place.longitude,
+        resident_id=user_id,
+    )
+
+    try:
+        db.add(complaint)
+        place.complaint_count += 1
+        db.add(issue)
+        await db.flush()
+        complaint.issue_id = issue.id
+    except Exception:
+        logger.exception(
+            "Failed to persist complaint for place #%s (user_id=%s)",
+            place_id,
+            user_id,
+        )
+        raise
+
+    owner_notified = await _safe_notify_owner(
+        "⚠️ Жалоба на организацию\n\n"
+        f"«{place.name}» — {place.address or 'адрес не указан'}\n"
+        f"{SHOP_COMPLAINT_LABELS.get(data.complaint_type, data.complaint_type)}\n"
+        f"{data.description[:300]}",
+        context="place_complaint",
+        place_id=place_id,
+    )
+    if not owner_notified:
+        logger.warning(
+            "Place complaint #%s created for place #%s but owner was not notified",
+            complaint.id,
+            place_id,
+        )
+
+    logger.info(
+        "Place complaint #%s created for place #%s (issue #%s, user_id=%s)",
+        complaint.id,
+        place_id,
+        issue.id,
+        user_id,
+    )
+    return PlaceComplaintResult(
+        complaint=complaint,
+        issue=issue,
+        owner_notified=owner_notified,
+    )
+
+
+async def add_place_review(
+    db: AsyncSession,
+    place_id: int,
+    data: PlaceReviewInput,
+    *,
+    user: Optional[User] = None,
+) -> PlaceReviewResult:
+    """Add a review to a place and recalculate its average rating."""
+    place = await _load_place(db, place_id)
+    author_name = _resolve_author_name(data.author_name, user)
+    user_id = user.id if user else None
+
+    await _check_duplicate_review(
+        db,
+        place_id,
+        user_id=user_id,
+        author_name=author_name,
+    )
+
+    review = PlaceReview(
+        place_id=place_id,
+        rating=data.rating,
+        text=data.text,
+        author_name=author_name,
+        user_id=user_id,
+    )
+
+    try:
+        db.add(review)
+        await db.flush()
+        await _recalculate_place_rating(db, place)
+    except PlaceValidationError:
+        raise
+    except Exception:
+        logger.exception(
+            "Failed to persist review for place #%s (user_id=%s)",
+            place_id,
+            user_id,
+        )
+        raise
+
+    logger.info(
+        "Place review #%s added to place #%s (rating=%s, user_id=%s)",
+        review.id,
+        place_id,
+        data.rating,
+        user_id,
+    )
+    return PlaceReviewResult(review=review, place=place)
