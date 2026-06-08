@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
@@ -18,7 +19,6 @@ from app.services.vk import send_message, get_welcome_keyboard
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 DIGEST_HOUR_UTC = 6  # 09:00 МСК зимой / 09:00 летом ≈
 
@@ -83,7 +83,7 @@ async def send_daily_digest(db: AsyncSession) -> int:
                 cat = CLASSIFIED_LABELS.get(ad.category, ad.category)
                 lines.append(f"• [{cat}] {ad.title}")
 
-        lines.append(f"\n🌐 {_SITE}/classifieds")
+        lines.append(f"\n🌐 {public_site_url()}/classifieds")
         try:
             await send_message(sub.peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
             sub.last_digest_at = now

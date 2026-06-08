@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
@@ -18,7 +19,6 @@ from app.services.vk import send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 SUBSCRIPTION_PRESETS = {
     "all": "все объявления",
@@ -59,7 +59,7 @@ async def format_ads_message(db: AsyncSession) -> str:
     if not ads:
         return (
             "📋 Объявлений пока нет.\n\n"
-            f"Подайте первым — кнопка «➕ Объявление» или:\n{_SITE}/classifieds\n\n"
+            f"Подайте первым — кнопка «➕ Объявление» или:\n{public_site_url()}/classifieds\n\n"
             "✨ Размещение бесплатно"
         )
     lines = [f"📋 Свежие объявления ({len(ads)}):\n"]
@@ -68,8 +68,8 @@ async def format_ads_message(db: AsyncSession) -> str:
         price = f" · {ad.price} {ad.price_unit or '₽'}" if ad.price else ""
         lines.append(f"• [{cat}] {ad.title}{price}")
         lines.append(f"  📞 {ad.phone}")
-    lines.append(f"\nВсе объявления: {_SITE}/classifieds")
-    lines.append(f"💼 Вакансии: {_SITE}/jobs")
+    lines.append(f"\nВсе объявления: {public_site_url()}/classifieds")
+    lines.append(f"💼 Вакансии: {public_site_url()}/jobs")
     lines.append("➕ Подать в боте — кнопка «Объявление»")
     return "\n".join(lines)
 
@@ -117,7 +117,7 @@ async def notify_subscribers_new_ad(db: AsyncSession, ad: ClassifiedAd) -> int:
         f"Категория: {cat}{price}\n"
         f"{ad.description[:150]}{'…' if len(ad.description) > 150 else ''}\n\n"
         f"📞 {ad.phone}\n"
-        f"Подробнее: {_SITE}/classifieds/{ad.id}"
+        f"Подробнее: {public_site_url()}/classifieds/{ad.id}"
     )
     sent = 0
     for sub in subs:

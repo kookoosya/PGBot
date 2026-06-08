@@ -1,13 +1,7 @@
 import { Link } from "react-router-dom";
+import { QUICK_NAV_EXTRA, QUICK_NAV_SECTIONS } from "@/lib/navigation";
 
-const links = [
-  { to: "/map", icon: "🗺", label: "Карта", desc: "Магазины и службы", color: "quick-nav-map" },
-  { to: "/classifieds", icon: "📋", label: "Объявления", desc: "От жителей", color: "quick-nav-ads" },
-  { to: "/services", icon: "💇", label: "Услуги", desc: "Мастера", color: "quick-nav-svc" },
-  { to: "/ai", icon: "🤖", label: "ИИ", desc: "Помощник", color: "quick-nav-ai" },
-  { to: "/services/cabinet", icon: "📅", label: "Мастер", desc: "Кабинет", color: "quick-nav-cab" },
-  { to: "/services/register", icon: "✨", label: "Стать мастером", desc: "Регистрация", color: "quick-nav-reg" },
-];
+const links = [...QUICK_NAV_SECTIONS, ...QUICK_NAV_EXTRA];
 
 export function QuickNav() {
   return (

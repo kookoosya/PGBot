@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 VK_API_URL = "https://api.vk.com/method"
-_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 
 async def vk_api_call(method: str, params: dict[str, Any]) -> dict:

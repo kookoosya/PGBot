@@ -34,3 +34,34 @@ export const MAIN_SECTIONS: NavSection[] = [
   { to: "/wishes", label: "Пожелания", icon: "💡" },
   { to: "/ai", label: "ИИ", icon: "🤖" },
 ];
+
+export type QuickNavItem = NavSection & {
+  desc: string;
+  color: string;
+};
+
+/** Быстрые карточки на главной — расширение MAIN_SECTIONS без дублирования путей */
+const QUICK_NAV_META: Record<string, { desc: string; color: string; icon?: string }> = {
+  "/map": { desc: "Магазины и службы", color: "quick-nav-map" },
+  "/classifieds": { desc: "От жителей", color: "quick-nav-ads" },
+  "/services": { desc: "Мастера", color: "quick-nav-svc", icon: "💇" },
+  "/ai": { desc: "Помощник", color: "quick-nav-ai" },
+};
+
+export const QUICK_NAV_SECTIONS: QuickNavItem[] = MAIN_SECTIONS.filter(
+  (section) => section.to in QUICK_NAV_META,
+).map((section) => {
+  const meta = QUICK_NAV_META[section.to];
+  return {
+    ...section,
+    icon: meta.icon ?? section.icon,
+    desc: meta.desc,
+    color: meta.color,
+  };
+});
+
+/** Дополнительные карточки мастера (не входят в MAIN_SECTIONS) */
+export const QUICK_NAV_EXTRA: QuickNavItem[] = [
+  { to: "/services/cabinet", label: "Мастер", icon: "📅", desc: "Кабинет", color: "quick-nav-cab" },
+  { to: "/services/register", label: "Стать мастером", icon: "✨", desc: "Регистрация", color: "quick-nav-reg" },
+];

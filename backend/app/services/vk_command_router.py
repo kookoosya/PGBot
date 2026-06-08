@@ -23,6 +23,8 @@ from app.services.ai_chat import (
     make_identifier,
 )
 from app.services.issue_processor import process_incoming_message
+from app.services.issue_utils import issue_display_summary
+from app.services.site_urls import public_site_url
 from app.services.vk import (
     get_ai_keyboard,
     get_inline_links_keyboard,
@@ -52,7 +54,6 @@ from app.services.vk_messages import (
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 AI_EXAMPLES = (
     "• Напиши объявление про дрова\n"
@@ -62,6 +63,18 @@ AI_EXAMPLES = (
 )
 
 CommandHandler = Callable[["VkRouteContext"], Awaitable[None]]
+
+# Commands that keep AI chat mode active (do not call exit_ai_mode in _dispatch).
+AI_PRESERVE_MODE = frozenset({"ai_enter", "ai_examples", "ai_images"})
+
+ISSUE_STATUS_EMOJI = {
+    IssueStatus.NEW: "🆕",
+    IssueStatus.UNDER_REVIEW: "🔍",
+    IssueStatus.ASSIGNED: "👤",
+    IssueStatus.IN_PROGRESS: "🔧",
+    IssueStatus.RESOLVED: "✅",
+    IssueStatus.REJECTED: "❌",
+}
 
 
 @dataclass(slots=True)
@@ -106,7 +119,8 @@ async def _send_ai(ctx: VkRouteContext, message: str) -> None:
 
 
 async def _send_with_site_links(peer_id: int, message: str, *paths: str) -> None:
-    links = [(label, f"{_SITE}{path}") for label, path in paths]
+    site = public_site_url()
+    links = [(label, f"{site}{path}") for label, path in paths]
     kb = get_inline_links_keyboard(links) if links else get_welcome_keyboard()
     await send_message(peer_id, message, keyboard=kb)
 
@@ -117,8 +131,27 @@ async def _subscribe_and_reply(ctx: VkRouteContext, preset: str) -> None:
 
 
 async def _start_flow_message(ctx: VkRouteContext, message: str) -> None:
-    exit_ai_mode(ctx.peer_id)
     await _send_welcome(ctx, message)
+
+
+def _format_taxi_lines(services: list[TaxiService], *, header: str, empty_line: str | None) -> str:
+    lines = [header]
+    if services:
+        for taxi in services:
+            lines.append(f"• {taxi.name}: {taxi.phone}")
+    elif empty_line:
+        lines.append(empty_line)
+    lines.append(f"\n{public_site_url()}/map")
+    return "\n".join(lines)
+
+
+async def _reply_taxi(db: AsyncSession, peer_id: int, *, header: str, empty_line: str | None = None) -> None:
+    result = await db.execute(
+        select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
+    )
+    services = result.scalars().all()
+    message = _format_taxi_lines(services, header=header, empty_line=empty_line)
+    await send_message(peer_id, message, keyboard=get_welcome_keyboard())
 
 
 async def _reply_places(
@@ -141,7 +174,7 @@ async def _reply_places(
     if not places:
         await send_message(
             peer_id,
-            f"Пока не нашёл в справочнике. Откройте карту:\n{_SITE}/map",
+            f"Пока не нашёл в справочнике. Откройте карту:\n{public_site_url()}/map",
             keyboard=get_welcome_keyboard(),
         )
         return
@@ -152,7 +185,7 @@ async def _reply_places(
             lines.append(f"  📍 {p.address}")
         if p.phone:
             lines.append(f"  📞 {p.phone}")
-    lines.append(f"\nВся карта: {_SITE}/map")
+    lines.append(f"\nВся карта: {public_site_url()}/map")
     await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
 
 
@@ -190,15 +223,7 @@ async def _try_map_keywords(ctx: VkRouteContext) -> bool:
         await _reply_places(db, peer_id, category=PlaceCategory.CULTURE)
         return True
     if any(k in text_lower for k in ("такси", "извоз")):
-        result = await db.execute(
-            select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
-        )
-        services = result.scalars().all()
-        lines = ["🚕 Такси:\n"]
-        for t in services:
-            lines.append(f"• {t.name}: {t.phone}")
-        lines.append(f"\n{_SITE}/map")
-        await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+        await _reply_taxi(db, peer_id, header="🚕 Такси:\n")
         return True
     if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
         await _reply_places(db, peer_id, category=PlaceCategory.TYRE)
@@ -231,26 +256,24 @@ async def _process_vk_ai(ctx: VkRouteContext, text: str) -> None:
 
 async def handle_welcome(ctx: VkRouteContext) -> None:
     """Меню / главная / start."""
-    exit_ai_mode(ctx.peer_id)
     clear_flow(ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
     await _send_welcome(ctx, get_welcome_message())
 
 
 async def handle_classifieds(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     msg = await format_ads_message(ctx.db)
     await _send_welcome(ctx, msg)
 
 
 async def handle_services(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
+    site = public_site_url()
     await _send_welcome(
         ctx,
         box(
             "Услуги посёлка",
-            f"Огород, дрова, покос, мастера с записью:\n{_SITE}/services\n\n"
-            f"📋 Объявления соседей:\n{_SITE}/classifieds\n\n"
+            f"Огород, дрова, покос, мастера с записью:\n{site}/services\n\n"
+            f"📋 Объявления соседей:\n{site}/classifieds\n\n"
             "✨ Всё бесплатно",
         ),
     )
@@ -288,7 +311,7 @@ async def handle_ai_images(ctx: VkRouteContext) -> None:
         ctx,
         box(
             "Генерация картинок",
-            f"На сайте: {_SITE}/ai → вкладка «Картинки»\n\n"
+            f"На сайте: {public_site_url()}/ai → вкладка «Картинки»\n\n"
             "Модели: Flux, Turbo, Nano Banana.\n"
             "Пример: «Уютная изба в снегу» или «Усадьба на закате».\n"
             "Опишите сцену на русском — скачайте результат.",
@@ -297,19 +320,16 @@ async def handle_ai_images(ctx: VkRouteContext) -> None:
 
 
 async def handle_ai_exit(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
     await _send_welcome(ctx, "Вернулись в меню 🪶")
 
 
 async def handle_jobs(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     msg = await format_jobs_message(ctx.db)
     await _send_with_site_links(ctx.peer_id, msg, ("💼 Вакансии", "/jobs"))
 
 
 async def handle_routes(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     await _send_with_site_links(ctx.peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
 
 
@@ -335,27 +355,20 @@ async def handle_wish(ctx: VkRouteContext) -> None:
 
 
 async def handle_taxi(ctx: VkRouteContext) -> None:
-    result = await ctx.db.execute(
-        select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
+    await _reply_taxi(
+        ctx.db,
+        ctx.peer_id,
+        header="🚕 Такси посёлка:\n",
+        empty_line="Справочник обновляется. Напишите «аптека» или откройте карту.",
     )
-    services = result.scalars().all()
-    lines = ["🚕 Такси посёлка:\n"]
-    if services:
-        for t in services:
-            lines.append(f"• {t.name}: {t.phone}")
-    else:
-        lines.append("Справочник обновляется. Напишите «аптека» или откройте карту.")
-    lines.append(f"\n{_SITE}/map")
-    await _send_welcome(ctx, "\n".join(lines))
 
 
 async def handle_complaints_info(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     await _send_welcome(
         ctx,
         box(
             "Жалобы жителей",
-            f"Форма на сайте: {_SITE}/complaints\n\n"
+            f"Форма на сайте: {public_site_url()}/complaints\n\n"
             "Или опишите проблему прямо здесь — примем заявку.\n"
             "«Мои обращения» — статус ваших заявок.",
         ),
@@ -363,12 +376,11 @@ async def handle_complaints_info(ctx: VkRouteContext) -> None:
 
 
 async def handle_register(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx.peer_id)
     await _send_welcome(
         ctx,
         box(
             "Регистрация",
-            f"{_SITE}/register\n\n"
+            f"{public_site_url()}/register\n\n"
             "🏠 Житель\n🏢 Организация\n"
             "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
         ),
@@ -376,9 +388,10 @@ async def handle_register(ctx: VkRouteContext) -> None:
 
 
 async def handle_site(ctx: VkRouteContext) -> None:
+    site = public_site_url()
     await _send_welcome(
         ctx,
-        box("Портал посёлка", f"{_SITE}\n\nГлавная · Карта · Объявления · Услуги · Жалобы · ИИ"),
+        box("Портал посёлка", f"{site}\n\nГлавная · Карта · Объявления · Услуги · Жалобы · ИИ"),
     )
 
 
@@ -387,7 +400,7 @@ async def handle_map(ctx: VkRouteContext) -> None:
         ctx,
         box(
             "Карта посёлка",
-            f"{_SITE}/map\n\n"
+            f"{public_site_url()}/map\n\n"
             "Магазины, аптеки, кафе, АЗС, гостиницы, маршруты.\n"
             "Напишите: «аптека», «магазин», «заправка», «музей»",
         ),
@@ -407,19 +420,10 @@ async def handle_my_issues(ctx: VkRouteContext) -> None:
         await _send_welcome(ctx, "📋 Обращений пока нет. Опишите проблему — приму заявку!")
         return
 
-    status_emoji = {
-        IssueStatus.NEW: "🆕",
-        IssueStatus.UNDER_REVIEW: "🔍",
-        IssueStatus.ASSIGNED: "👤",
-        IssueStatus.IN_PROGRESS: "🔧",
-        IssueStatus.RESOLVED: "✅",
-        IssueStatus.REJECTED: "❌",
-    }
     lines = ["📋 Ваши обращения:\n"]
     for issue in issues:
-        emoji = status_emoji.get(issue.status, "📋")
-        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:50]
-        lines.append(f"{emoji} #{issue.id} — {summary}")
+        emoji = ISSUE_STATUS_EMOJI.get(issue.status, "📋")
+        lines.append(f"{emoji} #{issue.id} — {issue_display_summary(issue, max_len=50)}")
     await _send_welcome(ctx, "\n".join(lines))
 
 
@@ -552,6 +556,8 @@ def _matches_classified_jobs(text_lower: str) -> bool:
 
 
 async def _dispatch(ctx: VkRouteContext, command_id: str) -> None:
+    if command_id not in AI_PRESERVE_MODE:
+        exit_ai_mode(ctx.peer_id)
     await COMMAND_HANDLERS[command_id](ctx)
 
 
@@ -572,6 +578,7 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
         return True
 
     if _matches_classified_jobs(ctx.text_lower):
+        exit_ai_mode(ctx.peer_id)
         await handle_classified_jobs(ctx)
         return True
 

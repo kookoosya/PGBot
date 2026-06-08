@@ -2,6 +2,7 @@ import logging
 import re
 
 from app.config import get_settings
+from app.services.site_urls import public_site_url
 from app.services.telegram import send_telegram_message
 from app.services.vk import send_message
 
@@ -72,7 +73,7 @@ async def notify_issue_status(issue) -> bool:
     ]
     if issue.resolution_text:
         lines.append(f"\nОтвет:\n{issue.resolution_text[:500]}")
-    lines.append(f"\n🌐 {settings.PUBLIC_SITE_URL.rstrip('/')}/complaints")
+    lines.append(f"\n🌐 {public_site_url()}/complaints")
     return await notify_vk_user(int(peer_id), "\n".join(lines))
 
 

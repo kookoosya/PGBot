@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.vk_command_router import (
+from app.services.vk_command_router import (
     VkRouteContext,
     route_ai_message,
     route_complaint,

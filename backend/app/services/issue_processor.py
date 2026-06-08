@@ -11,9 +11,10 @@ from app.models.department import Department
 from app.models.enums import IssueStatus, NotificationPriority, NotificationStatus, Priority, UserRole
 from app.models.issue import Issue, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
-from app.models.user import User
+from app.models.user import Role, User
 from app.schemas.analysis_result import AnalysisResult
 from app.services.gemini import analyze_issue
+from app.services.issue_utils import issue_display_summary
 from app.services.notifications import notify_owner
 from app.services.telegram import notify_about_issue
 from app.services.vk import send_message
@@ -40,20 +41,15 @@ async def get_or_create_web_resident(
         if existing:
             return existing
 
-    from app.models.user import Role
-
-    role_result = await db.execute(select(Role).where(Role.name == UserRole.RESIDENT))
-    role = role_result.scalar_one()
+    role = await _get_resident_role(db)
     suffix = phone or "web"
-    user = User(
+    return await _create_resident_user(
+        db,
         username=f"web_{suffix.replace('+', '').replace(' ', '')}_{int(datetime.now(timezone.utc).timestamp())}",
-        phone=phone,
         full_name=full_name or "Житель сайта",
         role_id=role.id,
+        phone=phone,
     )
-    db.add(user)
-    await db.flush()
-    return user
 
 
 async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
@@ -64,19 +60,14 @@ async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
     if user:
         return user
 
-    from app.models.user import Role
-
-    role_result = await db.execute(select(Role).where(Role.name == UserRole.RESIDENT))
-    role = role_result.scalar_one()
-    user = User(
+    role = await _get_resident_role(db)
+    return await _create_resident_user(
+        db,
         username=f"vk_{vk_id}",
-        vk_id=vk_id,
         full_name=f"Житель VK {vk_id}",
         role_id=role.id,
+        vk_id=vk_id,
     )
-    db.add(user)
-    await db.flush()
-    return user
 
 
 async def find_similar_issues(db: AsyncSession, text: str, category: str | None) -> list[Issue]:
@@ -105,6 +96,32 @@ async def find_department_by_name(db: AsyncSession, name: str) -> Department | N
     return result.scalar_one_or_none()
 
 
+async def _get_resident_role(db: AsyncSession) -> Role:
+    result = await db.execute(select(Role).where(Role.name == UserRole.RESIDENT))
+    return result.scalar_one()
+
+
+async def _create_resident_user(
+    db: AsyncSession,
+    *,
+    username: str,
+    full_name: str,
+    role_id: int,
+    phone: str | None = None,
+    vk_id: int | None = None,
+) -> User:
+    user = User(
+        username=username,
+        phone=phone,
+        vk_id=vk_id,
+        full_name=full_name,
+        role_id=role_id,
+    )
+    db.add(user)
+    await db.flush()
+    return user
+
+
 async def _analyze_issue_with_context(
     db: AsyncSession,
     text: str,
@@ -112,10 +129,10 @@ async def _analyze_issue_with_context(
 ) -> tuple[AnalysisResult, list[Issue]]:
     """Find similar issues, build context and run Gemini analysis."""
     existing = await find_similar_issues(db, text, category)
-    context_lines = []
-    for issue in existing[:5]:
-        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:100]
-        context_lines.append(f"#{issue.id}: {summary}")
+    context_lines = [
+        f"#{issue.id}: {issue_display_summary(issue)}"
+        for issue in existing[:5]
+    ]
     raw = await analyze_issue(text, "\n".join(context_lines))
     return AnalysisResult.from_gemini(raw), existing
 
@@ -261,6 +278,73 @@ def _attach_vk_photos(db: AsyncSession, issue_id: int, photos: list[dict] | None
         db.add(IssuePhoto(issue_id=issue_id, url=photo["url"], vk_photo_id=photo.get("vk_photo_id")))
 
 
+async def _persist_invalid_complaint(
+    db: AsyncSession,
+    text: str,
+    analysis: AnalysisResult,
+    resident: User,
+    *,
+    address: str | None = None,
+    vk_message_id: int | None = None,
+    vk_peer_id: int | None = None,
+) -> Issue:
+    issue = await _create_issue_from_analysis(
+        db,
+        text,
+        analysis,
+        resident,
+        is_valid=False,
+        address=address,
+        vk_message_id=vk_message_id,
+        vk_peer_id=vk_peer_id,
+    )
+    db.add(_create_ai_analysis(issue.id, analysis, is_valid=False))
+    return issue
+
+
+async def _persist_valid_complaint(
+    db: AsyncSession,
+    text: str,
+    analysis: AnalysisResult,
+    resident: User,
+    *,
+    category: str | None,
+    address: str | None = None,
+    vk_message_id: int | None = None,
+    vk_peer_id: int | None = None,
+    photos: list[dict] | None = None,
+    owner_message: str,
+) -> Issue:
+    priority = analysis.resolved_priority
+    department = await _resolve_department(db, analysis)
+    issue = await _create_issue_from_analysis(
+        db,
+        text,
+        analysis,
+        resident,
+        is_valid=True,
+        category=category,
+        priority=priority,
+        address=address,
+        department=department,
+        vk_message_id=vk_message_id,
+        vk_peer_id=vk_peer_id,
+    )
+    db.add(_create_ai_analysis(issue.id, analysis, is_valid=True, category=category, priority=priority))
+    _attach_vk_photos(db, issue.id, photos)
+    await _create_and_send_notification(
+        db,
+        issue,
+        analysis,
+        text,
+        category=category,
+        priority=priority,
+        department=department,
+        owner_message=owner_message.format(id=issue.id),
+    )
+    return issue
+
+
 async def process_incoming_message(
     db: AsyncSession,
     text: str,
@@ -281,16 +365,14 @@ async def process_incoming_message(
     analysis, existing = await _analyze_issue_with_context(db, text)
 
     if not analysis.is_valid:
-        issue = await _create_issue_from_analysis(
+        issue = await _persist_invalid_complaint(
             db,
             text,
             analysis,
             resident,
-            is_valid=False,
             vk_message_id=message_id,
             vk_peer_id=peer_id,
         )
-        db.add(_create_ai_analysis(issue.id, analysis, is_valid=False))
         await send_message(
             peer_id,
             "Ваше сообщение не принято как обращение. "
@@ -307,34 +389,17 @@ async def process_incoming_message(
         return parent_issue
 
     category = analysis.category
-    priority = analysis.resolved_priority
-    department = await _resolve_department(db, analysis)
-
-    issue = await _create_issue_from_analysis(
+    issue = await _persist_valid_complaint(
         db,
         text,
         analysis,
         resident,
-        is_valid=True,
         category=category,
-        priority=priority,
-        department=department,
         vk_message_id=message_id,
         vk_peer_id=peer_id,
-    )
-    db.add(_create_ai_analysis(issue.id, analysis, is_valid=True, category=category, priority=priority))
-    _attach_vk_photos(db, issue.id, photos)
-
-    await _create_and_send_notification(
-        db,
-        issue,
-        analysis,
-        text,
-        category=category,
-        priority=priority,
-        department=department,
+        photos=photos,
         owner_message=(
-            f"📋 Новое обращение #{issue.id}\n"
+            f"📋 Новое обращение #{{id}}\n"
             f"{analysis.summary_or(text[:120])}\n"
             f"Категория: {category or '—'}\n"
             f"От: VK id{vk_id}"
@@ -344,7 +409,7 @@ async def process_incoming_message(
     await send_message(
         peer_id,
         f"✅ Обращение #{issue.id} принято!\n"
-        f"📋 {analysis.summary or ''}\n"
+        f"📋 {analysis.summary_or('')}\n"
         f"📁 Категория: {category}\n"
         f"Статус: на рассмотрении",
     )
@@ -367,58 +432,29 @@ async def process_web_complaint(
     analysis, existing = await _analyze_issue_with_context(db, text, category)
 
     if not analysis.is_valid:
-        issue = await _create_issue_from_analysis(
+        return await _persist_invalid_complaint(
             db,
             text,
             analysis,
             resident,
-            is_valid=False,
             address=address,
         )
-        db.add(_create_ai_analysis(issue.id, analysis, is_valid=False))
-        return issue
 
     if parent_issue := await _handle_deduplication(db, existing, analysis.duplicate_probability):
         return parent_issue
 
     resolved_category = category or analysis.category
-    priority = analysis.resolved_priority
-    department = await _resolve_department(db, analysis)
-
-    issue = await _create_issue_from_analysis(
+    return await _persist_valid_complaint(
         db,
         text,
         analysis,
         resident,
-        is_valid=True,
         category=resolved_category,
-        priority=priority,
         address=address,
-        department=department,
-    )
-    db.add(
-        _create_ai_analysis(
-            issue.id,
-            analysis,
-            is_valid=True,
-            category=resolved_category,
-            priority=priority,
-        )
-    )
-
-    await _create_and_send_notification(
-        db,
-        issue,
-        analysis,
-        text,
-        category=resolved_category,
-        priority=priority,
-        department=department,
         owner_message=(
-            f"📋 Новое обращение #{issue.id} (сайт)\n"
+            f"📋 Новое обращение #{{id}} (сайт)\n"
             f"{analysis.summary_or(text[:120])}\n"
             f"Категория: {resolved_category or '—'}\n"
             f"От: {resident.full_name or resident.username}"
         ),
     )
-    return issue

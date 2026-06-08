@@ -13,7 +13,3 @@ def exit_ai_mode(peer_id: int) -> None:
 
 def is_ai_mode(peer_id: int) -> bool:
     return peer_id in _ai_peers
-
-
-def get_ai_peers() -> set[int]:
-    return set(_ai_peers)

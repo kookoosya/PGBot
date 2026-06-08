@@ -1,3 +1,4 @@
+from app.schemas.analysis_result import AnalysisResult
 from app.schemas.auth import LoginRequest, Token, UserCreate, UserResponse, UserUpdate
 from app.schemas.department import DepartmentCreate, DepartmentResponse, DepartmentUpdate
 from app.schemas.issue import (
@@ -11,6 +12,7 @@ from app.schemas.issue import (
 from app.schemas.statistics import StatisticsResponse
 
 __all__ = [
+    "AnalysisResult",
     "LoginRequest",
     "Token",
     "UserCreate",
