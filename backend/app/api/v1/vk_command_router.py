@@ -1,23 +1,35 @@
-"""VK bot command router — dispatches menu triggers to handlers."""
+"""VK bot command router — dispatches menu triggers, map keywords, AI and complaints."""
 
+import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
-from app.models.enums import IssueStatus
+from app.models.enums import IssueStatus, PlaceCategory
 from app.models.issue import Issue
+from app.models.place import Place
 from app.models.taxi import TaxiService
+from app.services.ai_chat import (
+    chat_with_ai,
+    get_payment_info,
+    get_usage_today,
+    increment_usage,
+    make_identifier,
+)
+from app.services.issue_processor import process_incoming_message
 from app.services.vk import (
     get_ai_keyboard,
+    get_inline_links_keyboard,
     get_welcome_keyboard,
     get_welcome_message,
     send_message,
 )
-from app.services.vk_ai_history import clear_ai_history
+from app.services.vk_ai_history import append_ai_turn, clear_ai_history, get_ai_history
 from app.services.vk_bot import format_ads_message, subscribe_peer, unsubscribe_peer
 from app.services.vk_flows import (
     clear_flow,
@@ -27,8 +39,17 @@ from app.services.vk_flows import (
     start_map_report_flow,
     start_wish_flow,
 )
-from app.services.vk_messages import ai_enter_text, box, help_text
+from app.services.vk_messages import (
+    ai_enter_text,
+    ai_limit_text,
+    ai_reply_footer,
+    box,
+    help_text,
+    looks_like_ai_question,
+    looks_like_complaint,
+)
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
@@ -42,7 +63,7 @@ AI_EXAMPLES = (
 CommandHandler = Callable[["VkRouteContext"], Awaitable[None]]
 
 
-@dataclass
+@dataclass(slots=True)
 class VkRouteContext:
     db: AsyncSession
     peer_id: int
@@ -50,76 +71,238 @@ class VkRouteContext:
     text: str
     text_lower: str
     ai_mode_peers: set[int]
+    parsed: dict[str, Any] | None = None
+
+    @classmethod
+    def from_parsed(
+        cls,
+        db: AsyncSession,
+        parsed: dict[str, Any],
+        ai_mode_peers: set[int],
+    ) -> "VkRouteContext":
+        text = parsed["text"]
+        return cls(
+            db=db,
+            peer_id=parsed["peer_id"],
+            from_id=parsed["from_id"],
+            text=text,
+            text_lower=text.lower(),
+            ai_mode_peers=ai_mode_peers,
+            parsed=parsed,
+        )
+
+    def update_text(self, text: str) -> None:
+        self.text = text
+        self.text_lower = text.lower()
 
 
-# --- Handlers ---
+# --- AI mode helpers (state lives in vk_webhook._ai_mode_peers for now) ---
+
+
+def enter_ai_mode(ctx: VkRouteContext) -> None:
+    ctx.ai_mode_peers.add(ctx.peer_id)
+
+
+def exit_ai_mode(ctx: VkRouteContext) -> None:
+    ctx.ai_mode_peers.discard(ctx.peer_id)
+
+
+def is_ai_mode(ctx: VkRouteContext) -> bool:
+    return ctx.peer_id in ctx.ai_mode_peers
+
+
+# --- Shared reply helpers ---
+
+
+async def _send_welcome(ctx: VkRouteContext, message: str) -> None:
+    await send_message(ctx.peer_id, message, keyboard=get_welcome_keyboard())
+
+
+async def _send_ai(ctx: VkRouteContext, message: str) -> None:
+    await send_message(ctx.peer_id, message, keyboard=get_ai_keyboard())
+
+
+async def _send_with_site_links(peer_id: int, message: str, *paths: str) -> None:
+    links = [(label, f"{_SITE}{path}") for label, path in paths]
+    kb = get_inline_links_keyboard(links) if links else get_welcome_keyboard()
+    await send_message(peer_id, message, keyboard=kb)
+
+
+async def _subscribe_and_reply(ctx: VkRouteContext, preset: str) -> None:
+    msg = await subscribe_peer(ctx.db, ctx.peer_id, preset)
+    await _send_welcome(ctx, msg)
+
+
+async def _start_flow_message(ctx: VkRouteContext, message: str) -> None:
+    exit_ai_mode(ctx)
+    await _send_welcome(ctx, message)
+
+
+async def _reply_places(
+    db: AsyncSession,
+    peer_id: int,
+    *,
+    category: PlaceCategory | None = None,
+    categories: tuple[PlaceCategory, ...] | None = None,
+    search: str | None = None,
+) -> None:
+    query = select(Place).where(Place.is_active.is_(True))
+    if categories:
+        query = query.where(Place.category.in_(categories))
+    elif category:
+        query = query.where(Place.category == category)
+    if search:
+        query = query.where(Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%"))
+    result = await db.execute(query.order_by(Place.name).limit(6))
+    places = result.scalars().all()
+    if not places:
+        await send_message(
+            peer_id,
+            f"Пока не нашёл в справочнике. Откройте карту:\n{_SITE}/map",
+            keyboard=get_welcome_keyboard(),
+        )
+        return
+    lines = ["🗺 На карте посёлка:\n"]
+    for p in places:
+        lines.append(f"• {p.name}")
+        if p.address:
+            lines.append(f"  📍 {p.address}")
+        if p.phone:
+            lines.append(f"  📞 {p.phone}")
+    lines.append(f"\nВся карта: {_SITE}/map")
+    await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+
+
+async def _try_map_keywords(ctx: VkRouteContext) -> bool:
+    """Справочник карты важнее ИИ для запросов «где аптека»."""
+    text_lower = ctx.text_lower
+    db = ctx.db
+    peer_id = ctx.peer_id
+
+    if any(k in text_lower for k in ("гостиниц", "отель", "ночлег", "где жить", "проживан")):
+        await _reply_places(db, peer_id, category=PlaceCategory.HOTEL)
+        return True
+    if "аптек" in text_lower:
+        await _reply_places(db, peer_id, category=PlaceCategory.PHARMACY)
+        return True
+    if any(k in text_lower for k in ("магазин", "продукт", "пятёроч", "магнит", "супермаркет")):
+        await _reply_places(
+            db, peer_id,
+            categories=(PlaceCategory.SHOP, PlaceCategory.SUPERMARKET),
+        )
+        return True
+    if any(k in text_lower for k in ("кафе", "ресторан", "поесть")):
+        await _reply_places(
+            db, peer_id,
+            categories=(PlaceCategory.CAFE, PlaceCategory.RESTAURANT),
+        )
+        return True
+    if any(k in text_lower for k in ("банк", "банкомат", "сбер")):
+        await _reply_places(db, peer_id, category=PlaceCategory.BANK)
+        return True
+    if any(k in text_lower for k in ("больниц", "поликлин", "врач", "медиц")):
+        await _reply_places(db, peer_id, category=PlaceCategory.HOSPITAL)
+        return True
+    if any(k in text_lower for k in ("музей", "михайловск", "пушкин", "лавр", "монаст")):
+        await _reply_places(db, peer_id, category=PlaceCategory.CULTURE)
+        return True
+    if any(k in text_lower for k in ("такси", "извоз")):
+        result = await db.execute(
+            select(TaxiService).where(TaxiService.is_active.is_(True)).order_by(TaxiService.sort_order)
+        )
+        services = result.scalars().all()
+        lines = ["🚕 Такси:\n"]
+        for t in services:
+            lines.append(f"• {t.name}: {t.phone}")
+        lines.append(f"\n{_SITE}/map")
+        await send_message(peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+        return True
+    if any(k in text_lower for k in ("шиномонтаж", "шины", "колеса", "колёса")):
+        await _reply_places(db, peer_id, category=PlaceCategory.TYRE)
+        return True
+    if any(k in text_lower for k in ("азс", "заправка", "бензин")):
+        await _reply_places(db, peer_id, category=PlaceCategory.GAS)
+        return True
+    return False
+
+
+async def _process_vk_ai(ctx: VkRouteContext, text: str) -> None:
+    identifier = make_identifier(None, None, vk_id=ctx.from_id)
+    used = await get_usage_today(ctx.db, identifier)
+    limit = settings.AI_VK_DAILY_LIMIT
+
+    if used >= limit:
+        await _send_ai(ctx, ai_limit_text(get_payment_info()))
+        return
+
+    history = await get_ai_history(ctx.db, ctx.peer_id)
+    reply = await chat_with_ai(text, history=history)
+    await increment_usage(ctx.db, identifier, "vk")
+    await append_ai_turn(ctx.db, ctx.peer_id, text, reply)
+    remaining = limit - used - 1
+    await _send_ai(ctx, f"{reply}{ai_reply_footer(remaining)}")
+
+
+# --- Command handlers ---
 
 
 async def handle_welcome(ctx: VkRouteContext) -> None:
     """Меню / главная / start."""
-    ctx.ai_mode_peers.discard(ctx.peer_id)
+    exit_ai_mode(ctx)
     clear_flow(ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
-    await send_message(ctx.peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, get_welcome_message())
 
 
 async def handle_classifieds(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
+    exit_ai_mode(ctx)
     msg = await format_ads_message(ctx.db)
-    await send_message(ctx.peer_id, msg, keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, msg)
 
 
 async def handle_services(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(
-        ctx.peer_id,
+    exit_ai_mode(ctx)
+    await _send_welcome(
+        ctx,
         box(
             "Услуги посёлка",
             f"Огород, дрова, покос, мастера с записью:\n{_SITE}/services\n\n"
             f"📋 Объявления соседей:\n{_SITE}/classifieds\n\n"
             "✨ Всё бесплатно",
         ),
-        keyboard=get_welcome_keyboard(),
     )
 
 
 async def handle_subscribe_all(ctx: VkRouteContext) -> None:
-    msg = await subscribe_peer(ctx.db, ctx.peer_id, "all")
-    await send_message(ctx.peer_id, msg, keyboard=get_welcome_keyboard())
+    await _subscribe_and_reply(ctx, "all")
 
 
 async def handle_subscribe_jobs(ctx: VkRouteContext) -> None:
-    msg = await subscribe_peer(ctx.db, ctx.peer_id, "jobs")
-    await send_message(ctx.peer_id, msg, keyboard=get_welcome_keyboard())
+    await _subscribe_and_reply(ctx, "jobs")
 
 
 async def handle_subscribe_preset(ctx: VkRouteContext) -> None:
     preset = "firewood" if "дрова" in ctx.text_lower else "services"
-    msg = await subscribe_peer(ctx.db, ctx.peer_id, preset)
-    await send_message(ctx.peer_id, msg, keyboard=get_welcome_keyboard())
+    await _subscribe_and_reply(ctx, preset)
 
 
 async def handle_unsubscribe(ctx: VkRouteContext) -> None:
     msg = await unsubscribe_peer(ctx.db, ctx.peer_id)
-    await send_message(ctx.peer_id, msg, keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, msg)
 
 
 async def handle_ai_enter(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.add(ctx.peer_id)
-    await send_message(ctx.peer_id, ai_enter_text(), keyboard=get_ai_keyboard())
+    enter_ai_mode(ctx)
+    await _send_ai(ctx, ai_enter_text())
 
 
 async def handle_ai_examples(ctx: VkRouteContext) -> None:
-    await send_message(
-        ctx.peer_id,
-        box("Примеры для ИИ", AI_EXAMPLES),
-        keyboard=get_ai_keyboard(),
-    )
+    await _send_ai(ctx, box("Примеры для ИИ", AI_EXAMPLES))
 
 
 async def handle_ai_images(ctx: VkRouteContext) -> None:
-    await send_message(
-        ctx.peer_id,
+    await _send_ai(
+        ctx,
         box(
             "Генерация картинок",
             f"На сайте: {_SITE}/ai → вкладка «Картинки»\n\n"
@@ -127,60 +310,45 @@ async def handle_ai_images(ctx: VkRouteContext) -> None:
             "Пример: «Уютная изба в снегу» или «Усадьба на закате».\n"
             "Опишите сцену на русском — скачайте результат.",
         ),
-        keyboard=get_ai_keyboard(),
     )
 
 
 async def handle_ai_exit(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
+    exit_ai_mode(ctx)
     await clear_ai_history(ctx.db, ctx.peer_id)
-    await send_message(ctx.peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, "Вернулись в меню 🪶")
 
 
 async def handle_jobs(ctx: VkRouteContext) -> None:
-    from app.api.v1 import vk_webhook as wh
-
-    ctx.ai_mode_peers.discard(ctx.peer_id)
+    exit_ai_mode(ctx)
     msg = await format_jobs_message(ctx.db)
-    await wh._send_with_site_links(ctx.peer_id, msg, ("💼 Вакансии", "/jobs"))
+    await _send_with_site_links(ctx.peer_id, msg, ("💼 Вакансии", "/jobs"))
 
 
 async def handle_routes(ctx: VkRouteContext) -> None:
-    from app.api.v1 import vk_webhook as wh
-
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await wh._send_with_site_links(ctx.peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
+    exit_ai_mode(ctx)
+    await _send_with_site_links(ctx.peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
 
 
 async def handle_routes_page(ctx: VkRouteContext) -> None:
-    from app.api.v1 import vk_webhook as wh
-
     page = int(ctx.text_lower.split()[-1]) - 1
-    await wh._send_with_site_links(ctx.peer_id, format_routes_message(page), ("🗺 На карте", "/map"))
+    await _send_with_site_links(ctx.peer_id, format_routes_message(page), ("🗺 На карте", "/map"))
 
 
 async def handle_map_report(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(ctx.peer_id, start_map_report_flow(ctx.peer_id), keyboard=get_welcome_keyboard())
+    await _start_flow_message(ctx, start_map_report_flow(ctx.peer_id))
 
 
 async def handle_classified_add(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(ctx.peer_id, start_classified_flow(ctx.peer_id), keyboard=get_welcome_keyboard())
+    await _start_flow_message(ctx, start_classified_flow(ctx.peer_id))
 
 
 async def handle_classified_jobs(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(
-        ctx.peer_id,
-        start_classified_flow(ctx.peer_id, jobs=True),
-        keyboard=get_welcome_keyboard(),
-    )
+    await _start_flow_message(ctx, start_classified_flow(ctx.peer_id, jobs=True))
 
 
 async def handle_wish(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(ctx.peer_id, start_wish_flow(ctx.peer_id), keyboard=get_welcome_keyboard())
+    await _start_flow_message(ctx, start_wish_flow(ctx.peer_id))
 
 
 async def handle_taxi(ctx: VkRouteContext) -> None:
@@ -195,55 +363,51 @@ async def handle_taxi(ctx: VkRouteContext) -> None:
     else:
         lines.append("Справочник обновляется. Напишите «аптека» или откройте карту.")
     lines.append(f"\n{_SITE}/map")
-    await send_message(ctx.peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, "\n".join(lines))
 
 
 async def handle_complaints_info(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(
-        ctx.peer_id,
+    exit_ai_mode(ctx)
+    await _send_welcome(
+        ctx,
         box(
             "Жалобы жителей",
             f"Форма на сайте: {_SITE}/complaints\n\n"
             "Или опишите проблему прямо здесь — примем заявку.\n"
             "«Мои обращения» — статус ваших заявок.",
         ),
-        keyboard=get_welcome_keyboard(),
     )
 
 
 async def handle_register(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-    await send_message(
-        ctx.peer_id,
+    exit_ai_mode(ctx)
+    await _send_welcome(
+        ctx,
         box(
             "Регистрация",
             f"{_SITE}/register\n\n"
             "🏠 Житель\n🏢 Организация\n"
             "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
         ),
-        keyboard=get_welcome_keyboard(),
     )
 
 
 async def handle_site(ctx: VkRouteContext) -> None:
-    await send_message(
-        ctx.peer_id,
+    await _send_welcome(
+        ctx,
         box("Портал посёлка", f"{_SITE}\n\nГлавная · Карта · Объявления · Услуги · Жалобы · ИИ"),
-        keyboard=get_welcome_keyboard(),
     )
 
 
 async def handle_map(ctx: VkRouteContext) -> None:
-    await send_message(
-        ctx.peer_id,
+    await _send_welcome(
+        ctx,
         box(
             "Карта посёлка",
             f"{_SITE}/map\n\n"
             "Магазины, аптеки, кафе, АЗС, гостиницы, маршруты.\n"
             "Напишите: «аптека», «магазин», «заправка», «музей»",
         ),
-        keyboard=get_welcome_keyboard(),
     )
 
 
@@ -257,30 +421,27 @@ async def handle_my_issues(ctx: VkRouteContext) -> None:
     )
     issues = result.scalars().all()
     if not issues:
-        await send_message(
-            ctx.peer_id,
-            "📋 Обращений пока нет. Опишите проблему — приму заявку!",
-            keyboard=get_welcome_keyboard(),
-        )
-    else:
-        status_emoji = {
-            IssueStatus.NEW: "🆕",
-            IssueStatus.UNDER_REVIEW: "🔍",
-            IssueStatus.ASSIGNED: "👤",
-            IssueStatus.IN_PROGRESS: "🔧",
-            IssueStatus.RESOLVED: "✅",
-            IssueStatus.REJECTED: "❌",
-        }
-        lines = ["📋 Ваши обращения:\n"]
-        for issue in issues:
-            emoji = status_emoji.get(issue.status, "📋")
-            summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:50]
-            lines.append(f"{emoji} #{issue.id} — {summary}")
-        await send_message(ctx.peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
+        await _send_welcome(ctx, "📋 Обращений пока нет. Опишите проблему — приму заявку!")
+        return
+
+    status_emoji = {
+        IssueStatus.NEW: "🆕",
+        IssueStatus.UNDER_REVIEW: "🔍",
+        IssueStatus.ASSIGNED: "👤",
+        IssueStatus.IN_PROGRESS: "🔧",
+        IssueStatus.RESOLVED: "✅",
+        IssueStatus.REJECTED: "❌",
+    }
+    lines = ["📋 Ваши обращения:\n"]
+    for issue in issues:
+        emoji = status_emoji.get(issue.status, "📋")
+        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:50]
+        lines.append(f"{emoji} #{issue.id} — {summary}")
+    await _send_welcome(ctx, "\n".join(lines))
 
 
 async def handle_help(ctx: VkRouteContext) -> None:
-    await send_message(ctx.peer_id, help_text(), keyboard=get_welcome_keyboard())
+    await _send_welcome(ctx, help_text())
 
 
 # --- Routing tables ---
@@ -313,7 +474,6 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
 }
 
 COMMAND_ALIASES: dict[str, str] = {
-    # welcome (also used by route_welcome)
     "начать": "welcome",
     "start": "welcome",
     "привет": "welcome",
@@ -323,18 +483,15 @@ COMMAND_ALIASES: dict[str, str] = {
     "🏠 меню": "welcome",
     "главная": "welcome",
     "🏠 главная": "welcome",
-    # classifieds
     "📋 объявления": "classifieds",
     "объявления": "classifieds",
     "объявление": "classifieds",
     "доска": "classifieds",
-    # services
     "🛠 услуги": "services",
     "услуги": "services",
     "мастера": "services",
     "огород": "services",
     "дрова": "services",
-    # subscribe
     "🔔 подписаться": "subscribe_all",
     "подписаться": "subscribe_all",
     "подписка": "subscribe_all",
@@ -346,7 +503,6 @@ COMMAND_ALIASES: dict[str, str] = {
     "подписка услуги": "subscribe_preset",
     "🔕 отписаться": "unsubscribe",
     "отписаться": "unsubscribe",
-    # AI menu
     "🤖 ии-помощник": "ai_enter",
     "ии-помощник": "ai_enter",
     "ии": "ai_enter",
@@ -360,7 +516,6 @@ COMMAND_ALIASES: dict[str, str] = {
     "🚪 выйти из ии": "ai_exit",
     "выйти из ии": "ai_exit",
     "стоп": "ai_exit",
-    # jobs & routes
     "💼 работа": "jobs",
     "работа": "jobs",
     "вакансии": "jobs",
@@ -371,7 +526,6 @@ COMMAND_ALIASES: dict[str, str] = {
     "маршрут": "routes",
     "куда сходить": "routes",
     "экскурсия": "routes",
-    # flows
     "🗺 ошибка карты": "map_report",
     "ошибка карты": "map_report",
     "ошибка на карте": "map_report",
@@ -384,7 +538,6 @@ COMMAND_ALIASES: dict[str, str] = {
     "пожелания": "wish",
     "предложения": "wish",
     "идея для сайта": "wish",
-    # info sections
     "🚕 такси": "taxi",
     "такси": "taxi",
     "⚠️ жалобы": "complaints_info",
@@ -416,8 +569,7 @@ def _matches_classified_jobs(text_lower: str) -> bool:
 
 
 async def _dispatch(ctx: VkRouteContext, command_id: str) -> None:
-    handler = COMMAND_HANDLERS[command_id]
-    await handler(ctx)
+    await COMMAND_HANDLERS[command_id](ctx)
 
 
 async def route_welcome(ctx: VkRouteContext) -> bool:
@@ -431,7 +583,7 @@ async def route_welcome(ctx: VkRouteContext) -> bool:
 
 async def route_vk_message(ctx: VkRouteContext) -> bool:
     """Route menu commands and map keywords. Returns True if handled."""
-    # Special matchers (order matters — routes_page before generic routes alias)
+    # Special matchers first (order matters — routes_page before generic routes alias)
     if _matches_routes_page(ctx.text_lower):
         await handle_routes_page(ctx)
         return True
@@ -445,9 +597,67 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
         await _dispatch(ctx, command_id)
         return True
 
-    from app.api.v1 import vk_webhook as wh
-
-    if await wh._try_map_keywords(ctx.db, ctx.peer_id, ctx.text_lower):
+    # Free-text map queries («аптека», «магазин», …) before AI
+    if await _try_map_keywords(ctx):
         return True
 
     return False
+
+
+async def route_ai_message(ctx: VkRouteContext) -> bool:
+    """Handle active AI mode or auto-detected AI questions."""
+    if is_ai_mode(ctx) or ctx.text_lower.startswith("ии:"):
+        msg = ctx.text[3:].strip() if ctx.text_lower.startswith("ии:") else ctx.text
+        if len(msg) < 2:
+            await _send_ai(ctx, "Напишите вопрос — отвечу в режиме ИИ.")
+        else:
+            await _process_vk_ai(ctx, msg)
+        return True
+
+    if looks_like_ai_question(ctx.text) and not looks_like_complaint(ctx.text):
+        enter_ai_mode(ctx)
+        await _process_vk_ai(ctx, ctx.text)
+        return True
+
+    return False
+
+
+async def route_complaint(ctx: VkRouteContext) -> bool:
+    """Process complaint text or photo attachments."""
+    if ctx.parsed is None:
+        return False
+
+    complaint_text = ctx.text.strip()
+    if ctx.parsed.get("photos") and len(complaint_text) < 5:
+        complaint_text = "Фото проблемы (VK)"
+
+    if not looks_like_complaint(complaint_text) and not ctx.parsed.get("photos"):
+        return False
+
+    try:
+        await process_incoming_message(
+            ctx.db,
+            text=complaint_text,
+            vk_id=ctx.from_id,
+            peer_id=ctx.peer_id,
+            message_id=ctx.parsed.get("message_id"),
+            photos=ctx.parsed.get("photos"),
+        )
+    except Exception as e:
+        logger.exception("Error processing VK message: %s", e)
+        await _send_welcome(ctx, "Ошибка. Напишите «помощь».")
+    return True
+
+
+async def send_fallback_message(ctx: VkRouteContext) -> None:
+    """Default reply when nothing else matched."""
+    await _send_welcome(
+        ctx,
+        box(
+            "Не понял сообщение",
+            "Выберите кнопку меню или:\n"
+            "🤖 ИИ-помощник — любые вопросы\n"
+            "⚠️ Жалобы — опишите проблему подробно\n\n"
+            "«Меню» — вернуться к разделам",
+        ),
+    )
