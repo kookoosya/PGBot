@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,8 @@ from app.services.vk import send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+AnalysisResult = dict[str, Any]
 
 
 async def get_or_create_web_resident(
@@ -104,6 +107,161 @@ async def find_department_by_name(db: AsyncSession, name: str) -> Department | N
     return result.scalar_one_or_none()
 
 
+async def _analyze_issue_with_context(
+    db: AsyncSession,
+    text: str,
+    category: str | None = None,
+) -> tuple[AnalysisResult, list[Issue]]:
+    existing = await find_similar_issues(db, text, category)
+    context_lines = []
+    for issue in existing[:5]:
+        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:100]
+        context_lines.append(f"#{issue.id}: {summary}")
+    analysis = await analyze_issue(text, "\n".join(context_lines))
+    return analysis, existing
+
+
+async def _handle_deduplication(
+    db: AsyncSession,
+    existing: list[Issue],
+    duplicate_prob: float,
+) -> Issue | None:
+    if duplicate_prob >= settings.DUPLICATE_THRESHOLD and existing:
+        parent_issue = existing[0]
+        parent_issue.confirmation_count += 1
+        db.add(
+            IssueDuplicate(
+                issue_id=parent_issue.id,
+                duplicate_of_id=parent_issue.id,
+                similarity_score=duplicate_prob,
+            )
+        )
+        return parent_issue
+    return None
+
+
+def _create_ai_analysis(
+    issue_id: int,
+    analysis: AnalysisResult,
+    *,
+    is_valid: bool,
+    category: str | None = None,
+    priority: str | None = None,
+    duplicate_prob: float = 0.0,
+) -> AIAnalysis:
+    return AIAnalysis(
+        issue_id=issue_id,
+        is_valid=is_valid,
+        category=category if is_valid else analysis.get("category"),
+        priority=priority if is_valid else analysis.get("priority"),
+        summary=analysis.get("summary"),
+        duplicate_probability=duplicate_prob if is_valid else analysis.get("duplicate_probability"),
+        suggested_department=analysis.get("suggested_department"),
+        raw_response=analysis,
+        model_version=settings.GEMINI_MODEL,
+    )
+
+
+async def _resolve_department(db: AsyncSession, analysis: AnalysisResult) -> Department | None:
+    if suggested := analysis.get("suggested_department"):
+        return await find_department_by_name(db, suggested)
+    return None
+
+
+async def _create_issue_from_analysis(
+    db: AsyncSession,
+    text: str,
+    analysis: AnalysisResult,
+    resident: User,
+    *,
+    is_valid: bool,
+    category: str | None = None,
+    priority: str | None = None,
+    address: str | None = None,
+    department: Department | None = None,
+    vk_message_id: int | None = None,
+    vk_peer_id: int | None = None,
+) -> Issue:
+    if not is_valid:
+        issue = Issue(
+            description=text,
+            status=IssueStatus.REJECTED,
+            is_spam=True,
+            resident_id=resident.id,
+            address=address,
+            vk_message_id=vk_message_id,
+            vk_peer_id=vk_peer_id,
+        )
+    else:
+        resolved_category = category
+        resolved_priority = priority or analysis.get("priority", Priority.MEDIUM.value)
+        issue = Issue(
+            title=analysis.get("summary", text[:100]),
+            description=text,
+            status=IssueStatus.NEW,
+            category=resolved_category,
+            priority=resolved_priority,
+            address=address,
+            resident_id=resident.id,
+            department_id=department.id if department else None,
+            vk_message_id=vk_message_id,
+            vk_peer_id=vk_peer_id,
+        )
+    db.add(issue)
+    await db.flush()
+    return issue
+
+
+def _notification_priority(priority: str) -> NotificationPriority:
+    if priority in (Priority.HIGH.value, Priority.CRITICAL.value):
+        return NotificationPriority.HIGH
+    return NotificationPriority.NORMAL
+
+
+async def _create_and_send_notification(
+    db: AsyncSession,
+    issue: Issue,
+    analysis: AnalysisResult,
+    text: str,
+    *,
+    category: str | None,
+    priority: str,
+    department: Department | None,
+    owner_message: str,
+) -> None:
+    notif_priority = _notification_priority(priority)
+    notification = Notification(
+        issue_id=issue.id,
+        channel="telegram",
+        priority=notif_priority,
+        message=f"Новое обращение #{issue.id}: {analysis.get('summary', text[:100])}",
+    )
+    db.add(notification)
+    await notify_owner(owner_message)
+
+    if notif_priority == NotificationPriority.HIGH:
+        dept_chat = department.telegram_chat_id if department else None
+        sent = await notify_about_issue(
+            issue.id,
+            analysis.get("summary", text[:100]),
+            category,
+            priority,
+            issue.address,
+            dept_chat,
+            notif_priority,
+        )
+        if sent:
+            notification.status = NotificationStatus.SENT
+            notification.sent_at = datetime.now(timezone.utc)
+
+
+def _attach_vk_photos(db: AsyncSession, issue_id: int, photos: list[dict] | None) -> None:
+    if not photos:
+        return
+    for photo in photos:
+        db.add(IssuePhoto(issue_id=issue_id, url=photo["url"], vk_photo_id=photo.get("vk_photo_id")))
+
+
 async def process_incoming_message(
     db: AsyncSession,
     text: str,
@@ -121,39 +279,19 @@ async def process_incoming_message(
         return None
 
     resident = await get_or_create_resident(db, vk_id)
-
-    existing = await find_similar_issues(db, text, None)
-    context_lines = []
-    for issue in existing[:5]:
-        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:100]
-        context_lines.append(f"#{issue.id}: {summary}")
-
-    analysis = await analyze_issue(text, "\n".join(context_lines))
+    analysis, existing = await _analyze_issue_with_context(db, text)
 
     if not analysis.get("is_valid", True):
-        issue = Issue(
-            description=text,
-            status=IssueStatus.REJECTED,
-            is_spam=True,
-            resident_id=resident.id,
+        issue = await _create_issue_from_analysis(
+            db,
+            text,
+            analysis,
+            resident,
+            is_valid=False,
             vk_message_id=message_id,
             vk_peer_id=peer_id,
         )
-        db.add(issue)
-        await db.flush()
-
-        ai = AIAnalysis(
-            issue_id=issue.id,
-            is_valid=False,
-            category=analysis.get("category"),
-            priority=analysis.get("priority"),
-            summary=analysis.get("summary"),
-            duplicate_probability=analysis.get("duplicate_probability"),
-            suggested_department=analysis.get("suggested_department"),
-            raw_response=analysis,
-            model_version=settings.GEMINI_MODEL,
-        )
-        db.add(ai)
+        db.add(_create_ai_analysis(issue.id, analysis, is_valid=False))
         await send_message(
             peer_id,
             "Ваше сообщение не принято как обращение. "
@@ -162,18 +300,7 @@ async def process_incoming_message(
         return issue
 
     duplicate_prob = analysis.get("duplicate_probability", 0.0)
-    parent_issue = None
-
-    if duplicate_prob >= settings.DUPLICATE_THRESHOLD and existing:
-        parent_issue = existing[0]
-        parent_issue.confirmation_count += 1
-        db.add(
-            IssueDuplicate(
-                issue_id=parent_issue.id,
-                duplicate_of_id=parent_issue.id,
-                similarity_score=duplicate_prob,
-            )
-        )
+    if parent_issue := await _handle_deduplication(db, existing, duplicate_prob):
         await send_message(
             peer_id,
             f"Спасибо! Ваше обращение связано с существующей проблемой #{parent_issue.id}. "
@@ -183,75 +310,47 @@ async def process_incoming_message(
 
     category = analysis.get("category")
     priority = analysis.get("priority", Priority.MEDIUM.value)
-    department = None
-    if suggested := analysis.get("suggested_department"):
-        department = await find_department_by_name(db, suggested)
+    department = await _resolve_department(db, analysis)
 
-    issue = Issue(
-        title=analysis.get("summary", text[:100]),
-        description=text,
-        status=IssueStatus.NEW,
-        category=category,
-        priority=priority,
-        resident_id=resident.id,
-        department_id=department.id if department else None,
-        vk_message_id=message_id,
-        vk_peer_id=peer_id,
-    )
-    db.add(issue)
-    await db.flush()
-
-    ai = AIAnalysis(
-        issue_id=issue.id,
+    issue = await _create_issue_from_analysis(
+        db,
+        text,
+        analysis,
+        resident,
         is_valid=True,
         category=category,
         priority=priority,
-        summary=analysis.get("summary"),
-        duplicate_probability=duplicate_prob,
-        suggested_department=analysis.get("suggested_department"),
-        raw_response=analysis,
-        model_version=settings.GEMINI_MODEL,
+        department=department,
+        vk_message_id=message_id,
+        vk_peer_id=peer_id,
     )
-    db.add(ai)
-
-    if photos:
-        for photo in photos:
-            db.add(IssuePhoto(issue_id=issue.id, url=photo["url"], vk_photo_id=photo.get("vk_photo_id")))
-
-    notif_priority = (
-        NotificationPriority.HIGH
-        if priority in (Priority.HIGH.value, Priority.CRITICAL.value)
-        else NotificationPriority.NORMAL
-    )
-    notification = Notification(
-        issue_id=issue.id,
-        channel="telegram",
-        priority=notif_priority,
-        message=f"Новое обращение #{issue.id}: {analysis.get('summary', text[:100])}",
-    )
-    db.add(notification)
-
-    await notify_owner(
-        f"📋 Новое обращение #{issue.id}\n"
-        f"{analysis.get('summary', text[:120])}\n"
-        f"Категория: {category or '—'}\n"
-        f"От: VK id{vk_id}"
-    )
-
-    if notif_priority == NotificationPriority.HIGH:
-        dept_chat = department.telegram_chat_id if department else None
-        sent = await notify_about_issue(
+    db.add(
+        _create_ai_analysis(
             issue.id,
-            analysis.get("summary", text[:100]),
-            category,
-            priority,
-            issue.address,
-            dept_chat,
-            notif_priority,
+            analysis,
+            is_valid=True,
+            category=category,
+            priority=priority,
+            duplicate_prob=duplicate_prob,
         )
-        if sent:
-            notification.status = NotificationStatus.SENT
-            notification.sent_at = datetime.now(timezone.utc)
+    )
+    _attach_vk_photos(db, issue.id, photos)
+
+    await _create_and_send_notification(
+        db,
+        issue,
+        analysis,
+        text,
+        category=category,
+        priority=priority,
+        department=department,
+        owner_message=(
+            f"📋 Новое обращение #{issue.id}\n"
+            f"{analysis.get('summary', text[:120])}\n"
+            f"Категория: {category or '—'}\n"
+            f"От: VK id{vk_id}"
+        ),
+    )
 
     await send_message(
         peer_id,
@@ -260,7 +359,6 @@ async def process_incoming_message(
         f"📁 Категория: {category}\n"
         f"Статус: на рассмотрении",
     )
-
     return issue
 
 
@@ -277,117 +375,63 @@ async def process_web_complaint(
     resident = await get_or_create_web_resident(
         db, user=user, phone=phone, full_name=full_name
     )
-
-    existing = await find_similar_issues(db, text, category)
-    context_lines = []
-    for issue in existing[:5]:
-        summary = issue.ai_analysis.summary if issue.ai_analysis else issue.description[:100]
-        context_lines.append(f"#{issue.id}: {summary}")
-
-    analysis = await analyze_issue(text, "\n".join(context_lines))
+    analysis, existing = await _analyze_issue_with_context(db, text, category)
 
     if not analysis.get("is_valid", True):
-        issue = Issue(
-            description=text,
-            status=IssueStatus.REJECTED,
-            is_spam=True,
-            resident_id=resident.id,
+        issue = await _create_issue_from_analysis(
+            db,
+            text,
+            analysis,
+            resident,
+            is_valid=False,
             address=address,
         )
-        db.add(issue)
-        await db.flush()
-        ai = AIAnalysis(
-            issue_id=issue.id,
-            is_valid=False,
-            category=analysis.get("category"),
-            priority=analysis.get("priority"),
-            summary=analysis.get("summary"),
-            duplicate_probability=analysis.get("duplicate_probability"),
-            suggested_department=analysis.get("suggested_department"),
-            raw_response=analysis,
-            model_version=settings.GEMINI_MODEL,
-        )
-        db.add(ai)
+        db.add(_create_ai_analysis(issue.id, analysis, is_valid=False))
         return issue
 
     duplicate_prob = analysis.get("duplicate_probability", 0.0)
-    if duplicate_prob >= settings.DUPLICATE_THRESHOLD and existing:
-        parent_issue = existing[0]
-        parent_issue.confirmation_count += 1
-        db.add(
-            IssueDuplicate(
-                issue_id=parent_issue.id,
-                duplicate_of_id=parent_issue.id,
-                similarity_score=duplicate_prob,
-            )
-        )
+    if parent_issue := await _handle_deduplication(db, existing, duplicate_prob):
         return parent_issue
 
     resolved_category = category or analysis.get("category")
     priority = analysis.get("priority", Priority.MEDIUM.value)
-    department = None
-    if suggested := analysis.get("suggested_department"):
-        department = await find_department_by_name(db, suggested)
+    department = await _resolve_department(db, analysis)
 
-    issue = Issue(
-        title=analysis.get("summary", text[:100]),
-        description=text,
-        status=IssueStatus.NEW,
-        category=resolved_category,
-        priority=priority,
-        address=address,
-        resident_id=resident.id,
-        department_id=department.id if department else None,
-    )
-    db.add(issue)
-    await db.flush()
-
-    ai = AIAnalysis(
-        issue_id=issue.id,
+    issue = await _create_issue_from_analysis(
+        db,
+        text,
+        analysis,
+        resident,
         is_valid=True,
         category=resolved_category,
         priority=priority,
-        summary=analysis.get("summary"),
-        duplicate_probability=duplicate_prob,
-        suggested_department=analysis.get("suggested_department"),
-        raw_response=analysis,
-        model_version=settings.GEMINI_MODEL,
+        address=address,
+        department=department,
     )
-    db.add(ai)
-
-    notif_priority = (
-        NotificationPriority.HIGH
-        if priority in (Priority.HIGH.value, Priority.CRITICAL.value)
-        else NotificationPriority.NORMAL
-    )
-    notification = Notification(
-        issue_id=issue.id,
-        channel="telegram",
-        priority=notif_priority,
-        message=f"Новое обращение #{issue.id}: {analysis.get('summary', text[:100])}",
-    )
-    db.add(notification)
-
-    await notify_owner(
-        f"📋 Новое обращение #{issue.id} (сайт)\n"
-        f"{analysis.get('summary', text[:120])}\n"
-        f"Категория: {resolved_category or '—'}\n"
-        f"От: {resident.full_name or resident.username}"
-    )
-
-    if notif_priority == NotificationPriority.HIGH:
-        dept_chat = department.telegram_chat_id if department else None
-        sent = await notify_about_issue(
+    db.add(
+        _create_ai_analysis(
             issue.id,
-            analysis.get("summary", text[:100]),
-            resolved_category,
-            priority,
-            issue.address,
-            dept_chat,
-            notif_priority,
+            analysis,
+            is_valid=True,
+            category=resolved_category,
+            priority=priority,
+            duplicate_prob=duplicate_prob,
         )
-        if sent:
-            notification.status = NotificationStatus.SENT
-            notification.sent_at = datetime.now(timezone.utc)
+    )
 
+    await _create_and_send_notification(
+        db,
+        issue,
+        analysis,
+        text,
+        category=resolved_category,
+        priority=priority,
+        department=department,
+        owner_message=(
+            f"📋 Новое обращение #{issue.id} (сайт)\n"
+            f"{analysis.get('summary', text[:120])}\n"
+            f"Категория: {resolved_category or '—'}\n"
+            f"От: {resident.full_name or resident.username}"
+        ),
+    )
     return issue
