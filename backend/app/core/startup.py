@@ -7,7 +7,6 @@ from app.config import Settings, get_settings
 from app.core.background_tasks import start_background_tasks, stop_background_tasks
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 def validate_security_config(app_settings: Settings) -> None:
@@ -24,6 +23,7 @@ def validate_security_config(app_settings: Settings) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings = get_settings()
     validate_security_config(settings)
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     tasks = start_background_tasks(settings)
