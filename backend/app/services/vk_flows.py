@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
@@ -36,7 +37,6 @@ from app.services.vk_messages import box
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
 # peer_id -> {kind, step, data}
 _flows: dict[int, dict[str, Any]] = {}
@@ -89,7 +89,7 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
     if not ads:
         return (
             "💼 Вакансий пока нет.\n\n"
-            f"Разместите первую — кнопка «➕ Объявление» или:\n{_SITE}/jobs"
+            f"Разместите первую — кнопка «➕ Объявление» или:\n{public_site_url()}/jobs"
         )
     lines = [f"💼 Работа и вакансии ({len(ads)}):\n"]
     for ad in ads:
@@ -98,7 +98,7 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
         lines.append(f"• [{cat}] {ad.title}{pay}")
         lines.append(f"  {ad.description[:80]}{'…' if len(ad.description) > 80 else ''}")
         lines.append(f"  📞 {ad.phone}")
-    lines.append(f"\nВсе вакансии: {_SITE}/jobs")
+    lines.append(f"\nВсе вакансии: {public_site_url()}/jobs")
     lines.append("Разместить: «➕ Объявление»")
     return "\n".join(lines)
 
@@ -114,7 +114,7 @@ def format_routes_message(page: int = 0) -> str:
         lines.append(f"   {r['description']}")
     if start + per_page < len(routes):
         lines.append(f"\nЕщё: напишите «маршруты {page + 2}»")
-    lines.append(f"\nНа карте с линией маршрута:\n{_SITE}/map")
+    lines.append(f"\nНа карте с линией маршрута:\n{public_site_url()}/map")
     return "\n".join(lines)
 
 
@@ -231,7 +231,7 @@ async def handle_flow_message(
         return box(
             "Спасибо!",
             "Пожелание принято. Учтём при развитии портала.\n\n"
-            f"Ещё идеи — кнопка «💡 Пожелания» или {_SITE}/wishes",
+            f"Ещё идеи — кнопка «💡 Пожелания» или {public_site_url()}/wishes",
         )
 
     if kind == "classified":
@@ -306,12 +306,12 @@ async def handle_flow_message(
                 f"«{ad.title}»\n"
                 f"{ad.description[:200]}\n\n"
                 f"👤 {name}\n📞 {data['phone']}\n\n"
-                f"Модерация: {_SITE}/admin/classifieds"
+                f"Модерация: {public_site_url()}/admin/classifieds"
             )
             return box(
                 "Принято!",
                 "Объявление на модерации — появится на портале и в VK после проверки.\n\n"
-                f"Статус: {_SITE}/classifieds",
+                f"Статус: {public_site_url()}/classifieds",
             )
 
     if kind == "map_report":
