@@ -219,6 +219,7 @@ async def list_ads(
     search: str | None = Query(None, max_length=100),
     services_only: bool = False,
     jobs_only: bool = False,
+    ads_only: bool = False,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
@@ -230,6 +231,8 @@ async def list_ads(
         query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
     if jobs_only:
         query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
+    elif ads_only:
+        query = query.where(ClassifiedAd.category.notin_(JOB_CLASSIFIED_CATEGORIES))
     if category:
         query = query.where(ClassifiedAd.category == category)
     if search:

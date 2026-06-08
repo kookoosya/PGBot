@@ -4,8 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
-
-const JOB_CATEGORIES = new Set(["job", "construction_vacancy"]);
+import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 
 export function ClassifiedDetail() {
   const { id } = useParams();
@@ -51,8 +50,8 @@ export function ClassifiedDetail() {
   }
 
   const visual = getCategoryVisual(ad.category);
-  const isJob = JOB_CATEGORIES.has(ad.category);
-  const backTo = isJob ? "/classifieds?jobs=1" : "/classifieds";
+  const isJob = JOB_CATEGORY_IDS.has(ad.category);
+  const backTo = isJob ? "/jobs" : "/classifieds";
   const backLabel = isJob ? "← Все вакансии" : "← К доске";
 
   return (

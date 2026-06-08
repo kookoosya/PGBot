@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { BRAND } from "@/lib/branding";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
-
-const JOB_CATEGORIES = new Set(["job", "construction_vacancy"]);
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
-  const jobsMode = searchParams.get("jobs") === "1";
+  if (searchParams.get("jobs") === "1") {
+    return <Navigate to="/jobs" replace />;
+  }
 
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,11 +23,10 @@ export function Classifieds() {
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
-  const [filter, setFilter] = useState(jobsMode ? "job" : "");
-  const [jobsOnly, setJobsOnly] = useState(jobsMode);
+  const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    category: jobsMode ? "job" : "firewood",
+    category: "firewood",
     title: "",
     description: "",
     price: "",
@@ -41,19 +41,19 @@ export function Classifieds() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
 
+  const adCategories = categories.filter((c) => !JOB_CATEGORY_IDS.has(c.value));
+
   const load = (pageNum = 1, append = false) => {
     const params: Record<string, string> = {
+      ads_only: "true",
       page: String(pageNum),
       page_size: "20",
     };
-    if (jobsOnly) {
-      params.jobs_only = "true";
-    } else if (filter) {
-      params.category = filter;
-    }
+    if (filter) params.category = filter;
     if (search) params.search = search;
     setLoading(true);
-    api.getClassifieds(params)
+    api
+      .getClassifieds(params)
       .then((r) => {
         setTotal(r.total);
         setPage(pageNum);
@@ -68,16 +68,8 @@ export function Classifieds() {
   }, []);
 
   useEffect(() => {
-    if (jobsMode) {
-      setJobsOnly(true);
-      setFilter("");
-      setForm((f) => ({ ...f, category: "job" }));
-    }
-  }, [jobsMode]);
-
-  useEffect(() => {
     load(1, false);
-  }, [filter, jobsOnly, search]);
+  }, [filter, search]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,33 +97,26 @@ export function Classifieds() {
     }
   };
 
-  const visibleCategories = jobsOnly
-    ? categories.filter((c) => JOB_CATEGORIES.has(c.value))
-    : categories;
-
   return (
     <div className="page-section max-w-5xl">
       <PageHeader
-        icon={jobsOnly ? "💼" : "📋"}
-        title={jobsOnly ? "Работа и вакансии" : "Доска объявлений"}
-        subtitle={
-          jobsOnly
-            ? `${BRAND.name} — вакансии и подработка от соседей`
-            : `${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`
-        }
+        icon="📋"
+        title="Доска объявлений"
+        subtitle={`${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`}
       >
         <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "✕ Отмена" : jobsOnly ? "+ Вакансия" : "+ Подать объявление"}
+          {showForm ? "✕ Отмена" : "+ Подать объявление"}
         </button>
         <span className="free-badge">🆓 Бесплатно</span>
       </PageHeader>
 
       <div className="human-note mb-6">
         <p className="m-0 text-sm">
-          Размещение <strong>бесплатно и без регистрации</strong> — после модерации объявление появится на портале и в VK-боте.
-          Не переводите предоплату незнакомцам: все сделки — лично или по телефону.
-          Услуги (огород, дрова, мастера) — на{" "}
-          <Link to="/services" className="text-primary hover:underline">странице «Услуги»</Link>.
+          Дрова, покос, продажа, аренда — <strong>бесплатно и без регистрации</strong>.
+          Вакансии — на вкладке{" "}
+          <Link to="/jobs" className="text-primary hover:underline">«Работа»</Link>.
+          Мастера — на{" "}
+          <Link to="/services" className="text-primary hover:underline">«Услуги»</Link>.
         </p>
       </div>
 
@@ -148,47 +133,28 @@ export function Classifieds() {
         </Button>
       </div>
 
-      <div className="classified-quick-filters mb-4">
-        <button
-          type="button"
-          className={`classified-quick-btn ${!jobsOnly && !filter ? "classified-quick-btn-active" : ""}`}
-          onClick={() => { setJobsOnly(false); setFilter(""); }}
-        >
-          Все объявления
+      <div className="category-grid mb-4">
+        <button type="button" className={`category-tile ${!filter ? "category-tile-active" : ""}`} onClick={() => setFilter("")}>
+          <div className="category-tile-bg" style={{ background: "linear-gradient(135deg, #1a4d3a, #2d6a4f)" }} />
+          <span className="category-tile-icon">🪶</span>
+          <span className="category-tile-label">Все</span>
         </button>
-        <button
-          type="button"
-          className={`classified-quick-btn ${jobsOnly ? "classified-quick-btn-active" : ""}`}
-          onClick={() => { setJobsOnly(true); setFilter(""); setForm((f) => ({ ...f, category: "job" })); }}
-        >
-          💼 Работа и вакансии
-        </button>
+        {adCategories.map((c) => {
+          const visual = getCategoryVisual(c.value);
+          return (
+            <button
+              key={c.value}
+              type="button"
+              className={`category-tile ${filter === c.value ? "category-tile-active" : ""}`}
+              onClick={() => setFilter(c.value)}
+            >
+              <div className="category-tile-bg" style={{ background: visual.gradient }} />
+              <span className="category-tile-icon">{visual.icon}</span>
+              <span className="category-tile-label">{c.label}</span>
+            </button>
+          );
+        })}
       </div>
-
-      {!jobsOnly && (
-        <div className="category-grid">
-          <button type="button" className={`category-tile ${!filter ? "category-tile-active" : ""}`} onClick={() => setFilter("")}>
-            <div className="category-tile-bg" style={{ background: "linear-gradient(135deg, #1a4d3a, #2d6a4f)" }} />
-            <span className="category-tile-icon">🪶</span>
-            <span className="category-tile-label">Все</span>
-          </button>
-          {categories.map((c) => {
-            const visual = getCategoryVisual(c.value);
-            return (
-              <button
-                key={c.value}
-                type="button"
-                className={`category-tile ${filter === c.value ? "category-tile-active" : ""}`}
-                onClick={() => setFilter(c.value)}
-              >
-                <div className="category-tile-bg" style={{ background: visual.gradient }} />
-                <span className="category-tile-icon">{visual.icon}</span>
-                <span className="category-tile-label">{c.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {showForm && (
         <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4 form-glow">
@@ -203,12 +169,11 @@ export function Classifieds() {
           <div className="antifraud-note">
             <p className="m-0 text-sm">
               <strong>Без обмана:</strong> не просите предоплату, залог и переводы на карту.
-              Модератор отклонит подозрительные объявления.
             </p>
           </div>
 
           <select className="w-full border rounded-lg px-3 py-2 text-sm" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-            {(jobsOnly ? visibleCategories : categories).map((c) => (
+            {adCategories.map((c) => (
               <option key={c.value} value={c.value}>{getCategoryVisual(c.value).icon} {c.label}</option>
             ))}
           </select>
@@ -221,7 +186,7 @@ export function Classifieds() {
             required
           />
           <div className="grid grid-cols-2 gap-2">
-            <Input type="number" placeholder={jobsOnly ? "Зарплата / ставка" : "Ваша цена"} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <Input type="number" placeholder="Ваша цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
             <Input placeholder="за что (смена, месяц…)" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
           </div>
           <Input placeholder="Телефон +7…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
@@ -232,9 +197,6 @@ export function Classifieds() {
             value={form.contact_vk}
             onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
           />
-          <p className="text-xs text-muted-foreground m-0 -mt-2">
-            Необязательно. После модерации пришлём сообщение в VK, если указали профиль.
-          </p>
           <input
             type="text"
             name="website_url"
@@ -253,9 +215,7 @@ export function Classifieds() {
               className="mt-1"
               required
             />
-            <span>
-              Объявление честное: без предоплаты, залога и переводов незнакомцам. Контакты настоящие.
-            </span>
+            <span>Объявление честное: без предоплаты и переводов незнакомцам.</span>
           </label>
           <Button type="submit" className="w-full">🆓 Отправить на модерацию</Button>
         </form>
@@ -267,31 +227,9 @@ export function Classifieds() {
         <VkBotBanner />
       </div>
 
-      <div className={jobsOnly ? "epic-jobs-grid classified-jobs-list" : "space-y-4"}>
+      <div className="space-y-4">
         {ads.map((ad) => {
           const visual = getCategoryVisual(ad.category);
-          if (jobsOnly) {
-            return (
-              <Link key={ad.id} to={`/classifieds/${ad.id}`} className="epic-job-card no-underline text-inherit">
-                <div className="epic-job-icon" style={{ background: visual.gradient }}>
-                  {visual.icon}
-                </div>
-                <div className="epic-job-body">
-                  <span className="epic-job-badge">{ad.category_label}</span>
-                  <h3 className="epic-job-title">{ad.title}</h3>
-                  <p className="epic-job-desc">{ad.description}</p>
-                  {ad.price != null && (
-                    <p className="epic-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
-                  )}
-                  <p className="epic-job-contact">
-                    📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">{ad.phone}</a>
-                    {ad.address && ` · 📍 ${ad.address}`}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{ad.author_name}</p>
-                </div>
-              </Link>
-            );
-          }
           return (
             <div key={ad.id} className="classified-ad-card">
               <div className="classified-ad-image" style={{ background: visual.gradient }}>
@@ -318,13 +256,11 @@ export function Classifieds() {
           );
         })}
         {!loading && ads.length === 0 && (
-          <p className="text-center text-muted-foreground py-12 col-span-full">
-            {jobsOnly ? "Вакансий пока нет. Разместите первую!" : "Объявлений пока нет. Будьте первым!"}
-          </p>
+          <p className="text-center text-muted-foreground py-12">Объявлений пока нет. Будьте первым!</p>
         )}
-        {loading && <p className="text-center text-muted-foreground py-6 col-span-full">Загрузка…</p>}
+        {loading && <p className="text-center text-muted-foreground py-6">Загрузка…</p>}
         {ads.length > 0 && ads.length < total && (
-          <div className="col-span-full text-center pt-4">
+          <div className="text-center pt-4">
             <Button type="button" variant="outline" disabled={loading} onClick={() => load(page + 1, true)}>
               Ещё объявления ({ads.length} из {total})
             </Button>

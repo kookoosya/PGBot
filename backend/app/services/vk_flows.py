@@ -54,7 +54,7 @@ def start_classified_flow(peer_id: int, *, jobs: bool = False) -> str:
     _flows[peer_id] = {
         "kind": "classified",
         "step": "title",
-        "data": {"category": ClassifiedCategory.JOB if jobs else ClassifiedCategory.OTHER},
+        "data": {"category": ClassifiedCategory.JOB_TOURISM if jobs else ClassifiedCategory.OTHER},
     }
     hint = "вакансию" if jobs else "объявление"
     return box(
@@ -89,7 +89,7 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
     if not ads:
         return (
             "💼 Вакансий пока нет.\n\n"
-            f"Разместите первую — кнопка «➕ Объявление» или:\n{_SITE}/classifieds?jobs=1"
+            f"Разместите первую — кнопка «➕ Объявление» или:\n{_SITE}/jobs"
         )
     lines = [f"💼 Работа и вакансии ({len(ads)}):\n"]
     for ad in ads:
@@ -98,7 +98,7 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
         lines.append(f"• [{cat}] {ad.title}{pay}")
         lines.append(f"  {ad.description[:80]}{'…' if len(ad.description) > 80 else ''}")
         lines.append(f"  📞 {ad.phone}")
-    lines.append(f"\nВсе вакансии: {_SITE}/classifieds?jobs=1")
+    lines.append(f"\nВсе вакансии: {_SITE}/jobs")
     lines.append("Разместить: «➕ Объявление»")
     return "\n".join(lines)
 

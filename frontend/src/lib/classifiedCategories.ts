@@ -17,6 +17,15 @@ export const CLASSIFIED_CATEGORY_VISUALS: Record<string, CategoryVisual> = {
   rent: { icon: "🏠", gradient: "linear-gradient(135deg, #14532d 0%, #22c55e 100%)" },
   sale: { icon: "📦", gradient: "linear-gradient(135deg, #713f12 0%, #d97706 100%)" },
   job: { icon: "💼", gradient: "linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%)" },
+  job_tourism: { icon: "🏨", gradient: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" },
+  job_trade: { icon: "🛒", gradient: "linear-gradient(135deg, #b45309 0%, #fbbf24 100%)" },
+  job_agriculture: { icon: "🌾", gradient: "linear-gradient(135deg, #365314 0%, #84cc16 100%)" },
+  job_seasonal: { icon: "☀️", gradient: "linear-gradient(135deg, #c2410c 0%, #fb923c 100%)" },
+  job_driver: { icon: "🚗", gradient: "linear-gradient(135deg, #1e3a8a 0%, #60a5fa 100%)" },
+  job_jkh: { icon: "🔧", gradient: "linear-gradient(135deg, #374151 0%, #9ca3af 100%)" },
+  job_culture: { icon: "🏛", gradient: "linear-gradient(135deg, #581c87 0%, #a855f7 100%)" },
+  job_social: { icon: "🏥", gradient: "linear-gradient(135deg, #be123c 0%, #fb7185 100%)" },
+  job_education: { icon: "🏫", gradient: "linear-gradient(135deg, #1d4ed8 0%, #93c5fd 100%)" },
   other: { icon: "📋", gradient: "linear-gradient(135deg, #3f3f46 0%, #71717a 100%)" },
 };
 

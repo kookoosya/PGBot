@@ -316,7 +316,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in ("💼 работа", "работа", "вакансии", "вакансия", "подработка"):
             _ai_mode_peers.discard(peer_id)
             msg = await format_jobs_message(db)
-            await _send_with_site_links(peer_id, msg, ("💼 Вакансии", "/classifieds?jobs=1"))
+            await _send_with_site_links(peer_id, msg, ("💼 Вакансии", "/jobs"))
             return PlainTextResponse("ok")
 
         if text_lower.startswith("маршруты ") and text_lower.split()[-1].isdigit():

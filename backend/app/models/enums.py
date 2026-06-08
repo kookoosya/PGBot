@@ -71,6 +71,15 @@ class ClassifiedCategory(str, enum.Enum):
     RENT = "rent"
     SALE = "sale"
     JOB = "job"
+    JOB_TOURISM = "job_tourism"
+    JOB_TRADE = "job_trade"
+    JOB_AGRICULTURE = "job_agriculture"
+    JOB_SEASONAL = "job_seasonal"
+    JOB_DRIVER = "job_driver"
+    JOB_JKH = "job_jkh"
+    JOB_CULTURE = "job_culture"
+    JOB_SOCIAL = "job_social"
+    JOB_EDUCATION = "job_education"
     OTHER = "other"
 
 
@@ -91,6 +100,15 @@ SERVICE_CLASSIFIED_CATEGORIES = {
 JOB_CLASSIFIED_CATEGORIES = {
     ClassifiedCategory.JOB,
     ClassifiedCategory.CONSTRUCTION_VACANCY,
+    ClassifiedCategory.JOB_TOURISM,
+    ClassifiedCategory.JOB_TRADE,
+    ClassifiedCategory.JOB_AGRICULTURE,
+    ClassifiedCategory.JOB_SEASONAL,
+    ClassifiedCategory.JOB_DRIVER,
+    ClassifiedCategory.JOB_JKH,
+    ClassifiedCategory.JOB_CULTURE,
+    ClassifiedCategory.JOB_SOCIAL,
+    ClassifiedCategory.JOB_EDUCATION,
 }
 
 
@@ -113,7 +131,16 @@ CLASSIFIED_LABELS = {
     ClassifiedCategory.TUTORING: "Услуги / обучение",
     ClassifiedCategory.RENT: "Аренда",
     ClassifiedCategory.SALE: "Продажа",
-    ClassifiedCategory.JOB: "Работа",
+    ClassifiedCategory.JOB: "Работа (другое)",
+    ClassifiedCategory.JOB_TOURISM: "Туризм / гостиницы",
+    ClassifiedCategory.JOB_TRADE: "Магазины / торговля",
+    ClassifiedCategory.JOB_AGRICULTURE: "Сельхоз / фермы",
+    ClassifiedCategory.JOB_SEASONAL: "Сезонная подработка",
+    ClassifiedCategory.JOB_DRIVER: "Водитель / перевозки",
+    ClassifiedCategory.JOB_JKH: "ЖКХ / коммунальные",
+    ClassifiedCategory.JOB_CULTURE: "Музей / культура",
+    ClassifiedCategory.JOB_SOCIAL: "Медицина / соцсфера",
+    ClassifiedCategory.JOB_EDUCATION: "Образование / дети",
     ClassifiedCategory.OTHER: "Другое",
 }
 
