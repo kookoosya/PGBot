@@ -20,10 +20,19 @@ def is_valid_gemini_key(key: str) -> bool:
 
 
 def is_valid_pollinations_key(key: str) -> bool:
+    """Ключ для чата Pollinations (sk_/pk_ или Google AQ.)."""
     k = key.strip()
     if not k or _looks_like_placeholder(k):
         return False
     return k.startswith(("sk_", "pk_", "AQ."))
+
+
+def is_valid_pollinations_image_key(key: str) -> bool:
+    """Ключ для картинок Pollinations — только sk_/pk_ с enter.pollinations.ai."""
+    k = key.strip()
+    if not k or _looks_like_placeholder(k):
+        return False
+    return k.startswith(("sk_", "pk_"))
 
 
 def is_valid_openrouter_key(key: str) -> bool:
@@ -34,14 +43,27 @@ def is_valid_openrouter_key(key: str) -> bool:
 def get_ai_status() -> dict:
     s = get_settings()
     poll_ok = is_valid_pollinations_key(s.POLLINATIONS_API_KEY)
+    poll_img_ok = is_valid_pollinations_image_key(s.POLLINATIONS_API_KEY)
     or_ok = is_valid_openrouter_key(s.OPENROUTER_API_KEY)
     gemini_ok = is_valid_gemini_key(s.GEMINI_API_KEY)
 
     if poll_ok:
         chat_provider = "pollinations"
-        image_provider = "pollinations"
-        ready = True
-        message = "ИИ подключён через Pollinations (чат и картинки)."
+        if poll_img_ok:
+            image_provider = "pollinations"
+            ready = True
+            message = "ИИ подключён через Pollinations (чат и картинки)."
+        elif or_ok:
+            image_provider = "openrouter"
+            ready = True
+            message = "Чат через Pollinations, картинки через OpenRouter."
+        else:
+            image_provider = "local-poster"
+            ready = True
+            message = (
+                "Чат через Pollinations. Для картинок нужен sk_-ключ с enter.pollinations.ai "
+                "или пополните OpenRouter."
+            )
     elif or_ok:
         chat_provider = "openrouter"
         image_provider = "openrouter"

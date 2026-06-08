@@ -7,7 +7,10 @@ from app.services.ai_image_fallback import save_fallback_image
 from app.services.ai_image_store import save_image
 from app.services.ai_prompt_translate import image_prompt_english
 from app.services.ai_providers import openrouter_image_bytes, pollinations_image_bytes
-from app.services.ai_status import is_valid_openrouter_key, is_valid_pollinations_key
+from app.services.ai_status import (
+    is_valid_openrouter_key,
+    is_valid_pollinations_image_key,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -53,8 +56,8 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
                 "provider": "openrouter",
             }
 
-    # Pollinations Flux
-    if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+    # Pollinations Flux (только sk_/pk_ — Google AQ. не подходит для /image)
+    if is_valid_pollinations_image_key(settings.POLLINATIONS_API_KEY):
         poll_model = POLLINATIONS_MODEL_MAP.get(model, "flux")
         data = await pollinations_image_bytes(en_prompt, model=poll_model, width=width, height=height)
         if not data:
@@ -73,7 +76,7 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
         if result:
             return result
 
-    if not is_valid_openrouter_key(settings.OPENROUTER_API_KEY) and not is_valid_pollinations_key(
+    if not is_valid_openrouter_key(settings.OPENROUTER_API_KEY) and not is_valid_pollinations_image_key(
         settings.POLLINATIONS_API_KEY
     ):
         return {"error": "Генератор картинок не настроен: нет API-ключа на сервере."}
