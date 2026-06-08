@@ -5,10 +5,23 @@ on:
     branches: [cursor/narodny-kontrol-mvp-e7fb]
   workflow_dispatch:
 
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check deploy credentials
+        run: |
+          if [ -z "${{ secrets.VPS_PASSWORD }}" ] && [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "::error::Нет VPS_PASSWORD и VPS_SSH_KEY в GitHub Secrets."
+            echo "Добавьте пароль root VPS: Settings → Secrets and variables → Actions → New repository secret → VPS_PASSWORD"
+            echo "Затем: Actions → Deploy VPS → Run workflow"
+            exit 1
+          fi
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -16,10 +29,15 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 30m
           script: |
+            set -e
             cd /opt/pgbot
             git fetch origin cursor/narodny-kontrol-mvp-e7fb
             git checkout cursor/narodny-kontrol-mvp-e7fb
             git pull origin cursor/narodny-kontrol-mvp-e7fb
+            bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
+            bash scripts/setup-russia-mirror.sh
             docker compose -f docker-compose.prod.yml up -d --build
             docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
+            echo "Deploy OK: https://192-210-213-135.sslip.io"
