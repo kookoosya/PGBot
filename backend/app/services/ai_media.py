@@ -16,14 +16,13 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 CHAT_MODELS = [
-    {"id": "gemini-flash", "label": "GPT-4o Mini", "provider": "openrouter", "fast": True},
-    {"id": "openai", "label": "GPT-4o", "provider": "openrouter", "smart": True},
-    {"id": "gemini-2.0-flash", "label": "Gemini (прямой Google)", "provider": "google", "fast": True},
+    {"id": "gemini-flash", "label": "Быстрый", "provider": "pollinations", "fast": True},
+    {"id": "openai", "label": "Умный", "provider": "pollinations", "smart": True},
 ]
 
 IMAGE_MODELS = [
-    {"id": "flux", "label": "Gemini Image", "provider": "openrouter", "desc": "Реалистичные сцены"},
-    {"id": "turbo", "label": "Gemini Image Fast", "provider": "openrouter", "desc": "Быстрая генерация"},
+    {"id": "flux", "label": "Flux", "provider": "pollinations"},
+    {"id": "turbo", "label": "Turbo", "provider": "pollinations"},
 ]
 
 POLLINATIONS_MODEL_MAP = {
@@ -41,22 +40,7 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
 
     en_prompt = image_prompt_english(prompt)
 
-    # OpenRouter Gemini Image
-    if is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
-        data = await openrouter_image_bytes(en_prompt, model=model)
-        if not data:
-            data = await openrouter_image_bytes(prompt, model=model)
-        if data:
-            ext = "png" if data[:8] == b"\x89PNG\r\n\x1a\n" else "jpg"
-            image_id = save_image(data, ext)
-            return {
-                "url": f"/api/v1/ai/images/{image_id}",
-                "model": model,
-                "prompt": prompt,
-                "provider": "openrouter",
-            }
-
-    # Pollinations Flux (только sk_/pk_ — Google AQ. не подходит для /image)
+    # Pollinations Flux — бесплатно по pollen
     if is_valid_pollinations_image_key(settings.POLLINATIONS_API_KEY):
         poll_model = POLLINATIONS_MODEL_MAP.get(model, "flux")
         data = await pollinations_image_bytes(en_prompt, model=poll_model, width=width, height=height)
@@ -69,6 +53,21 @@ async def generate_image(prompt: str, model: str = "flux", width: int = 1024, he
                 "model": model,
                 "prompt": prompt,
                 "provider": "pollinations",
+            }
+
+    # OpenRouter — резерв, если есть кредиты
+    if is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
+        data = await openrouter_image_bytes(en_prompt, model=model)
+        if not data:
+            data = await openrouter_image_bytes(prompt, model=model)
+        if data:
+            ext = "png" if data[:8] == b"\x89PNG\r\n\x1a\n" else "jpg"
+            image_id = save_image(data, ext)
+            return {
+                "url": f"/api/v1/ai/images/{image_id}",
+                "model": model,
+                "prompt": prompt,
+                "provider": "openrouter",
             }
 
     if settings.GEMINI_API_KEY and model == "gemini-imagen":

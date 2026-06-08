@@ -11,9 +11,7 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "🪶 Привет! Я ИИ-помощник Пушкинских Гор.\n\n" +
-        "Спросите что угодно — напишу текст, подскажу идею, отвечу на вопрос.\n" +
-        "Во вкладке «Картинки» — генерация изображений по описанию.",
+        "🪶 Привет! Спросите что угодно — или нарисуйте картинку во вкладке «Картинки».",
     },
   ]);
   const [input, setInput] = useState("");
@@ -114,21 +112,8 @@ export function AIChat() {
 
       {aiStatus && !aiStatus.ready && (
         <div className="ai-status-warn" role="status">
-          <strong>ИИ не подключён к API</strong>
+          <strong>ИИ временно недоступен</strong>
           <p>{aiStatus.message}</p>
-        </div>
-      )}
-
-      {aiStatus?.limits && (
-        <div className="ai-limits-note text-sm mb-4">
-          <p className="m-0 mb-1"><strong>Лимиты:</strong> {aiStatus.limits.site_note}</p>
-          <p className="m-0 text-muted-foreground">{aiStatus.limits.providers_note}</p>
-          {aiStatus.providers && aiStatus.providers.length > 0 && (
-            <p className="m-0 mt-1 text-muted-foreground">
-              Провайдеры: {aiStatus.providers.join(" · ")}
-              {aiStatus.gemini_configured && aiStatus.chat_provider !== "google" && " (Gemini — резерв)"}
-            </p>
-          )}
         </div>
       )}
 
@@ -145,8 +130,7 @@ export function AIChat() {
         <>
           {chatModels.length > 1 && (
             <div className="mb-3">
-              <label className="text-xs text-muted-foreground">Модель</label>
-              <select className="w-full border rounded px-3 py-2 text-sm mt-1" value={chatModel} onChange={(e) => setChatModel(e.target.value)}>
+              <select className="w-full border rounded px-3 py-2 text-sm" value={chatModel} onChange={(e) => setChatModel(e.target.value)} aria-label="Режим чата">
                 {chatModels.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
@@ -193,16 +177,13 @@ export function AIChat() {
 
       {tab === "image" && (
         <div className="pushkin-card p-6 space-y-4">
-          <div>
-            <label className="text-xs text-muted-foreground">Модель</label>
-            <select className="w-full border rounded px-3 py-2 text-sm mt-1" value={imageModel} onChange={(e) => setImageModel(e.target.value)}>
+          {imageModels.length > 1 && (
+            <select className="w-full border rounded px-3 py-2 text-sm" value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Стиль картинки">
               {imageModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}{m.desc ? ` — ${m.desc}` : ""}
-                </option>
+                <option key={m.id} value={m.id}>{m.label}</option>
               ))}
             </select>
-          </div>
+          )}
           <div className="suggest-chips">
             {imageSuggestions.map((s) => (
               <button key={s} type="button" className="suggest-chip" onClick={() => setImagePrompt(s)}>
@@ -229,13 +210,10 @@ export function AIChat() {
           {imageError && <p className="text-sm text-red-600 m-0">{imageError}</p>}
           {generatedImage && (
             <div className="space-y-2 ai-image-result">
-              {(imageProvider === "pollinations" || imageProvider === "openrouter") && (
-                <p className="text-xs text-muted-foreground m-0">✨ Сгенерировано нейросетью</p>
-              )}
               {imageProvider === "local-poster" && (
-                <p className="text-xs text-amber-700 m-0">Заглушка — API недоступен</p>
+                <p className="text-xs text-amber-700 m-0">Не удалось нарисовать — попробуйте ещё раз</p>
               )}
-              <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border shadow-md" />
+              <img src={generatedImage} alt="Картинка" className="w-full rounded-lg border shadow-md" />
               <a href={generatedImage.split("?")[0]} download="pushkin-ai.jpg" className="btn-hero-secondary text-sm inline-block no-underline">
                 Скачать
               </a>

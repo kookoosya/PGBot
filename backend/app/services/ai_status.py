@@ -52,28 +52,25 @@ def get_ai_status() -> dict:
         if poll_img_ok:
             image_provider = "pollinations"
             ready = True
-            message = "ИИ подключён через Pollinations (чат и картинки)."
+            message = "ИИ работает."
         elif or_ok:
             image_provider = "openrouter"
             ready = True
-            message = "Чат через Pollinations, картинки через OpenRouter."
+            message = "ИИ работает."
         else:
             image_provider = "local-poster"
             ready = True
-            message = (
-                "Чат через Pollinations. Для картинок нужен sk_-ключ с enter.pollinations.ai "
-                "или пополните OpenRouter."
-            )
+            message = "Чат работает. Картинки временно недоступны."
     elif or_ok:
         chat_provider = "openrouter"
         image_provider = "openrouter"
         ready = True
-        message = "ИИ подключён через OpenRouter (GPT + Gemini Image)."
+        message = "ИИ работает."
     elif gemini_ok:
         chat_provider = "google"
         image_provider = "local-fallback"
         ready = True
-        message = "Чат через Gemini. Для картинок добавьте OPENROUTER_API_KEY или POLLINATIONS_API_KEY."
+        message = "ИИ работает (только чат)."
     else:
         chat_provider = "local"
         image_provider = "local-poster"
@@ -102,14 +99,7 @@ def get_ai_status() -> dict:
         "message": message,
         "limits": {
             "site_daily": s.AI_FREE_DAILY_LIMIT,
-            "site_note": (
-                f"На портале — {s.AI_FREE_DAILY_LIMIT} сообщений/картинок в день на человека. "
-                "Лимит обновляется в полночь."
-            ),
-            "providers_note": (
-                "У нейросетей свои лимиты: Gemini — квота Google (запросов/мин и в день), "
-                "OpenRouter — баланс кредитов, Pollinations — pollen на аккаунте. "
-                "При исчерпании квоты ответ может прийти с задержкой или через другой провайдер."
-            ),
+            "site_note": f"{s.AI_FREE_DAILY_LIMIT} запросов в день на человека.",
+            "providers_note": "",
         },
     }
