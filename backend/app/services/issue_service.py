@@ -161,12 +161,16 @@ async def _change_issue_status(
 
 async def get_issue_details(db: AsyncSession, issue_id: int) -> Issue | None:
     """Load an issue with photos, AI analysis and comments eagerly fetched."""
-    result = await db.execute(
-        select(Issue)
-        .options(*_ISSUE_DETAIL_LOADS)
-        .where(Issue.id == issue_id)
-    )
-    issue = result.scalar_one_or_none()
+    try:
+        result = await db.execute(
+            select(Issue)
+            .options(*_ISSUE_DETAIL_LOADS)
+            .where(Issue.id == issue_id)
+        )
+        issue = result.scalar_one_or_none()
+    except Exception:
+        logger.exception("Failed to load issue #%s", issue_id)
+        raise
     if issue is None:
         logger.debug("Issue %s not found", issue_id)
     return issue
@@ -191,8 +195,17 @@ async def get_issues_for_user(
     if status is not None:
         query = query.where(Issue.status == status)
 
-    result = await db.execute(query)
-    issues = list(result.scalars().all())
+    try:
+        result = await db.execute(query)
+        issues = list(result.scalars().all())
+    except Exception:
+        logger.exception(
+            "Failed to load issues for user %s (status=%s, limit=%s)",
+            user.id,
+            status.value if status else None,
+            safe_limit,
+        )
+        raise
     logger.debug(
         "Loaded %s issue(s) for user %s (status=%s, limit=%s)",
         len(issues),
@@ -328,8 +341,16 @@ async def add_issue_comment(
         text=text,
         is_internal=is_internal,
     )
-    db.add(comment)
-    await db.flush()
+    try:
+        db.add(comment)
+        await db.flush()
+    except Exception:
+        logger.exception(
+            "Failed to add comment to issue #%s by user %s",
+            issue.id,
+            author.id,
+        )
+        raise
     logger.debug(
         "Comment added to issue #%s by user %s (internal=%s)",
         issue.id,

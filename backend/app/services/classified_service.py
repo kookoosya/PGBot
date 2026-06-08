@@ -482,11 +482,26 @@ async def _validate_create_input(db: AsyncSession, data: ClassifiedCreateInput) 
             "Текст похож на мошенническую схему. Уберите требование предоплаты или перевода.",
         )
 
-    rate_err = await check_phone_rate_limit(db, data.phone)
+    try:
+        rate_err = await check_phone_rate_limit(db, data.phone)
+    except Exception:
+        logger.exception(
+            "Rate limit check failed for classified ad (phone=%r)",
+            data.phone,
+        )
+        raise
     if rate_err:
         raise ClassifiedValidationError(rate_err, status_code=429)
 
-    dup_err = await check_recent_duplicate(db, data.phone, data.title)
+    try:
+        dup_err = await check_recent_duplicate(db, data.phone, data.title)
+    except Exception:
+        logger.exception(
+            "Duplicate check failed for classified ad (phone=%r title=%r)",
+            data.phone,
+            data.title,
+        )
+        raise
     if dup_err:
         raise ClassifiedValidationError(dup_err)
 

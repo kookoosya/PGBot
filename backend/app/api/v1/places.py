@@ -1,10 +1,8 @@
-import math
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import case, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
@@ -38,99 +36,18 @@ from app.schemas.place import (
 from app.services.map_routes import get_map_routes
 from app.services.map_sync import sync_all_map_data
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
-from app.services.schedule import format_opening_hours
+from app.services.place_service import (
+    PlaceNotFoundError,
+    PlaceSearchParams,
+    PlaceSortField,
+    build_place_response,
+    get_place_details,
+    search_places,
+)
 from app.services.yandex_sync import sync_places_from_yandex
 
 router = APIRouter()
 settings = get_settings()
-
-SHOP_CATEGORIES = {
-    PlaceCategory.SHOP, PlaceCategory.SUPERMARKET, PlaceCategory.PHARMACY,
-    PlaceCategory.TYRE, PlaceCategory.AUTO,
-}
-
-LODGING_CATEGORIES = {PlaceCategory.HOTEL}
-
-USEFUL_CATEGORIES = {
-    PlaceCategory.BANK,
-    PlaceCategory.POST,
-    PlaceCategory.GOVERNMENT,
-    PlaceCategory.HOSPITAL,
-    PlaceCategory.TRANSPORT,
-    PlaceCategory.PARKING,
-}
-
-SOURCE_PRIORITY = case(
-    (Place.external_source == "reference", 0),
-    (Place.external_source == "yandex", 1),
-    (Place.external_source == "seed", 2),
-    (Place.external_source == "osm", 3),
-    else_=4,
-)
-
-EFFECTIVE_RATING = case(
-    (Place.external_rating > 0, Place.external_rating),
-    else_=Place.avg_rating,
-)
-EFFECTIVE_REVIEWS = case(
-    (Place.external_review_count > 0, Place.external_review_count),
-    else_=Place.review_count,
-)
-
-
-def _radius_bbox(radius_km: float) -> tuple[float, float, float, float]:
-    lat_delta = radius_km / 111.0
-    lng_delta = radius_km / (111.0 * math.cos(math.radians(settings.MAP_CENTER_LAT)))
-    return (
-        settings.MAP_CENTER_LAT - lat_delta,
-        settings.MAP_CENTER_LAT + lat_delta,
-        settings.MAP_CENTER_LNG - lng_delta,
-        settings.MAP_CENTER_LNG + lng_delta,
-    )
-
-
-def _settlement_bbox() -> tuple[float, float, float, float]:
-    return _radius_bbox(8.0)
-
-
-def _district_bbox() -> tuple[float, float, float, float]:
-    return _radius_bbox(settings.MAP_SYNC_RADIUS_KM)
-
-
-def _rating_meta(p: Place) -> dict:
-    if p.external_rating > 0:
-        source = "yandex" if p.external_source == "yandex" else "reference"
-        return {
-            "display_rating": p.external_rating,
-            "display_review_count": p.external_review_count,
-            "rating_source": source,
-        }
-    if p.avg_rating > 0:
-        return {
-            "display_rating": p.avg_rating,
-            "display_review_count": p.review_count,
-            "rating_source": "users",
-        }
-    return {"display_rating": 0.0, "display_review_count": 0, "rating_source": None}
-
-
-def _place_response(p: Place) -> PlaceResponse:
-    meta = _rating_meta(p)
-    return PlaceResponse(
-        id=p.id, name=p.name, category=p.category,
-        category_label=PLACE_CATEGORY_LABELS.get(p.category, p.category),
-        description=p.description, address=p.address,
-        latitude=p.latitude, longitude=p.longitude,
-        phone=p.phone, website=p.website,
-        opening_hours=format_opening_hours(p.opening_hours) or p.opening_hours,
-        avg_rating=p.avg_rating, review_count=p.review_count,
-        external_rating=p.external_rating,
-        external_review_count=p.external_review_count,
-        yandex_url=p.yandex_url,
-        complaint_count=p.complaint_count,
-        last_synced_at=p.last_synced_at,
-        **meta,
-    )
 
 
 @router.get("/categories")
@@ -202,80 +119,40 @@ async def list_places(
     east: float | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=500),
-    sort: str = Query("rating", pattern="^(rating|name)$"),
+    sort: PlaceSortField = Query("rating"),
     district: bool = False,
 ):
-    query = select(Place).where(Place.is_active.is_(True))
-    if category:
-        query = query.where(Place.category == category)
-    if shops_only:
-        query = query.where(Place.category.in_(SHOP_CATEGORIES))
-    if useful_only:
-        query = query.where(Place.category.in_(USEFUL_CATEGORIES))
-    if search:
-        query = query.where(
-            Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%")
-        )
-    if min_rating:
-        query = query.where(EFFECTIVE_RATING >= min_rating)
-    if all(v is not None for v in (south, west, north, east)):
-        query = query.where(
-            Place.latitude >= south, Place.latitude <= north,
-            Place.longitude >= west, Place.longitude <= east,
-        )
-    else:
-        use_district = district or category in LODGING_CATEGORIES
-        lat_min, lat_max, lng_min, lng_max = _district_bbox() if use_district else _settlement_bbox()
-        query = query.where(
-            Place.latitude >= lat_min, Place.latitude <= lat_max,
-            Place.longitude >= lng_min, Place.longitude <= lng_max,
-        )
-
-    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
-    if sort == "rating":
-        query = query.order_by(
-            SOURCE_PRIORITY,
-            EFFECTIVE_RATING.desc(),
-            EFFECTIVE_REVIEWS.desc(),
-            Place.name,
-        )
-    else:
-        query = query.order_by(SOURCE_PRIORITY, Place.name)
-    query = query.offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(query)
-    places = result.scalars().all()
-    return PlaceListResponse(items=[_place_response(p) for p in places], total=total)
+    result = await search_places(
+        db,
+        PlaceSearchParams(
+            category=category,
+            search=search,
+            shops_only=shops_only,
+            useful_only=useful_only,
+            min_rating=min_rating,
+            south=south,
+            west=west,
+            north=north,
+            east=east,
+            page=page,
+            page_size=page_size,
+            sort_by=sort,
+            district=district,
+        ),
+    )
+    return PlaceListResponse(
+        items=[build_place_response(place) for place in result.items],
+        total=result.total,
+    )
 
 
 @router.get("/{place_id}", response_model=PlaceDetailResponse)
 async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(
-        select(Place)
-        .options(selectinload(Place.reviews), selectinload(Place.complaints))
-        .where(Place.id == place_id)
-    )
-    place = result.scalar_one_or_none()
-    if not place:
-        raise HTTPException(status_code=404, detail="Место не найдено")
-
-    reviews = sorted(place.reviews, key=lambda r: r.created_at, reverse=True)[:10]
-    complaints = sorted(place.complaints, key=lambda c: c.created_at, reverse=True)[:5]
-
-    resp = _place_response(place)
-    return PlaceDetailResponse(
-        **resp.model_dump(),
-        reviews=[PlaceReviewResponse.model_validate(r) for r in reviews],
-        recent_complaints=[
-            PlaceComplaintResponse(
-                id=c.id, complaint_type=c.complaint_type,
-                complaint_label=MAP_REPORT_LABELS.get(c.complaint_type)
-                or SHOP_COMPLAINT_LABELS.get(c.complaint_type, c.complaint_type),
-                description=c.description, price_tagged=c.price_tagged,
-                price_charged=c.price_charged, status=c.status, created_at=c.created_at,
-            )
-            for c in complaints
-        ],
-    )
+    try:
+        detail = await get_place_details(db, place_id)
+    except PlaceNotFoundError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return detail.response
 
 
 @router.post("/{place_id}/reviews", response_model=PlaceReviewResponse, status_code=201)
