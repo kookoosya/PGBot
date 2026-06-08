@@ -18,13 +18,13 @@ POLLINATIONS_IMAGE_URL = f"{POLLINATIONS_BASE}/image"
 POLLINATIONS_CHAT_URL = f"{POLLINATIONS_BASE}/v1/chat/completions"
 
 POLLINATIONS_CHAT_MODELS = {
-    "gemini-flash": "gemini-3.5-flash",
-    "gemini": "gemini",
+    "gemini-flash": "openai",
+    "gemini": "openai",
     "openai-fast": "openai-fast",
     "openai": "openai",
-    "pollinations": "gemini-3.5-flash",
-    "gemini-2.0-flash": "gemini-3.5-flash",
-    "gemini-1.5-pro": "gemini",
+    "pollinations": "openai",
+    "gemini-2.0-flash": "openai-fast",
+    "gemini-1.5-pro": "openai",
 }
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
