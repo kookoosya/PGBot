@@ -14,7 +14,7 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "vk_subscribers",
-        sa.Column("peer_id", sa.BigInteger(), nullable=False),
+        sa.Column("peer_id", sa.BigInteger(), autoincrement=False, nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("peer_id"),
     )
