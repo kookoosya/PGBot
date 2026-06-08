@@ -16,7 +16,7 @@ BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
 # Синхронизируем API-ключи из .deploy.env до перезапуска контейнеров
 bash "$SCRIPT_DIR/sync-vps-env.sh" 2>/dev/null || true
 
-REMOTE="cd /opt/pgbot && git fetch origin $BRANCH && git checkout $BRANCH && git pull origin $BRANCH && bash scripts/setup-russia-mirror.sh && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head"
+REMOTE="cd /opt/pgbot && git fetch origin $BRANCH && git checkout $BRANCH && git pull origin $BRANCH && bash scripts/vps-sync-ai-keys.sh && bash scripts/setup-russia-mirror.sh && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head"
 
 export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"
 

@@ -216,11 +216,11 @@ export function AIChat() {
           {imageError && <p className="text-sm text-red-600 m-0">{imageError}</p>}
           {generatedImage && (
             <div className="space-y-2 ai-image-result">
-              {imageProvider === "pollinations" && (
+              {(imageProvider === "pollinations" || imageProvider === "openrouter") && (
                 <p className="text-xs text-muted-foreground m-0">✨ Сгенерировано нейросетью</p>
               )}
               {imageProvider === "local-poster" && (
-                <p className="text-xs text-amber-700 m-0">Заглушка — API-ключ не настроен на сервере</p>
+                <p className="text-xs text-amber-700 m-0">Заглушка — API недоступен</p>
               )}
               <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border shadow-md" />
               <a href={generatedImage.split("?")[0]} download="pushkin-ai.jpg" className="btn-hero-secondary text-sm inline-block no-underline">

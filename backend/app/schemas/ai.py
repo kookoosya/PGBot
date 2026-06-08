@@ -65,5 +65,6 @@ class AIStatusResponse(BaseModel):
     chat_provider: str
     image_provider: str
     pollinations_configured: bool
+    openrouter_configured: bool = False
     gemini_configured: bool
     message: str

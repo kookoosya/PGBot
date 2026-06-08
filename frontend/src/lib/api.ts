@@ -525,6 +525,7 @@ export interface AIStatus {
   chat_provider: string;
   image_provider: string;
   pollinations_configured: boolean;
+  openrouter_configured?: boolean;
   gemini_configured: boolean;
   message: string;
 }
