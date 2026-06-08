@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -32,7 +31,13 @@ from app.schemas.issue import (
 from app.core.rate_limit import limiter
 from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
-from app.services.issue_service import add_issue_comment, update_issue_status as apply_issue_status
+from app.services.issue_service import (
+    IssueActorContext,
+    add_issue_comment,
+    get_issue_details,
+    resolve_issue,
+    update_issue_status,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -72,6 +77,23 @@ def _can_view_issue(user: User, issue: Issue) -> bool:
     return False
 
 
+def _actor(request: Request, user: User) -> IssueActorContext:
+    return IssueActorContext(actor_id=user.id, ip_address=get_client_ip(request))
+
+
+async def _require_issue(
+    db: AsyncSession,
+    issue_id: int,
+    user: User,
+) -> Issue:
+    issue = await get_issue_details(db, issue_id)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    if not _can_view_issue(user, issue):
+        raise HTTPException(status_code=403, detail="Access denied")
+    return issue
+
+
 @router.post("", response_model=IssueResponse, status_code=201)
 @limiter.limit(settings.ISSUE_RATE_LIMIT)
 async def create_issue(
@@ -106,12 +128,8 @@ async def create_issue(
             detail="Обращение не принято. Опишите конкретную проблему без рекламы и оскорблений.",
         )
 
-    result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue.id)
-    )
-    return _issue_to_response(result.scalar_one())
+    loaded = await get_issue_details(db, issue.id)
+    return _issue_to_response(loaded or issue)
 
 
 @router.get("", response_model=IssueListResponse)
@@ -166,16 +184,7 @@ async def get_issue(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
-    )
-    issue = result.scalar_one_or_none()
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-    if not _can_view_issue(current_user, issue):
-        raise HTTPException(status_code=403, detail="Access denied")
+    issue = await _require_issue(db, issue_id, current_user)
     return _issue_to_response(issue)
 
 
@@ -187,16 +196,7 @@ async def update_issue(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
-    )
-    issue = result.scalar_one_or_none()
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-    if not _can_view_issue(current_user, issue):
-        raise HTTPException(status_code=403, detail="Access denied")
+    issue = await _require_issue(db, issue_id, current_user)
 
     update_data = data.model_dump(exclude_unset=True)
     if not is_owner_user(current_user):
@@ -214,32 +214,31 @@ async def update_issue(
 
 
 @router.patch("/{issue_id}/status", response_model=IssueResponse)
-async def update_issue_status(
+async def update_issue_status_endpoint(
     issue_id: int,
     data: IssueStatusUpdate,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
-    )
-    issue = result.scalar_one_or_none()
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-    if not _can_view_issue(current_user, issue):
-        raise HTTPException(status_code=403, detail="Access denied")
+    issue = await _require_issue(db, issue_id, current_user)
+    actor = _actor(request, current_user)
 
-    await apply_issue_status(
-        db,
-        issue,
-        status=data.status,
-        resolution_text=data.resolution_text,
-        actor_id=current_user.id,
-        ip_address=get_client_ip(request),
-    )
+    if data.status == IssueStatus.RESOLVED:
+        await resolve_issue(
+            db,
+            issue,
+            resolution_text=data.resolution_text,
+            actor=actor,
+        )
+    else:
+        await update_issue_status(
+            db,
+            issue,
+            status=data.status,
+            resolution_text=data.resolution_text,
+            actor=actor,
+        )
     return _issue_to_response(issue)
 
 

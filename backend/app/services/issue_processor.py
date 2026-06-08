@@ -1,3 +1,7 @@
+"""Incoming complaint processing: AI analysis, deduplication and notifications.
+
+Lifecycle updates on existing issues live in ``issue_service``.
+"""
 import asyncio
 import logging
 from datetime import datetime, timezone
@@ -85,6 +89,7 @@ async def get_or_create_web_resident(
     phone: str | None = None,
     full_name: str | None = None,
 ) -> User:
+    """Return an existing web resident or create an anonymous site user."""
     if user:
         return user
 
@@ -108,6 +113,7 @@ async def get_or_create_web_resident(
 
 
 async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
+    """Return an existing VK resident or create a new one linked to ``vk_id``."""
     result = await db.execute(
         select(User).options(selectinload(User.role)).where(User.vk_id == vk_id)
     )
@@ -126,6 +132,7 @@ async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
 
 
 async def find_similar_issues(db: AsyncSession, text: str, category: str | None) -> list[Issue]:
+    """Find open parent issues that may be duplicates of the complaint text."""
     query = (
         select(Issue)
         .options(selectinload(Issue.ai_analysis))
@@ -145,6 +152,7 @@ async def find_similar_issues(db: AsyncSession, text: str, category: str | None)
 
 
 async def find_department_by_name(db: AsyncSession, name: str) -> Department | None:
+    """Match a department by partial name (case-insensitive)."""
     result = await db.execute(
         select(Department).where(Department.name.ilike(f"%{name}%"), Department.is_active.is_(True))
     )
@@ -408,6 +416,7 @@ async def process_incoming_message(
     message_id: int | None = None,
     photos: list[dict] | None = None,
 ) -> Issue | None:
+    """Process a VK complaint: validate, analyze, deduplicate, persist and reply."""
     if not text or len(text.strip()) < 5:
         await send_message(
             peer_id,
@@ -481,6 +490,7 @@ async def process_web_complaint(
     address: str | None = None,
     category: str | None = None,
 ) -> Issue:
+    """Process a web-form complaint through AI analysis and persistence."""
     resident = await get_or_create_web_resident(
         db, user=user, phone=phone, full_name=full_name
     )
