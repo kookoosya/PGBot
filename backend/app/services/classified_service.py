@@ -1,4 +1,4 @@
-"""Classified ads — creation, moderation and quota (extracted from API layer)."""
+"""Classified ads — creation, moderation, search and quota (extracted from API layer)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ from app.models.enums import (
     CLASSIFIED_LABELS,
     ClassifiedCategory,
     ClassifiedPaymentStatus,
+    JOB_CLASSIFIED_CATEGORIES,
+    SERVICE_CLASSIFIED_CATEGORIES,
 )
 from app.models.user import User
 from app.services.audit import log_action
@@ -63,12 +65,40 @@ class ClassifiedActorContext:
 
 
 @dataclass(frozen=True, slots=True)
+class ClassifiedSearchParams:
+    """Filters for ``search_classifieds``."""
+
+    category: Optional[ClassifiedCategory] = None
+    search: Optional[str] = None
+    payment_status: Optional[ClassifiedPaymentStatus] = ClassifiedPaymentStatus.APPROVED
+    is_active: Optional[bool] = True
+    user_id: Optional[int] = None
+    phone: Optional[str] = None
+    services_only: bool = False
+    jobs_only: bool = False
+    ads_only: bool = False
+    page: int = 1
+    page_size: int = 20
+
+
+@dataclass(frozen=True, slots=True)
+class ClassifiedSearchResult:
+    """Paginated classified ad search result."""
+
+    items: list[ClassifiedAd]
+    total: int
+    page: int
+    page_size: int
+
+
+@dataclass(frozen=True, slots=True)
 class ClassifiedCreateResult:
     """Result of a successful ad submission."""
 
     ad: ClassifiedAd
     message: str
     free: bool
+    owner_notified: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,10 +108,12 @@ class ModerationResult:
     ad: ClassifiedAd
     message: str
     subscribers_notified: int = 0
+    vk_notified: bool = True
+    audit_logged: bool = True
 
 
 class ClassifiedValidationError(Exception):
-    """Business validation failure when creating an ad."""
+    """Business validation failure when creating or loading an ad."""
 
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
         super().__init__(detail)
@@ -130,7 +162,74 @@ async def get_classified_quota(
     }
 
 
+async def search_classifieds(
+    db: AsyncSession,
+    params: ClassifiedSearchParams,
+) -> ClassifiedSearchResult:
+    """Search and filter classified ads with pagination."""
+    page = max(1, params.page)
+    page_size = max(1, min(params.page_size, 100))
+    query = select(ClassifiedAd)
+
+    if params.payment_status is not None:
+        query = query.where(ClassifiedAd.payment_status == params.payment_status)
+    if params.is_active is not None:
+        query = query.where(ClassifiedAd.is_active.is_(params.is_active))
+    if params.user_id is not None:
+        query = query.where(ClassifiedAd.user_id == params.user_id)
+    if params.phone is not None:
+        query = query.where(ClassifiedAd.phone == params.phone)
+    if params.services_only:
+        query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
+    if params.jobs_only:
+        query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
+    elif params.ads_only:
+        query = query.where(ClassifiedAd.category.notin_(JOB_CLASSIFIED_CATEGORIES))
+    if params.category is not None:
+        query = query.where(ClassifiedAd.category == params.category)
+    if params.search:
+        pattern = f"%{params.search}%"
+        query = query.where(
+            ClassifiedAd.title.ilike(pattern) | ClassifiedAd.description.ilike(pattern),
+        )
+
+    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    result = await db.execute(
+        query.order_by(ClassifiedAd.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    items = list(result.scalars().all())
+    logger.debug(
+        "Classified search: %s item(s), total=%s page=%s page_size=%s",
+        len(items),
+        total,
+        page,
+        page_size,
+    )
+    return ClassifiedSearchResult(items=items, total=total, page=page, page_size=page_size)
+
+
+async def increment_ad_views(db: AsyncSession, ad_id: int) -> ClassifiedAd:
+    """Increment the view counter for an active, approved ad."""
+    result = await db.execute(
+        select(ClassifiedAd).where(
+            ClassifiedAd.id == ad_id,
+            ClassifiedAd.is_active.is_(True),
+            ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
+        )
+    )
+    ad = result.scalar_one_or_none()
+    if ad is None:
+        raise ClassifiedValidationError("Объявление не найдено", status_code=404)
+
+    ad.views_count += 1
+    logger.debug("Classified ad #%s view count incremented to %s", ad.id, ad.views_count)
+    return ad
+
+
 async def _validate_create_input(db: AsyncSession, data: ClassifiedCreateInput) -> None:
+    """Run all submission validations; raise ``ClassifiedValidationError`` on failure."""
     if data.website_url:
         raise ClassifiedValidationError(
             "Не удалось отправить форму. Обновите страницу.",
@@ -163,7 +262,13 @@ async def _validate_create_input(db: AsyncSession, data: ClassifiedCreateInput) 
         )
 
 
-async def _notify_owner_new_ad(ad: ClassifiedAd, data: ClassifiedCreateInput, *, placement_fee: int) -> bool:
+async def _notify_owner_new_ad(
+    ad: ClassifiedAd,
+    data: ClassifiedCreateInput,
+    *,
+    placement_fee: int,
+) -> bool:
+    """Notify site owner about a new pending ad; return ``True`` on success."""
     cat_label = CLASSIFIED_LABELS.get(data.category, data.category)
     fee_line = f"💳 {placement_fee} ₽" if placement_fee else "🆓 Бесплатное размещение"
     try:
@@ -179,7 +284,59 @@ async def _notify_owner_new_ad(ad: ClassifiedAd, data: ClassifiedCreateInput, *,
         )
         return True
     except Exception:
-        logger.exception("Owner notification failed for classified ad #%s", ad.id)
+        logger.exception(
+            "Owner notification failed for classified ad #%s (title=%r)",
+            ad.id,
+            data.title,
+        )
+        return False
+
+
+async def _safe_classified_audit(
+    db: AsyncSession,
+    action: str,
+    ad_id: int,
+    actor: ClassifiedActorContext,
+    details: dict[str, Any],
+) -> bool:
+    """Write audit log for classified moderation; return ``True`` on success."""
+    try:
+        await log_action(
+            db,
+            action,
+            "classified",
+            ad_id,
+            user_id=actor.actor_id,
+            details=details,
+            ip_address=actor.ip_address,
+        )
+        return True
+    except Exception:
+        logger.exception(
+            "Audit log failed for classified #%s: action=%s actor_id=%s",
+            ad_id,
+            action,
+            actor.actor_id,
+        )
+        return False
+
+
+async def _safe_notify_vk(
+    ad: ClassifiedAd,
+    message: str,
+    *,
+    context: str,
+) -> bool:
+    """Send VK message to ad author; return ``True`` on success."""
+    try:
+        await notify_vk_user(ad.contact_vk or ad.vk_id, message)
+        return True
+    except Exception:
+        logger.exception(
+            "VK notification failed for classified ad #%s during %s",
+            ad.id,
+            context,
+        )
         return False
 
 
@@ -224,37 +381,20 @@ async def create_classified_ad(
     db.add(ad)
     await db.flush()
 
-    await _notify_owner_new_ad(ad, data, placement_fee=placement_fee)
-    logger.info("Classified ad #%s created by user %s", ad.id, user_id)
+    owner_notified = await _notify_owner_new_ad(ad, data, placement_fee=placement_fee)
+    if not owner_notified:
+        logger.warning(
+            "Classified ad #%s created but owner was not notified",
+            ad.id,
+        )
 
+    logger.info("Classified ad #%s created by user %s", ad.id, user_id)
     return ClassifiedCreateResult(
         ad=ad,
         message="Заявка принята бесплатно! Объявление появится после модерации.",
         free=True,
+        owner_notified=owner_notified,
     )
-
-
-async def _safe_classified_audit(
-    db: AsyncSession,
-    action: str,
-    ad_id: int,
-    actor: ClassifiedActorContext,
-    details: dict[str, Any],
-) -> bool:
-    try:
-        await log_action(
-            db,
-            action,
-            "classified",
-            ad_id,
-            user_id=actor.actor_id,
-            details=details,
-            ip_address=actor.ip_address,
-        )
-        return True
-    except Exception:
-        logger.exception("Audit log failed for classified #%s action %s", ad_id, action)
-        return False
 
 
 async def moderate_classified_ad(
@@ -270,8 +410,6 @@ async def moderate_classified_ad(
     if not ad:
         raise ClassifiedValidationError("Объявление не найдено", status_code=404)
 
-    subscribers_notified = 0
-
     if action == "approve":
         ad.is_active = True
         ad.payment_status = ClassifiedPaymentStatus.APPROVED
@@ -283,49 +421,69 @@ async def moderate_classified_ad(
             f"Срок: {settings.CLASSIFIED_PERIOD_DAYS} дней\n\n"
             "Жители посёлка уже видят его на портале. Удачных сделок!"
         )
-        try:
-            await notify_vk_user(ad.contact_vk or ad.vk_id, vk_msg)
-        except Exception:
-            logger.exception("VK notify failed on approve for ad #%s", ad.id)
+        vk_notified = await _safe_notify_vk(ad, vk_msg, context="approve")
 
-        from app.services.vk_bot import notify_subscribers_new_ad
-
+        subscribers_notified = 0
         try:
+            from app.services.vk_bot import notify_subscribers_new_ad
+
             subscribers_notified = await notify_subscribers_new_ad(db, ad)
         except Exception:
-            logger.exception("Subscriber notify failed for ad #%s", ad.id)
+            logger.exception(
+                "Subscriber notification failed for classified ad #%s on approve",
+                ad.id,
+            )
 
-        await _safe_classified_audit(
+        audit_logged = await _safe_classified_audit(
             db,
             "classified_approve",
             ad.id,
             actor,
-            {"payment_status": ad.payment_status.value},
+            {"payment_status": ad.payment_status.value, "vk_notified": vk_notified},
         )
+        if not audit_logged:
+            logger.warning(
+                "Classified ad #%s approved but audit was not logged (actor=%s)",
+                ad.id,
+                actor.actor_id,
+            )
+
         logger.info("Classified ad #%s approved by user %s", ad.id, actor.actor_id)
         return ModerationResult(
             ad=ad,
             message="Объявление опубликовано",
             subscribers_notified=subscribers_notified,
+            vk_notified=vk_notified,
+            audit_logged=audit_logged,
         )
 
     ad.is_active = False
     ad.payment_status = ClassifiedPaymentStatus.REJECTED
-    try:
-        await notify_vk_user(
-            ad.contact_vk or ad.vk_id,
-            f"❌ Объявление «{ad.title}» не прошло модерацию.\n"
-            "Проверьте оплату и текст. Можно подать заново.",
-        )
-    except Exception:
-        logger.exception("VK notify failed on reject for ad #%s", ad.id)
+    vk_notified = await _safe_notify_vk(
+        ad,
+        f"❌ Объявление «{ad.title}» не прошло модерацию.\n"
+        "Проверьте оплату и текст. Можно подать заново.",
+        context="reject",
+    )
 
-    await _safe_classified_audit(
+    audit_logged = await _safe_classified_audit(
         db,
         "classified_reject",
         ad.id,
         actor,
-        {"payment_status": ad.payment_status.value},
+        {"payment_status": ad.payment_status.value, "vk_notified": vk_notified},
     )
+    if not audit_logged:
+        logger.warning(
+            "Classified ad #%s rejected but audit was not logged (actor=%s)",
+            ad.id,
+            actor.actor_id,
+        )
+
     logger.info("Classified ad #%s rejected by user %s", ad.id, actor.actor_id)
-    return ModerationResult(ad=ad, message="Объявление отклонено")
+    return ModerationResult(
+        ad=ad,
+        message="Объявление отклонено",
+        vk_notified=vk_notified,
+        audit_logged=audit_logged,
+    )

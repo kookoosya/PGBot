@@ -21,10 +21,13 @@ from app.models.user import User
 from app.services.classified_service import (
     ClassifiedActorContext,
     ClassifiedCreateInput,
+    ClassifiedSearchParams,
     ClassifiedValidationError,
     create_classified_ad,
     get_classified_quota,
+    increment_ad_views,
     moderate_classified_ad,
+    search_classifieds,
 )
 
 router = APIRouter()
@@ -94,6 +97,46 @@ def _to_create_input(data: ClassifiedCreate) -> ClassifiedCreateInput:
 
 def _classified_actor(request: Request, user: User) -> ClassifiedActorContext:
     return ClassifiedActorContext(actor_id=user.id, ip_address=get_client_ip(request))
+
+
+def _to_response(ad: ClassifiedAd) -> ClassifiedResponse:
+    return ClassifiedResponse(
+        id=ad.id,
+        category=ad.category,
+        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
+        title=ad.title,
+        description=ad.description,
+        price=ad.price,
+        price_unit=ad.price_unit,
+        phone=ad.phone,
+        author_name=ad.author_name,
+        address=ad.address,
+        contact_telegram=ad.contact_telegram,
+        views_count=ad.views_count,
+        created_at=ad.created_at.isoformat(),
+    )
+
+
+def _to_pending_response(ad: ClassifiedAd) -> ClassifiedPendingResponse:
+    return ClassifiedPendingResponse(
+        id=ad.id,
+        category=ad.category,
+        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
+        title=ad.title,
+        description=ad.description,
+        price=ad.price,
+        price_unit=ad.price_unit,
+        phone=ad.phone,
+        author_name=ad.author_name,
+        address=ad.address,
+        contact_telegram=ad.contact_telegram,
+        views_count=ad.views_count,
+        created_at=ad.created_at.isoformat(),
+        payment_status=ad.payment_status,
+        payment_reference=ad.payment_reference,
+        placement_fee=ad.placement_fee,
+        contact_vk=ad.contact_vk,
+    )
 
 
 @router.get("/payment-info")
@@ -210,38 +253,23 @@ async def list_ads(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    query = select(ClassifiedAd).where(
-        ClassifiedAd.is_active.is_(True),
-        ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
+    result = await search_classifieds(
+        db,
+        ClassifiedSearchParams(
+            category=category,
+            search=search,
+            services_only=services_only,
+            jobs_only=jobs_only,
+            ads_only=ads_only,
+            page=page,
+            page_size=page_size,
+        ),
     )
-    if services_only:
-        query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
-    if jobs_only:
-        query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
-    elif ads_only:
-        query = query.where(ClassifiedAd.category.notin_(JOB_CLASSIFIED_CATEGORIES))
-    if category:
-        query = query.where(ClassifiedAd.category == category)
-    if search:
-        query = query.where(ClassifiedAd.title.ilike(f"%{search}%") | ClassifiedAd.description.ilike(f"%{search}%"))
-
-    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
-    result = await db.execute(
-        query.order_by(ClassifiedAd.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
-    )
-    items = [
-        ClassifiedResponse(
-            id=a.id, category=a.category,
-            category_label=CLASSIFIED_LABELS.get(a.category, a.category),
-            title=a.title, description=a.description,
-            price=a.price, price_unit=a.price_unit,
-            phone=a.phone, author_name=a.author_name,
-            address=a.address, contact_telegram=a.contact_telegram,
-            views_count=a.views_count, created_at=a.created_at.isoformat(),
-        )
-        for a in result.scalars().all()
-    ]
-    return {"items": items, "total": total, "page": page}
+    return {
+        "items": [_to_response(ad) for ad in result.items],
+        "total": result.total,
+        "page": result.page,
+    }
 
 
 @router.get("/pending")
@@ -249,27 +277,16 @@ async def list_pending(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(
-        select(ClassifiedAd)
-        .where(ClassifiedAd.payment_status == ClassifiedPaymentStatus.PENDING)
-        .order_by(ClassifiedAd.created_at.desc())
+    result = await search_classifieds(
+        db,
+        ClassifiedSearchParams(
+            payment_status=ClassifiedPaymentStatus.PENDING,
+            is_active=None,
+            page=1,
+            page_size=100,
+        ),
     )
-    return [
-        ClassifiedPendingResponse(
-            id=a.id, category=a.category,
-            category_label=CLASSIFIED_LABELS.get(a.category, a.category),
-            title=a.title, description=a.description,
-            price=a.price, price_unit=a.price_unit,
-            phone=a.phone, author_name=a.author_name,
-            address=a.address, contact_telegram=a.contact_telegram,
-            views_count=a.views_count, created_at=a.created_at.isoformat(),
-            payment_status=a.payment_status,
-            payment_reference=a.payment_reference,
-            placement_fee=a.placement_fee,
-            contact_vk=a.contact_vk,
-        )
-        for a in result.scalars().all()
-    ]
+    return [_to_pending_response(ad) for ad in result.items]
 
 
 @router.post("", status_code=201)
@@ -335,23 +352,9 @@ async def reject_ad(
 @router.get("/{ad_id}")
 @limiter.limit("60/minute")
 async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(
-        select(ClassifiedAd).where(
-            ClassifiedAd.id == ad_id,
-            ClassifiedAd.is_active.is_(True),
-            ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
-        )
-    )
-    ad = result.scalar_one_or_none()
-    if not ad:
-        raise HTTPException(404, "Объявление не найдено")
-    ad.views_count += 1
-    return ClassifiedResponse(
-        id=ad.id, category=ad.category,
-        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
-        title=ad.title, description=ad.description,
-        price=ad.price, price_unit=ad.price_unit,
-        phone=ad.phone, author_name=ad.author_name,
-        address=ad.address, contact_telegram=ad.contact_telegram,
-        views_count=ad.views_count, created_at=ad.created_at.isoformat(),
-    )
+    try:
+        ad = await increment_ad_views(db, ad_id)
+    except ClassifiedValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+    return _to_response(ad)

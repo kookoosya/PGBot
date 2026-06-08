@@ -65,17 +65,29 @@ async def _safe_audit(
         )
         return True
     except Exception:
-        logger.exception("Audit log failed for issue #%s action %s", issue_id, action)
+        logger.exception(
+            "Audit log failed for issue #%s: action=%s actor_id=%s ip=%s",
+            issue_id,
+            action,
+            actor.actor_id,
+            actor.ip_address,
+        )
         return False
 
 
 async def _safe_notify_status(issue: Issue) -> bool:
     """Notify resident in VK about status change; return ``True`` on success."""
+    peer_id = getattr(issue, "vk_peer_id", None)
     try:
         await notify_issue_status(issue)
         return True
     except Exception:
-        logger.exception("Failed to notify resident about issue #%s status change", issue.id)
+        logger.exception(
+            "VK status notification failed for issue #%s (status=%s peer_id=%s)",
+            issue.id,
+            _status_value(issue.status),
+            peer_id,
+        )
         return False
 
 
@@ -118,11 +130,24 @@ async def _change_issue_status(
     if extra_audit:
         details.update(extra_audit)
 
-    await _safe_audit(db, audit_action, issue.id, actor, details)
+    audited = await _safe_audit(db, audit_action, issue.id, actor, details)
+    if not audited:
+        logger.warning(
+            "Issue #%s status changed to %s but audit action %s was not logged (actor=%s)",
+            issue.id,
+            status.value,
+            audit_action,
+            actor.actor_id,
+        )
     if notify:
         notified = await _safe_notify_status(issue)
         if not notified:
-            logger.warning("Issue #%s status changed but resident was not notified", issue.id)
+            logger.warning(
+                "Issue #%s status changed to %s but resident was not notified (peer_id=%s)",
+                issue.id,
+                status.value,
+                issue.vk_peer_id,
+            )
 
     logger.info(
         "Issue #%s: %s → %s by user %s",
@@ -265,13 +290,20 @@ async def assign_issue(
     previous = issue.assignee_id
     issue.assignee_id = assignee_id
 
-    await _safe_audit(
+    audited = await _safe_audit(
         db,
         "assign_issue",
         issue.id,
         actor,
         {"assignee_id": assignee_id, "previous_assignee_id": previous},
     )
+    if not audited:
+        logger.warning(
+            "Issue #%s assigned to user %s but audit was not logged (actor=%s)",
+            issue.id,
+            assignee_id,
+            actor.actor_id,
+        )
     logger.info(
         "Issue #%s assigned to user %s by user %s",
         issue.id,
