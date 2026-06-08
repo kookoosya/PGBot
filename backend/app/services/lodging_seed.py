@@ -77,50 +77,6 @@ LODGING_PLACES: list[tuple] = [
         "+7 (81146) 2-23-21", "по брони", "https://pushkinland.ru",
         "На берегу озера, рядом с усадьбой Петровское",
     ),
-
-    # —— Посуточно (отдельная категория — не смешиваем с гостиницами) ——
-    (
-        "Квартиры посуточно — Авито", PlaceCategory.RENTAL,
-        57.0267, 28.9100, "рп. Пушкинские Горы, центр",
-        None, "актуально на Авито", "https://www.avito.ru/pushkinskie_gory/kvartiry/sdam/posutochno",
-        "Все квартиры посуточно в посёлке — свежие объявления и номера на Авито",
-    ),
-    (
-        "Дома и коттеджи посуточно — Авито", PlaceCategory.RENTAL,
-        57.0267, 28.9100, "Пушкиногорский район",
-        None, "актуально на Авито", "https://www.avito.ru/pushkinskie_gory/doma_dachi_kottedzhi/sdam/posutochno",
-        "Дома, дачи и коттеджи посуточно по району — смотрите актуальные объявления",
-    ),
-    (
-        "Квартира посуточно, ул. Ленина", PlaceCategory.RENTAL,
-        57.0265, 28.9110, "рп. Пушкинские Горы, ул. Ленина",
-        None, "от 2 суток", "https://www.avito.ru/pushkinskie_gory/kvartiry/sdam/posutochno",
-        "Студии и квартиры в историческом центре — бронь через Авито",
-    ),
-    (
-        "Дом посуточно, ул. Аэродромная, 1", PlaceCategory.RENTAL,
-        57.0178, 28.9320, "рп. Пушкинские Горы, ул. Аэродромная, 1",
-        None, "посуточно", "https://www.avito.ru/pushkinskie_gory/doma_dachi_kottedzhi/sdam/posutochno",
-        "Дом с террасой и купелью — уточняйте номер на Авито",
-    ),
-    (
-        "Дом посуточно, ул. Заозёрная, 48", PlaceCategory.RENTAL,
-        57.0295, 28.9180, "рп. Пушкинские Горы, ул. Заозёрная, 48",
-        None, "посуточно", "https://www.avito.ru/pushkinskie_gory/doma_dachi_kottedzhi/sdam/posutochno",
-        "Дом в центре посёлка — актуальный контакт на Авито",
-    ),
-    (
-        "Дача посуточно, д. Луговка", PlaceCategory.RENTAL,
-        57.0400, 28.9300, "д. Луговка, менее 1 км от Пушкинских Гор",
-        None, "посуточно", "https://www.avito.ru/pushkinskie_gory/doma_dachi_kottedzhi/sdam/posutochno",
-        "Дача с 3 спальнями — бронь через объявление на Авито",
-    ),
-    (
-        "Посуточно — Суточно.ру", PlaceCategory.RENTAL,
-        57.0267, 28.9100, "Пушкиногорский район",
-        None, "онлайн-бронь", "https://sutochno.ru/front/search?query=Пушкинские%20Горы",
-        "Альтернатива Авито — посуточная аренда с онлайн-бронированием",
-    ),
 ]
 
 

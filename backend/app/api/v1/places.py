@@ -46,7 +46,15 @@ SHOP_CATEGORIES = {
     PlaceCategory.TYRE, PlaceCategory.AUTO,
 }
 
-LODGING_CATEGORIES = {PlaceCategory.HOTEL, PlaceCategory.RENTAL}
+LODGING_CATEGORIES = {PlaceCategory.HOTEL}
+
+SOURCE_PRIORITY = case(
+    (Place.external_source == "reference", 0),
+    (Place.external_source == "yandex", 1),
+    (Place.external_source == "seed", 2),
+    (Place.external_source == "osm", 3),
+    else_=4,
+)
 
 EFFECTIVE_RATING = case(
     (Place.external_rating > 0, Place.external_rating),
@@ -199,9 +207,14 @@ async def list_places(
 
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
     if sort == "rating":
-        query = query.order_by(EFFECTIVE_RATING.desc(), EFFECTIVE_REVIEWS.desc(), Place.name)
+        query = query.order_by(
+            SOURCE_PRIORITY,
+            EFFECTIVE_RATING.desc(),
+            EFFECTIVE_REVIEWS.desc(),
+            Place.name,
+        )
     else:
-        query = query.order_by(Place.name)
+        query = query.order_by(SOURCE_PRIORITY, Place.name)
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
     places = result.scalars().all()

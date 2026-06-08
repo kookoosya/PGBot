@@ -45,7 +45,11 @@ def _item_response(item: CatalogItem, *, admin: bool = False) -> dict:
 
 @router.get("/categories")
 async def list_catalog_categories():
-    return [{"value": c.value, "label": CATALOG_CATEGORY_LABELS[c]} for c in CatalogCategory]
+    return [
+        {"value": c.value, "label": CATALOG_CATEGORY_LABELS[c]}
+        for c in CatalogCategory
+        if c not in (CatalogCategory.AVITO,)
+    ]
 
 
 @router.get("/items", response_model=list[CatalogItemResponse])
@@ -58,6 +62,8 @@ async def list_public_items(
         .where(
             CatalogItem.is_active.is_(True),
             CatalogItem.is_internal.is_(False),
+            CatalogItem.source != CatalogSource.AVITO,
+            CatalogItem.category != CatalogCategory.AVITO,
         )
         .order_by(CatalogItem.sort_order, CatalogItem.name)
     )

@@ -12,7 +12,6 @@ const CATEGORIES = [
   { value: "delivery", label: "Доставка" },
   { value: "snow_removal", label: "Снег" },
   { value: "tutoring", label: "Обучение" },
-  { value: "avito", label: "Авито" },
   { value: "other", label: "Другое" },
 ];
 
@@ -95,7 +94,7 @@ export function AdminProposals() {
               </select>
               <textarea className="w-full border rounded px-3 py-2 text-sm min-h-[80px]" placeholder="Описание" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               <input className="w-full border rounded px-3 py-2 text-sm" placeholder="Телефон" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              <input className="w-full border rounded px-3 py-2 text-sm" placeholder="Ссылка (Авито, сайт)" value={form.external_url} onChange={(e) => setForm({ ...form, external_url: e.target.value })} />
+              <input className="w-full border rounded px-3 py-2 text-sm" placeholder="Ссылка (сайт)" value={form.external_url} onChange={(e) => setForm({ ...form, external_url: e.target.value })} />
               <input className="w-full border rounded px-3 py-2 text-sm" placeholder="Цена / подсказка" value={form.price_hint} onChange={(e) => setForm({ ...form, price_hint: e.target.value })} />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.is_internal !== false} onChange={(e) => setForm({ ...form, is_internal: e.target.checked })} />

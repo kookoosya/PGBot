@@ -16,7 +16,7 @@ const STATUS: Record<string, { label: string; color: string }> = {
 const CATALOG_ICONS: Record<string, string> = {
   garden: "🌱", firewood: "🪵", grass_mowing: "🌿", delivery: "🚚",
   handyman: "🔧", snow_removal: "❄️", construction: "🏗", beauty: "💇",
-  tutoring: "📚", transport: "🚛", avito: "📢", other: "📋",
+  tutoring: "📚", transport: "🚛", other: "📋",
 };
 
 export function Services() {
@@ -136,7 +136,7 @@ export function Services() {
                       )}
                       {item.external_url && (
                         <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="btn-hero-secondary text-xs px-3 py-1.5 no-underline">
-                          {item.source === "avito" ? "Авито →" : "Подробнее →"}
+                          Подробнее →
                         </a>
                       )}
                     </div>

@@ -1,4 +1,4 @@
-"""Справочник услуг посёлка и ссылки на Авито."""
+"""Справочник услуг посёлка — без внешних агрегаторов."""
 
 import hashlib
 
@@ -8,109 +8,55 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.catalog_item import CatalogItem
 from app.models.enums import CatalogCategory, CatalogSource, CATALOG_CATEGORY_LABELS
 
-AVITO_BASE = "https://www.avito.ru/pushkinskie_gory"
-
 # name, category, description, phone, url, price_hint, address, source
 CATALOG_SEED: list[tuple] = [
     (
         "Перепахать огород",
         CatalogCategory.GARDEN,
-        "Вспашка, культивация, подготовка грядок — ищите исполнителей на Авито и в объявлениях соседей",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/predlozheniya_uslug_dlya_doma-ASgBAgICAkQeAUP0lg",
-        "договорная",
-        "Пушкинские Горы",
-        CatalogSource.AVITO,
+        "Вспашка, культивация, подготовка грядок — смотрите объявления соседей на портале",
+        None, None, "договорная", "Пушкинские Горы", CatalogSource.REFERENCE,
     ),
     (
         "Покос травы / газона",
         CatalogCategory.GRASS_MOWING,
         "Покос участков, триммер, вывоз травы — типичная услуга в посёлке летом",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug",
-        "от 500 ₽",
-        "Пушкиногорский район",
-        CatalogSource.REFERENCE,
+        None, None, "от 500 ₽", "Пушкиногорский район", CatalogSource.REFERENCE,
     ),
     (
         "Дрова / колка / доставка",
         CatalogCategory.FIREWOOD,
-        "Колка, заготовка и доставка дров — смотрите объявления соседей и Авито",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug",
-        "договорная",
-        "Пушкинские Горы",
-        CatalogSource.REFERENCE,
+        "Колка, заготовка и доставка дров — объявления соседей в разделе «Объявления»",
+        None, None, "договорная", "Пушкинские Горы", CatalogSource.REFERENCE,
     ),
     (
         "Уборка снега",
         CatalogCategory.SNOW_REMOVAL,
         "Чистка крыш, дорожек, парковок — сезонная услуга",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/uborka-ASgBAgICAUTEA0T0lg",
-        "договорная",
-        "Пушкинские Горы",
-        CatalogSource.AVITO,
+        None, None, "договорная", "Пушкинские Горы", CatalogSource.REFERENCE,
     ),
     (
         "Мелкий ремонт, сантехника, электрика",
         CatalogCategory.HANDYMAN,
         "Муж на час, мелкий бытовой ремонт в доме и на участке",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/remont_stroitelstvo-ASgBAgICAkTeDQL0lg",
-        "договорная",
-        None,
-        CatalogSource.AVITO,
+        None, None, "договорная", None, CatalogSource.REFERENCE,
     ),
     (
         "Строительство / ремонт",
         CatalogCategory.CONSTRUCTION,
-        "Отделка, кровля, фундамент, баня — предложения на Авито по району",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/remont_stroitelstvo-ASgBAgICAkTeDQL0lg",
-        None,
-        "Пушкиногорский район",
-        CatalogSource.AVITO,
+        "Отделка, кровля, фундамент, баня — мастера и бригады по району",
+        None, None, None, "Пушкиногорский район", CatalogSource.REFERENCE,
     ),
     (
         "Доставка / вывоз / грузчики",
         CatalogCategory.DELIVERY,
         "Доставка стройматериалов, вывоз мусора, погрузка",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/perevozki_i_gruzoperevozki-ASgBAgICAkQeAUX0lg",
-        None,
-        None,
-        CatalogSource.AVITO,
+        None, None, None, None, CatalogSource.REFERENCE,
     ),
     (
         "Репетитор / обучение",
         CatalogCategory.TUTORING,
-        "Занятия для детей и взрослых — объявления на портале и Авито",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug",
-        None,
-        None,
-        CatalogSource.REFERENCE,
-    ),
-    (
-        "Услуги посёлка — все на Авито",
-        CatalogCategory.AVITO,
-        "Актуальные объявления исполнителей: перепашка, покос, ремонт, доставка",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug",
-        "актуально на сайте",
-        "Пушкинские Горы",
-        CatalogSource.AVITO,
-    ),
-    (
-        "Для дома и дачи — Авито",
-        CatalogCategory.AVITO,
-        "Огород, баня, забор, благоустройство участка",
-        None,
-        f"{AVITO_BASE}/predlozheniya_uslug/predlozheniya_uslug_dlya_doma-ASgBAgICAkQeAUP0lg",
-        None,
-        "Пушкиногорский район",
-        CatalogSource.AVITO,
+        "Занятия для детей и взрослых — объявления на портале",
+        None, None, None, None, CatalogSource.REFERENCE,
     ),
 ]
 
@@ -151,7 +97,7 @@ async def seed_village_services(db: AsyncSession) -> int:
                 address=addr,
                 source=src,
                 seed_key=key,
-                sort_order=10 if src == CatalogSource.AVITO else 50,
+                sort_order=50,
             ))
             created += 1
 

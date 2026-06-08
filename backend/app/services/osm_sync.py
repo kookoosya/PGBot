@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.enums import PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.place import Place
+from app.services.place_cleanup import should_skip_osm_element
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -112,7 +113,7 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
     for element in data.get("elements", []):
         tags = element.get("tags", {})
         name = tags.get("name") or tags.get("name:ru") or tags.get("brand")
-        if not name:
+        if not name or should_skip_osm_element(tags, name):
             continue
 
         lat = element.get("lat") or (element.get("center") or {}).get("lat")

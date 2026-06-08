@@ -25,7 +25,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   shop: "🛒", supermarket: "🏪", pharmacy: "💊", cafe: "☕",
   restaurant: "🍽", bank: "🏦", post: "📮", school: "🏫",
   hospital: "🏥", government: "🏛", transport: "🚌", culture: "🎭",
-  hotel: "🏨", rental: "🏠", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
+  hotel: "🏨", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
   taxi: "🚕", other: "📍",
 };
 
@@ -33,7 +33,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   shop: "#e67e22", supermarket: "#d35400", pharmacy: "#27ae60",
   cafe: "#8e44ad", restaurant: "#c0392b", bank: "#2980b9",
   government: "#2c3e50", culture: "#9b59b6", tyre: "#34495e",
-  auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085", rental: "#db2777", beauty: "#e91e63",
+  auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085", beauty: "#e91e63",
   other: "#1a5c3a",
 };
 
@@ -180,7 +180,7 @@ export function MapPage() {
     api.getTaxiServices().then(setTaxi).catch(console.error);
   }, []);
 
-  const isLodging = category === "hotel" || category === "rental";
+  const isLodging = category === "hotel";
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     if (boundsPausedRef.current) return;
@@ -365,8 +365,11 @@ export function MapPage() {
               <Button size="sm" variant={category === "hotel" ? "default" : "outline"} onClick={() => setCategory(category === "hotel" ? "" : "hotel")}>
                 🏨 Гостиницы
               </Button>
-              <Button size="sm" variant={category === "rental" ? "default" : "outline"} onClick={() => setCategory(category === "rental" ? "" : "rental")}>
-                🏠 Посуточно
+              <Button size="sm" variant={category === "cafe" ? "default" : "outline"} onClick={() => setCategory(category === "cafe" ? "" : "cafe")}>
+                ☕ Кафе
+              </Button>
+              <Button size="sm" variant={category === "gas" ? "default" : "outline"} onClick={() => setCategory(category === "gas" ? "" : "gas")}>
+                ⛽ АЗС
               </Button>
               <Button size="sm" variant={offlineReady ? "outline" : "default"} onClick={handleOfflineDownload} disabled={offlineBusy}>
                 {offlineBusy ? "Скачиваю…" : offlineReady ? "📥 Обновить офлайн" : "📥 Офлайн"}
@@ -412,7 +415,7 @@ export function MapPage() {
                 <p className="org-detail-row">
                   🔗{" "}
                   <a href={selected.website} target="_blank" rel="noopener noreferrer">
-                    {selected.category === "rental" ? "Объявление / бронь" : "Сайт"}
+                    Сайт
                   </a>
                 </p>
               )}

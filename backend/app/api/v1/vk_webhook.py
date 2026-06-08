@@ -125,15 +125,9 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             await send_message(
                 peer_id,
                 f"🗺 Карта посёлка — магазины, аптеки, АЗС, гостиницы:\n{_SITE}/map\n\n"
-                "Напишите «шиномонтаж», «заправка», «гостиница» или «посуточно».",
+                "Напишите «шиномонтаж», «заправка» или «гостиница».",
                 keyboard=get_welcome_keyboard(),
             )
-            return PlainTextResponse("ok")
-
-        if any(k in text_lower for k in ("посуточно", "авито", "квартир")) and not any(
-            k in text_lower for k in ("продам", "куплю", "сдам надолго")
-        ):
-            await _reply_places(db, peer_id, category=PlaceCategory.RENTAL)
             return PlainTextResponse("ok")
 
         if any(k in text_lower for k in (
