@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.audit_log import AuditLog
+from app.core.deps import can_manage_issues, is_official_user, is_owner_user
 from app.models.enums import OFFICIAL_ROLES, IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue, IssueComment
 from app.models.user import User
@@ -81,6 +82,13 @@ class IssueValidationError(ServiceError):
         super().__init__(detail, status_code=status_code)
 
 
+class IssueAccessDeniedError(ServiceError):
+    """Raised when a user cannot view or modify an issue."""
+
+    def __init__(self, detail: str = "Access denied") -> None:
+        super().__init__(detail, status_code=403)
+
+
 @dataclass(frozen=True, slots=True)
 class IssueSearchParams:
     """Filters for ``search_issues``."""
@@ -107,6 +115,83 @@ def _official_category_filter(user: User):
             conditions.append(Issue.department_id == user.department_id)
         return or_(*conditions)
     return None
+
+
+def can_view_issue(user: User, issue: Issue) -> bool:
+    """Return whether ``user`` may read or comment on ``issue``."""
+    if user.role.name == UserRole.RESIDENT:
+        return issue.resident_id == user.id
+    if is_owner_user(user):
+        return True
+    if is_official_user(user):
+        if user.role.name == UserRole.SOCIAL_SERVICE:
+            return (
+                issue.category in JKH_CATEGORIES
+                or (user.department_id and issue.department_id == user.department_id)
+            )
+        return True
+    return False
+
+
+async def require_issue_for_user(
+    db: AsyncSession,
+    issue_id: int,
+    user: User,
+) -> Issue:
+    """Load an issue and enforce read access for ``user``."""
+    issue = await get_issue_details(db, issue_id)
+    if not issue:
+        raise IssueNotFoundError()
+    if not can_view_issue(user, issue):
+        raise IssueAccessDeniedError()
+    return issue
+
+
+async def update_issue_fields(
+    db: AsyncSession,
+    issue: Issue,
+    user: User,
+    update_data: dict[str, Any],
+    *,
+    actor: IssueActorContext,
+) -> Issue:
+    """Apply partial field updates with role-based field restrictions."""
+    if not is_owner_user(user):
+        update_data.pop("department_id", None)
+        update_data.pop("assignee_id", None)
+
+    for field, value in update_data.items():
+        setattr(issue, field, value)
+
+    await log_action(
+        db,
+        "update_issue",
+        "issue",
+        issue.id,
+        user_id=actor.actor_id,
+        details=update_data,
+        ip_address=actor.ip_address,
+    )
+    return issue
+
+
+async def add_comment_for_user(
+    db: AsyncSession,
+    issue_id: int,
+    user: User,
+    *,
+    text: str,
+    is_internal: bool,
+) -> IssueComment:
+    """Add a comment after verifying the user can access the issue."""
+    issue = await require_issue_for_user(db, issue_id, user)
+    return await add_issue_comment(
+        db,
+        issue,
+        author=user,
+        text=text,
+        is_internal=is_internal and can_manage_issues(user),
+    )
 
 
 def _apply_issue_access_filter(query, user: User):

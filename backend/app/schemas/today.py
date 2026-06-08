@@ -19,9 +19,21 @@ class TodayMapSnippet(BaseModel):
     route_count: int
 
 
+class TodayEventSnippet(BaseModel):
+    id: int
+    title: str
+    starts_at_label: str
+    ends_at_label: str | None = None
+    location: str | None = None
+    category_label: str
+    description: str | None = None
+    source_url: str | None = None
+
+
 class TodayResponse(BaseModel):
     weather: WeatherResponse | None = None
     latest_classified: TodayClassifiedSnippet | None = None
     map: TodayMapSnippet
+    upcoming_events: list[TodayEventSnippet] = Field(default_factory=list)
     updated_at: str
     cache_ttl_seconds: int = 300

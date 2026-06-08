@@ -30,6 +30,7 @@ const Issues = lazy(() => import("./pages/Issues").then((m) => ({ default: m.Iss
 const Residents = lazy(() => import("./pages/Residents").then((m) => ({ default: m.Residents })));
 const Departments = lazy(() => import("./pages/Departments").then((m) => ({ default: m.Departments })));
 const Analytics = lazy(() => import("./pages/Analytics").then((m) => ({ default: m.Analytics })));
+const AdminEvents = lazy(() => import("./pages/AdminEvents").then((m) => ({ default: m.AdminEvents })));
 const AdminMarketing = lazy(() => import("./pages/AdminMarketing").then((m) => ({ default: m.AdminMarketing })));
 const AdminVisits = lazy(() => import("./pages/AdminVisits").then((m) => ({ default: m.AdminVisits })));
 const Verification = lazy(() => import("./pages/Verification").then((m) => ({ default: m.Verification })));
@@ -121,6 +122,7 @@ export default function App() {
         <Route path="departments" element={<Lazy><Departments /></Lazy>} />
         <Route path="analytics" element={<Lazy><Analytics /></Lazy>} />
         <Route path="marketing" element={<Lazy><AdminMarketing /></Lazy>} />
+        <Route path="events" element={<Lazy><AdminEvents /></Lazy>} />
         <Route path="visits" element={<Lazy><AdminVisits /></Lazy>} />
         <Route path="verification" element={<Lazy><Verification /></Lazy>} />
         <Route path="classifieds" element={<Lazy><ClassifiedModeration /></Lazy>} />

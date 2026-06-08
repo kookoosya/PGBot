@@ -301,3 +301,24 @@ OFFICIAL_ROLES = {
     UserRole.ADMINISTRATION,
     UserRole.SOCIAL_SERVICE,
 }
+
+
+class EventCategory(str, enum.Enum):
+    CULTURE = "culture"
+    HOLIDAY = "holiday"
+    SPORT = "sport"
+    EDUCATION = "education"
+    COMMUNITY = "community"
+    TOURISM = "tourism"
+    OTHER = "other"
+
+
+EVENT_CATEGORY_LABELS = {
+    EventCategory.CULTURE: "Культура",
+    EventCategory.HOLIDAY: "Праздник",
+    EventCategory.SPORT: "Спорт",
+    EventCategory.EDUCATION: "Образование",
+    EventCategory.COMMUNITY: "Общее",
+    EventCategory.TOURISM: "Туризм",
+    EventCategory.OTHER: "Событие",
+}

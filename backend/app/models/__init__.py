@@ -8,6 +8,7 @@ from app.models.provider_busy import ProviderBusyBlock
 from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
 from app.models.audit_log import AuditLog
 from app.models.department import Department
+from app.models.event import Event
 from app.models.issue import Issue, IssueComment, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.page_visit import PageVisit
@@ -23,6 +24,7 @@ __all__ = [
     "IssueComment",
     "IssueDuplicate",
     "Department",
+    "Event",
     "Notification",
     "AuditLog",
     "AIAnalysis",

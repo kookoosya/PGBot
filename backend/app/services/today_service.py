@@ -12,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import CLASSIFIED_LABELS
 from app.schemas.today import TodayResponse
 from app.services.classified_service import ClassifiedSearchParams, search_classifieds
+from app.services.datetime_utils import format_event_datetime
+from app.services.event_service import event_category_label, get_upcoming_events
 from app.services.place_service import get_map_stats
 from app.services.weather_service import WeatherFetchError, WeatherSnapshot, get_weather
 
@@ -33,10 +35,23 @@ class TodaySnapshot:
     total_reviews: int
     active_taxi_count: int
     route_count: int
+    upcoming_events: list["TodayEventRow"]
     updated_at: datetime
 
+
+@dataclass(frozen=True, slots=True)
+class TodayEventRow:
+    id: int
+    title: str
+    starts_at_label: str
+    ends_at_label: str | None
+    location: str | None
+    category_label: str
+    description: str | None
+    source_url: str | None
+
     def to_response(self) -> TodayResponse:
-        from app.schemas.today import TodayClassifiedSnippet, TodayMapSnippet
+        from app.schemas.today import TodayClassifiedSnippet, TodayEventSnippet, TodayMapSnippet
 
         latest = None
         if self.latest_classified_id is not None and self.latest_classified_title:
@@ -56,6 +71,19 @@ class TodaySnapshot:
                 active_taxi_count=self.active_taxi_count,
                 route_count=self.route_count,
             ),
+            upcoming_events=[
+                TodayEventSnippet(
+                    id=event.id,
+                    title=event.title,
+                    starts_at_label=event.starts_at_label,
+                    ends_at_label=event.ends_at_label,
+                    location=event.location,
+                    category_label=event.category_label,
+                    description=event.description,
+                    source_url=event.source_url,
+                )
+                for event in self.upcoming_events
+            ],
             updated_at=self.updated_at.isoformat(),
             cache_ttl_seconds=TODAY_CACHE_TTL_SECONDS,
         )
@@ -101,6 +129,25 @@ async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
     except Exception:
         logger.exception("Today snapshot: failed to load map stats")
 
+    upcoming: list[TodayEventRow] = []
+    try:
+        events = await get_upcoming_events(db, limit=5)
+        upcoming = [
+            TodayEventRow(
+                id=event.id,
+                title=event.title,
+                starts_at_label=format_event_datetime(event.starts_at),
+                ends_at_label=format_event_datetime(event.ends_at) if event.ends_at else None,
+                location=event.location,
+                category_label=event_category_label(event.category),
+                description=event.description,
+                source_url=event.source_url,
+            )
+            for event in events
+        ]
+    except Exception:
+        logger.exception("Today snapshot: failed to load upcoming events")
+
     return TodaySnapshot(
         weather=weather,
         latest_classified_id=latest_id,
@@ -111,5 +158,6 @@ async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
         total_reviews=total_reviews,
         active_taxi_count=active_taxi_count,
         route_count=route_count,
+        upcoming_events=upcoming,
         updated_at=datetime.now(timezone.utc),
     )

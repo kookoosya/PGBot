@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -10,14 +9,12 @@ from app.core.deps import (
     get_client_ip,
     get_current_user,
     get_optional_user,
-    is_official_user,
-    is_owner_user,
     require_owner_or_official,
 )
 from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.models.enums import IssueCategory, IssueStatus, UserRole
+from app.models.enums import IssueStatus, UserRole
 from app.models.issue import Issue
 from app.models.user import User
 from app.schemas.issue import (
@@ -33,26 +30,32 @@ from app.schemas.issue import (
     IssueStatusUpdate,
     IssueUpdate,
 )
-from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
 from app.services.issue_service import (
+    IssueAccessDeniedError,
     IssueActorContext,
+    IssueNotFoundError,
     IssueSearchParams,
     IssueValidationError,
-    JKH_CATEGORIES,
-    add_issue_comment,
+    add_comment_for_user,
     archive_issue,
     get_issue_details,
     get_issues_for_user,
     get_status_timelines_for_issues,
     reopen_issue,
+    require_issue_for_user,
     resolve_issue,
     search_issues,
+    update_issue_fields,
     update_issue_status,
 )
 
 router = APIRouter()
 settings = get_settings()
+
+
+def _raise_issue_access_error(exc: IssueNotFoundError | IssueAccessDeniedError) -> None:
+    raise_http_for_service_error(exc)
 
 
 def _issue_to_response(issue: Issue) -> IssueResponse:
@@ -74,36 +77,8 @@ def _issue_to_my_response(issue: Issue, timeline) -> IssueMyResponse:
     )
 
 
-def _can_view_issue(user: User, issue: Issue) -> bool:
-    if user.role.name == UserRole.RESIDENT:
-        return issue.resident_id == user.id
-    if is_owner_user(user):
-        return True
-    if is_official_user(user):
-        if user.role.name == UserRole.SOCIAL_SERVICE:
-            return (
-                issue.category in JKH_CATEGORIES
-                or (user.department_id and issue.department_id == user.department_id)
-            )
-        return True
-    return False
-
-
 def _actor(request: Request, user: User) -> IssueActorContext:
     return IssueActorContext(actor_id=user.id, ip_address=get_client_ip(request))
-
-
-async def _require_issue(
-    db: AsyncSession,
-    issue_id: int,
-    user: User,
-) -> Issue:
-    issue = await get_issue_details(db, issue_id)
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-    if not _can_view_issue(user, issue):
-        raise HTTPException(status_code=403, detail="Access denied")
-    return issue
 
 
 @router.post("", response_model=IssueResponse, status_code=201)
@@ -211,7 +186,10 @@ async def get_issue(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    issue = await _require_issue(db, issue_id, current_user)
+    try:
+        issue = await require_issue_for_user(db, issue_id, current_user)
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
     return _issue_to_response(issue)
 
 
@@ -223,19 +201,18 @@ async def update_issue(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    issue = await _require_issue(db, issue_id, current_user)
+    try:
+        issue = await require_issue_for_user(db, issue_id, current_user)
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
 
     update_data = data.model_dump(exclude_unset=True)
-    if not is_owner_user(current_user):
-        update_data.pop("department_id", None)
-        update_data.pop("assignee_id", None)
-
-    for field, value in update_data.items():
-        setattr(issue, field, value)
-
-    await log_action(
-        db, "update_issue", "issue", issue.id,
-        user_id=current_user.id, details=update_data, ip_address=get_client_ip(request),
+    issue = await update_issue_fields(
+        db,
+        issue,
+        current_user,
+        update_data,
+        actor=_actor(request, current_user),
     )
     return _issue_to_response(issue)
 
@@ -248,7 +225,10 @@ async def update_issue_status_endpoint(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    issue = await _require_issue(db, issue_id, current_user)
+    try:
+        issue = await require_issue_for_user(db, issue_id, current_user)
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
     actor = _actor(request, current_user)
 
     if data.status == IssueStatus.RESOLVED:
@@ -277,7 +257,10 @@ async def reopen_issue_endpoint(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    issue = await _require_issue(db, issue_id, current_user)
+    try:
+        issue = await require_issue_for_user(db, issue_id, current_user)
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
     actor = _actor(request, current_user)
     try:
         await reopen_issue(
@@ -298,7 +281,10 @@ async def archive_issue_endpoint(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
-    issue = await _require_issue(db, issue_id, current_user)
+    try:
+        issue = await require_issue_for_user(db, issue_id, current_user)
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
     await archive_issue(db, issue, actor=_actor(request, current_user))
     return _issue_to_response(issue)
 
@@ -310,18 +296,14 @@ async def add_comment(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    result = await db.execute(select(Issue).where(Issue.id == issue_id))
-    issue = result.scalar_one_or_none()
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-    if not _can_view_issue(current_user, issue):
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    comment = await add_issue_comment(
-        db,
-        issue,
-        author=current_user,
-        text=data.text,
-        is_internal=data.is_internal and can_manage_issues(current_user),
-    )
+    try:
+        comment = await add_comment_for_user(
+            db,
+            issue_id,
+            current_user,
+            text=data.text,
+            is_internal=data.is_internal,
+        )
+    except (IssueNotFoundError, IssueAccessDeniedError) as exc:
+        _raise_issue_access_error(exc)
     return IssueCommentResponse.model_validate(comment)

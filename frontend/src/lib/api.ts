@@ -237,6 +237,25 @@ class ApiClient {
     return this.request<TodayResponse>("/public/today");
   }
 
+  getAdminEvents(includeUnpublished = true) {
+    const q = includeUnpublished ? "" : "?include_unpublished=false";
+    return this.request<EventListResponse>(`/admin/events${q}`);
+  }
+
+  createEvent(data: EventCreate) {
+    return this.request<EventItem>("/admin/events", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateEvent(id: number, data: Partial<EventCreate>) {
+    return this.request<EventItem>(`/admin/events/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
   getMyIssues(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<IssueMyListResponse>(`/issues/my${query}`);
@@ -906,10 +925,57 @@ export interface TodayMapSnippet {
   route_count: number;
 }
 
+export interface TodayEventSnippet {
+  id: number;
+  title: string;
+  starts_at_label: string;
+  ends_at_label?: string | null;
+  location?: string | null;
+  category_label: string;
+  description?: string | null;
+  source_url?: string | null;
+}
+
 export interface TodayResponse {
   weather: WeatherResponse | null;
   latest_classified: TodayClassifiedSnippet | null;
   map: TodayMapSnippet;
+  upcoming_events: TodayEventSnippet[];
   updated_at: string;
   cache_ttl_seconds: number;
+}
+
+export interface EventItem {
+  id: number;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  starts_at_label: string;
+  ends_at_label: string | null;
+  location: string | null;
+  category: string;
+  category_label: string;
+  source: string | null;
+  source_url: string | null;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventCreate {
+  title: string;
+  description?: string;
+  starts_at: string;
+  ends_at?: string | null;
+  location?: string;
+  category: string;
+  source?: string;
+  source_url?: string;
+  is_published?: boolean;
+}
+
+export interface EventListResponse {
+  items: EventItem[];
+  total: number;
 }

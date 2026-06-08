@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { PushkinVersesSection } from "@/components/PushkinVersesSection";
 import { TodayInVillage } from "@/components/TodayInVillage";
+import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
 import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
@@ -45,8 +46,9 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="page-section max-w-5xl mx-auto px-4">
+      <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
         <TodayInVillage />
+        <UpcomingEvents />
       </section>
 
       <section className="epic-vk-section">

@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   Building2,
+  CalendarDays,
   ClipboardList,
   FileText,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const navItems = [
   { to: "/admin/departments", icon: Building2, label: "Отделы" },
   { to: "/admin/analytics", icon: BarChart3, label: "Аналитика" },
   { to: "/admin/marketing", icon: TrendingUp, label: "Статистика объявлений" },
+  { to: "/admin/events", icon: CalendarDays, label: "События" },
   { to: "/admin/visits", icon: Eye, label: "Посещения сайта" },
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
   { to: "/admin/classifieds", icon: Megaphone, label: "Модерация объявлений" },
