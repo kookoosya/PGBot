@@ -1180,6 +1180,105 @@
     border-color: hsl(42 45% 82%);
   }
 
+  .map-filter-scroll {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .map-filter-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .map-filter-chip {
+    flex: 0 0 auto;
+    border: 1.5px solid hsl(42 45% 82%);
+    background: hsl(40 55% 99%);
+    color: hsl(152 35% 22%);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .map-filter-chip-active {
+    background: hsl(152 48% 18%);
+    color: hsl(42 85% 92%);
+    border-color: hsl(42 65% 50%);
+  }
+  .map-filter-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .map-offline-btn {
+    flex: 0 0 auto;
+    border: 1.5px solid hsl(42 45% 82%);
+    background: hsl(40 55% 99%);
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .org-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .org-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    transition: transform 0.15s ease;
+  }
+  .org-action-btn:hover {
+    transform: translateY(-1px);
+  }
+  .org-action-call {
+    background: hsl(152 48% 18%);
+    color: hsl(42 85% 92%);
+  }
+  .org-action-route {
+    background: hsl(42 78% 46%);
+    color: hsl(152 50% 10%);
+  }
+  .org-action-maps,
+  .org-action-offline {
+    background: hsl(42 35% 94%);
+    color: hsl(152 35% 22%);
+    border: 1.5px solid hsl(42 45% 82%);
+  }
+
+  .org-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1.5px solid hsl(42 45% 82%);
+  }
+  .org-tab {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+    color: hsl(152 20% 45%);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+  }
+  .org-tab-active {
+    color: hsl(152 48% 18%);
+    font-weight: 700;
+    border-bottom-color: hsl(42 78% 46%);
+  }
+
   .map-pane {
     min-height: 420px;
     height: 100%;

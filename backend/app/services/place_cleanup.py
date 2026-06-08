@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 SKIP_OSM_NAMES = {
     "ozon", "wildberries", "сдэк", "cdek", "pickpoint", "boxberry",
-    "exclusive palace", "пункт выдачи", "постамат",
+    "exclusive palace", "пункт выдачи", "постамат", "пропан",
 }
+DEPRECATED_ADDRESS_PARTS = ("строителей, 1-б", "строителей, 1")
 SKIP_OSM_SHOPS = {"parcel_locker", "outpost", "kiosk", "ticket", "lottery"}
 SKIP_OSM_AMENITIES = {"parcel_locker", "vending_machine"}
 
@@ -64,6 +65,10 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             reason = "aggregator"
         elif place.category == PlaceCategory.RENTAL:
             reason = "rental_removed"
+        elif any(part in (place.address or "").lower() for part in DEPRECATED_ADDRESS_PARTS):
+            reason = "deprecated_address"
+        elif place.category == PlaceCategory.GAS and "пропан" in _norm_name(place.name):
+            reason = "propane_not_petrol"
         elif place.external_source == "osm":
             name_l = _norm_name(place.name)
             if any(skip in name_l for skip in SKIP_OSM_NAMES):

@@ -22,8 +22,7 @@ VILLAGE_PLACES: list[tuple] = [
     ("Аптека 36,6", PlaceCategory.PHARMACY, 57.0255, 28.9140, "ул. Красноармейская, 22", None, "08:00-22:00", 0, 0),
     ("Шиномонтаж", PlaceCategory.TYRE, 57.0173, 28.9335, "ул. Аэродромная, 23", "+7 (906) 221-03-54", "по записи", 0, 0),
     ("Автосервис", PlaceCategory.AUTO, 57.0242, 28.9070, "ул. Пушкина, 9", "+7 (81146) 2-20-11", "09:00-18:00", 0, 0),
-    ("АЗС", PlaceCategory.GAS, 57.0258, 28.9132, "ул. Новоржевская, 31", None, "круглосуточно", 0, 0),
-    ("АЗС", PlaceCategory.GAS, 57.0245, 28.9068, "ул. Строителей, 1-Б", None, "круглосуточно", 0, 0),
+    ("АЗС Псковнефтепродукт", PlaceCategory.GAS, 57.0219, 28.9399, "ул. Новоржевская, 31", "+7 (81146) 2-19-02", "круглосуточно", 0, 0),
     ("Кафе «Пушкинъ»", PlaceCategory.CAFE, 57.0269, 28.9115, "пл. Ленина, 3", "+7 (81146) 2-14-00", "10:00-22:00", 0, 0),
     ("Кафе «У поэта»", PlaceCategory.CAFE, 57.0275, 28.9090, "ул. Красноармейская, 10", "+7 (81146) 2-16-44", "11:00-23:00", 0, 0),
     ("Столовая", PlaceCategory.RESTAURANT, 57.0260, 28.9120, "ул. Ленина, 25", "+7 (81146) 2-08-30", "08:00-20:00", 0, 0),
@@ -50,7 +49,13 @@ VILLAGE_PLACES: list[tuple] = [
 
 # Старые выдуманные записи — отключаем при каждом синке
 DEPRECATED_NAMES = {"лукойл", "газпромнефть", "колёса", "колеса", "мотор"}
-DEPRECATED_ADDRESS_PARTS = ("новоржевское шоссе", "новоржевская, 45", "пушкина, 5")
+DEPRECATED_ADDRESS_PARTS = (
+    "новоржевское шоссе",
+    "новоржевская, 45",
+    "пушкина, 5",
+    "строителей, 1-б",
+    "строителей, 1",
+)
 
 TAXI_SEED = [
     (
@@ -95,11 +100,10 @@ async def seed_village_places(db: AsyncSession) -> int:
         active_keys.add(key)
         result = await db.execute(select(Place).where(Place.yandex_id == key))
         place = result.scalars().first()
-        cat_label = PLACE_CATEGORY_LABELS.get(cat, "Объект")
         extra_phone = ""
         if name == "Шиномонтаж" and "Аэродромная" in addr:
-            extra_phone = " · +7 (981) 783-86-67"
-        description = f"{cat_label} — Пушкинские Горы{extra_phone}"
+            extra_phone = "+7 (981) 783-86-67"
+        description = extra_phone or None
         y_url = _yandex_maps_url(lat, lng, name)
 
         if place:
@@ -138,9 +142,13 @@ async def seed_village_places(db: AsyncSession) -> int:
         addr_l = (place.address or "").lower()
         if any(bad in name_l for bad in DEPRECATED_NAMES):
             place.is_active = False
+        elif any(part in addr_l for part in DEPRECATED_ADDRESS_PARTS):
+            place.is_active = False
         elif place.category == PlaceCategory.TYRE and "выезд на новоржевское" in addr_l:
             place.is_active = False
-        elif place.category == PlaceCategory.GAS and "лукойл" in name_l:
+        elif place.category == PlaceCategory.GAS and ("лукойл" in name_l or "строителей" in addr_l):
+            place.is_active = False
+        elif place.category == PlaceCategory.GAS and "пропан" in name_l:
             place.is_active = False
 
     await db.flush()

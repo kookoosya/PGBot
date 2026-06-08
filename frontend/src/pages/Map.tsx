@@ -22,6 +22,22 @@ import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const CENTER: [number, number] = [57.0267, 28.91];
 
+const QUICK_FILTERS: { id: string; label: string; category?: string; shopsOnly?: boolean }[] = [
+  { id: "shops", label: "🛒 Магазины", shopsOnly: true },
+  { id: "pharmacy", label: "💊 Аптеки", category: "pharmacy" },
+  { id: "cafe", label: "☕ Кафе", category: "cafe" },
+  { id: "gas", label: "⛽ АЗС", category: "gas" },
+  { id: "culture", label: "🎭 Музеи", category: "culture" },
+  { id: "hospital", label: "🏥 Медицина", category: "hospital" },
+  { id: "hotel", label: "🏨 Гостиницы", category: "hotel" },
+  { id: "tyre", label: "🛞 Авто", category: "tyre" },
+];
+
+function isUsefulDescription(text: string | null | undefined): boolean {
+  if (!text) return false;
+  return !/^[\wа-яё\s/]+ — пушкинские горы$/i.test(text.trim());
+}
+
 const CATEGORY_ICONS: Record<string, string> = {
   shop: "🛒", supermarket: "🏪", pharmacy: "💊", cafe: "☕",
   restaurant: "🍽", bank: "🏦", post: "📮", school: "🏫",
@@ -192,6 +208,21 @@ export function MapPage() {
 
   const isLodging = category === "hotel";
 
+  const activeFilterId = shopsOnly
+    ? "shops"
+    : QUICK_FILTERS.find((f) => f.category === category)?.id ?? "";
+
+  const applyQuickFilter = (filter: (typeof QUICK_FILTERS)[number]) => {
+    const isActive = activeFilterId === filter.id;
+    if (isActive) {
+      setCategory("");
+      setShopsOnly(false);
+      return;
+    }
+    setCategory(filter.category ?? "");
+    setShopsOnly(Boolean(filter.shopsOnly));
+  };
+
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     if (boundsPausedRef.current) return;
     if (bounds) boundsRef.current = bounds;
@@ -353,12 +384,9 @@ export function MapPage() {
 
           {mapStats && (
             <div className="map-stats-overlay">
-              <p className="font-bold m-0 text-sm">📍 {mapStats.total_places} организаций</p>
+              <p className="font-bold m-0 text-sm">📍 {mapStats.total_places} мест</p>
               <p className="text-xs text-muted-foreground m-0 mt-1">
-                Обновлено: {formatSyncAge(mapStats.last_sync)}
-              </p>
-              <p className="text-xs text-muted-foreground m-0 mt-0.5">
-                Справочник + OpenStreetMap каждые 6 ч
+                {formatSyncAge(mapStats.last_sync)}
               </p>
             </div>
           )}
@@ -374,34 +402,41 @@ export function MapPage() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadPlaces()}
             />
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" variant={shopsOnly ? "default" : "outline"} onClick={() => setShopsOnly(!shopsOnly)}>
-                🛒 Магазины
-              </Button>
-              <Button size="sm" variant={category === "pharmacy" ? "default" : "outline"} onClick={() => setCategory(category === "pharmacy" ? "" : "pharmacy")}>
-                💊 Аптеки
-              </Button>
-              <Button size="sm" variant={category === "tyre" ? "default" : "outline"} onClick={() => setCategory(category === "tyre" ? "" : "tyre")}>
-                🛞 Шины
-              </Button>
-              <Button size="sm" variant={category === "hotel" ? "default" : "outline"} onClick={() => setCategory(category === "hotel" ? "" : "hotel")}>
-                🏨 Гостиницы
-              </Button>
-              <Button size="sm" variant={category === "cafe" ? "default" : "outline"} onClick={() => setCategory(category === "cafe" ? "" : "cafe")}>
-                ☕ Кафе
-              </Button>
-              <Button size="sm" variant={category === "gas" ? "default" : "outline"} onClick={() => setCategory(category === "gas" ? "" : "gas")}>
-                ⛽ АЗС
-              </Button>
-              <Button size="sm" variant={offlineReady ? "outline" : "default"} onClick={handleOfflineDownload} disabled={offlineBusy}>
-                {offlineBusy ? "Скачиваю…" : offlineReady ? "📥 Обновить офлайн" : "📥 Офлайн"}
-              </Button>
-              <select className="text-sm rounded-md border px-2 py-1 flex-1 min-w-[120px]" value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">Все</option>
+            <div className="map-filter-scroll">
+              {QUICK_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={`map-filter-chip${activeFilterId === f.id ? " map-filter-chip-active" : ""}`}
+                  onClick={() => applyQuickFilter(f)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className="map-filter-row">
+              <select
+                className="text-sm rounded-md border px-2 py-1.5 flex-1"
+                value={shopsOnly ? "" : category}
+                onChange={(e) => {
+                  setShopsOnly(false);
+                  setCategory(e.target.value);
+                }}
+              >
+                <option value="">Все категории</option>
                 {categories.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                className="map-offline-btn"
+                onClick={handleOfflineDownload}
+                disabled={offlineBusy}
+                title="Скачать карту для офлайн"
+              >
+                {offlineBusy ? "…" : offlineReady ? "📥" : "📥 Офлайн"}
+              </button>
             </div>
             {offlineMsg ? <p className="text-xs text-muted-foreground">{offlineMsg}</p> : null}
           </div>
@@ -441,38 +476,48 @@ export function MapPage() {
                   </a>
                 </p>
               )}
-              {selected.description && (
+              {isUsefulDescription(selected.description) && (
                 <p className="text-sm text-muted-foreground mt-2">{selected.description}</p>
               )}
 
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="org-action-grid mt-4">
+                {selected.phone && (
+                  <a href={`tel:${selected.phone.replace(/\s/g, "")}`} className="org-action-btn org-action-call no-underline">
+                    📞 Позвонить
+                  </a>
+                )}
                 <a
                   href={yandexRouteUrl(selected.latitude, selected.longitude)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-hero-primary text-xs px-3 py-2 no-underline"
+                  className="org-action-btn org-action-route no-underline"
                 >
-                  🧭 Проложить маршрут
-                </a>
-                <a
-                  href={geoNavigateUrl(selected.latitude, selected.longitude)}
-                  className="btn-hero-secondary text-xs px-3 py-2 no-underline"
-                >
-                  📍 Навигатор офлайн
+                  🧭 Маршрут
                 </a>
                 <a
                   href={selected.yandex_url || yandexMapsPointUrl(selected.latitude, selected.longitude, selected.name)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-hero-secondary text-xs px-3 py-2 no-underline"
+                  className="org-action-btn org-action-maps no-underline"
                 >
-                  Яндекс.Карты
+                  🗺 На карте
+                </a>
+                <a
+                  href={geoNavigateUrl(selected.latitude, selected.longitude)}
+                  className="org-action-btn org-action-offline no-underline"
+                >
+                  📍 GPS
                 </a>
               </div>
 
-              <div className="flex gap-1 mt-4 border-b">
+              <div className="org-tabs mt-4">
                 {(["info", "review", "complaint"] as const).map((t) => (
-                  <button key={t} className={`px-3 py-2 text-sm ${tab === t ? "border-b-2 border-amber-500 font-medium" : "text-muted-foreground"}`} onClick={() => setTab(t)}>
+                  <button
+                    key={t}
+                    type="button"
+                    className={`org-tab${tab === t ? " org-tab-active" : ""}`}
+                    onClick={() => setTab(t)}
+                  >
                     {t === "info" ? "Отзывы" : t === "review" ? "Оценить" : "Жалоба"}
                   </button>
                 ))}
@@ -515,7 +560,9 @@ export function MapPage() {
             </div>
           ) : (
             <div className="p-3 space-y-2">
-              <p className="text-xs text-muted-foreground px-1">По рейтингу · клик — карточка и переход на карте</p>
+              <p className="text-xs text-muted-foreground px-1">
+                {sortedPlaces.length > 0 ? `${sortedPlaces.length} на карте` : "Загрузка…"}
+              </p>
               {sortedPlaces.map((p) => (
                 <button key={p.id} className="org-list-card" onClick={() => openPlace(p.id)}>
                   <span className="org-list-icon">{CATEGORY_ICONS[p.category] || "📍"}</span>
