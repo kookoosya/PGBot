@@ -1,7 +1,5 @@
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +12,7 @@ from app.models.enums import IssueStatus, NotificationPriority, NotificationStat
 from app.models.issue import Issue, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.user import User
+from app.schemas.analysis_result import AnalysisResult
 from app.services.gemini import analyze_issue
 from app.services.notifications import notify_owner
 from app.services.telegram import notify_about_issue
@@ -21,39 +20,6 @@ from app.services.vk import send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-
-@dataclass
-class AnalysisResult:
-    """Structured result of Gemini issue analysis."""
-
-    is_valid: bool = True
-    category: str | None = None
-    priority: str | None = None
-    summary: str | None = None
-    duplicate_probability: float = 0.0
-    suggested_department: str | None = None
-    raw_response: dict[str, Any] = field(default_factory=dict)
-
-    @classmethod
-    def from_gemini(cls, data: dict[str, Any]) -> "AnalysisResult":
-        raw_prob = data.get("duplicate_probability", 0.0)
-        return cls(
-            is_valid=data.get("is_valid", True),
-            category=data.get("category"),
-            priority=data.get("priority"),
-            summary=data.get("summary"),
-            duplicate_probability=float(raw_prob or 0.0),
-            suggested_department=data.get("suggested_department"),
-            raw_response=data,
-        )
-
-    @property
-    def resolved_priority(self) -> str:
-        return self.priority or Priority.MEDIUM.value
-
-    def summary_or(self, fallback: str) -> str:
-        return self.summary or fallback
 
 
 async def get_or_create_web_resident(
