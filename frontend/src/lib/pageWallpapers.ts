@@ -11,7 +11,7 @@ const photos = VILLAGE_PHOTOS;
 /** Обои для каждого раздела портала */
 export const PAGE_WALLPAPERS: Record<string, PageWallpaper> = {
   "/": { ...photos[0], label: "Михайловское" },
-  "/map": { ...photos[2], label: "Посёлок" },
+  "/map": { ...photos[2], label: "НКЦ" },
   "/classifieds": { ...photos[3], label: "Памятник" },
   "/jobs": { ...photos[5], label: "Петровское" },
   "/services": { ...photos[4], label: "Тригорское" },
@@ -19,7 +19,7 @@ export const PAGE_WALLPAPERS: Record<string, PageWallpaper> = {
   "/wishes": { ...photos[5], label: "Петровское" },
   "/ai": { ...photos[0], label: "Михайловское" },
   "/register": { ...photos[4], label: "Тригорское" },
-  "/cabinet/login": { ...photos[2], label: "Посёлок" },
+  "/cabinet/login": { ...photos[2], label: "НКЦ" },
   "/cabinet": { ...photos[3], label: "Памятник" },
   "/official": { ...photos[1], label: "Лавра" },
 };

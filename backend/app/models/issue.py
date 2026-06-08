@@ -15,6 +15,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.enums import IssueCategory, IssueStatus, Priority
 
+_CLOSED_ISSUE_STATUSES = frozenset(
+    {IssueStatus.RESOLVED, IssueStatus.REJECTED, IssueStatus.ARCHIVED}
+)
+
 
 class Issue(Base):
     __tablename__ = "issues"
@@ -60,6 +64,27 @@ class Issue(Base):
         back_populates="issue", foreign_keys="IssueDuplicate.issue_id", cascade="all, delete-orphan"
     )
     ai_analysis: Mapped["AIAnalysis | None"] = relationship(back_populates="issue", uselist=False)
+
+    def __repr__(self) -> str:
+        status = self.status.value if isinstance(self.status, IssueStatus) else self.status
+        category = (
+            self.category.value
+            if isinstance(self.category, IssueCategory)
+            else self.category
+        )
+        snippet = (self.title or self.description[:40] or "").replace("\n", " ")
+        return (
+            f"Issue(id={self.id}, status={status!r}, category={category!r}, "
+            f"summary={snippet!r})"
+        )
+
+    @property
+    def is_resolved(self) -> bool:
+        return self.status in _CLOSED_ISSUE_STATUSES
+
+    @property
+    def is_open(self) -> bool:
+        return not self.is_resolved
 
 
 class IssuePhoto(Base):

@@ -133,8 +133,19 @@ async def _analyze_issue_with_context(
         f"#{issue.id}: {issue_display_summary(issue)}"
         for issue in existing[:5]
     ]
-    raw = await analyze_issue(text, "\n".join(context_lines))
-    return AnalysisResult.from_gemini(raw), existing
+    try:
+        raw = await analyze_issue(text, "\n".join(context_lines))
+        return AnalysisResult.from_gemini(raw), existing
+    except Exception as exc:
+        logger.warning("Gemini analysis failed: %s", exc)
+        return (
+            AnalysisResult(
+                is_valid=False,
+                summary="Не удалось проанализировать обращение автоматически. Попробуйте позже.",
+                raw_response={"error": str(exc)},
+            ),
+            existing,
+        )
 
 
 async def _handle_deduplication(
