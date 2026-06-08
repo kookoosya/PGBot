@@ -363,7 +363,11 @@ class ApiClient {
 
   getClassifieds(params?: Record<string, string>) {
     const q = params ? "?" + new URLSearchParams(params).toString() : "";
-    return this.request<{ items: ClassifiedAd[]; total: number }>(`/classifieds${q}`);
+    return this.request<{ items: ClassifiedAd[]; total: number; page?: number }>(`/classifieds${q}`);
+  }
+
+  getClassified(id: number) {
+    return this.request<ClassifiedAd>(`/classifieds/${id}`);
   }
 
   getPendingClassifieds() {

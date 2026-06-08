@@ -16,6 +16,7 @@ const AIChat = lazy(() => import("./pages/AIChat").then((m) => ({ default: m.AIC
 const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m.Services })));
 const ServiceRegister = lazy(() => import("./pages/ServiceRegister").then((m) => ({ default: m.ServiceRegister })));
 const Classifieds = lazy(() => import("./pages/Classifieds").then((m) => ({ default: m.Classifieds })));
+const ClassifiedDetail = lazy(() => import("./pages/ClassifiedDetail").then((m) => ({ default: m.ClassifiedDetail })));
 const Complaints = lazy(() => import("./pages/Complaints").then((m) => ({ default: m.Complaints })));
 const OfficialIssues = lazy(() => import("./pages/OfficialIssues").then((m) => ({ default: m.OfficialIssues })));
 const ProviderCabinet = lazy(() => import("./pages/ProviderCabinet").then((m) => ({ default: m.ProviderCabinet })));
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="services/register" element={<Lazy><ServiceRegister /></Lazy>} />
         <Route path="services/cabinet" element={<Lazy><ProviderCabinet /></Lazy>} />
         <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
+        <Route path="classifieds/:id" element={<Lazy><ClassifiedDetail /></Lazy>} />
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
         <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />

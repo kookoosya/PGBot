@@ -213,6 +213,7 @@ export function MapPage() {
   const [mapStats, setMapStats] = useState<MapStats | null>(null);
   const [placesLoading, setPlacesLoading] = useState(true);
   const [placesError, setPlacesError] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
   const boundsPausedRef = useRef(false);
 
@@ -438,8 +439,25 @@ export function MapPage() {
         </div>
       )}
 
+      <div className="map-mobile-tabs lg:hidden page-section pb-2">
+        <button
+          type="button"
+          className={`map-mobile-tab ${mobileTab === "map" ? "map-mobile-tab-active" : ""}`}
+          onClick={() => setMobileTab("map")}
+        >
+          🗺 Карта
+        </button>
+        <button
+          type="button"
+          className={`map-mobile-tab ${mobileTab === "list" ? "map-mobile-tab-active" : ""}`}
+          onClick={() => setMobileTab("list")}
+        >
+          📋 Список ({sortedPlaces.length})
+        </button>
+      </div>
+
       <div className="flex flex-col lg:flex-row map-layout">
-        <div className="map-pane flex-1 relative">
+        <div className={`map-pane flex-1 relative ${mobileTab === "list" ? "map-pane-hidden-mobile" : ""}`}>
           <MapContainer center={CENTER} zoom={14} className="map-canvas z-0" scrollWheelZoom>
             <TileLayer
               attribution={mapStyle === "scheme"
@@ -478,7 +496,7 @@ export function MapPage() {
 
         </div>
 
-        <div className="w-full lg:w-[420px] border-l map-sidebar map-sidebar-glass overflow-y-auto">
+        <div className={`w-full lg:w-[420px] border-l map-sidebar map-sidebar-glass overflow-y-auto ${mobileTab === "map" ? "map-sidebar-hidden-mobile" : ""}`}>
           <div className="p-4 space-y-3 border-b sticky top-0 map-sidebar-head z-10">
             <input
               className="w-full rounded-md border px-3 py-2 text-sm"
@@ -670,7 +688,7 @@ export function MapPage() {
                     : `${sortedPlaces.length} на карте`}
               </p>
               {sortedPlaces.map((p) => (
-                <button key={p.id} className="org-list-card" onClick={() => openPlace(p.id)}>
+                <button key={p.id} className="org-list-card" onClick={() => { openPlace(p.id); setMobileTab("map"); }}>
                   <span className="org-list-icon">{CATEGORY_ICONS[p.category] || "📍"}</span>
                   <div className="org-list-body">
                     <div className="flex justify-between gap-2">

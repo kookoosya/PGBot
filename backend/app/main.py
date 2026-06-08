@@ -35,6 +35,23 @@ async def _background_map_sync():
         await asyncio.sleep(settings.MAP_AUTO_SYNC_HOURS * 3600)
 
 
+async def _background_vk_digest():
+    """Ежедневная сводка подписчикам VK (проверка каждый час)."""
+    from app.database import AsyncSessionLocal
+    from app.services.vk_digest import send_daily_digest
+
+    while True:
+        try:
+            async with AsyncSessionLocal() as db:
+                sent = await send_daily_digest(db)
+                await db.commit()
+                if sent:
+                    logger.info("VK daily digest sent to %s subscribers", sent)
+        except Exception as e:
+            logger.error("VK digest error: %s", e)
+        await asyncio.sleep(3600)
+
+
 def _validate_security_config() -> None:
     weak_secret = settings.SECRET_KEY in (
         "",
@@ -50,8 +67,10 @@ async def lifespan(app: FastAPI):
     _validate_security_config()
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
     sync_task = asyncio.create_task(_background_map_sync())
+    digest_task = asyncio.create_task(_background_vk_digest())
     yield
     sync_task.cancel()
+    digest_task.cancel()
     logger.info("Shutting down")
 
 

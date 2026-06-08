@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.database import get_db
-from app.models.enums import IssueStatus, PLACE_CATEGORY_LABELS, PlaceCategory
+from app.models.enums import IssueStatus, PlaceCategory
 from app.models.issue import Issue
 from app.models.place import Place
 from app.models.taxi import TaxiService
@@ -23,11 +23,14 @@ from app.services.ai_chat import (
 from app.services.issue_processor import process_incoming_message
 from app.services.vk import (
     get_ai_keyboard,
+    get_inline_links_keyboard,
     get_welcome_keyboard,
     get_welcome_message,
     parse_vk_message,
     send_message,
 )
+from app.services.vk_ai_history import append_ai_turn, clear_ai_history, get_ai_history
+from app.services.vk_voice import extract_audio_url, transcribe_audio_url
 from app.services.vk_bot import (
     format_ads_message,
     subscribe_peer,
@@ -39,6 +42,7 @@ from app.services.vk_flows import (
     format_routes_message,
     handle_flow_message,
     start_classified_flow,
+    start_map_report_flow,
     start_wish_flow,
 )
 from app.services.vk_messages import (
@@ -75,14 +79,22 @@ async def _process_vk_ai(db: AsyncSession, peer_id: int, from_id: int, text: str
         await send_message(peer_id, ai_limit_text(get_payment_info()), keyboard=get_ai_keyboard())
         return
 
-    reply = await chat_with_ai(text)
+    history = await get_ai_history(db, peer_id)
+    reply = await chat_with_ai(text, history=history)
     await increment_usage(db, identifier, "vk")
+    await append_ai_turn(db, peer_id, text, reply)
     remaining = limit - used - 1
     await send_message(
         peer_id,
         f"{reply}{ai_reply_footer(remaining)}",
         keyboard=get_ai_keyboard(),
     )
+
+
+async def _send_with_site_links(peer_id: int, message: str, *paths: str) -> None:
+    links = [(label, f"{_SITE}{path}") for label, path in paths]
+    kb = get_inline_links_keyboard(links) if links else get_welcome_keyboard()
+    await send_message(peer_id, message, keyboard=kb)
 
 
 async def _reply_places(
@@ -197,8 +209,25 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if text_lower in menu_triggers:
             _ai_mode_peers.discard(peer_id)
             clear_flow(peer_id)
+            await clear_ai_history(db, peer_id)
             await send_message(peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
+
+        # Голосовое → текст
+        audio_url = extract_audio_url(parsed.get("attachments") or [])
+        if audio_url:
+            transcribed = await transcribe_audio_url(audio_url)
+            if transcribed:
+                text = transcribed
+                text_lower = text.lower()
+                await send_message(peer_id, f"🎤 Распознано: «{transcribed[:200]}»")
+            elif not text.strip():
+                await send_message(
+                    peer_id,
+                    "Не удалось распознать голосовое. Напишите текстом или повторите.",
+                    keyboard=get_welcome_keyboard(),
+                )
+                return PlainTextResponse("ok")
 
         flow_reply = await handle_flow_message(db, peer_id, from_id, text)
         if flow_reply:
@@ -226,8 +255,19 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
             )
             return PlainTextResponse("ok")
 
-        if text_lower in ("🔔 подписаться", "подписаться", "подписка"):
-            msg = await subscribe_peer(db, peer_id)
+        if text_lower in ("🔔 подписаться", "подписаться", "подписка", "подписка все"):
+            msg = await subscribe_peer(db, peer_id, "all")
+            await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("подписка работа", "подписка вакансии", "🔔 работа"):
+            msg = await subscribe_peer(db, peer_id, "jobs")
+            await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
+            return PlainTextResponse("ok")
+
+        if text_lower in ("подписка дрова", "подписка услуги"):
+            preset = "firewood" if "дрова" in text_lower else "services"
+            msg = await subscribe_peer(db, peer_id, preset)
             await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
@@ -265,18 +305,29 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
 
         if text_lower in ("🚪 выйти из ии", "выйти из ии", "стоп"):
             _ai_mode_peers.discard(peer_id)
+            await clear_ai_history(db, peer_id)
             await send_message(peer_id, "Вернулись в меню 🪶", keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("💼 работа", "работа", "вакансии", "вакансия", "подработка"):
             _ai_mode_peers.discard(peer_id)
             msg = await format_jobs_message(db)
-            await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
+            await _send_with_site_links(peer_id, msg, ("💼 Вакансии", "/classifieds?jobs=1"))
+            return PlainTextResponse("ok")
+
+        if text_lower.startswith("маршруты ") and text_lower.split()[-1].isdigit():
+            page = int(text_lower.split()[-1]) - 1
+            await _send_with_site_links(peer_id, format_routes_message(page), ("🗺 На карте", "/map"))
             return PlainTextResponse("ok")
 
         if text_lower in ("🛤 маршруты", "маршруты", "маршрут", "куда сходить", "экскурсия"):
             _ai_mode_peers.discard(peer_id)
-            await send_message(peer_id, format_routes_message(), keyboard=get_welcome_keyboard())
+            await _send_with_site_links(peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
+            return PlainTextResponse("ok")
+
+        if text_lower in ("🗺 ошибка карты", "ошибка карты", "ошибка на карте", "карта ошибка"):
+            _ai_mode_peers.discard(peer_id)
+            await send_message(peer_id, start_map_report_flow(peer_id), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("➕ объявление", "подать объявление", "добавить объявление", "разместить объявление"):

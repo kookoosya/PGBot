@@ -235,6 +235,10 @@ async def update_issue_status(
         details={"status": data.status.value, "resolution": data.resolution_text},
         ip_address=get_client_ip(request),
     )
+
+    from app.services.notifications import notify_issue_status
+    await notify_issue_status(issue)
+
     return _issue_to_response(issue)
 
 

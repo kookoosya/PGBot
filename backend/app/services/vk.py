@@ -29,6 +29,23 @@ async def vk_api_call(method: str, params: dict[str, Any]) -> dict:
         return data.get("response", {})
 
 
+def get_inline_links_keyboard(links: list[tuple[str, str]]) -> dict:
+    """Inline-кнопки со ссылками на сайт (до 3)."""
+    row: list[dict] = []
+    buttons: list[list[dict]] = []
+    for label, url in links[:3]:
+        row.append({
+            "action": {"type": "open_link", "link": url, "label": label[:40]},
+            "color": "primary",
+        })
+        if len(row) == 2:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    return {"inline": True, "buttons": buttons}
+
+
 async def send_message(peer_id: int, message: str, keyboard: dict | None = None) -> int:
     params: dict[str, Any] = {
         "peer_id": peer_id,
@@ -70,6 +87,7 @@ def parse_vk_message(event: dict) -> dict | None:
         "peer_id": peer_id,
         "message_id": message_id,
         "photos": photos,
+        "attachments": message.get("attachments", []),
     }
 
 
@@ -95,8 +113,12 @@ def get_welcome_keyboard() -> dict:
                 {"action": {"type": "text", "label": "⚠️ Жалобы"}, "color": "primary"},
             ],
             [
+                {"action": {"type": "text", "label": "🗺 Ошибка карты"}, "color": "secondary"},
                 {"action": {"type": "text", "label": "💡 Пожелания"}, "color": "secondary"},
+            ],
+            [
                 {"action": {"type": "text", "label": "🚕 Такси"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🔕 Отписаться"}, "color": "secondary"},
             ],
             [
                 {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},

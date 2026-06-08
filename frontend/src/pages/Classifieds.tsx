@@ -15,6 +15,11 @@ export function Classifieds() {
   const jobsMode = searchParams.get("jobs") === "1";
 
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [filter, setFilter] = useState(jobsMode ? "job" : "");
   const [jobsOnly, setJobsOnly] = useState(jobsMode);
@@ -35,14 +40,26 @@ export function Classifieds() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
 
-  const load = () => {
-    const params: Record<string, string> = {};
+  const load = (pageNum = 1, append = false) => {
+    const params: Record<string, string> = {
+      page: String(pageNum),
+      page_size: "20",
+    };
     if (jobsOnly) {
       params.jobs_only = "true";
     } else if (filter) {
       params.category = filter;
     }
-    api.getClassifieds(params).then((r) => setAds(r.items)).catch(console.error);
+    if (search) params.search = search;
+    setLoading(true);
+    api.getClassifieds(params)
+      .then((r) => {
+        setTotal(r.total);
+        setPage(pageNum);
+        setAds(append ? (prev) => [...prev, ...r.items] : r.items);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -58,8 +75,8 @@ export function Classifieds() {
   }, [jobsMode]);
 
   useEffect(() => {
-    load();
-  }, [filter, jobsOnly]);
+    load(1, false);
+  }, [filter, jobsOnly, search]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +98,7 @@ export function Classifieds() {
         website_url: "",
         agree_rules: false,
       }));
-      load();
+      load(1, false);
     } catch (err) {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка");
@@ -116,6 +133,19 @@ export function Classifieds() {
           Услуги (огород, дрова, мастера) — на{" "}
           <Link to="/services" className="text-primary hover:underline">странице «Услуги»</Link>.
         </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <Input
+          placeholder="Поиск по заголовку…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
+          className="flex-1"
+        />
+        <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
+          Найти
+        </Button>
       </div>
 
       <div className="classified-quick-filters mb-4">
@@ -263,7 +293,9 @@ export function Classifieds() {
               </div>
               <div className="classified-ad-body">
                 <div className="flex justify-between gap-2">
-                  <h3 className="font-bold text-lg">{ad.title}</h3>
+                  <h3 className="font-bold text-lg">
+                    <Link to={`/classifieds/${ad.id}`} className="hover:underline">{ad.title}</Link>
+                  </h3>
                   {ad.price != null && (
                     <span className="text-amber-700 font-semibold shrink-0">{ad.price} {ad.price_unit || "₽"}</span>
                   )}
@@ -278,10 +310,18 @@ export function Classifieds() {
             </div>
           );
         })}
-        {ads.length === 0 && (
+        {!loading && ads.length === 0 && (
           <p className="text-center text-muted-foreground py-12 col-span-full">
             {jobsOnly ? "Вакансий пока нет. Разместите первую!" : "Объявлений пока нет. Будьте первым!"}
           </p>
+        )}
+        {loading && <p className="text-center text-muted-foreground py-6 col-span-full">Загрузка…</p>}
+        {ads.length > 0 && ads.length < total && (
+          <div className="col-span-full text-center pt-4">
+            <Button type="button" variant="outline" disabled={loading} onClick={() => load(page + 1, true)}>
+              Ещё объявления ({ads.length} из {total})
+            </Button>
+          </div>
         )}
       </div>
     </div>

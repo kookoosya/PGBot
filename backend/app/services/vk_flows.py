@@ -14,8 +14,15 @@ from app.models.enums import (
     CLASSIFIED_LABELS,
     ClassifiedCategory,
     ClassifiedPaymentStatus,
+    IssueCategory,
+    IssueStatus,
     JOB_CLASSIFIED_CATEGORIES,
+    MAP_REPORT_LABELS,
+    Priority,
+    ShopComplaintType,
 )
+from app.models.issue import Issue
+from app.models.place import Place, PlaceComplaint
 from app.models.site_feedback import SiteFeedback
 from app.services.classified_antifraud import (
     check_phone_rate_limit,
@@ -96,16 +103,100 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
     return "\n".join(lines)
 
 
-def format_routes_message() -> str:
+def format_routes_message(page: int = 0) -> str:
     routes = get_map_routes()
-    lines = ["🛤 Туристические маршруты:\n"]
-    for r in routes:
-        lines.append(f"• {r['title']} ({r['duration']})")
-        lines.append(f"  {r['description']}")
-        for i, stop in enumerate(r["stops"][:3], 1):
-            lines.append(f"  {i}. {stop['name']}")
-    lines.append(f"\nМаршруты на карте: {_SITE}/map")
+    per_page = 5
+    start = page * per_page
+    chunk = routes[start : start + per_page]
+    lines = [f"🛤 Маршруты ({len(routes)} всего):\n"]
+    for i, r in enumerate(chunk, start + 1):
+        lines.append(f"{i}. {r['title']} — {r['duration']}")
+        lines.append(f"   {r['description']}")
+    if start + per_page < len(routes):
+        lines.append(f"\nЕщё: напишите «маршруты {page + 2}»")
+    lines.append(f"\nНа карте с линией маршрута:\n{_SITE}/map")
     return "\n".join(lines)
+
+
+MAP_REPORT_TYPES = [
+    ShopComplaintType.MAP_WRONG_HOURS,
+    ShopComplaintType.MAP_WRONG_PHONE,
+    ShopComplaintType.MAP_CLOSED,
+    ShopComplaintType.MAP_WRONG_ADDRESS,
+    ShopComplaintType.MAP_OTHER,
+]
+
+
+def start_map_report_flow(peer_id: int) -> str:
+    _flows[peer_id] = {"kind": "map_report", "step": "search", "data": {}}
+    return box(
+        "Ошибка на карте",
+        "Напишите название места или улицу — найду в справочнике.\n\n"
+        "«Отмена» — выйти.",
+    )
+
+
+async def _search_places_for_report(db: AsyncSession, query: str) -> list[Place]:
+    q = query.strip()
+    if len(q) < 2:
+        return []
+    result = await db.execute(
+        select(Place)
+        .where(
+            Place.is_active.is_(True),
+            Place.name.ilike(f"%{q}%") | Place.address.ilike(f"%{q}%"),
+        )
+        .order_by(Place.name)
+        .limit(6)
+    )
+    return list(result.scalars().all())
+
+
+async def _submit_map_report(
+    db: AsyncSession,
+    place: Place,
+    report_type: ShopComplaintType,
+    description: str,
+    peer_id: int,
+) -> str:
+    type_label = MAP_REPORT_LABELS.get(report_type, report_type.value)
+    complaint = PlaceComplaint(
+        place_id=place.id,
+        complaint_type=report_type,
+        description=description,
+        author_name=f"VK #{peer_id}",
+    )
+    db.add(complaint)
+    place.complaint_count += 1
+
+    issue_desc = (
+        f"Ошибка на карте: {place.name} ({place.address or ''})\n"
+        f"Тип: {type_label}\n{description}"
+    )
+    issue = Issue(
+        title=f"Карта: {place.name}",
+        description=issue_desc,
+        status=IssueStatus.NEW,
+        category=IssueCategory.OTHER,
+        priority=Priority.MEDIUM,
+        address=place.address,
+        latitude=place.latitude,
+        longitude=place.longitude,
+        vk_peer_id=peer_id,
+    )
+    db.add(issue)
+    await db.flush()
+    complaint.issue_id = issue.id
+
+    await notify_owner(
+        f"🗺 ОШИБКА НА КАРТЕ (VK)\n\n"
+        f"«{place.name}» — {place.address or '—'}\n"
+        f"{type_label}\n{description[:300]}"
+    )
+    return box(
+        "Спасибо!",
+        f"Сообщение об ошибке принято.\nМесто: {place.name}\nПроверим и обновим карту.",
+    )
 
 
 async def handle_flow_message(
@@ -222,5 +313,60 @@ async def handle_flow_message(
                 "Объявление на модерации — появится на портале и в VK после проверки.\n\n"
                 f"Статус: {_SITE}/classifieds",
             )
+
+    if kind == "map_report":
+        data = flow["data"]
+        step = flow["step"]
+
+        if step == "search":
+            places = await _search_places_for_report(db, text)
+            if not places:
+                return "Не нашёл. Уточните название или «отмена»."
+            data["places"] = [{"id": p.id, "name": p.name, "address": p.address or ""} for p in places]
+            flow["step"] = "pick"
+            lines = ["Выберите номер места:\n"]
+            for i, p in enumerate(places, 1):
+                lines.append(f"{i}. {p.name}")
+                if p.address:
+                    lines.append(f"   📍 {p.address}")
+            return "\n".join(lines)
+
+        if step == "pick":
+            try:
+                idx = int(text.strip()) - 1
+                picked = data["places"][idx]
+            except (ValueError, IndexError, KeyError):
+                return "Напишите номер из списка (1–6) или «отмена»."
+            data["place_id"] = picked["id"]
+            data["place_name"] = picked["name"]
+            flow["step"] = "type"
+            lines = ["Тип ошибки — напишите номер:\n"]
+            for i, t in enumerate(MAP_REPORT_TYPES, 1):
+                lines.append(f"{i}. {MAP_REPORT_LABELS[t]}")
+            return "\n".join(lines)
+
+        if step == "type":
+            try:
+                tidx = int(text.strip()) - 1
+                report_type = MAP_REPORT_TYPES[tidx]
+            except (ValueError, IndexError):
+                return "Напишите номер типа (1–5) или «отмена»."
+            data["report_type"] = report_type.value
+            flow["step"] = "description"
+            return f"Опишите ошибку для «{data['place_name']}» (от 10 символов):"
+
+        if step == "description":
+            desc = text.strip()
+            if len(desc) < 10:
+                return "Описание от 10 символов. Или «отмена»."
+            result = await db.execute(select(Place).where(Place.id == data["place_id"]))
+            place = result.scalar_one_or_none()
+            if not place:
+                clear_flow(peer_id)
+                return "Место не найдено. Начните заново."
+            report_type = ShopComplaintType(data["report_type"])
+            msg = await _submit_map_report(db, place, report_type, desc, peer_id)
+            clear_flow(peer_id)
+            return msg
 
     return None

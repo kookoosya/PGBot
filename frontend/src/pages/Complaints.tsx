@@ -210,8 +210,15 @@ export function Complaints() {
                       <p className="text-sm mt-2">
                         {issue.ai_analysis?.summary || issue.description}
                       </p>
+                      {issue.resolution_text && (
+                        <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm">
+                          <strong className="text-emerald-800">Ответ службы:</strong>
+                          <p className="m-0 mt-1 text-emerald-900">{issue.resolution_text}</p>
+                        </div>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">
                         {formatDate(issue.created_at)}
+                        {issue.resolved_at && ` · решено ${formatDate(issue.resolved_at)}`}
                       </p>
                     </div>
                   ))}

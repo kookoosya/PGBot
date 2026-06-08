@@ -7,13 +7,38 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.classified import ClassifiedAd
-from app.models.enums import CLASSIFIED_LABELS, ClassifiedPaymentStatus
+from app.models.enums import (
+    CLASSIFIED_LABELS,
+    ClassifiedPaymentStatus,
+    JOB_CLASSIFIED_CATEGORIES,
+    SERVICE_CLASSIFIED_CATEGORIES,
+)
 from app.models.vk_subscriber import VkSubscriber
 from app.services.vk import send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
+
+SUBSCRIPTION_PRESETS = {
+    "all": "все объявления",
+    "jobs": "только работа и вакансии",
+    "services": "услуги и мастера",
+    "firewood": "дрова и огород",
+}
+
+
+def _wants_ad(sub: VkSubscriber, category) -> bool:
+    cats = (sub.categories or "all").lower()
+    if cats == "all":
+        return True
+    if cats == "jobs":
+        return category in JOB_CLASSIFIED_CATEGORIES
+    if cats == "services":
+        return category in SERVICE_CLASSIFIED_CATEGORIES
+    allowed = {c.strip() for c in cats.split(",") if c.strip()}
+    cat_val = category.value if hasattr(category, "value") else str(category)
+    return cat_val in allowed
 
 
 async def list_recent_ads(db: AsyncSession, limit: int = 5) -> list[ClassifiedAd]:
@@ -34,7 +59,7 @@ async def format_ads_message(db: AsyncSession) -> str:
     if not ads:
         return (
             "📋 Объявлений пока нет.\n\n"
-            f"Подайте первым на сайте:\n{_SITE}/classifieds\n\n"
+            f"Подайте первым — кнопка «➕ Объявление» или:\n{_SITE}/classifieds\n\n"
             "✨ Размещение бесплатно"
         )
     lines = [f"📋 Свежие объявления ({len(ads)}):\n"]
@@ -49,13 +74,23 @@ async def format_ads_message(db: AsyncSession) -> str:
     return "\n".join(lines)
 
 
-async def subscribe_peer(db: AsyncSession, peer_id: int) -> str:
+async def subscribe_peer(db: AsyncSession, peer_id: int, categories: str = "all") -> str:
+    preset = categories.lower().strip() or "all"
+    if preset not in SUBSCRIPTION_PRESETS and preset != "all":
+        preset = "all"
     result = await db.execute(select(VkSubscriber).where(VkSubscriber.peer_id == peer_id))
-    if result.scalar_one_or_none():
-        return "✅ Вы уже подписаны на новые объявления."
-    db.add(VkSubscriber(peer_id=peer_id))
+    existing = result.scalar_one_or_none()
+    label = SUBSCRIPTION_PRESETS.get(preset, preset)
+    if existing:
+        existing.categories = preset
+        await db.flush()
+        return f"✅ Подписка обновлена: {label}."
+    db.add(VkSubscriber(peer_id=peer_id, categories=preset))
     await db.flush()
-    return "🔔 Подписка оформлена! Буду присылать новые объявления соседей."
+    return (
+        f"🔔 Подписка оформлена: {label}.\n\n"
+        "Сменить: «подписка работа», «подписка дрова», «подписка все»"
+    )
 
 
 async def unsubscribe_peer(db: AsyncSession, peer_id: int) -> str:
@@ -82,10 +117,12 @@ async def notify_subscribers_new_ad(db: AsyncSession, ad: ClassifiedAd) -> int:
         f"Категория: {cat}{price}\n"
         f"{ad.description[:150]}{'…' if len(ad.description) > 150 else ''}\n\n"
         f"📞 {ad.phone}\n"
-        f"Подробнее: {_SITE}/classifieds"
+        f"Подробнее: {_SITE}/classifieds/{ad.id}"
     )
     sent = 0
     for sub in subs:
+        if not _wants_ad(sub, ad.category):
+            continue
         try:
             await send_message(sub.peer_id, msg)
             sent += 1
