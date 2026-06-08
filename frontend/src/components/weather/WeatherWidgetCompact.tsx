@@ -1,4 +1,4 @@
-import { formatTemperature, formatUpdatedAt, useWeather } from "@/hooks/useWeather";
+import { formatTemperature, useWeather } from "@/hooks/useWeather";
 
 type Props = {
   variant?: "header" | "inline";
