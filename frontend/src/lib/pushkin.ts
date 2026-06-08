@@ -2,18 +2,69 @@ export const PUSHKIN_QUOTES: Record<string, string> = {
   home: "«Любви, надежды, тихой славы\nНедолго сердцу снабжать...»",
   ai: "«Счастье то, что дух просветляет.»",
   map: "«Здесь русский дух... здесь Русью пахнет!»",
+  jobs: "«Труд — вот лучшая зарядка для юности!»",
   services: "«Труд — вот лучшая зарядка для юности!»",
   classifieds: "«Всё, что ни делается, — к лучшему.»",
+  complaints: "«Нет, я не льщу себя надеждой...»",
+  wishes: "«Мечты, мечты,\nГде ваша сладость?»",
   register: "«Береги минуту — час сбережёшь.»",
   default: "«Я памятник себе воздвиг нерукотворный...»",
 };
 
-export const PUSHKIN_VERSES = [
-  "«Уж небо осенью дышало...»",
-  "«Здесь русский дух... здесь Русью пахнет!»",
-  "«Труд — вот лучшая зарядка для юности!»",
-  "«Всё, что ни делается, — к лучшему.»",
+/** Герой главной — одна строка, крупно */
+export const HERO_VERSE =
+  "«Любви, надежды, тихой славы\nНедолго сердцу снабжать...»";
+
+export type PushkinVerse = {
+  text: string;
+  source: string;
+};
+
+/** Блок стихов на главной — без навигации, только поэзия */
+export const LANDING_VERSES: PushkinVerse[] = [
+  {
+    text: "«Здесь русский дух... здесь Русью пахнет!»",
+    source: "«Медный всадник»",
+  },
+  {
+    text: "«У лужайки, на опушке\nМахают, снявши шляпы...»",
+    source: "«У лужайки»",
+  },
+  {
+    text: "«Я памятник себе воздвиг нерукотворный,\nК нему не зарастёт народная тропа...»",
+    source: "«Я памятник...»",
+  },
+  {
+    text: "«Уж небо осенью дышало,\nУж более ручейков не бежало...»",
+    source: "«Осень»",
+  },
+  {
+    text: "«Всё, что ни делается, — к лучшему.»",
+    source: "К Чаадаеву",
+  },
+  {
+    text: "«Труд — вот лучшая зарядка для юности!»",
+    source: "«Дубровский»",
+  },
+  {
+    text: "«Счастье то, что дух просветляет.»",
+    source: "К Чаадаеву",
+  },
+  {
+    text: "«Мечты, мечты,\nГде ваша сладость?»",
+    source: "«Во глубине сибирских руд»",
+  },
 ];
+
+/** Короткая строка к фото мест */
+export const PHOTO_VERSES: Record<string, string> = {
+  Михайловское: "«...и снова я у вас, мои друзья...»",
+  "Святогорский монастырь": "«И памятник надгробный там\nСтоит, уныло над Соротью...»",
+  "Центр посёлка": "«Здесь русский дух... здесь Русью пахнет!»",
+  "Памятник Пушкину": "«Я памятник себе воздвиг нерукотворный...»",
+  Тригорское: "«У лужайки, на опушке\nМахают, снявши шляпы...»",
+  Петровское: "«Уж небо осенью дышало...»",
+};
 
 export { SITE_URL } from "./siteUrl";
 
@@ -67,8 +118,11 @@ export function quoteForPage(path: string): string {
   if (path === "/" || path === "") return PUSHKIN_QUOTES.home;
   if (path.startsWith("/ai")) return PUSHKIN_QUOTES.ai;
   if (path.startsWith("/map")) return PUSHKIN_QUOTES.map;
+  if (path.startsWith("/jobs")) return PUSHKIN_QUOTES.jobs;
   if (path.startsWith("/services")) return PUSHKIN_QUOTES.services;
   if (path.startsWith("/classifieds")) return PUSHKIN_QUOTES.classifieds;
+  if (path.startsWith("/complaints")) return PUSHKIN_QUOTES.complaints;
+  if (path.startsWith("/wishes")) return PUSHKIN_QUOTES.wishes;
   if (path.startsWith("/register")) return PUSHKIN_QUOTES.register;
   return PUSHKIN_QUOTES.default;
 }

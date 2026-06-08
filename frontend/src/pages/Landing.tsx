@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { PushkinVersesSection } from "@/components/PushkinVersesSection";
+import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
-import { VkBotLink } from "@/components/VkBotLink";
 import { BRAND } from "@/lib/branding";
-import { MAIN_SECTIONS } from "@/lib/navigation";
 import { api } from "@/lib/api";
-import { VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 
@@ -15,8 +15,6 @@ export function Landing() {
   useEffect(() => {
     api.getMapStats().then((s) => setPlacesCount(s.total_places)).catch(() => {});
   }, []);
-
-  const quickSections = MAIN_SECTIONS.filter((s) => s.to !== "/");
 
   return (
     <div className="landing-epic">
@@ -30,43 +28,49 @@ export function Landing() {
           <div className="epic-hero-mesh" />
         </div>
 
-        <div className="epic-hero-inner">
+        <div className="epic-hero-inner epic-hero-inner-centered">
           <div className="epic-hero-copy animate-hero">
             <span className="epic-kicker">🪶 {BRAND.district}</span>
+            <blockquote className="epic-quote">{HERO_VERSE}</blockquote>
             <h1 className="epic-title">
               <span className="epic-title-line">{BRAND.name}</span>
               <span className="epic-title-sub">{BRAND.tagline}</span>
             </h1>
             <p className="epic-lead">{BRAND.description}</p>
+
             {placesCount != null && (
-              <p className="epic-hero-meta">
-                {placesCount} организаций на карте · объявления и вакансии бесплатно
-              </p>
+              <div className="epic-stats-row">
+                <div className="epic-stat-card epic-stat-card-static">
+                  <strong>{placesCount}</strong>
+                  <span>организаций на карте</span>
+                </div>
+                <div className="epic-stat-card epic-stat-card-static">
+                  <strong>0 ₽</strong>
+                  <span>объявления и вакансии</span>
+                </div>
+                <div className="epic-stat-card epic-stat-card-static">
+                  <strong>24/7</strong>
+                  <span>ИИ и ВК-бот</span>
+                </div>
+              </div>
             )}
 
             <div className="epic-cta-row">
-              <Link to="/map" className="epic-btn epic-btn-primary">🗺 Карта посёлка</Link>
-              <Link to="/classifieds" className="epic-btn epic-btn-glass">📋 Объявления</Link>
-            </div>
-          </div>
-
-          <div className="epic-hero-panel animate-in">
-            <p className="epic-panel-label">Разделы</p>
-            <div className="epic-panel-grid">
-              {quickSections.map((s) => (
-                <Link key={s.to} to={s.to} className="epic-panel-tile">
-                  <span className="epic-panel-icon">{s.icon}</span>
-                  <span className="epic-panel-text">{s.label}</span>
-                </Link>
-              ))}
-            </div>
-            <div className="epic-panel-vk">
-              <VkBotLink />
+              <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
+                🗺 Открыть карту
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
+      <section className="epic-vk-section">
+        <div className="page-section max-w-2xl mx-auto">
+          <VkBotBanner />
+        </div>
+      </section>
+
+      <PushkinVersesSection />
       <VillageGallery />
     </div>
   );

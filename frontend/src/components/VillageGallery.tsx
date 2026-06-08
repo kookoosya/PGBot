@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { PHOTO_VERSES, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 export function VillageGallery() {
   const [broken, setBroken] = useState<Record<string, boolean>>({});
@@ -9,7 +9,7 @@ export function VillageGallery() {
       <div className="page-section">
         <h3 className="section-title">Пушкиногорье</h3>
         <p className="text-center text-muted-foreground -mt-6 mb-10 text-sm">
-          Реальные фото мест — музей-заповедник, монастырь, усадьбы
+          Музей-заповедник, монастырь, усадьбы — места, где жил и творил поэт
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VILLAGE_PHOTOS.map((photo, i) => (
@@ -39,6 +39,9 @@ export function VillageGallery() {
               <div className="p-4">
                 <h4 className="font-semibold">{photo.title}</h4>
                 <p className="text-xs text-muted-foreground">{photo.caption}</p>
+                {PHOTO_VERSES[photo.title] && (
+                  <p className="epic-photo-verse">{PHOTO_VERSES[photo.title]}</p>
+                )}
                 {"credit" in photo && photo.credit ? (
                   <p className="text-[10px] text-muted-foreground/70 mt-1">{photo.credit}</p>
                 ) : null}

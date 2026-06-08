@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { PageBackdrop } from "@/components/PageBackdrop";
+import { PushkinBanner } from "@/components/PushkinBanner";
 import { FooterNav } from "@/components/FooterNav";
 import { VkBotLink } from "@/components/VkBotLink";
 import { api } from "@/lib/api";
@@ -12,6 +13,7 @@ import { TabNav } from "./TabNav";
 export function PublicLayout() {
   const { user } = useUserAuth();
   const location = useLocation();
+  const isHome = location.pathname === "/";
 
   useEffect(() => {
     api.trackVisit(location.pathname).catch(() => {});
@@ -32,7 +34,7 @@ export function PublicLayout() {
               </div>
             </Link>
             <div className="pushkin-header-actions">
-              <VkBotLink />
+              {!isHome && <VkBotLink />}
               {user ? (
                 <Link to={getUserHomePath(user)} className="pushkin-header-link">
                   👤 {user.full_name || user.username}
@@ -50,6 +52,8 @@ export function PublicLayout() {
         </div>
         <TabNav variant="top" />
       </header>
+
+      {!isHome && <PushkinBanner />}
 
       <main className="flex-1 w-full pushkin-main page-fade-wrap" key={location.pathname}>
         <Outlet />

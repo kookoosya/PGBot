@@ -1596,6 +1596,19 @@
     @apply mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 md:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center;
   }
 
+  .epic-hero-inner-centered {
+    @apply lg:grid-cols-1 max-w-3xl text-center;
+  }
+  .epic-hero-inner-centered .epic-lead {
+    @apply mx-auto;
+  }
+  .epic-hero-inner-centered .epic-stats-row {
+    @apply max-w-lg mx-auto;
+  }
+  .epic-hero-inner-centered .epic-cta-row {
+    @apply justify-center;
+  }
+
   .epic-kicker {
     @apply inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.14em] uppercase;
     background: hsl(42 75% 50% / 0.22);
@@ -1742,6 +1755,36 @@
   .epic-panel-icon { font-size: 1.5rem; line-height: 1; }
   .epic-panel-text { @apply text-xs font-bold; }
   .epic-panel-vk { @apply mt-4; }
+
+  .epic-verses-section {
+    background: linear-gradient(180deg, hsl(42 38% 95%), hsl(40 48% 98%));
+    border-top: 4px solid hsl(42 75% 50%);
+  }
+  .epic-verses-grid {
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+  }
+  .epic-verse-card {
+    @apply m-0 rounded-2xl p-5 flex flex-col gap-3 h-full;
+    background: hsl(40 55% 99%);
+    border: 2px solid hsl(42 40% 82%);
+    box-shadow: 0 4px 16px hsl(152 30% 20% / 0.06);
+  }
+  .epic-verse-text {
+    @apply m-0 font-serif italic text-base leading-relaxed whitespace-pre-line flex-1;
+    color: hsl(350 42% 28%);
+  }
+  .epic-verse-source {
+    @apply text-xs font-semibold not-italic;
+    color: hsl(42 55% 38%);
+  }
+  .epic-photo-verse {
+    @apply mt-2 mb-0 font-serif italic text-xs leading-relaxed whitespace-pre-line;
+    color: hsl(350 38% 32%);
+  }
+
+  .footer-minimal {
+    @apply max-w-xl mx-auto;
+  }
 
   .epic-bento-section {
     background: linear-gradient(180deg, hsl(42 38% 95%), hsl(42 42% 98%));
