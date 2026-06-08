@@ -13,7 +13,7 @@ fi
 HOST="${VPS_HOST:-192.210.213.135}"
 USER="${VPS_USER:-root}"
 BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
-REMOTE="cd /opt/pgbot && git fetch origin $BRANCH && git checkout $BRANCH && git pull origin $BRANCH && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head"
+REMOTE="cd /opt/pgbot && git fetch origin $BRANCH && git checkout $BRANCH && git pull origin $BRANCH && bash scripts/setup-russia-mirror.sh && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head"
 
 export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"
 
@@ -27,4 +27,4 @@ else
   exit 1
 fi
 
-echo "Deploy OK: https://pushkiny.gmxreply.com"
+echo "Deploy OK: https://192-210-213-135.sslip.io (без VPN)"

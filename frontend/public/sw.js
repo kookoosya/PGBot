@@ -1,10 +1,12 @@
-const CACHE = "pgbot-shell-v3";
-const TILE_CACHE = "pgbot-map-tiles-v3";
+const CACHE = "pgbot-shell-v5";
+const TILE_CACHE = "pgbot-map-tiles-v5";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(["/map"]).catch(() => {})),
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k.startsWith("pgbot-")).map((k) => caches.delete(k))),
+    ),
   );
 });
 

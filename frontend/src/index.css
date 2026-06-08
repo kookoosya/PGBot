@@ -1225,11 +1225,294 @@
     }
   }
 
+  /* === EPIC LANDING === */
+  .landing-epic {
+    --epic-gold: hsl(42 88% 58%);
+    --epic-forest: hsl(152 48% 16%);
+  }
+
+  .epic-hero {
+    position: relative;
+    min-height: min(96vh, 980px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: hsl(42 90% 96%);
+  }
+
+  .epic-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .epic-hero-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.06);
+    animation: epicKenBurns 18s ease-in-out infinite alternate;
+  }
+  .epic-hero-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(115deg, hsl(152 48% 10% / 0.92) 0%, hsl(152 40% 16% / 0.78) 42%, hsl(350 38% 18% / 0.55) 100%),
+      linear-gradient(0deg, hsl(152 50% 8% / 0.85), transparent 45%);
+  }
+  .epic-hero-mesh {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 30%, hsl(42 85% 55% / 0.22), transparent 40%),
+      radial-gradient(circle at 80% 70%, hsl(350 55% 45% / 0.18), transparent 38%);
+    mix-blend-mode: screen;
+  }
+
+  .epic-hero-inner {
+    position: relative;
+    z-index: 1;
+    @apply mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 md:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center;
+  }
+
+  .epic-kicker {
+    @apply inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.14em] uppercase;
+    background: hsl(42 75% 50% / 0.22);
+    border: 1px solid hsl(42 80% 60% / 0.45);
+    color: hsl(42 90% 88%);
+  }
+
+  .epic-quote {
+    @apply font-serif italic text-lg md:text-xl mb-3 whitespace-pre-line;
+    color: hsl(42 85% 78%);
+  }
+
+  .epic-title {
+    @apply m-0;
+  }
+  .epic-title-line {
+    display: block;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(2.4rem, 7vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  }
+  .epic-title-sub {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: clamp(1.1rem, 3vw, 1.65rem);
+    font-weight: 600;
+    color: var(--epic-gold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .epic-lead {
+    @apply mt-5 max-w-xl text-base md:text-lg leading-relaxed;
+    color: hsl(42 50% 92% / 0.9);
+  }
+
+  .epic-stats-row {
+    @apply grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8;
+  }
+  .epic-stat-card {
+    @apply rounded-2xl p-4 no-underline transition;
+    background: hsl(152 40% 12% / 0.55);
+    border: 2px solid hsl(42 70% 50% / 0.35);
+    backdrop-filter: blur(10px);
+    color: hsl(42 90% 94%);
+  }
+  .epic-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(42 80% 55% / 0.7);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  }
+  .epic-stat-card strong {
+    display: block;
+    font-size: 1.75rem;
+    font-family: "Playfair Display", Georgia, serif;
+    color: var(--epic-gold);
+  }
+  .epic-stat-card span {
+    @apply text-xs font-semibold mt-1 block;
+    color: hsl(42 60% 88% / 0.85);
+  }
+  .epic-stat-card-static { cursor: default; }
+
+  .epic-cta-row {
+    @apply flex flex-wrap gap-3 mt-8;
+  }
+  .epic-btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm md:text-base transition no-underline;
+  }
+  .epic-btn-primary {
+    background: linear-gradient(180deg, hsl(42 88% 58%), hsl(42 78% 46%));
+    color: hsl(152 50% 10%);
+    border: 2px solid hsl(42 92% 68%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  }
+  .epic-btn-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+  .epic-btn-glass {
+    background: hsl(152 35% 14% / 0.45);
+    border: 2px solid hsl(42 60% 55% / 0.5);
+    color: hsl(42 90% 94%);
+    backdrop-filter: blur(8px);
+  }
+  .epic-btn-glass:hover {
+    background: hsl(152 35% 18% / 0.65);
+    border-color: hsl(42 75% 55%);
+  }
+  .epic-btn-lg {
+    @apply px-8 py-4 text-base;
+  }
+
+  .epic-access-note {
+    @apply mt-6 text-xs md:text-sm rounded-xl px-4 py-3;
+    background: hsl(42 70% 50% / 0.12);
+    border: 1px dashed hsl(42 75% 55% / 0.45);
+    color: hsl(42 80% 88%);
+  }
+  .epic-access-link {
+    color: hsl(42 90% 72%);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .epic-hero-panel {
+    @apply rounded-3xl p-5 md:p-6;
+    background: hsl(40 55% 99% / 0.1);
+    border: 2px solid hsl(42 75% 60% / 0.35);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  }
+  .epic-panel-label {
+    @apply text-xs font-bold uppercase tracking-[0.16em] m-0 mb-4;
+    color: hsl(42 85% 78%);
+  }
+  .epic-panel-grid {
+    @apply grid grid-cols-2 gap-2;
+  }
+  .epic-panel-tile {
+    @apply flex flex-col items-center justify-center gap-1 rounded-2xl p-3 text-center no-underline transition;
+    background: hsl(152 40% 14% / 0.55);
+    border: 1px solid hsl(42 55% 45% / 0.35);
+    color: hsl(42 90% 94%);
+    min-height: 5.5rem;
+  }
+  .epic-panel-tile:hover {
+    transform: translateY(-2px);
+    border-color: hsl(42 80% 55%);
+    background: hsl(152 38% 18% / 0.75);
+  }
+  .epic-panel-tile-accent {
+    background: linear-gradient(135deg, hsl(42 75% 48% / 0.35), hsl(42 80% 55% / 0.2));
+    border-color: hsl(42 80% 55% / 0.55);
+  }
+  .epic-panel-icon { font-size: 1.5rem; line-height: 1; }
+  .epic-panel-text { @apply text-xs font-bold; }
+  .epic-panel-vk { @apply mt-4; }
+
+  .epic-bento-section {
+    background: linear-gradient(180deg, hsl(42 38% 95%), hsl(42 42% 98%));
+    border-top: 4px solid hsl(42 75% 50%);
+  }
+  .epic-section-head {
+    @apply text-center max-w-2xl mx-auto mb-10;
+  }
+  .epic-section-kicker {
+    @apply text-xs font-bold uppercase tracking-[0.18em] m-0;
+    color: hsl(42 70% 38%);
+  }
+  .epic-section-title {
+    @apply text-3xl md:text-4xl font-bold mt-2 mb-3 m-0;
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
+  .epic-section-desc {
+    @apply text-muted-foreground m-0;
+  }
+
+  .epic-bento {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+  .epic-bento-card {
+    @apply relative overflow-hidden rounded-3xl p-6 md:p-7 no-underline text-inherit transition;
+    border: 2px solid transparent;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 36px rgba(12, 40, 28, 0.1);
+  }
+  .epic-bento-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 20px 48px rgba(12, 40, 28, 0.16);
+  }
+  .epic-bento-emerald {
+    background: linear-gradient(145deg, hsl(152 42% 92%), hsl(152 35% 88%));
+    border-color: hsl(152 35% 68%);
+  }
+  .epic-bento-gold {
+    background: linear-gradient(145deg, hsl(42 65% 92%), hsl(42 58% 88%));
+    border-color: hsl(42 60% 65%);
+  }
+  .epic-bento-rose {
+    background: linear-gradient(145deg, hsl(350 45% 94%), hsl(350 38% 90%));
+    border-color: hsl(350 35% 78%);
+  }
+  .epic-bento-violet {
+    background: linear-gradient(145deg, hsl(265 40% 94%), hsl(265 32% 90%));
+    border-color: hsl(265 30% 78%);
+  }
+  .epic-bento-num {
+    @apply absolute top-4 right-5 text-4xl font-bold opacity-15;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .epic-bento-icon { @apply text-4xl mb-3; }
+  .epic-bento-title { @apply text-xl font-bold m-0 mb-2; }
+  .epic-bento-desc { @apply text-sm text-muted-foreground m-0 flex-1 leading-relaxed; }
+  .epic-bento-go {
+    @apply mt-4 text-sm font-bold;
+    color: hsl(152 45% 22%);
+  }
+
+  .epic-strip {
+    background: linear-gradient(135deg, hsl(152 48% 16%), hsl(152 40% 24%) 55%, hsl(350 38% 26%));
+    color: hsl(42 90% 94%);
+    border-top: 4px solid hsl(42 80% 52%);
+    border-bottom: 4px solid hsl(42 80% 52%);
+  }
+  .epic-strip-inner {
+    @apply flex flex-col md:flex-row md:items-center md:justify-between gap-6;
+  }
+  .epic-strip-kicker {
+    @apply text-xs font-bold uppercase tracking-[0.16em] m-0;
+    color: hsl(42 80% 70%);
+  }
+  .epic-strip-title {
+    @apply text-2xl md:text-3xl font-bold mt-2 mb-2 m-0;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .epic-strip-desc {
+    @apply m-0 max-w-xl text-sm md:text-base;
+    color: hsl(42 50% 90% / 0.88);
+  }
+
+  @keyframes epicKenBurns {
+    from { transform: scale(1.06) translate(0, 0); }
+    to { transform: scale(1.12) translate(-1.2%, -0.8%); }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-hero > *,
     .animate-in,
     .hero-glow,
     .hero-orb,
+    .epic-hero-photo,
     .pushkin-header::after,
     .map-marker-pin {
       animation: none !important;
@@ -1237,7 +1520,10 @@
     .pushkin-card-hover:hover,
     .feature-card:hover .feature-icon,
     .pushkin-tab:hover,
-    .stat-pill:hover {
+    .stat-pill:hover,
+    .epic-bento-card:hover,
+    .epic-stat-card:hover,
+    .epic-btn-primary:hover {
       transform: none;
     }
   }

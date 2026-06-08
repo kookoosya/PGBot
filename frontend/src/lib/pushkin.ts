@@ -15,7 +15,7 @@ export const PUSHKIN_VERSES = [
   "«Всё, что ни делается, — к лучшему.»",
 ];
 
-export const SITE_URL = "https://pushkiny.gmxreply.com";
+export { SITE_URL } from "./siteUrl";
 
 /** Фото Пушкиногорья — локальные копии с Wikimedia Commons */
 export const VILLAGE_PHOTOS = [
