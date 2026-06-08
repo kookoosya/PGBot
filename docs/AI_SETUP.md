@@ -20,13 +20,31 @@ POLLINATIONS_API_KEY=sk_ваш_ключ
 
 Ключ автоматически попадёт в `/opt/pgbot/.env` на сервере.
 
-## Альтернатива: прямой Gemini
+## Gemini (Google) — где взять ключ
 
+1. Откройте **https://aistudio.google.com/apikey**
+2. Войдите в Google-аккаунт
+3. Нажмите **«Create API key»** / «Создать ключ API»
+4. Скопируйте ключ — он начинается с **`AIza...`** (длина ~39 символов)
+
+Бесплатный тариф: есть лимиты на запросы в минуту/день — для портала обычно хватает.
+
+### Куда вставить ключ
+
+**Вариант А** — Cursor → Settings → Cloud Agents → **Secrets**:
 ```env
-GEMINI_API_KEY=AIza...   # из aistudio.google.com/apikey
+GEMINI_API_KEY=AIzaSy...
 ```
 
-Работает чат. Для картинок всё равно лучше Pollinations.
+**Вариант Б** — файл `.deploy.env` в корне проекта:
+```env
+GEMINI_API_KEY=AIzaSy...
+```
+
+Затем деплой: `bash scripts/remote-deploy.sh` — ключ попадёт в `/opt/pgbot/.env`.
+
+Приоритет провайдеров: Pollinations → OpenRouter → **Gemini** → локальный справочник.
+Сейчас на VPS уже работает OpenRouter; Gemini добавится как дополнительный путь.
 
 ## Проверка
 
