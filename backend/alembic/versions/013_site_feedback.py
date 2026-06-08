@@ -8,8 +8,8 @@ Create Date: 2026-06-08
 from alembic import op
 import sqlalchemy as sa
 
-revision = "013_site_feedback"
-down_revision = "012_vk_subscribers"
+revision = "013"
+down_revision = "012"
 branch_labels = None
 depends_on = None
 
