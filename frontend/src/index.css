@@ -856,6 +856,12 @@
   }
   .ai-status-warn p { margin: 0.35rem 0 0; }
 
+  .ai-limits-note {
+    @apply rounded-xl p-4;
+    background: hsl(42 45% 96%);
+    border: 1px solid hsl(42 40% 82%);
+  }
+
   .ai-chat-panel {
     height: calc(100vh - 380px);
     min-height: 360px;

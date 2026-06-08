@@ -527,7 +527,13 @@ export interface AIStatus {
   pollinations_configured: boolean;
   openrouter_configured?: boolean;
   gemini_configured: boolean;
+  providers?: string[];
   message: string;
+  limits?: {
+    site_daily: number;
+    site_note: string;
+    providers_note: string;
+  };
 }
 
 export interface AIModelsInfo {

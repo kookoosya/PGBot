@@ -14,7 +14,9 @@ def _looks_like_placeholder(key: str) -> bool:
 
 def is_valid_gemini_key(key: str) -> bool:
     k = key.strip()
-    return bool(k) and not _looks_like_placeholder(k) and (k.startswith("AIza") or len(k) >= 32)
+    return bool(k) and not _looks_like_placeholder(k) and (
+        k.startswith("AIza") or k.startswith("AQ.") or len(k) >= 32
+    )
 
 
 def is_valid_pollinations_key(key: str) -> bool:
@@ -57,6 +59,14 @@ def get_ai_status() -> dict:
         else:
             message = "ИИ не настроен: нет рабочего API-ключа на сервере."
 
+    providers = []
+    if poll_ok:
+        providers.append("Pollinations")
+    if or_ok:
+        providers.append("OpenRouter")
+    if gemini_ok:
+        providers.append("Gemini")
+
     return {
         "ready": ready,
         "chat_provider": chat_provider,
@@ -64,5 +74,18 @@ def get_ai_status() -> dict:
         "pollinations_configured": poll_ok,
         "openrouter_configured": or_ok,
         "gemini_configured": gemini_ok,
+        "providers": providers,
         "message": message,
+        "limits": {
+            "site_daily": s.AI_FREE_DAILY_LIMIT,
+            "site_note": (
+                f"На портале — {s.AI_FREE_DAILY_LIMIT} сообщений/картинок в день на человека. "
+                "Лимит обновляется в полночь."
+            ),
+            "providers_note": (
+                "У нейросетей свои лимиты: Gemini — квота Google (запросов/мин и в день), "
+                "OpenRouter — баланс кредитов, Pollinations — pollen на аккаунте. "
+                "При исчерпании квоты ответ может прийти с задержкой или через другой провайдер."
+            ),
+        },
     }

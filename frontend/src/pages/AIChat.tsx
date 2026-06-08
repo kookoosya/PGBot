@@ -119,6 +119,19 @@ export function AIChat() {
         </div>
       )}
 
+      {aiStatus?.limits && (
+        <div className="ai-limits-note text-sm mb-4">
+          <p className="m-0 mb-1"><strong>Лимиты:</strong> {aiStatus.limits.site_note}</p>
+          <p className="m-0 text-muted-foreground">{aiStatus.limits.providers_note}</p>
+          {aiStatus.providers && aiStatus.providers.length > 0 && (
+            <p className="m-0 mt-1 text-muted-foreground">
+              Провайдеры: {aiStatus.providers.join(" · ")}
+              {aiStatus.gemini_configured && aiStatus.chat_provider !== "google" && " (Gemini — резерв)"}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-4">
         <button type="button" className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`} onClick={() => setTab("chat")}>
           💬 Чат

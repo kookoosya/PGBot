@@ -67,4 +67,6 @@ class AIStatusResponse(BaseModel):
     pollinations_configured: bool
     openrouter_configured: bool = False
     gemini_configured: bool
+    providers: list[str] = []
     message: str
+    limits: dict | None = None

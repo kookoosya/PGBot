@@ -44,7 +44,17 @@ GEMINI_API_KEY=AIzaSy...
 Затем деплой: `bash scripts/remote-deploy.sh` — ключ попадёт в `/opt/pgbot/.env`.
 
 Приоритет провайдеров: Pollinations → OpenRouter → **Gemini** → локальный справочник.
-Сейчас на VPS уже работает OpenRouter; Gemini добавится как дополнительный путь.
+
+### Лимиты
+
+| Уровень | Что ограничено |
+|---------|----------------|
+| **Портал** | 30 сообщений/картинок в день на человека (обновление в полночь) |
+| **Gemini** | Квота Google: запросов в минуту и в день; при 429 — подождите или включите биллинг |
+| **OpenRouter** | Баланс кредитов на аккаунте |
+| **Pollinations** | Pollen на аккаунте (enter.pollinations.ai) |
+
+**Важно:** чужие «бесплатные ключи из интернета» использовать нельзя — это нарушение правил и риск блокировки. Легальные бесплатные варианты: [aistudio.google.com](https://aistudio.google.com/apikey), [enter.pollinations.ai](https://enter.pollinations.ai), [openrouter.ai](https://openrouter.ai).
 
 ## Проверка
 
