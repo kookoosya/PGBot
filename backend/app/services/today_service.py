@@ -23,6 +23,18 @@ TODAY_CACHE_TTL_SECONDS = 300
 
 
 @dataclass(frozen=True, slots=True)
+class TodayEventRow:
+    id: int
+    title: str
+    starts_at_label: str
+    ends_at_label: str | None
+    location: str | None
+    category_label: str
+    description: str | None
+    source_url: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class TodaySnapshot:
     """Landing dashboard payload assembled from existing services."""
 
@@ -35,20 +47,8 @@ class TodaySnapshot:
     total_reviews: int
     active_taxi_count: int
     route_count: int
-    upcoming_events: list["TodayEventRow"]
+    upcoming_events: list[TodayEventRow]
     updated_at: datetime
-
-
-@dataclass(frozen=True, slots=True)
-class TodayEventRow:
-    id: int
-    title: str
-    starts_at_label: str
-    ends_at_label: str | None
-    location: str | None
-    category_label: str
-    description: str | None
-    source_url: str | None
 
     def to_response(self) -> TodayResponse:
         from app.schemas.today import TodayClassifiedSnippet, TodayEventSnippet, TodayMapSnippet
