@@ -16,27 +16,18 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
-import { api, ComplaintType, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
+import { api, ComplaintType, MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
 import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const CENTER: [number, number] = [57.0267, 28.91];
 
-const QUICK_FILTERS: {
-  id: string;
-  label: string;
-  category?: string;
-  shopsOnly?: boolean;
-  usefulOnly?: boolean;
-}[] = [
-  { id: "shops", label: "🛒 Магазины", shopsOnly: true },
-  { id: "pharmacy", label: "💊 Аптеки", category: "pharmacy" },
-  { id: "cafe", label: "☕ Кафе", category: "cafe" },
-  { id: "gas", label: "⛽ АЗС", category: "gas" },
-  { id: "culture", label: "🎭 Музеи", category: "culture" },
-  { id: "useful", label: "🏦 Полезное", usefulOnly: true },
-  { id: "hotel", label: "🏨 Гостиницы", category: "hotel" },
-  { id: "tyre", label: "🛞 Авто", category: "tyre" },
+const FALLBACK_MAP_MODES: MapFilterMode[] = [
+  { id: "shops", label: "🛒 Магазины", category: null, shops_only: true, useful_only: false, show_taxi: false },
+  { id: "pharmacy", label: "💊 Аптеки", category: "pharmacy", shops_only: false, useful_only: false, show_taxi: false },
+  { id: "taxi", label: "🚕 Такси", category: null, shops_only: false, useful_only: false, show_taxi: true },
+  { id: "useful", label: "🏦 Полезное", category: null, shops_only: false, useful_only: true, show_taxi: false },
+  { id: "landmarks", label: "🏛 Достопримечательности", category: "culture", shops_only: false, useful_only: false, show_taxi: false },
 ];
 
 function formatPlaceNote(text: string | null | undefined): string | null {
@@ -195,7 +186,8 @@ export function MapPage() {
   const [mapReportTypes, setMapReportTypes] = useState<ComplaintType[]>([]);
   const [search, setSearch] = useState("");
   const [mapStyle, setMapStyle] = useState<"scheme" | "satellite">("scheme");
-  const [showTaxi, setShowTaxi] = useState(true);
+  const [mapModes, setMapModes] = useState<MapFilterMode[]>(FALLBACK_MAP_MODES);
+  const [taxiMode, setTaxiMode] = useState(false);
   const [complaintTypes, setComplaintTypes] = useState<ComplaintType[]>([]);
   const [tab, setTab] = useState<"info" | "review" | "complaint" | "report">("info");
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: "", author_name: "" });
@@ -225,28 +217,33 @@ export function MapPage() {
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
     api.getMapStats().then(setMapStats).catch(console.error);
+    api.getMapFilterModes().then(setMapModes).catch(() => setMapModes(FALLBACK_MAP_MODES));
     api.getMapRoutes().then(setRoutes).catch(console.error);
   }, []);
 
   const isLodging = category === "hotel";
 
-  const activeFilterId = shopsOnly
-    ? "shops"
-    : usefulOnly
-      ? "useful"
-      : QUICK_FILTERS.find((f) => f.category === category)?.id ?? "";
+  const activeFilterId = taxiMode
+    ? "taxi"
+    : shopsOnly
+      ? "shops"
+      : usefulOnly
+        ? "useful"
+        : mapModes.find((f) => f.category === category)?.id ?? "";
 
-  const applyQuickFilter = (filter: (typeof QUICK_FILTERS)[number]) => {
+  const applyQuickFilter = (filter: MapFilterMode) => {
     const isActive = activeFilterId === filter.id;
     if (isActive) {
       setCategory("");
       setShopsOnly(false);
       setUsefulOnly(false);
+      setTaxiMode(false);
       return;
     }
     setCategory(filter.category ?? "");
-    setShopsOnly(Boolean(filter.shopsOnly));
-    setUsefulOnly(Boolean(filter.usefulOnly));
+    setShopsOnly(Boolean(filter.shops_only));
+    setUsefulOnly(Boolean(filter.useful_only));
+    setTaxiMode(Boolean(filter.show_taxi));
   };
 
   const showRoute = (route: MapRoute) => {
@@ -257,6 +254,12 @@ export function MapPage() {
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     if (boundsPausedRef.current) return;
+    if (taxiMode) {
+      setPlaces([]);
+      setPlacesLoading(false);
+      setPlacesError(false);
+      return;
+    }
     if (bounds) boundsRef.current = bounds;
     const b = bounds || boundsRef.current;
     if (!b && !isLodging) return;
@@ -297,7 +300,7 @@ export function MapPage() {
           setPlacesLoading(false);
         }
       });
-  }, [category, shopsOnly, usefulOnly, search, isLodging]);
+  }, [category, shopsOnly, usefulOnly, search, isLodging, taxiMode]);
 
   async function handleOfflineDownload() {
     setOfflineBusy(true);
@@ -456,12 +459,11 @@ export function MapPage() {
         </div>
       )}
 
-      {showTaxi && taxi.length > 0 && (
+      {taxi.length > 0 && (
         <div className="page-section pb-3">
-          <div className="taxi-panel">
+          <div className={`taxi-panel${taxiMode ? " taxi-panel-active" : ""}`}>
             <div className="taxi-panel-header">
-              <h3>🚕 Такси для туристов</h3>
-              <button type="button" className="text-xs opacity-60" onClick={() => setShowTaxi(false)}>скрыть</button>
+              <h3>🚕 Такси {taxiMode ? "в посёлке" : "для туристов"}</h3>
             </div>
             <div className="taxi-grid">
               {taxi.map((t) => (
@@ -555,7 +557,7 @@ export function MapPage() {
               onKeyDown={(e) => e.key === "Enter" && loadPlaces()}
             />
             <div className="map-filter-scroll">
-              {QUICK_FILTERS.map((f) => (
+              {mapModes.map((f) => (
                 <button
                   key={f.id}
                   type="button"

@@ -39,6 +39,7 @@ from app.services.place_service import (
     build_complaint_response,
     build_place_response,
     create_place_complaint,
+    get_map_filter_modes,
     get_map_stats,
     get_place_details,
     list_active_taxi,
@@ -80,6 +81,11 @@ async def list_map_routes():
 async def list_taxi(db: Annotated[AsyncSession, Depends(get_db)]):
     taxis = await list_active_taxi(db)
     return [TaxiServiceResponse.model_validate(t) for t in taxis]
+
+
+@router.get("/map/modes")
+async def list_map_filter_modes():
+    return get_map_filter_modes()
 
 
 @router.get("/map/stats", response_model=MapStatsResponse)

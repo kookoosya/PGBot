@@ -15,12 +15,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.audit_log import AuditLog
-from app.models.enums import IssueStatus
+from app.models.enums import OFFICIAL_ROLES, IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue, IssueComment
 from app.models.user import User
 from app.services.audit import log_action
@@ -43,6 +43,10 @@ _ISSUE_LIST_LOADS = (
 )
 
 _STATUS_AUDIT_ACTIONS = frozenset({"status_change", "reopen_issue", "archive_issue"})
+
+JKH_CATEGORIES = frozenset(
+    {IssueCategory.UTILITIES, IssueCategory.WATER, IssueCategory.SEWERAGE}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +79,45 @@ class IssueValidationError(ServiceError):
 
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
         super().__init__(detail, status_code=status_code)
+
+
+@dataclass(frozen=True, slots=True)
+class IssueSearchParams:
+    """Filters for ``search_issues``."""
+
+    status: Optional[IssueStatus] = None
+    category: Optional[str] = None
+    search: Optional[str] = None
+    page: int = 1
+    page_size: int = 20
+
+
+@dataclass(frozen=True, slots=True)
+class IssueSearchResult:
+    items: list[Issue]
+    total: int
+    page: int
+    page_size: int
+
+
+def _official_category_filter(user: User):
+    if user.role.name == UserRole.SOCIAL_SERVICE:
+        conditions = [Issue.category.in_(JKH_CATEGORIES)]
+        if user.department_id:
+            conditions.append(Issue.department_id == user.department_id)
+        return or_(*conditions)
+    return None
+
+
+def _apply_issue_access_filter(query, user: User):
+    if user.role.name == UserRole.RESIDENT:
+        return query.where(Issue.resident_id == user.id)
+    if user.role.name in OFFICIAL_ROLES or user.role.name == UserRole.MODERATOR:
+        cat_filter = _official_category_filter(user)
+        if cat_filter is not None:
+            return query.where(cat_filter)
+        return query
+    raise IssueValidationError("Недостаточно прав", status_code=403)
 
 
 async def _safe_audit(
@@ -251,6 +294,35 @@ async def get_issues_for_user(
         safe_limit,
     )
     return issues
+
+
+async def search_issues(
+    db: AsyncSession,
+    user: User,
+    params: IssueSearchParams,
+) -> IssueSearchResult:
+    """Search issues visible to ``user`` with pagination."""
+    page = max(1, params.page)
+    page_size = max(1, min(params.page_size, 100))
+
+    query = select(Issue).options(*_ISSUE_LIST_LOADS)
+    query = _apply_issue_access_filter(query, user)
+
+    if params.status is not None:
+        query = query.where(Issue.status == params.status)
+    if params.category:
+        query = query.where(Issue.category == params.category)
+    if params.search:
+        query = query.where(Issue.description.ilike(f"%{params.search.strip()}%"))
+
+    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    result = await db.execute(
+        query.order_by(Issue.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    items = list(result.scalars().all())
+    return IssueSearchResult(items=items, total=total, page=page, page_size=page_size)
 
 
 async def get_issue_status_timeline(db: AsyncSession, issue: Issue) -> list[IssueStatusEvent]:

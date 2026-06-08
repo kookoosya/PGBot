@@ -16,21 +16,13 @@ from app.models.enums import (
 )
 from app.models.vk_subscriber import VkSubscriber
 from app.services.vk import send_message, get_welcome_keyboard
+from app.services.vk_subscription import subscriber_wants_category
 from app.services.weather_service import WeatherFetchError, format_weather_digest_lines, get_weather
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 DIGEST_HOUR_UTC = 6  # 09:00 МСК зимой / 09:00 летом ≈
-
-
-def _subscriber_wants_category(sub: VkSubscriber, category) -> bool:
-    cats = (sub.categories or "all").lower()
-    if cats == "all":
-        return True
-    if cats == "jobs":
-        return category in JOB_CLASSIFIED_CATEGORIES
-    return category.value in cats.split(",") or str(category) in cats.split(",")
 
 
 async def send_daily_digest(db: AsyncSession) -> int:
@@ -77,7 +69,7 @@ async def send_daily_digest(db: AsyncSession) -> int:
         if sub.last_digest_at and sub.last_digest_at.date() >= now.date():
             continue
 
-        relevant = [a for a in recent_ads if _subscriber_wants_category(sub, a.category)]
+        relevant = [a for a in recent_ads if subscriber_wants_category(sub, a.category)]
         lines = [
             "🪶 Сводка за сутки\n",
         ]

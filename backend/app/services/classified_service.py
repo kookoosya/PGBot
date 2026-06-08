@@ -22,6 +22,7 @@ from app.models.enums import (
     ClassifiedCategory,
     ClassifiedPaymentStatus,
     JOB_CLASSIFIED_CATEGORIES,
+    NEIGHBOR_HELP_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
 )
 from app.models.user import User
@@ -93,6 +94,7 @@ class ClassifiedSearchParams:
     services_only: bool = False
     jobs_only: bool = False
     ads_only: bool = False
+    neighbor_only: bool = False
     page: int = 1
     page_size: int = 20
     offset: Optional[int] = None
@@ -292,6 +294,8 @@ async def search_classifieds(
             query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
         elif params.ads_only:
             query = query.where(ClassifiedAd.category.notin_(JOB_CLASSIFIED_CATEGORIES))
+        if params.neighbor_only:
+            query = query.where(ClassifiedAd.category.in_(NEIGHBOR_HELP_CATEGORIES))
         if params.category is not None:
             query = query.where(ClassifiedAd.category == params.category)
         if params.search:
@@ -531,6 +535,21 @@ async def _validate_create_input(db: AsyncSession, data: ClassifiedCreateInput) 
             "Ссылки в контактах не допускаются — укажите телефон.",
         )
 
+    if data.category == ClassifiedCategory.NEIGHBOR_HELP:
+        _validate_neighbor_help(data)
+
+
+def _validate_neighbor_help(data: ClassifiedCreateInput) -> None:
+    """Extra checks for free mutual-help ads."""
+    if data.price:
+        raise ClassifiedValidationError(
+            "«Сосед помогает» — объявления без цены. Опишите, чем можете помочь.",
+        )
+    if len(data.title) > 80:
+        raise ClassifiedValidationError("Заголовок для «Сосед помогает» — не длиннее 80 символов.")
+    if len(data.description) > 500:
+        raise ClassifiedValidationError("Описание для «Сосед помогает» — не длиннее 500 символов.")
+
 
 async def _notify_owner_new_ad(
     ad: ClassifiedAd,
@@ -614,9 +633,10 @@ async def create_classified_ad(
     await _validate_create_input(db, data)
 
     user_id = user.id if user else None
+    is_neighbor_help = data.category == ClassifiedCategory.NEIGHBOR_HELP
     quota = await get_classified_quota(db, data.phone, user_id)
-    requires_payment = quota["requires_payment"]
-    placement_fee = settings.CLASSIFIED_PLACEMENT_FEE if requires_payment else 0
+    requires_payment = False if is_neighbor_help else quota["requires_payment"]
+    placement_fee = 0 if is_neighbor_help else (settings.CLASSIFIED_PLACEMENT_FEE if requires_payment else 0)
 
     if requires_payment and not data.payment_confirmed:
         raise ClassifiedValidationError(
@@ -661,9 +681,14 @@ async def create_classified_ad(
         )
 
     logger.info("Classified ad #%s created by user %s", ad.id, user_id)
+    message = (
+        "Заявка «Сосед помогает» принята бесплатно! Появится после быстрой модерации."
+        if is_neighbor_help
+        else "Заявка принята бесплатно! Объявление появится после модерации."
+    )
     return ClassifiedCreateResult(
         ad=ad,
-        message="Заявка принята бесплатно! Объявление появится после модерации.",
+        message=message,
         free=True,
         owner_notified=owner_notified,
     )

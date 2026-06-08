@@ -225,6 +225,10 @@ class ApiClient {
     return this.request<MapStats>("/places/map/stats");
   }
 
+  getMapFilterModes() {
+    return this.request<MapFilterMode[]>("/places/map/modes");
+  }
+
   getWeather() {
     return this.request<WeatherResponse>("/weather");
   }
@@ -817,6 +821,15 @@ export interface MapRoute {
   duration: string;
   description: string;
   stops: MapRouteStop[];
+}
+
+export interface MapFilterMode {
+  id: string;
+  label: string;
+  category: string | null;
+  shops_only: boolean;
+  useful_only: boolean;
+  show_taxi: boolean;
 }
 
 export interface FeedbackItem {

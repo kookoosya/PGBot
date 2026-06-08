@@ -12,6 +12,7 @@ import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
+  const neighborMode = searchParams.get("neighbor") === "1";
   if (searchParams.get("jobs") === "1") {
     return <Navigate to="/jobs" replace />;
   }
@@ -45,10 +46,14 @@ export function Classifieds() {
 
   const load = (pageNum = 1, append = false) => {
     const params: Record<string, string> = {
-      ads_only: "true",
       page: String(pageNum),
       page_size: "20",
     };
+    if (neighborMode) {
+      params.neighbor_only = "true";
+    } else {
+      params.ads_only = "true";
+    }
     if (filter) params.category = filter;
     if (search) params.search = search;
     setLoading(true);
@@ -69,7 +74,7 @@ export function Classifieds() {
 
   useEffect(() => {
     load(1, false);
-  }, [filter, search]);
+  }, [filter, search, neighborMode]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,9 +105,13 @@ export function Classifieds() {
   return (
     <div className="page-section max-w-5xl">
       <PageHeader
-        icon="📋"
-        title="Доска объявлений"
-        subtitle={`${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`}
+        icon={neighborMode ? "🤝" : "📋"}
+        title={neighborMode ? "Сосед помогает" : "Доска объявлений"}
+        subtitle={
+          neighborMode
+            ? "Бесплатные объявления о взаимной помощи — без цены и без оплаты размещения"
+            : `${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`
+        }
       >
         <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Подать объявление"}
@@ -117,6 +126,8 @@ export function Classifieds() {
           <Link to="/jobs" className="text-primary hover:underline">«Работа»</Link>.
           Мастера — на{" "}
           <Link to="/services" className="text-primary hover:underline">«Услуги»</Link>.
+          {" "}Взаимная помощь —{" "}
+          <Link to="/classifieds?neighbor=1" className="text-primary hover:underline">«Сосед помогает»</Link>.
         </p>
       </div>
 

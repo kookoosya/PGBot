@@ -26,6 +26,7 @@ export const CLASSIFIED_CATEGORY_VISUALS: Record<string, CategoryVisual> = {
   job_culture: { icon: "🏛", gradient: "linear-gradient(135deg, #581c87 0%, #a855f7 100%)" },
   job_social: { icon: "🏥", gradient: "linear-gradient(135deg, #be123c 0%, #fb7185 100%)" },
   job_education: { icon: "🏫", gradient: "linear-gradient(135deg, #1d4ed8 0%, #93c5fd 100%)" },
+  neighbor_help: { icon: "🤝", gradient: "linear-gradient(135deg, #14532d 0%, #4ade80 100%)" },
   other: { icon: "📋", gradient: "linear-gradient(135deg, #3f3f46 0%, #71717a 100%)" },
 };
 

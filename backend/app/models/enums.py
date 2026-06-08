@@ -80,10 +80,15 @@ class ClassifiedCategory(str, enum.Enum):
     JOB_CULTURE = "job_culture"
     JOB_SOCIAL = "job_social"
     JOB_EDUCATION = "job_education"
+    NEIGHBOR_HELP = "neighbor_help"
     OTHER = "other"
 
 
 # Категории объявлений в едином каталоге услуг
+NEIGHBOR_HELP_CATEGORIES = {
+    ClassifiedCategory.NEIGHBOR_HELP,
+}
+
 SERVICE_CLASSIFIED_CATEGORIES = {
     ClassifiedCategory.GARDEN,
     ClassifiedCategory.FIREWOOD,
@@ -141,6 +146,7 @@ CLASSIFIED_LABELS = {
     ClassifiedCategory.JOB_CULTURE: "Музей / культура",
     ClassifiedCategory.JOB_SOCIAL: "Медицина / соцсфера",
     ClassifiedCategory.JOB_EDUCATION: "Образование / дети",
+    ClassifiedCategory.NEIGHBOR_HELP: "Сосед помогает",
     ClassifiedCategory.OTHER: "Другое",
 }
 

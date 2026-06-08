@@ -51,7 +51,6 @@ from app.services.vk_messages import (
     looks_like_ai_question,
     looks_like_complaint,
 )
-from app.services.weather_service import (
     WeatherFetchError,
     format_weather_vk_current,
     format_weather_vk_hourly,
@@ -295,8 +294,23 @@ async def handle_subscribe_jobs(ctx: VkRouteContext) -> None:
 
 
 async def handle_subscribe_preset(ctx: VkRouteContext) -> None:
-    preset = "firewood" if "дрова" in ctx.text_lower else "services"
+    text = ctx.text_lower
+    if "дрова" in text:
+        preset = "firewood"
+    elif "огород" in text:
+        preset = "garden"
+    elif "сосед" in text or "помощ" in text:
+        preset = "neighbor"
+    elif "услуг" in text or "мастер" in text:
+        preset = "services"
+    else:
+        preset = "services"
     await _subscribe_and_reply(ctx, preset)
+
+
+async def handle_subscribe_custom(ctx: VkRouteContext) -> None:
+    raw = ctx.text_lower.removeprefix("подписка").strip()
+    await _subscribe_and_reply(ctx, raw or "all")
 
 
 async def handle_unsubscribe(ctx: VkRouteContext) -> None:
@@ -465,6 +479,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "subscribe_all": handle_subscribe_all,
     "subscribe_jobs": handle_subscribe_jobs,
     "subscribe_preset": handle_subscribe_preset,
+    "subscribe_custom": handle_subscribe_custom,
     "unsubscribe": handle_unsubscribe,
     "ai_enter": handle_ai_enter,
     "ai_examples": handle_ai_examples,
@@ -514,6 +529,11 @@ COMMAND_ALIASES: dict[str, str] = {
     "🔔 работа": "subscribe_jobs",
     "подписка дрова": "subscribe_preset",
     "подписка услуги": "subscribe_preset",
+    "подписка огород": "subscribe_preset",
+    "подписка сосед": "subscribe_preset",
+    "подписка neighbor": "subscribe_preset",
+    "подписка garden": "subscribe_preset",
+    "подписка firewood": "subscribe_preset",
     "🔕 отписаться": "unsubscribe",
     "отписаться": "unsubscribe",
     "🤖 ии-помощник": "ai_enter",
@@ -610,6 +630,10 @@ def _matches_weather_query(text_lower: str) -> bool:
     return text_lower.startswith("прогноз")
 
 
+def _matches_subscription_custom(text_lower: str) -> bool:
+    return text_lower.startswith("подписка ") and text_lower.count(",") > 0
+
+
 async def route_vk_message(ctx: VkRouteContext) -> bool:
     """Route menu commands and map keywords. Returns True if handled."""
     # Special matchers first (order matters — routes_page before generic routes alias)
@@ -624,6 +648,10 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
 
     if _matches_weather_query(ctx.text_lower):
         await _dispatch(ctx, "weather")
+        return True
+
+    if _matches_subscription_custom(ctx.text_lower):
+        await handle_subscribe_custom(ctx)
         return True
 
     command_id = COMMAND_ALIASES.get(ctx.text_lower)

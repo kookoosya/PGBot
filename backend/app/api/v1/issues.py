@@ -1,9 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.deps import (
@@ -16,6 +15,7 @@ from app.core.deps import (
     require_owner_or_official,
 )
 from app.core.service_http import raise_http_for_service_error
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue
@@ -33,12 +33,13 @@ from app.schemas.issue import (
     IssueStatusUpdate,
     IssueUpdate,
 )
-from app.core.rate_limit import limiter
 from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
 from app.services.issue_service import (
     IssueActorContext,
+    IssueSearchParams,
     IssueValidationError,
+    JKH_CATEGORIES,
     add_issue_comment,
     archive_issue,
     get_issue_details,
@@ -46,17 +47,12 @@ from app.services.issue_service import (
     get_status_timelines_for_issues,
     reopen_issue,
     resolve_issue,
+    search_issues,
     update_issue_status,
 )
 
 router = APIRouter()
 settings = get_settings()
-
-JKH_CATEGORIES = {
-    IssueCategory.UTILITIES,
-    IssueCategory.WATER,
-    IssueCategory.SEWERAGE,
-}
 
 
 def _issue_to_response(issue: Issue) -> IssueResponse:
@@ -76,15 +72,6 @@ def _issue_to_my_response(issue: Issue, timeline) -> IssueMyResponse:
             for event in timeline
         ],
     )
-
-
-def _official_category_filter(user: User):
-    if user.role.name == UserRole.SOCIAL_SERVICE:
-        conditions = [Issue.category.in_(JKH_CATEGORIES)]
-        if user.department_id:
-            conditions.append(Issue.department_id == user.department_id)
-        return or_(*conditions)
-    return None
 
 
 def _can_view_issue(user: User, issue: Issue) -> bool:
@@ -167,39 +154,26 @@ async def list_issues(
     category: str | None = None,
     search: str | None = None,
 ):
-    query = select(Issue).options(
-        selectinload(Issue.photos),
-        selectinload(Issue.ai_analysis),
-    )
-
-    if current_user.role.name == UserRole.RESIDENT:
-        query = query.where(Issue.resident_id == current_user.id)
-    elif can_manage_issues(current_user):
-        cat_filter = _official_category_filter(current_user)
-        if cat_filter is not None:
-            query = query.where(cat_filter)
-    else:
-        raise HTTPException(status_code=403, detail="Недостаточно прав")
-
-    if status_filter:
-        query = query.where(Issue.status == status_filter)
-    if category:
-        query = query.where(Issue.category == category)
-    if search:
-        query = query.where(Issue.description.ilike(f"%{search}%"))
-
-    count_query = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_query)).scalar() or 0
-
-    query = query.order_by(Issue.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(query)
-    issues = result.scalars().all()
+    try:
+        result = await search_issues(
+            db,
+            current_user,
+            IssueSearchParams(
+                status=status_filter,
+                category=category,
+                search=search,
+                page=page,
+                page_size=page_size,
+            ),
+        )
+    except IssueValidationError as exc:
+        raise_http_for_service_error(exc)
 
     return IssueListResponse(
-        items=[_issue_to_response(i) for i in issues],
-        total=total,
-        page=page,
-        page_size=page_size,
+        items=[_issue_to_response(i) for i in result.items],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
     )
 
 
