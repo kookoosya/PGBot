@@ -14,6 +14,7 @@ from app.models.enums import IssueStatus, PlaceCategory
 from app.models.issue import Issue
 from app.models.place import Place
 from app.models.taxi import TaxiService
+from app.services.ai_mode import enter_ai_mode, exit_ai_mode, is_ai_mode
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -70,7 +71,6 @@ class VkRouteContext:
     from_id: int
     text: str
     text_lower: str
-    ai_mode_peers: set[int]
     parsed: dict[str, Any] | None = None
 
     @classmethod
@@ -78,7 +78,6 @@ class VkRouteContext:
         cls,
         db: AsyncSession,
         parsed: dict[str, Any],
-        ai_mode_peers: set[int],
     ) -> "VkRouteContext":
         text = parsed["text"]
         return cls(
@@ -87,28 +86,12 @@ class VkRouteContext:
             from_id=parsed["from_id"],
             text=text,
             text_lower=text.lower(),
-            ai_mode_peers=ai_mode_peers,
             parsed=parsed,
         )
 
     def update_text(self, text: str) -> None:
         self.text = text
         self.text_lower = text.lower()
-
-
-# --- AI mode helpers (state lives in vk_webhook._ai_mode_peers for now) ---
-
-
-def enter_ai_mode(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.add(ctx.peer_id)
-
-
-def exit_ai_mode(ctx: VkRouteContext) -> None:
-    ctx.ai_mode_peers.discard(ctx.peer_id)
-
-
-def is_ai_mode(ctx: VkRouteContext) -> bool:
-    return ctx.peer_id in ctx.ai_mode_peers
 
 
 # --- Shared reply helpers ---
@@ -134,7 +117,7 @@ async def _subscribe_and_reply(ctx: VkRouteContext, preset: str) -> None:
 
 
 async def _start_flow_message(ctx: VkRouteContext, message: str) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await _send_welcome(ctx, message)
 
 
@@ -248,20 +231,20 @@ async def _process_vk_ai(ctx: VkRouteContext, text: str) -> None:
 
 async def handle_welcome(ctx: VkRouteContext) -> None:
     """Меню / главная / start."""
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     clear_flow(ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
     await _send_welcome(ctx, get_welcome_message())
 
 
 async def handle_classifieds(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     msg = await format_ads_message(ctx.db)
     await _send_welcome(ctx, msg)
 
 
 async def handle_services(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await _send_welcome(
         ctx,
         box(
@@ -292,7 +275,7 @@ async def handle_unsubscribe(ctx: VkRouteContext) -> None:
 
 
 async def handle_ai_enter(ctx: VkRouteContext) -> None:
-    enter_ai_mode(ctx)
+    enter_ai_mode(ctx.peer_id)
     await _send_ai(ctx, ai_enter_text())
 
 
@@ -314,19 +297,19 @@ async def handle_ai_images(ctx: VkRouteContext) -> None:
 
 
 async def handle_ai_exit(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
     await _send_welcome(ctx, "Вернулись в меню 🪶")
 
 
 async def handle_jobs(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     msg = await format_jobs_message(ctx.db)
     await _send_with_site_links(ctx.peer_id, msg, ("💼 Вакансии", "/jobs"))
 
 
 async def handle_routes(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await _send_with_site_links(ctx.peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
 
 
@@ -367,7 +350,7 @@ async def handle_taxi(ctx: VkRouteContext) -> None:
 
 
 async def handle_complaints_info(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await _send_welcome(
         ctx,
         box(
@@ -380,7 +363,7 @@ async def handle_complaints_info(ctx: VkRouteContext) -> None:
 
 
 async def handle_register(ctx: VkRouteContext) -> None:
-    exit_ai_mode(ctx)
+    exit_ai_mode(ctx.peer_id)
     await _send_welcome(
         ctx,
         box(
@@ -606,7 +589,7 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
 
 async def route_ai_message(ctx: VkRouteContext) -> bool:
     """Handle active AI mode or auto-detected AI questions."""
-    if is_ai_mode(ctx) or ctx.text_lower.startswith("ии:"):
+    if is_ai_mode(ctx.peer_id) or ctx.text_lower.startswith("ии:"):
         msg = ctx.text[3:].strip() if ctx.text_lower.startswith("ии:") else ctx.text
         if len(msg) < 2:
             await _send_ai(ctx, "Напишите вопрос — отвечу в режиме ИИ.")
@@ -615,7 +598,7 @@ async def route_ai_message(ctx: VkRouteContext) -> bool:
         return True
 
     if looks_like_ai_question(ctx.text) and not looks_like_complaint(ctx.text):
-        enter_ai_mode(ctx)
+        enter_ai_mode(ctx.peer_id)
         await _process_vk_ai(ctx, ctx.text)
         return True
 

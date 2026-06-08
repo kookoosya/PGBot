@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.vk_command_router import (
     VkRouteContext,
-    exit_ai_mode,
     route_ai_message,
     route_complaint,
     route_vk_message,
@@ -17,6 +16,7 @@ from app.api.v1.vk_command_router import (
 from app.config import get_settings
 from app.core.rate_limit import limiter
 from app.database import get_db
+from app.services.ai_mode import exit_ai_mode
 from app.services.vk import get_welcome_keyboard, parse_vk_message, send_message
 from app.services.vk_flows import handle_flow_message
 from app.services.vk_voice import extract_audio_url, transcribe_audio_url
@@ -24,9 +24,6 @@ from app.services.vk_voice import extract_audio_url, transcribe_audio_url
 logger = logging.getLogger(__name__)
 settings = get_settings()
 router = APIRouter()
-
-# Module-level AI mode state (to be extracted to a service in a future stage)
-_ai_mode_peers: set[int] = set()
 
 
 @router.post("/callback")
@@ -50,7 +47,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
     if not parsed:
         return PlainTextResponse("ok")
 
-    ctx = VkRouteContext.from_parsed(db, parsed, _ai_mode_peers)
+    ctx = VkRouteContext.from_parsed(db, parsed)
 
     # Welcome before voice — preserves original processing order
     if await route_welcome(ctx):
@@ -74,7 +71,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
     # Multi-step flows (classified, wish, map report, …)
     flow_reply = await handle_flow_message(db, ctx.peer_id, ctx.from_id, ctx.text)
     if flow_reply:
-        exit_ai_mode(ctx)
+        exit_ai_mode(ctx.peer_id)
         await send_message(ctx.peer_id, flow_reply, keyboard=get_welcome_keyboard())
         return PlainTextResponse("ok")
 
