@@ -9,6 +9,14 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
     history: list[ChatMessage] = []
+    model: str | None = None
+
+
+class ImageRequest(BaseModel):
+    prompt: str = Field(min_length=3, max_length=500)
+    model: str = "nano-banana"
+    width: int = Field(default=1024, ge=256, le=1536)
+    height: int = Field(default=1024, ge=256, le=1536)
 
 
 class ChatResponse(BaseModel):
@@ -17,6 +25,15 @@ class ChatResponse(BaseModel):
     daily_limit: int
     limit_reached: bool = False
     payment_info: dict | None = None
+    model: str | None = None
+
+
+class ImageResponse(BaseModel):
+    url: str | None = None
+    model: str
+    prompt: str
+    provider: str | None = None
+    error: str | None = None
 
 
 class UsageResponse(BaseModel):
@@ -34,3 +51,9 @@ class PaymentInfoResponse(BaseModel):
     amount_suggested: int
     contact_email: str
     message: str
+
+
+class ModelsResponse(BaseModel):
+    chat_models: list[dict]
+    image_models: list[dict]
+    capabilities: list[str]

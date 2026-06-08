@@ -12,6 +12,7 @@ from app.models.issue import Issue, IssueComment, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.page_visit import PageVisit
 from app.models.user import Role, User
+from app.models.vk_subscriber import VkSubscriber
 
 __all__ = [
     "User",
@@ -37,4 +38,5 @@ __all__ = [
     "ClassifiedAd",
     "ProviderBusyBlock",
     "PageVisit",
+    "VkSubscriber",
 ]

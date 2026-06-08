@@ -70,7 +70,8 @@ class Settings(BaseSettings):
     PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
 
-    # Classified ads: 150 ₽ per ad per month (each ad billed separately)
+    # Classified ads: 3 free, then 150 ₽ per ad per 30 days
+    CLASSIFIED_FREE_LIMIT: int = 3
     CLASSIFIED_PLACEMENT_FEE: int = 150
     CLASSIFIED_PERIOD_DAYS: int = 30
     CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление Пушкинские Горы"

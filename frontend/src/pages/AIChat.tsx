@@ -1,27 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { api, ChatMessage, PaymentInfo, UsageInfo } from "@/lib/api";
+import { api, AIModelOption, ChatMessage, PaymentInfo, UsageInfo } from "@/lib/api";
+
+type Tab = "chat" | "image";
 
 export function AIChat() {
+  const [tab, setTab] = useState<Tab>("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
       content:
-        "🪶 Здравствуйте! Я ИИ-помощник Пушкинских Гор.\n\n" +
-        "Спросите о поселке, быте, культуре — или помогу сформулировать обращение.\n" +
-        "«Ученье — свет, а неученье — тьма» — так что спрашивайте смело!",
+        "🪶 Привет! Я универсальный ИИ-помощник Пушкинских Гор.\n\n" +
+        "Могу ответить на любой вопрос, написать текст, подсказать идею.\n" +
+        "Во вкладке «Картинки» — генерация изображений (Nano Banana, Flux, Turbo…).",
     },
   ]);
   const [input, setInput] = useState("");
+  const [imagePrompt, setImagePrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
+  const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
+  const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
+  const [capabilities, setCapabilities] = useState<string[]>([]);
+  const [chatModel, setChatModel] = useState("gemini-2.0-flash");
+  const [imageModel, setImageModel] = useState("nano-banana");
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api.getAIUsage().then(setUsage).catch(console.error);
     api.getPaymentInfo().then(setPayment).catch(console.error);
+    api.getAIModels().then((m) => {
+      setChatModels(m.chat_models);
+      setImageModels(m.image_models);
+      setCapabilities(m.capabilities);
+      if (m.chat_models[0]) setChatModel(m.chat_models[0].id);
+      if (m.image_models[0]) setImageModel(m.image_models[0].id);
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -34,104 +53,194 @@ export function AIChat() {
     setInput("");
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
-
     try {
       const history = messages
         .filter((m) => m.role !== "system")
         .map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
-
-      const res = await api.sendAIChat(userMsg, history);
+      const res = await api.sendAIChat(userMsg, history, chatModel);
       setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
       setUsage({ used: res.daily_limit - res.remaining, remaining: res.remaining, daily_limit: res.daily_limit });
-    } catch (e) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Произошла ошибка. Попробуйте позже." },
-      ]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: "Ошибка. Попробуйте позже." }]);
     } finally {
       setLoading(false);
     }
   };
 
+  const generateImage = async () => {
+    if (!imagePrompt.trim() || imageLoading) return;
+    setImageLoading(true);
+    setImageError("");
+    setGeneratedImage(null);
+    try {
+      const res = await api.generateAIImage(imagePrompt.trim(), imageModel);
+      if (res.error || !res.url) {
+        setImageError(res.error || "Не удалось сгенерировать");
+      } else {
+        setGeneratedImage(res.url);
+      }
+      api.getAIUsage().then(setUsage).catch(console.error);
+    } catch (e) {
+      setImageError(e instanceof Error ? e.message : "Ошибка генерации");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
   const suggestions = [
-    "Что интересного в Пушкинских Горах?",
-    "Как подать объявление?",
-    "Где на карте аптеки и магазины?",
+    "Напиши объявление про дрова",
+    "Что посмотреть в Пушкиногорье?",
+    "Идеи для дачи на лето",
+  ];
+
+  const imageSuggestions = [
+    "Усадьба в русском стиле, закат",
+    "Памятник Пушкину в парке",
+    "Уютная изба в снегу",
   ];
 
   return (
     <div className="page-section max-w-3xl">
-      <PageHeader
-        icon="🤖"
-        title="ИИ-помощник"
-        subtitle="«Счастье то, что дух просветляет...»"
-      >
+      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Текст · картинки · любые задачи">
         {usage && (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
             Сегодня: {usage.used} / {usage.daily_limit}
-            {usage.remaining > 0 && ` · осталось ${usage.remaining}`}
           </span>
         )}
       </PageHeader>
 
-      <div className="pushkin-card flex flex-col" style={{ height: "calc(100vh - 320px)", minHeight: 400 }}>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] whitespace-pre-wrap text-sm ${msg.role === "user" ? "chat-bubble-user" : "chat-bubble-ai"}`}>
-                {msg.content}
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="chat-bubble-ai text-sm text-muted-foreground animate-pulse">
-                🪶 Думаю...
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
+      {capabilities.length > 0 && (
+        <div className="human-note mb-4 text-sm">
+          <p className="font-semibold m-0 mb-2">ИИ умеет:</p>
+          <ul className="m-0 pl-4 space-y-1">
+            {capabilities.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
         </div>
+      )}
 
-        <div className="border-t p-4">
+      <div className="flex gap-2 mb-4">
+        <button
+          type="button"
+          className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`}
+          onClick={() => setTab("chat")}
+        >
+          💬 Чат
+        </button>
+        <button
+          type="button"
+          className={`filter-chip ${tab === "image" ? "filter-chip-active" : ""}`}
+          onClick={() => setTab("image")}
+        >
+          🎨 Картинки
+        </button>
+      </div>
+
+      {tab === "chat" && (
+        <>
+          <div className="mb-3">
+            <label className="text-xs text-muted-foreground">Модель чата</label>
+            <select
+              className="w-full border rounded px-3 py-2 text-sm mt-1"
+              value={chatModel}
+              onChange={(e) => setChatModel(e.target.value)}
+            >
+              {chatModels.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="pushkin-card flex flex-col" style={{ height: "calc(100vh - 420px)", minHeight: 360 }}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] whitespace-pre-wrap text-sm ${msg.role === "user" ? "chat-bubble-user" : "chat-bubble-ai"}`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="chat-bubble-ai text-sm text-muted-foreground animate-pulse">🪶 Думаю…</div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+            <div className="border-t p-4">
+              <div className="suggest-chips">
+                {suggestions.map((s) => (
+                  <button key={s} type="button" className="suggest-chip" disabled={loading} onClick={() => setInput(s)}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-lg border bg-background px-4 py-3 text-sm"
+                  placeholder="Спросите что угодно…"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
+                  maxLength={1000}
+                  disabled={loading}
+                />
+                <Button onClick={send} disabled={loading || !input.trim()}>→</Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {tab === "image" && (
+        <div className="pushkin-card p-6 space-y-4">
+          <div>
+            <label className="text-xs text-muted-foreground">Модель картинки</label>
+            <select
+              className="w-full border rounded px-3 py-2 text-sm mt-1"
+              value={imageModel}
+              onChange={(e) => setImageModel(e.target.value)}
+            >
+              {imageModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}{m.desc ? ` — ${m.desc}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="suggest-chips">
-            {suggestions.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="suggest-chip"
-                disabled={loading}
-                onClick={() => { setInput(s); }}
-              >
+            {imageSuggestions.map((s) => (
+              <button key={s} type="button" className="suggest-chip" onClick={() => setImagePrompt(s)}>
                 {s}
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 rounded-lg border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              placeholder="Задайте вопрос..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-              maxLength={1000}
-              disabled={loading}
-            />
-            <Button onClick={send} disabled={loading || !input.trim()} className="px-6">
-              →
-            </Button>
-          </div>
+          <textarea
+            className="w-full border rounded px-3 py-2 text-sm min-h-[80px]"
+            placeholder="Опишите картинку на русском или английском…"
+            value={imagePrompt}
+            onChange={(e) => setImagePrompt(e.target.value)}
+            maxLength={500}
+          />
+          <Button className="w-full" onClick={generateImage} disabled={imageLoading || !imagePrompt.trim()}>
+            {imageLoading ? "Рисую…" : "🎨 Сгенерировать"}
+          </Button>
+          {imageError && <p className="text-sm text-red-600">{imageError}</p>}
+          {generatedImage && (
+            <div className="space-y-2">
+              <img src={generatedImage} alt="Сгенерировано ИИ" className="w-full rounded-lg border" />
+              <a href={generatedImage} download="pushkin-ai.png" className="btn-hero-secondary text-sm inline-block no-underline">
+                Скачать
+              </a>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {payment && (
         <div className="mt-6 pushkin-card p-6 text-sm">
-          <h3 className="font-semibold text-base mb-2">💳 Поддержать портал</h3>
+          <h3 className="font-semibold mb-2">💳 Поддержать портал</h3>
           <p className="text-muted-foreground mb-3">{payment.message}</p>
           <div className="payment-card-number">{payment.card_number}</div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            От {payment.amount_suggested} ₽. Бесплатные сообщения обновляются каждый день.
-          </p>
         </div>
       )}
     </div>

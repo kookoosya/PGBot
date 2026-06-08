@@ -11,30 +11,25 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 VK_API_URL = "https://api.vk.com/method"
+_SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
-PUSHKIN_WELCOME = [
-    (
-        "🪶 Добро пожаловать на портал посёлка Пушкинские Горы!\n\n"
-        "«Здесь Пушкин родился, здесь он и умер...» — а мы здесь живём "
-        "и заботимся о своём поселке.\n\n"
-        "📝 Напишите проблему — я передам её ответственным.\n"
-        "🤖 Нажмите «ИИ-помощник» — поговорите с умным собеседником.\n"
-        "📋 «Мои обращения» — статус ваших заявок."
-    ),
-    (
-        "🪶 Здравствуйте, житель Пушкинских Гор!\n\n"
-        "«Любви, надежды, тихой славы\n"
-        "Недолго сердцу снабжать...»\n\n"
-        "А вот решать бытовые вопросы — можно долго и основательно! "
-        "Опишите проблему текстом, приложите фото — мы примем обращение."
-    ),
-]
+PUSHKIN_WELCOME = (
+    "🪶 Портал Пушкинские Горы — ваш помощник в VK!\n\n"
+    "То же, что на сайте:\n"
+    "📋 Объявления (3 бесплатно)\n"
+    "🗺 Карта магазинов и заведений\n"
+    "🛠 Услуги соседей\n"
+    "🤖 ИИ — ответит на всё + картинки\n"
+    "📝 Обращения жителей\n\n"
+    f"🌐 {_SITE}"
+)
 
 PUSHKIN_AI_HINT = (
-    "🤖 Режим ИИ-помощника включён!\n"
-    "Спросите что угодно о поселке, быте, культуре.\n"
-    "Лимит: {limit} сообщений в день.\n\n"
-    "Напишите «выйти» чтобы вернуться к обращениям."
+    "🤖 ИИ-помощник включён!\n\n"
+    "Могу всё: советы, тексты, идеи, расчёты.\n"
+    "Картинки — на сайте в разделе ИИ (Nano Banana, Flux…).\n"
+    "Лимит: {limit} сообщений/день.\n\n"
+    "«Выйти из ИИ» — обратно в меню."
 )
 
 
@@ -102,15 +97,20 @@ def get_welcome_keyboard() -> dict:
         "inline": False,
         "buttons": [
             [
-                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
-                {"action": {"type": "text", "label": "📋 Мои обращения"}, "color": "primary"},
-            ],
-            [
+                {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
                 {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
-                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
             ],
             [
-                {"action": {"type": "text", "label": "ℹ️ Помощь"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🛠 Услуги"}, "color": "primary"},
+                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+            ],
+            [
+                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "📋 Мои обращения"}, "color": "default"},
+                {"action": {"type": "text", "label": "ℹ️ Помощь"}, "color": "default"},
             ],
         ],
     }
@@ -120,10 +120,13 @@ def get_ai_keyboard() -> dict:
     return {
         "one_time": False,
         "buttons": [
-            [{"action": {"type": "text", "label": "🚪 Выйти из ИИ"}, "color": "negative"}],
+            [
+                {"action": {"type": "text", "label": "🎨 Картинки на сайте"}, "color": "primary"},
+                {"action": {"type": "text", "label": "🚪 Выйти из ИИ"}, "color": "negative"},
+            ],
         ],
     }
 
 
 def get_welcome_message() -> str:
-    return random.choice(PUSHKIN_WELCOME)
+    return PUSHKIN_WELCOME

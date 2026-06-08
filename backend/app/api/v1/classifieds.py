@@ -62,23 +62,55 @@ class ClassifiedPendingResponse(ClassifiedResponse):
     contact_vk: str | None = None
 
 
-def get_classified_payment_info() -> dict:
+async def _count_user_ads(db: AsyncSession, phone: str, user_id: int | None = None) -> int:
+    """Сколько объявлений уже подано (включая на модерации)."""
+    from sqlalchemy import or_
+
+    filters = [
+        ClassifiedAd.payment_status.in_([
+            ClassifiedPaymentStatus.PENDING,
+            ClassifiedPaymentStatus.APPROVED,
+        ]),
+    ]
+    if user_id:
+        filters.append(or_(ClassifiedAd.phone == phone, ClassifiedAd.user_id == user_id))
+    else:
+        filters.append(ClassifiedAd.phone == phone)
+    q = select(func.count(ClassifiedAd.id)).where(*filters)
+    return (await db.execute(q)).scalar() or 0
+
+
+async def get_classified_quota(db: AsyncSession, phone: str | None, user_id: int | None = None) -> dict:
+    free_limit = settings.CLASSIFIED_FREE_LIMIT
     fee = settings.CLASSIFIED_PLACEMENT_FEE
+    used = await _count_user_ads(db, phone, user_id) if phone else 0
+    free_remaining = max(0, free_limit - used)
+    requires_payment = free_remaining <= 0
     return {
-        "card_number": settings.PAYMENT_CARD_NUMBER,
-        "amount": fee,
+        "free_limit": free_limit,
+        "free_used": used,
+        "free_remaining": free_remaining,
+        "requires_payment": requires_payment,
+        "amount": fee if requires_payment else 0,
         "period_days": settings.CLASSIFIED_PERIOD_DAYS,
+        "card_number": settings.PAYMENT_CARD_NUMBER,
         "message": (
-            f"{fee} ₽ за каждое объявление на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
-            "Хотите 10 объявлений — платите 10 раз по 150 ₽. "
-            "Вы зарабатываете на услугах и вакансиях — а портал посёлка нужно развивать."
+            f"Первые {free_limit} объявления — бесплатно на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
+            f"С {free_limit + 1}-го — {fee} ₽ за каждое объявление."
+            if not requires_payment
+            else f"Бесплатный лимит ({free_limit} шт.) исчерпан. "
+            f"Размещение: {fee} ₽ на {settings.CLASSIFIED_PERIOD_DAYS} дней."
         ),
     }
 
 
 @router.get("/payment-info")
-async def payment_info():
-    return get_classified_payment_info()
+async def payment_info(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    phone: str | None = Query(None, min_length=10, max_length=20),
+    current_user: Annotated[User | None, Depends(get_optional_user)] = None,
+):
+    return await get_classified_quota(db, phone, current_user.id if current_user else None)
 
 
 @router.get("/marketing-stats")
@@ -248,7 +280,11 @@ async def create_ad(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User | None, Depends(get_optional_user)] = None,
 ):
-    if not data.payment_confirmed:
+    quota = await get_classified_quota(db, data.phone, current_user.id if current_user else None)
+    requires_payment = quota["requires_payment"]
+    placement_fee = settings.CLASSIFIED_PLACEMENT_FEE if requires_payment else 0
+
+    if requires_payment and not data.payment_confirmed:
         raise HTTPException(
             status_code=400,
             detail=f"Подтвердите оплату {settings.CLASSIFIED_PLACEMENT_FEE} ₽ за размещение объявления",
@@ -271,30 +307,36 @@ async def create_ad(
         is_active=False,
         payment_status=ClassifiedPaymentStatus.PENDING,
         payment_reference=data.payment_reference,
-        placement_fee=settings.CLASSIFIED_PLACEMENT_FEE,
+        placement_fee=placement_fee,
     )
     db.add(ad)
     await db.flush()
 
     cat_label = CLASSIFIED_LABELS.get(data.category, data.category)
+    fee_line = f"💳 {placement_fee} ₽" if requires_payment else "🆓 Бесплатное размещение"
+    site = settings.PUBLIC_SITE_URL.rstrip("/")
     await notify_owner(
-        "📢 Новое объявление на модерации\n\n"
+        "📢 НОВОЕ ОБЪЯВЛЕНИЕ\n\n"
         f"#{ad.id} · {cat_label}\n"
         f"«{data.title}»\n"
-        f"👤 {data.author_name} · 📞 {data.phone}\n"
-        f"💳 {settings.CLASSIFIED_PLACEMENT_FEE} ₽\n\n"
-        "Проверьте оплату и опубликуйте в админ-панели."
+        f"{data.description[:200]}{'…' if len(data.description) > 200 else ''}\n\n"
+        f"👤 {data.author_name}\n"
+        f"📞 {data.phone}\n"
+        f"{fee_line}\n\n"
+        f"Модерация: {site}/admin/classifieds"
     )
 
-    payment = get_classified_payment_info()
-    return {
-        "id": ad.id,
-        "message": (
-            "Заявка принята! Уведомление отправлено. "
-            "Объявление появится после проверки оплаты. "
-            f"Карта: {payment['card_number']} — {payment['amount']} ₽."
-        ),
-    }
+    if requires_payment:
+        msg = (
+            "Заявка принята! Объявление появится после проверки оплаты. "
+            f"Карта: {settings.PAYMENT_CARD_NUMBER} — {placement_fee} ₽."
+        )
+    else:
+        msg = (
+            f"Заявка принята бесплатно! (осталось бесплатных: {quota['free_remaining'] - 1} из {quota['free_limit']}). "
+            "Объявление появится после модерации."
+        )
+    return {"id": ad.id, "message": msg, "free": not requires_payment}
 
 
 @router.post("/{ad_id}/approve")
@@ -320,7 +362,9 @@ async def approve_ad(
     )
     await notify_vk_user(ad.contact_vk or ad.vk_id, vk_msg)
 
-    return {"message": "Объявление опубликовано"}
+    from app.services.vk_bot import notify_subscribers_new_ad
+    notified = await notify_subscribers_new_ad(db, ad)
+    return {"message": "Объявление опубликовано", "subscribers_notified": notified}
 
 
 @router.post("/{ad_id}/reject")

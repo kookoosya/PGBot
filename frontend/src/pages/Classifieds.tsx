@@ -34,15 +34,25 @@ export function Classifieds() {
     api.getClassifieds(params).then((r) => setAds(r.items)).catch(console.error);
   };
 
+  const loadQuota = (phone?: string) => {
+    api.getClassifiedPaymentInfo(phone).then(setPayment).catch(console.error);
+  };
+
   useEffect(() => {
     api.getClassifiedCategories().then(setCategories).catch(console.error);
-    api.getClassifiedPaymentInfo().then(setPayment).catch(console.error);
+    loadQuota();
     load();
   }, [filter]);
 
+  useEffect(() => {
+    if (form.phone.length >= 10) loadQuota(form.phone);
+  }, [form.phone]);
+
+  const requiresPayment = payment?.requires_payment ?? false;
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.payment_confirmed) {
+    if (requiresPayment && !form.payment_confirmed) {
       setMsgType("err");
       setMsg(`Подтвердите оплату ${payment?.amount ?? 150} ₽ за размещение`);
       return;
@@ -51,6 +61,7 @@ export function Classifieds() {
       const res = await api.createClassified({
         ...form,
         price: form.price ? +form.price : undefined,
+        payment_confirmed: requiresPayment ? form.payment_confirmed : true,
       });
       setMsgType("ok");
       setMsg(res.message);
@@ -63,6 +74,7 @@ export function Classifieds() {
         contact_vk: "",
         payment_confirmed: false,
       }));
+      loadQuota(form.phone);
       load();
     } catch (err) {
       setMsgType("err");
@@ -82,25 +94,23 @@ export function Classifieds() {
         </button>
         {payment && (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-amber-400/20 border border-amber-400/40 text-amber-100">
-            {payment.amount} ₽ / объявление / {payment.period_days} дн.
+            {payment.requires_payment
+              ? `${payment.amount} ₽ / объявление`
+              : `🆓 Бесплатно · осталось ${payment.free_remaining} из ${payment.free_limit}`}
           </span>
         )}
       </PageHeader>
 
       <div className="human-note mb-6">
         <p className="m-0 text-sm">
-          Продажа, аренда, вакансии — здесь. Услуги (огород, дрова, покос, мастера) — на{" "}
-          <a href="/services" className="text-primary hover:underline">странице «Услуги»</a>.
-          Размещение <strong>150 ₽ / 30 дней</strong>.
+          Первые <strong>{payment?.free_limit ?? 3} объявления бесплатно</strong> на {payment?.period_days ?? 30} дней.
+          Дальше — <strong>{payment?.amount ?? 150} ₽</strong> за каждое.
+          Услуги (огород, дрова, мастера) — на <a href="/services" className="text-primary hover:underline">странице «Услуги»</a>.
         </p>
       </div>
 
       <div className="category-grid">
-        <button
-          type="button"
-          className={`category-tile ${!filter ? "category-tile-active" : ""}`}
-          onClick={() => setFilter("")}
-        >
+        <button type="button" className={`category-tile ${!filter ? "category-tile-active" : ""}`} onClick={() => setFilter("")}>
           <div className="category-tile-bg" style={{ background: "linear-gradient(135deg, #1a4d3a, #2d6a4f)" }} />
           <span className="category-tile-icon">🪶</span>
           <span className="category-tile-label">Все</span>
@@ -124,36 +134,33 @@ export function Classifieds() {
 
       {showForm && payment && (
         <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4">
-          <div className="payment-box payment-box-simple">
-            <p className="font-bold text-amber-900 text-lg mb-2">
-              💳 {payment.amount} ₽ за объявление на {payment.period_days} дней
-            </p>
-            <p className="text-muted-foreground mb-4">{payment.message}</p>
-            <div className="payment-card-number">
-              {payment.card_number}
+          {requiresPayment ? (
+            <div className="payment-box payment-box-simple">
+              <p className="font-bold text-amber-900 text-lg mb-2">
+                💳 {payment.amount} ₽ за объявление на {payment.period_days} дней
+              </p>
+              <p className="text-muted-foreground mb-4">{payment.message}</p>
+              <div className="payment-card-number">{payment.card_number}</div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Бесплатный лимит ({payment.free_limit} шт.) использован.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              10 объявлений = 10 × {payment.amount} ₽. Каждое оплачивается отдельно.
-            </p>
-          </div>
+          ) : (
+            <div className="payment-box payment-box-simple bg-green-50 border-green-200">
+              <p className="font-bold text-green-900 text-lg mb-1">🆓 Бесплатное размещение</p>
+              <p className="text-sm text-green-800">
+                Осталось бесплатных объявлений: <strong>{payment.free_remaining}</strong> из {payment.free_limit}
+                {" "}· срок {payment.period_days} дней
+              </p>
+            </div>
+          )}
 
-          <select
-            className="w-full border rounded px-3 py-2 text-sm"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
+          <select className="w-full border rounded px-3 py-2 text-sm" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
             {categories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {getCategoryVisual(c.value).icon} {c.label}
-              </option>
+              <option key={c.value} value={c.value}>{getCategoryVisual(c.value).icon} {c.label}</option>
             ))}
           </select>
-          <Input
-            placeholder="Заголовок"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
+          <Input placeholder="Заголовок" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           <textarea
             className="w-full border rounded px-3 py-2 text-sm min-h-[100px]"
             placeholder="Описание"
@@ -162,61 +169,38 @@ export function Classifieds() {
             required
           />
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Ваша цена услуги"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-            />
-            <Input
-              placeholder="за что (м³, смена...)"
-              value={form.price_unit}
-              onChange={(e) => setForm({ ...form, price_unit: e.target.value })}
-            />
+            <Input type="number" placeholder="Ваша цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <Input placeholder="за что (м³, смена…)" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
           </div>
+          <Input placeholder="Телефон" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+          <Input placeholder="Ваше имя" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
+          <Input placeholder="Адрес / район" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           <Input
-            placeholder="Телефон"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            required
-          />
-          <Input
-            placeholder="Ваше имя"
-            value={form.author_name}
-            onChange={(e) => setForm({ ...form, author_name: e.target.value })}
-            required
-          />
-          <Input
-            placeholder="Адрес / район"
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <Input
-            placeholder="ВКонтакте (id или ссылка) — для уведомления о публикации"
+            placeholder="ВКонтакте — для уведомления о публикации"
             value={form.contact_vk}
             onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
           />
-          <label className="flex items-start gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={form.payment_confirmed}
-              onChange={(e) => setForm({ ...form, payment_confirmed: e.target.checked })}
-            />
-            <span>
-              Я перевёл(а) <strong>{payment.amount} ₽</strong> на карту{" "}
-              <strong className="font-mono">{payment.card_number}</strong>
-            </span>
-          </label>
+          {requiresPayment && (
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.payment_confirmed}
+                onChange={(e) => setForm({ ...form, payment_confirmed: e.target.checked })}
+              />
+              <span>
+                Я перевёл(а) <strong>{payment.amount} ₽</strong> на карту{" "}
+                <strong className="font-mono">{payment.card_number}</strong>
+              </span>
+            </label>
+          )}
           <Button type="submit" className="w-full">
-            Отправить — уведомление придёт сразу
+            {requiresPayment ? "Отправить на модерацию" : "🆓 Отправить бесплатно"}
           </Button>
         </form>
       )}
 
-      {msg && (
-        <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>
-      )}
+      {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
 
       <div className="space-y-4">
         {ads.map((ad) => {
@@ -231,18 +215,13 @@ export function Classifieds() {
                 <div className="flex justify-between gap-2">
                   <h3 className="font-bold text-lg">{ad.title}</h3>
                   {ad.price != null && (
-                    <span className="text-amber-700 font-semibold shrink-0">
-                      {ad.price} {ad.price_unit || "₽"}
-                    </span>
+                    <span className="text-amber-700 font-semibold shrink-0">{ad.price} {ad.price_unit || "₽"}</span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">{ad.author_name}</p>
                 <p className="text-sm mt-2">{ad.description}</p>
                 <p className="text-sm mt-3">
-                  📞{" "}
-                  <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">
-                    {ad.phone}
-                  </a>
+                  📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">{ad.phone}</a>
                   {ad.address && ` · 📍 ${ad.address}`}
                 </p>
               </div>
@@ -250,9 +229,7 @@ export function Classifieds() {
           );
         })}
         {ads.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">
-            Объявлений пока нет. Будьте первым!
-          </p>
+          <p className="text-center text-muted-foreground py-12">Объявлений пока нет. Будьте первым — 3 бесплатно!</p>
         )}
       </div>
     </div>

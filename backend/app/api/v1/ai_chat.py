@@ -6,7 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.core.deps import get_client_ip
 from app.database import get_db
-from app.schemas.ai import ChatRequest, ChatResponse, PaymentInfoResponse, UsageResponse
+from app.schemas.ai import (
+    ChatRequest,
+    ChatResponse,
+    ImageRequest,
+    ImageResponse,
+    ModelsResponse,
+    PaymentInfoResponse,
+    UsageResponse,
+)
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -14,13 +22,31 @@ from app.services.ai_chat import (
     increment_usage,
     make_identifier,
 )
+from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
 
 router = APIRouter()
 settings = get_settings()
 
+AI_CAPABILITIES = [
+    "Ответы на любые вопросы о посёлке и не только",
+    "Написание текстов: объявления, поздравления, письма",
+    "Идеи для дачи, ремонта, бизнеса",
+    "Генерация картинок: Nano Banana, Flux, Turbo, Gemini",
+    "Помощь с учёбой, переводами, расчётами",
+]
+
 
 def _get_limit(source: str = "web") -> int:
     return settings.AI_VK_DAILY_LIMIT if source == "vk" else settings.AI_FREE_DAILY_LIMIT
+
+
+@router.get("/models", response_model=ModelsResponse)
+async def list_models():
+    return ModelsResponse(
+        chat_models=CHAT_MODELS,
+        image_models=IMAGE_MODELS,
+        capabilities=AI_CAPABILITIES,
+    )
 
 
 @router.get("/payment-info", response_model=PaymentInfoResponse)
@@ -53,30 +79,28 @@ async def public_chat(
     identifier = make_identifier(get_client_ip(request), request.headers.get("User-Agent"))
     used = await get_usage_today(db, identifier)
     limit = _get_limit()
+    model_id = data.model or settings.GEMINI_MODEL
 
     if used >= limit:
         payment = get_payment_info()
         return ChatResponse(
             reply=(
                 f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
-                f"ИИ-помощник работает за счёт добровольных пожертвований — "
-                f"серверы и API стоят денег.\n\n"
+                f"ИИ-помощник работает за счёт добровольных пожертвований.\n\n"
                 f"💳 Перевод: {payment['card_number']}\n"
                 f"Получатель: {payment['card_holder']}\n"
-                f"Банк: {payment['bank_name']}\n"
-                f"Сумма: от {payment['amount_suggested']} ₽\n"
-                f"Комментарий: «{payment['description']}»\n\n"
-                f"После перевода напишите на {payment['contact_email']} — "
-                f"мы расширим ваш лимит. Завтра бесплатные сообщения обновятся!"
+                f"Сумма: от {payment['amount_suggested']} ₽\n\n"
+                f"Завтра лимит обновится!"
             ),
             remaining=0,
             daily_limit=limit,
             limit_reached=True,
             payment_info=payment,
+            model=model_id,
         )
 
     history = [{"role": m.role, "content": m.content} for m in data.history]
-    reply = await chat_with_ai(data.message, history)
+    reply = await chat_with_ai(data.message, history, model_id=model_id)
     new_count = await increment_usage(db, identifier, "web")
 
     return ChatResponse(
@@ -84,4 +108,31 @@ async def public_chat(
         remaining=max(0, limit - new_count),
         daily_limit=limit,
         limit_reached=False,
+        model=model_id,
     )
+
+
+@router.post("/generate-image", response_model=ImageResponse)
+async def generate_image_endpoint(
+    data: ImageRequest,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    identifier = make_identifier(get_client_ip(request), request.headers.get("User-Agent"))
+    used = await get_usage_today(db, identifier)
+    limit = _get_limit()
+
+    if used >= limit:
+        raise HTTPException(status_code=429, detail="Дневной лимит ИИ исчерпан")
+
+    result = await generate_image(data.prompt, data.model, data.width, data.height)
+    if result.get("error"):
+        return ImageResponse(
+            url=None,
+            model=data.model,
+            prompt=data.prompt,
+            error=result["error"],
+        )
+
+    await increment_usage(db, identifier, "web")
+    return ImageResponse(**result)

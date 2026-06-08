@@ -137,10 +137,21 @@ class ApiClient {
     return this.request<PaymentInfo>("/ai/payment-info");
   }
 
-  sendAIChat(message: string, history: { role: string; content: string }[]) {
+  getAIModels() {
+    return this.request<AIModelsInfo>("/ai/models");
+  }
+
+  sendAIChat(message: string, history: { role: string; content: string }[], model?: string) {
     return this.request<ChatResponse>("/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify({ message, history, model }),
+    });
+  }
+
+  generateAIImage(prompt: string, model: string) {
+    return this.request<ImageGenResult>("/ai/generate-image", {
+      method: "POST",
+      body: JSON.stringify({ prompt, model }),
     });
   }
 
@@ -309,8 +320,9 @@ class ApiClient {
     return this.request<{ value: string; label: string }[]>("/classifieds/categories");
   }
 
-  getClassifiedPaymentInfo() {
-    return this.request<ClassifiedPaymentInfo>("/classifieds/payment-info");
+  getClassifiedPaymentInfo(phone?: string) {
+    const q = phone ? `?phone=${encodeURIComponent(phone)}` : "";
+    return this.request<ClassifiedPaymentInfo>(`/classifieds/payment-info${q}`);
   }
 
   getClassifiedMarketingStats() {
@@ -472,6 +484,30 @@ export interface ChatResponse {
   remaining: number;
   daily_limit: number;
   limit_reached: boolean;
+  model?: string;
+}
+
+export interface AIModelOption {
+  id: string;
+  label: string;
+  provider: string;
+  desc?: string;
+  fast?: boolean;
+  smart?: boolean;
+}
+
+export interface AIModelsInfo {
+  chat_models: AIModelOption[];
+  image_models: AIModelOption[];
+  capabilities: string[];
+}
+
+export interface ImageGenResult {
+  url: string | null;
+  model: string;
+  prompt: string;
+  provider?: string;
+  error?: string;
 }
 
 export interface UsageInfo {
@@ -643,6 +679,10 @@ export interface ClassifiedPaymentInfo {
   amount: number;
   period_days: number;
   message: string;
+  free_limit: number;
+  free_used: number;
+  free_remaining: number;
+  requires_payment: boolean;
 }
 
 export interface ClassifiedAd {

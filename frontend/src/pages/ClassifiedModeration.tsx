@@ -35,7 +35,7 @@ export function ClassifiedModeration() {
     <div>
       <h2 className="text-2xl font-bold mb-6">📋 Модерация объявлений</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Проверьте оплату {items[0]?.placement_fee ?? 150} ₽ и опубликуйте объявление
+        {items[0]?.placement_fee ? `Проверьте оплату ${items[0].placement_fee} ₽` : "Бесплатное объявление"} — опубликуйте
       </p>
       <div className="space-y-4">
         {items.map((ad) => (

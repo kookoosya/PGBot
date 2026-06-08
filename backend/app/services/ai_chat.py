@@ -21,19 +21,22 @@ PUSHKIN_QUOTES = [
     "«Счастье то, что дух просветляет.»",
 ]
 
-CHAT_SYSTEM_PROMPT = """Ты — умный и дружелюбный ИИ-помощник поселка Пушкинские Горы (Псковская область).
-Здесь жил и творил Александр Сергеевич Пушкин. Твой стиль — тёплый, культурный, с лёгкими
-отсылками к поэзии, но без пафоса. Ты помогаешь жителям с вопросами о:
-- жизни в поселке, быте, ЖКХ
-- культуре, истории Пушкинских Гор
-- подготовке обращений в народный контроль
-- общих вопросах (в разумных пределах)
+CHAT_SYSTEM_PROMPT = """Ты — мощный универсальный ИИ-помощник портала посёлка Пушкинские Горы (Псковская область).
+Здесь жил Александр Сергеевич Пушкин. Ты можешь помочь с ЛЮБЫМИ задачами:
+- вопросы о посёлке, быте, ЖКХ, карте, объявлениях, услугах
+- написать текст объявления, пост, поздравление, письмо
+- идеи для бизнеса, ремонта, дачи, огорода
+- культура, история, маршруты по Пушкиногорью
+- программирование, учёба, переводы, расчёты — всё в разумных пределах
+- подсказать, как сгенерировать картинку на сайте (раздел «Картинки»)
+
+На сайте доступны модели: Gemini Flash/Pro для текста, Nano Banana / Flux / Turbo для картинок.
 
 Правила:
-- Отвечай на русском, кратко и по делу (до 300 слов)
+- Отвечай на русском, полезно и по делу (до 400 слов)
 - Не выдавай себя за официальное лицо администрации
-- Для жалоб на проблемы посоветуй написать боту или на сайт
-- Будь полезным и интересным собеседником
+- Для жалоб на проблемы — бот ВК или сайт
+- Будь дружелюбным собеседником
 """
 
 
@@ -70,7 +73,7 @@ async def increment_usage(db: AsyncSession, identifier: str, source: str = "web"
     return count
 
 
-async def chat_with_ai(message: str, history: list[dict] | None = None) -> str:
+async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
     if not settings.GEMINI_API_KEY:
         quote = random.choice(PUSHKIN_QUOTES)
         return (
@@ -83,8 +86,9 @@ async def chat_with_ai(message: str, history: list[dict] | None = None) -> str:
 
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
+        model_name = model_id or settings.GEMINI_MODEL
         model = genai.GenerativeModel(
-            settings.GEMINI_MODEL,
+            model_name,
             system_instruction=CHAT_SYSTEM_PROMPT,
         )
 
@@ -113,9 +117,13 @@ async def chat_with_ai(message: str, history: list[dict] | None = None) -> str:
 def get_payment_info() -> dict:
     return {
         "card_number": settings.PAYMENT_CARD_NUMBER,
+        "card_holder": settings.PAYMENT_CARD_HOLDER,
+        "bank_name": settings.PAYMENT_BANK_NAME,
+        "description": settings.PAYMENT_DESCRIPTION,
         "amount_suggested": settings.PAYMENT_AMOUNT_SUGGESTED,
+        "contact_email": settings.PAYMENT_CONTACT_EMAIL,
         "message": (
             f"Поддержите портал посёлка — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
-            "Перевод на карту помогает развивать сайт."
+            "Перевод на карту помогает развивать сайт и ИИ."
         ),
     }
