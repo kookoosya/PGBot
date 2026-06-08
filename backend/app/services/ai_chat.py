@@ -85,14 +85,7 @@ def _maybe_quote(text: str) -> str:
 
 
 def _ai_unavailable_message() -> str:
-    return (
-        "⚠️ ИИ сейчас не подключён к внешнему API.\n\n"
-        "На сервере нужен рабочий ключ:\n"
-        "• POLLINATIONS_API_KEY (рекомендуется) — enter.pollinations.ai\n"
-        "• или GEMINI_API_KEY — aistudio.google.com\n\n"
-        "Сейчас на VPS стоит заглушка из .env.example, а не ваш ключ.\n"
-        "Добавьте ключ в /opt/pgbot/.env и перезапустите backend."
-    )
+    return "⚠️ ИИ временно недоступен. Попробуйте позже."
 
 
 async def _chat_gemini(message: str, history: list[dict] | None, model_id: str | None) -> str | None:
