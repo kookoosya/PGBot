@@ -51,7 +51,7 @@ export function PublicLayout() {
         <TabNav variant="top" />
       </header>
 
-      <main className="flex-1 w-full pushkin-main">
+      <main className="flex-1 w-full pushkin-main page-fade-wrap" key={location.pathname}>
         <Outlet />
       </main>
 
