@@ -8,7 +8,7 @@ import {
   offlineBundleAge,
   registerServiceWorker,
 } from "@/lib/offlineMap";
-import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -16,26 +16,35 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
-import { api, MapStats, Place, PlaceDetail, ComplaintType, TaxiService } from "@/lib/api";
+import { api, ComplaintType, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
 import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
 import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 const CENTER: [number, number] = [57.0267, 28.91];
 
-const QUICK_FILTERS: { id: string; label: string; category?: string; shopsOnly?: boolean }[] = [
+const QUICK_FILTERS: {
+  id: string;
+  label: string;
+  category?: string;
+  shopsOnly?: boolean;
+  usefulOnly?: boolean;
+}[] = [
   { id: "shops", label: "🛒 Магазины", shopsOnly: true },
   { id: "pharmacy", label: "💊 Аптеки", category: "pharmacy" },
   { id: "cafe", label: "☕ Кафе", category: "cafe" },
   { id: "gas", label: "⛽ АЗС", category: "gas" },
   { id: "culture", label: "🎭 Музеи", category: "culture" },
-  { id: "hospital", label: "🏥 Медицина", category: "hospital" },
+  { id: "useful", label: "🏦 Полезное", usefulOnly: true },
   { id: "hotel", label: "🏨 Гостиницы", category: "hotel" },
   { id: "tyre", label: "🛞 Авто", category: "tyre" },
 ];
 
-function isUsefulDescription(text: string | null | undefined): boolean {
-  if (!text) return false;
-  return !/^[\wа-яё\s/]+ — пушкинские горы$/i.test(text.trim());
+function formatPlaceNote(text: string | null | undefined): string | null {
+  if (!text) return null;
+  const cleaned = text
+    .replace(/ · Данные из открытых источников — уточняйте перед визитом$/, "")
+    .trim();
+  return cleaned || null;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -43,7 +52,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   restaurant: "🍽", bank: "🏦", post: "📮", school: "🏫",
   hospital: "🏥", government: "🏛", transport: "🚌", culture: "🎭",
   hotel: "🏨", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
-  taxi: "🚕", other: "📍",
+  taxi: "🚕", parking: "🅿️", other: "📍",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -180,14 +189,21 @@ export function MapPage() {
   const [taxi, setTaxi] = useState<TaxiService[]>([]);
   const [category, setCategory] = useState("");
   const [shopsOnly, setShopsOnly] = useState(false);
+  const [usefulOnly, setUsefulOnly] = useState(false);
+  const [routes, setRoutes] = useState<MapRoute[]>([]);
+  const [activeRoute, setActiveRoute] = useState<MapRoute | null>(null);
+  const [mapReportTypes, setMapReportTypes] = useState<ComplaintType[]>([]);
   const [search, setSearch] = useState("");
   const [mapStyle, setMapStyle] = useState<"scheme" | "satellite">("scheme");
   const [showTaxi, setShowTaxi] = useState(true);
   const [complaintTypes, setComplaintTypes] = useState<ComplaintType[]>([]);
-  const [tab, setTab] = useState<"info" | "review" | "complaint">("info");
+  const [tab, setTab] = useState<"info" | "review" | "complaint" | "report">("info");
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: "", author_name: "" });
   const [complaintForm, setComplaintForm] = useState({
     complaint_type: "price_tag_fraud", description: "", price_tagged: "", price_charged: "", author_name: "",
+  });
+  const [reportForm, setReportForm] = useState({
+    complaint_type: "map_wrong_hours", description: "", author_name: "",
   });
   const [msg, setMsg] = useState("");
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
@@ -201,26 +217,38 @@ export function MapPage() {
   useEffect(() => {
     registerServiceWorker();
     api.getComplaintTypes().then(setComplaintTypes).catch(console.error);
+    api.getMapReportTypes().then(setMapReportTypes).catch(console.error);
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
     api.getMapStats().then(setMapStats).catch(console.error);
+    api.getMapRoutes().then(setRoutes).catch(console.error);
   }, []);
 
   const isLodging = category === "hotel";
 
   const activeFilterId = shopsOnly
     ? "shops"
-    : QUICK_FILTERS.find((f) => f.category === category)?.id ?? "";
+    : usefulOnly
+      ? "useful"
+      : QUICK_FILTERS.find((f) => f.category === category)?.id ?? "";
 
   const applyQuickFilter = (filter: (typeof QUICK_FILTERS)[number]) => {
     const isActive = activeFilterId === filter.id;
     if (isActive) {
       setCategory("");
       setShopsOnly(false);
+      setUsefulOnly(false);
       return;
     }
     setCategory(filter.category ?? "");
     setShopsOnly(Boolean(filter.shopsOnly));
+    setUsefulOnly(Boolean(filter.usefulOnly));
+  };
+
+  const showRoute = (route: MapRoute) => {
+    setActiveRoute(route);
+    setSelected(null);
+    setHighlight(null);
   };
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
@@ -231,6 +259,7 @@ export function MapPage() {
     const params: Record<string, string> = { page_size: "500", sort: "rating" };
     if (category) params.category = category;
     if (shopsOnly) params.shops_only = "true";
+    if (usefulOnly) params.useful_only = "true";
     if (search) params.search = search;
     if (isLodging) {
       params.district = "true";
@@ -256,7 +285,7 @@ export function MapPage() {
           setOfflineMsg("Нет сети — показаны сохранённые точки.");
         }
       });
-  }, [category, shopsOnly, search, isLodging]);
+  }, [category, shopsOnly, usefulOnly, search, isLodging]);
 
   async function handleOfflineDownload() {
     setOfflineBusy(true);
@@ -276,7 +305,7 @@ export function MapPage() {
 
   useEffect(() => {
     if (boundsRef.current || isLodging) loadPlaces(boundsRef.current ?? undefined);
-  }, [category, shopsOnly, search, loadPlaces, isLodging]);
+  }, [category, shopsOnly, usefulOnly, search, loadPlaces, isLodging]);
 
   const sortedPlaces = useMemo(
     () => [...places].sort((a, b) => b.display_rating - a.display_rating || b.display_review_count - a.display_review_count),
@@ -312,6 +341,14 @@ export function MapPage() {
     setTab("info");
   };
 
+  const submitReport = async () => {
+    if (!selected || reportForm.description.length < 10) return;
+    await api.addComplaint(selected.id, reportForm);
+    setMsg("Спасибо! Проверим и обновим карту.");
+    setReportForm({ complaint_type: "map_wrong_hours", description: "", author_name: "" });
+    setTab("info");
+  };
+
   return (
     <div>
       <div className="page-section pb-2">
@@ -326,6 +363,33 @@ export function MapPage() {
         </div>
       </div>
 
+
+      {routes.length > 0 && (
+        <div className="page-section pb-3">
+          <div className="map-routes-panel">
+            <h3 className="map-routes-title">🧭 Маршруты для туристов</h3>
+            <div className="map-routes-grid">
+              {routes.map((route) => (
+                <button
+                  key={route.id}
+                  type="button"
+                  className={`map-route-card${activeRoute?.id === route.id ? " map-route-card-active" : ""}`}
+                  onClick={() => showRoute(route)}
+                >
+                  <strong>{route.title}</strong>
+                  <span className="text-xs opacity-80">{route.duration}</span>
+                  <p className="text-xs m-0 mt-1">{route.description}</p>
+                </button>
+              ))}
+            </div>
+            {activeRoute && (
+              <button type="button" className="text-xs mt-2 opacity-70" onClick={() => setActiveRoute(null)}>
+                Скрыть маршрут
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {showTaxi && taxi.length > 0 && (
         <div className="page-section pb-3">
@@ -370,6 +434,12 @@ export function MapPage() {
             />
             <MapEvents onBounds={loadPlaces} pausedRef={boundsPausedRef} />
             <ClusterLayer places={places} onSelect={openPlace} />
+            {activeRoute && activeRoute.stops.length > 1 && (
+              <Polyline
+                positions={activeRoute.stops.map((s) => [s.latitude, s.longitude] as [number, number])}
+                pathOptions={{ color: "#c9a227", weight: 4, opacity: 0.85, dashArray: "10 8" }}
+              />
+            )}
             <FlyToPlace place={highlight} pausedRef={boundsPausedRef} />
           </MapContainer>
 
@@ -420,6 +490,7 @@ export function MapPage() {
                 value={shopsOnly ? "" : category}
                 onChange={(e) => {
                   setShopsOnly(false);
+                  setUsefulOnly(false);
                   setCategory(e.target.value);
                 }}
               >
@@ -476,9 +547,12 @@ export function MapPage() {
                   </a>
                 </p>
               )}
-              {isUsefulDescription(selected.description) && (
-                <p className="text-sm text-muted-foreground mt-2">{selected.description}</p>
+              {formatPlaceNote(selected.description) && (
+                <p className="text-sm text-muted-foreground mt-2">{formatPlaceNote(selected.description)}</p>
               )}
+              <p className="text-xs text-muted-foreground mt-2 m-0">
+                Данные из открытых источников — уточняйте часы и телефон перед визитом.
+              </p>
 
               <div className="org-action-grid mt-4">
                 {selected.phone && (
@@ -511,14 +585,14 @@ export function MapPage() {
               </div>
 
               <div className="org-tabs mt-4">
-                {(["info", "review", "complaint"] as const).map((t) => (
+                {(["info", "review", "report", "complaint"] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
                     className={`org-tab${tab === t ? " org-tab-active" : ""}`}
                     onClick={() => setTab(t)}
                   >
-                    {t === "info" ? "Отзывы" : t === "review" ? "Оценить" : "Жалоба"}
+                    {t === "info" ? "Отзывы" : t === "review" ? "Оценить" : t === "report" ? "Ошибка" : "Жалоба"}
                   </button>
                 ))}
               </div>
@@ -548,8 +622,21 @@ export function MapPage() {
                 </div>
               )}
 
+              {tab === "report" && (
+                <div className="mt-3 space-y-3">
+                  <p className="text-xs text-muted-foreground m-0">Заведение закрылось? Неверный телефон? Напишите — обновим карту.</p>
+                  <select className="w-full border rounded px-2 py-1 text-sm" value={reportForm.complaint_type} onChange={(e) => setReportForm({ ...reportForm, complaint_type: e.target.value })}>
+                    {mapReportTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                  <textarea className="w-full border rounded p-2 text-sm min-h-[80px]" placeholder="Что не так? Например: закрыто, другой телефон..." value={reportForm.description} onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })} />
+                  <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Ваше имя (необязательно)" value={reportForm.author_name} onChange={(e) => setReportForm({ ...reportForm, author_name: e.target.value })} />
+                  <Button className="w-full" onClick={submitReport}>Отправить</Button>
+                </div>
+              )}
+
               {tab === "complaint" && (
                 <div className="mt-3 space-y-3">
+                  <p className="text-xs text-muted-foreground m-0">Жалоба на магазин: цена, чек, товар.</p>
                   <select className="w-full border rounded px-2 py-1 text-sm" value={complaintForm.complaint_type} onChange={(e) => setComplaintForm({ ...complaintForm, complaint_type: e.target.value })}>
                     {complaintTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>

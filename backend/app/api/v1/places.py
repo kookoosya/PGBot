@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.core.deps import get_optional_user, require_owner
 from app.database import get_db
 from app.models.enums import (
+    MAP_REPORT_LABELS,
     PLACE_CATEGORY_LABELS,
     SHOP_COMPLAINT_LABELS,
     IssueCategory,
@@ -33,6 +34,7 @@ from app.schemas.place import (
     PlaceReviewResponse,
     TaxiServiceResponse,
 )
+from app.services.map_routes import get_map_routes
 from app.services.map_sync import sync_all_map_data
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
 from app.services.schedule import format_opening_hours
@@ -47,6 +49,15 @@ SHOP_CATEGORIES = {
 }
 
 LODGING_CATEGORIES = {PlaceCategory.HOTEL}
+
+USEFUL_CATEGORIES = {
+    PlaceCategory.BANK,
+    PlaceCategory.POST,
+    PlaceCategory.GOVERNMENT,
+    PlaceCategory.HOSPITAL,
+    PlaceCategory.TRANSPORT,
+    PlaceCategory.PARKING,
+}
 
 SOURCE_PRIORITY = case(
     (Place.external_source == "reference", 0),
@@ -134,7 +145,18 @@ async def list_complaint_types():
     return [
         {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]}
         for t in ShopComplaintType
+        if t not in MAP_REPORT_LABELS
     ]
+
+
+@router.get("/map-report-types")
+async def list_map_report_types():
+    return [{"value": t.value, "label": MAP_REPORT_LABELS[t]} for t in MAP_REPORT_LABELS]
+
+
+@router.get("/routes")
+async def list_map_routes():
+    return get_map_routes()
 
 
 @router.get("/taxi", response_model=list[TaxiServiceResponse])
@@ -171,6 +193,7 @@ async def list_places(
     category: PlaceCategory | None = None,
     search: str | None = None,
     shops_only: bool = False,
+    useful_only: bool = False,
     min_rating: float | None = Query(None, ge=0, le=5),
     south: float | None = None,
     west: float | None = None,
@@ -186,6 +209,8 @@ async def list_places(
         query = query.where(Place.category == category)
     if shops_only:
         query = query.where(Place.category.in_(SHOP_CATEGORIES))
+    if useful_only:
+        query = query.where(Place.category.in_(USEFUL_CATEGORIES))
     if search:
         query = query.where(
             Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%")
@@ -309,16 +334,20 @@ async def add_complaint(
     db.add(complaint)
     place.complaint_count += 1
 
+    type_label = MAP_REPORT_LABELS.get(data.complaint_type) or SHOP_COMPLAINT_LABELS.get(
+        data.complaint_type, data.complaint_type
+    )
+    is_map_report = data.complaint_type in MAP_REPORT_LABELS
     issue_desc = (
-        f"Жалоба на {place.name} ({place.address or ''})\n"
-        f"Тип: {SHOP_COMPLAINT_LABELS.get(data.complaint_type, data.complaint_type)}\n"
+        f"{'Ошибка на карте' if is_map_report else 'Жалоба'}: {place.name} ({place.address or ''})\n"
+        f"Тип: {type_label}\n"
         f"{data.description}"
     )
     if data.price_tagged or data.price_charged:
         issue_desc += f"\nЦена на ценнике: {data.price_tagged or '—'}, на кассе: {data.price_charged or '—'}"
 
     issue = Issue(
-        title=f"Жалоба: {place.name}",
+        title=f"{'Карта' if is_map_report else 'Жалоба'}: {place.name}",
         description=issue_desc,
         status=IssueStatus.NEW,
         category=IssueCategory.OTHER,
@@ -342,7 +371,8 @@ async def add_complaint(
 
     return PlaceComplaintResponse(
         id=complaint.id, complaint_type=complaint.complaint_type,
-        complaint_label=SHOP_COMPLAINT_LABELS.get(complaint.complaint_type, ""),
+        complaint_label=MAP_REPORT_LABELS.get(complaint.complaint_type)
+        or SHOP_COMPLAINT_LABELS.get(complaint.complaint_type, ""),
         description=complaint.description, price_tagged=complaint.price_tagged,
         price_charged=complaint.price_charged, status=complaint.status,
         created_at=complaint.created_at,

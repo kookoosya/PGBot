@@ -1180,6 +1180,32 @@
     border-color: hsl(42 45% 82%);
   }
 
+  .map-routes-panel {
+    @apply pushkin-card p-4;
+    background: linear-gradient(135deg, hsl(42 50% 96%), hsl(152 25% 94%));
+  }
+  .map-routes-title {
+    @apply text-base font-bold m-0 mb-3;
+  }
+  .map-routes-grid {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  .map-route-card {
+    text-align: left;
+    border: 1.5px solid hsl(42 45% 82%);
+    background: hsl(40 55% 99%);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    transition: all 0.15s ease;
+  }
+  .map-route-card-active {
+    border-color: hsl(42 78% 46%);
+    background: hsl(42 55% 94%);
+    box-shadow: 0 4px 14px rgba(12, 40, 28, 0.1);
+  }
+
   .map-filter-scroll {
     display: flex;
     gap: 0.5rem;

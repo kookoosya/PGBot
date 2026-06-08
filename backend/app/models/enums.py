@@ -196,6 +196,7 @@ class PlaceCategory(str, enum.Enum):
     TYRE = "tyre"
     AUTO = "auto"
     TAXI = "taxi"
+    PARKING = "parking"
     OTHER = "other"
 
 
@@ -207,6 +208,11 @@ class ShopComplaintType(str, enum.Enum):
     EXPIRED_PRODUCT = "expired_product"
     SHORT_WEIGHT = "short_weight"
     OTHER = "other"
+    MAP_WRONG_HOURS = "map_wrong_hours"
+    MAP_WRONG_PHONE = "map_wrong_phone"
+    MAP_CLOSED = "map_closed"
+    MAP_WRONG_ADDRESS = "map_wrong_address"
+    MAP_OTHER = "map_other"
 
 
 PLACE_CATEGORY_LABELS = {
@@ -229,7 +235,16 @@ PLACE_CATEGORY_LABELS = {
     PlaceCategory.TYRE: "Шиномонтаж",
     PlaceCategory.AUTO: "Автосервис",
     PlaceCategory.TAXI: "Такси",
+    PlaceCategory.PARKING: "Парковка",
     PlaceCategory.OTHER: "Другое",
+}
+
+MAP_REPORT_LABELS = {
+    ShopComplaintType.MAP_WRONG_HOURS: "Неверные часы работы",
+    ShopComplaintType.MAP_WRONG_PHONE: "Неверный телефон",
+    ShopComplaintType.MAP_CLOSED: "Заведение закрыто",
+    ShopComplaintType.MAP_WRONG_ADDRESS: "Неверный адрес",
+    ShopComplaintType.MAP_OTHER: "Другая ошибка на карте",
 }
 
 SHOP_COMPLAINT_LABELS = {

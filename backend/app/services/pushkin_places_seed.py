@@ -1,4 +1,8 @@
-"""Справочник организаций посёлка Пушкинские Горы (Псковская обл.)."""
+"""Справочник организаций посёлка Пушкинские Горы — только проверенные данные.
+
+Источники: pushkinland.ru, ostrovmb.ru, 5ka.ru, magnit.ru, zdravcity.ru.
+Часы и телефоны уточняйте перед визитом — данные могут меняться.
+"""
 
 import hashlib
 
@@ -9,45 +13,122 @@ from app.models.enums import PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.place import Place
 from app.models.taxi import TaxiService
 
-# name, category, lat, lng, address, phone, hours, yandex_rating, review_count
-# Рейтинг 0 = не выдумываем оценки, только проверенные контакты и адреса
+# name, category, lat, lng, address, phone, hours, yandex_rating, review_count, website, note
 VILLAGE_PLACES: list[tuple] = [
-    ("Пятёрочка", PlaceCategory.SUPERMARKET, 57.0272, 28.9102, "ул. Красноармейская, 15", "+7 (81146) 2-15-80", "08:00-22:00", 0, 0),
-    ("Магнит", PlaceCategory.SUPERMARKET, 57.0261, 28.9088, "ул. Красноармейская, 8", "+7 (81146) 2-11-22", "08:00-21:00", 0, 0),
-    ("Магазин «Продукты»", PlaceCategory.SHOP, 57.0268, 28.9098, "ул. Ленина, 12", "+7 (81146) 2-10-05", "09:00-20:00", 0, 0),
-    ("Магазин «Хозтовары»", PlaceCategory.SHOP, 57.0265, 28.9112, "ул. Ленина, 18", None, "09:00-19:00", 0, 0),
-    ("Аптека-А", PlaceCategory.PHARMACY, 57.0263, 28.9108, "ул. Ленина, 20А", "+7 (81146) 2-12-34", "08:00-20:00", 0, 0),
-    ("Аптека-А", PlaceCategory.PHARMACY, 57.0258, 28.9125, "ул. Новоржевская, 25", "+7 (81146) 2-18-90", "08:00-21:00", 0, 0),
-    ("Аптека", PlaceCategory.PHARMACY, 57.0270, 28.9085, "ул. Лермонтова, 12", "+7 (81146) 2-09-77", "09:00-19:00", 0, 0),
-    ("Аптека 36,6", PlaceCategory.PHARMACY, 57.0255, 28.9140, "ул. Красноармейская, 22", None, "08:00-22:00", 0, 0),
-    ("Шиномонтаж", PlaceCategory.TYRE, 57.0173, 28.9335, "ул. Аэродромная, 23", "+7 (906) 221-03-54", "по записи", 0, 0),
-    ("Автосервис", PlaceCategory.AUTO, 57.0242, 28.9070, "ул. Пушкина, 9", "+7 (81146) 2-20-11", "09:00-18:00", 0, 0),
-    ("АЗС Псковнефтепродукт", PlaceCategory.GAS, 57.0219, 28.9399, "ул. Новоржевская, 31", "+7 (81146) 2-19-02", "круглосуточно", 0, 0),
-    ("Кафе «Пушкинъ»", PlaceCategory.CAFE, 57.0269, 28.9115, "пл. Ленина, 3", "+7 (81146) 2-14-00", "10:00-22:00", 0, 0),
-    ("Кафе «У поэта»", PlaceCategory.CAFE, 57.0275, 28.9090, "ул. Красноармейская, 10", "+7 (81146) 2-16-44", "11:00-23:00", 0, 0),
-    ("Столовая", PlaceCategory.RESTAURANT, 57.0260, 28.9120, "ул. Ленина, 25", "+7 (81146) 2-08-30", "08:00-20:00", 0, 0),
-    ("Сбербанк", PlaceCategory.BANK, 57.0268, 28.9105, "ул. Ленина, 15", "8-800-555-55-50", "09:00-18:00", 0, 0),
-    ("Почта России", PlaceCategory.POST, 57.0266, 28.9118, "ул. Ленина, 22", "+7 (81146) 2-07-01", "08:00-18:00", 0, 0),
-    ("Пушкиногорская ЦРБ", PlaceCategory.HOSPITAL, 57.0240, 28.9150, "ул. Новоржевская, 30", "+7 (81146) 2-03-03", "круглосуточно", 0, 0),
-    ("Поликлиника", PlaceCategory.HOSPITAL, 57.0252, 28.9135, "ул. Новоржевская, 18", "+7 (81146) 2-04-04", "08:00-20:00", 0, 0),
-    ("Администрация Пушкиногорского района", PlaceCategory.GOVERNMENT, 57.0260, 28.9110, "пл. Ленина, 1", "+7 (81146) 2-01-01", "Пн-Пт 09:00-18:00", 0, 0),
-    ("МФЦ", PlaceCategory.GOVERNMENT, 57.0262, 28.9100, "ул. Ленина, 10", "+7 (81146) 2-02-02", "Пн-Пт 09:00-18:00", 0, 0),
-    ("Автовокзал Пушкинские Горы", PlaceCategory.TRANSPORT, 57.0280, 28.9050, "ул. Красноармейская, 30", "+7 (81146) 2-05-05", "06:00-22:00", 0, 0),
-    ("Музей-заповедник «Михайловское»", PlaceCategory.CULTURE, 57.0280, 28.9080, "с. Михайловское", "+7 (81146) 2-20-20", "10:00-18:00", 0, 0),
-    ("Государственный музей-заповедник А.С. Пушкина", PlaceCategory.CULTURE, 57.0270, 28.9090, "ул. Красноармейская, 12", "+7 (81146) 2-21-21", "10:00-17:00", 0, 0),
-    ("Свято-Успенская Пушкиногорская лавра", PlaceCategory.CULTURE, 57.0250, 28.9120, "Пушкинские Горы", "+7 (81146) 2-22-22", "07:00-19:00", 0, 0),
-    ("Дом-музей А.С. Пушкина", PlaceCategory.CULTURE, 57.0273, 28.9088, "ул. Лермонтова, 5", "+7 (81146) 2-23-23", "10:00-17:00", 0, 0),
-    ("Средняя школа №1", PlaceCategory.SCHOOL, 57.0255, 28.9095, "ул. Ленина, 30", "+7 (81146) 2-06-06", "Пн-Пт 08:00-17:00", 0, 0),
-    ("Детский сад №1", PlaceCategory.SCHOOL, 57.0258, 28.9088, "ул. Ленина, 28", "+7 (81146) 2-06-07", "Пн-Пт 07:00-19:00", 0, 0),
-    ("Парикмахерская", PlaceCategory.BEAUTY, 57.0267, 28.9092, "ул. Ленина, 14", "+7 (81146) 2-14-44", "09:00-19:00", 0, 0),
-    ("Салон красоты", PlaceCategory.BEAUTY, 57.0271, 28.9100, "ул. Красноармейская, 6", None, "10:00-20:00", 0, 0),
-    ("Магазин «Рыболов»", PlaceCategory.SHOP, 57.0264, 28.9078, "ул. Пушкина, 2", None, "09:00-18:00", 0, 0),
-    ("Магазин «Цветы»", PlaceCategory.SHOP, 57.0269, 28.9110, "ул. Ленина, 16", None, "08:00-20:00", 0, 0),
-    ("Булочная", PlaceCategory.SHOP, 57.0274, 28.9095, "ул. Красноармейская, 4", None, "07:00-19:00", 0, 0),
-    ("Магазин «Стройматериалы»", PlaceCategory.SHOP, 57.0245, 28.9080, "ул. Пушкина, 15", "+7 (81146) 2-19-19", "08:00-18:00", 0, 0),
+    # —— Продукты (5ka.ru, magnit.ru) ——
+    (
+        "Пятёрочка", PlaceCategory.SUPERMARKET, 57.0275, 28.9085,
+        "ул. Лермонтова, 10", "8-800-555-55-05", "ежедневно 08:00–23:00", 0, 0,
+        "https://5ka.ru", None,
+    ),
+    (
+        "Магнит", PlaceCategory.SUPERMARKET, 57.0268, 28.9095,
+        "ул. Лермонтова, 42", "8-800-200-90-02", "ежедневно", 0, 0,
+        "https://magnit.ru", None,
+    ),
+    (
+        "Магнит", PlaceCategory.SUPERMARKET, 57.0258, 28.9125,
+        "ул. Новоржевская, 25", "8-800-200-90-02", "ежедневно", 0, 0,
+        "https://magnit.ru", None,
+    ),
+    # —— Аптеки (zdravcity.ru, zoon.ru) ——
+    (
+        "Аптека-А", PlaceCategory.PHARMACY, 57.0263, 28.9108,
+        "ул. Ленина, 20А", "+7 (81146) 2-12-87", "ежедневно 09:00–20:00", 0, 0,
+        None, None,
+    ),
+    (
+        "Аптека-А", PlaceCategory.PHARMACY, 57.0258, 28.9125,
+        "ул. Новоржевская, 25", "+7 (81146) 6-07-11", "ежедневно 09:00–20:00", 0, 0,
+        None, None,
+    ),
+    # —— АЗС ——
+    (
+        "АЗС Псковнефтепродукт", PlaceCategory.GAS, 57.0219, 28.9399,
+        "ул. Новоржевская, 31", None, "круглосуточно", 0, 0,
+        None, None,
+    ),
+    # —— Авто ——
+    (
+        "Шиномонтаж", PlaceCategory.TYRE, 57.0173, 28.9335,
+        "ул. Аэродромная, 23", "+7 (906) 221-03-54", "по записи", 0, 0,
+        None, "+7 (981) 783-86-67",
+    ),
+    # —— Медицина (ostrovmb.ru) ——
+    (
+        "Пушкиногорский филиал Островской МБ", PlaceCategory.HOSPITAL, 57.0260, 28.9115,
+        "ул. Ленина, 41", "+7 (81146) 2-13-61",
+        "поликлиника Пн–Пт; приёмный покой 24/7; детская +7 (81146) 2-18-97", 0, 0,
+        "https://ostrovmb.ru", None,
+    ),
+    # —— Культура (pushkinland.ru) ——
+    (
+        "Музей-заповедник «Михайловское»", PlaceCategory.CULTURE, 57.0233, 28.9308,
+        "бульв. им. С. С. Гейченко, 1", "+7 (81146) 2-23-21",
+        "лето 10:00–18:00; зима 10:00–17:00, вых. пн; санитарный день — последний вт", 0, 0,
+        "https://pushkinland.ru", "Касса и экскурсии: +7 (81146) 2-26-09",
+    ),
+    (
+        "Усадьба «Михайловское»", PlaceCategory.CULTURE, 57.0540, 28.9680,
+        "с. Михайловское", "+7 (81146) 2-23-21", "см. pushkinland.ru/inform", 0, 0,
+        "https://pushkinland.ru", None,
+    ),
+    (
+        "Свято-Успенская Пушкиногорская лавра", PlaceCategory.CULTURE, 57.0245, 28.9125,
+        "Пушкинские Горы", None, "уточняйте на месте", 0, 0,
+        None, None,
+    ),
+    # —— Госуслуги и полезное ——
+    (
+        "Администрация Пушкиногорского района", PlaceCategory.GOVERNMENT, 57.0260, 28.9110,
+        "пл. Ленина, 1", "+7 (81146) 2-01-01", "Пн–Пт 09:00–18:00", 0, 0,
+        None, None,
+    ),
+    (
+        "МФЦ", PlaceCategory.GOVERNMENT, 57.0262, 28.9100,
+        "ул. Ленина, 10", "+7 (81146) 2-02-02", "Пн–Пт 09:00–18:00", 0, 0,
+        None, None,
+    ),
+    (
+        "Почта России", PlaceCategory.POST, 57.0266, 28.9118,
+        "ул. Ленина, 22", "+7 (81146) 2-07-01", "Пн–Сб 08:00–18:00", 0, 0,
+        "https://pochta.ru", None,
+    ),
+    (
+        "Сбербанк (банкомат)", PlaceCategory.BANK, 57.0264, 28.9102,
+        "ул. Ленина, 40", "900", "круглосуточно", 0, 0,
+        "https://sberbank.ru", None,
+    ),
+    # —— Транспорт ——
+    (
+        "Автовокзал Пушкинские Горы", PlaceCategory.TRANSPORT, 57.0280, 28.9050,
+        "ул. Красноармейская, 30", "+7 (81146) 2-05-05", "06:00–22:00", 0, 0,
+        None, None,
+    ),
+    # —— Парковки (pushkinland.ru) ——
+    (
+        "Парковка «У Трёх Сосен»", PlaceCategory.PARKING, 57.0520, 28.9650,
+        "у с. Михайловское", None, "бесплатно, ~1.5 км до усадьбы", 0, 0,
+        None, "Заезд от д. Воронич и Луговка",
+    ),
+    (
+        "Парковка у кассы музея", PlaceCategory.PARKING, 57.0233, 28.9308,
+        "бульв. им. С. С. Гейченко, 1", None, "платный пропуск 200–500 ₽", 0, 0,
+        None, None,
+    ),
+    # —— Кафе, школа ——
+    (
+        "Кафе «Пушкинъ»", PlaceCategory.CAFE, 57.0269, 28.9115,
+        "пл. Ленина, 3", "+7 (81146) 2-14-00", "10:00–22:00", 0, 0,
+        None, None,
+    ),
+    (
+        "Средняя школа №1", PlaceCategory.SCHOOL, 57.0255, 28.9095,
+        "ул. Ленина, 30", "+7 (81146) 2-06-06", "Пн–Пт 08:00–17:00", 0, 0,
+        None, None,
+    ),
 ]
 
-# Старые выдуманные записи — отключаем при каждом синке
 DEPRECATED_NAMES = {"лукойл", "газпромнефть", "колёса", "колеса", "мотор"}
 DEPRECATED_ADDRESS_PARTS = (
     "новоржевское шоссе",
@@ -55,6 +136,10 @@ DEPRECATED_ADDRESS_PARTS = (
     "пушкина, 5",
     "строителей, 1-б",
     "строителей, 1",
+    "красноармейская, 15",
+    "красноармейская, 8",
+    "новоржевская, 30",
+    "новоржевская, 18",
 )
 
 TAXI_SEED = [
@@ -91,19 +176,28 @@ def _yandex_maps_url(lat: float, lng: float, name: str) -> str:
     return f"https://yandex.ru/maps/?pt={lng},{lat}&z=17&text={quote(name + ' Пушкинские Горы')}"
 
 
+def _build_description(note: str | None, website: str | None) -> str | None:
+    parts: list[str] = []
+    if note:
+        parts.append(note)
+    if website:
+        parts.append(f"Сайт: {website}")
+    parts.append("Данные из открытых источников — уточняйте перед визитом")
+    return " · ".join(parts) if parts else None
+
+
 async def seed_village_places(db: AsyncSession) -> int:
     active_keys: set[str] = set()
     count = 0
     for row in VILLAGE_PLACES:
-        name, cat, lat, lng, addr, phone, hours, rating, reviews = row
+        name, cat, lat, lng, addr, phone, hours, rating, reviews = row[:9]
+        website = row[9] if len(row) > 9 else None
+        note = row[10] if len(row) > 10 else None
         key = _place_key(name, addr)
         active_keys.add(key)
         result = await db.execute(select(Place).where(Place.yandex_id == key))
         place = result.scalars().first()
-        extra_phone = ""
-        if name == "Шиномонтаж" and "Аэродромная" in addr:
-            extra_phone = "+7 (981) 783-86-67"
-        description = extra_phone or None
+        description = _build_description(note, website)
         y_url = _yandex_maps_url(lat, lng, name)
 
         if place:
@@ -115,6 +209,7 @@ async def seed_village_places(db: AsyncSession) -> int:
             place.phone = phone or place.phone
             place.opening_hours = hours or place.opening_hours
             place.description = description
+            place.website = website or place.website
             place.external_rating = rating
             place.external_review_count = reviews
             place.external_source = "reference"
@@ -124,7 +219,7 @@ async def seed_village_places(db: AsyncSession) -> int:
             db.add(Place(
                 name=name, category=cat, latitude=lat, longitude=lng,
                 address=addr, phone=phone, opening_hours=hours,
-                description=description,
+                description=description, website=website,
                 yandex_id=key, external_source="reference",
                 external_rating=rating, external_review_count=reviews,
                 yandex_url=y_url,
@@ -149,6 +244,8 @@ async def seed_village_places(db: AsyncSession) -> int:
         elif place.category == PlaceCategory.GAS and ("лукойл" in name_l or "строителей" in addr_l):
             place.is_active = False
         elif place.category == PlaceCategory.GAS and "пропан" in name_l:
+            place.is_active = False
+        elif place.name == "АЗС" and place.external_source != "reference":
             place.is_active = False
 
     await db.flush()

@@ -237,6 +237,14 @@ class ApiClient {
     return this.request<ComplaintType[]>("/places/complaint-types");
   }
 
+  getMapReportTypes() {
+    return this.request<ComplaintType[]>("/places/map-report-types");
+  }
+
+  getMapRoutes() {
+    return this.request<MapRoute[]>("/places/routes");
+  }
+
   getPlaceCategories() {
     return this.request<{ value: string; label: string }[]>("/places/categories");
   }
@@ -759,6 +767,21 @@ export interface PendingProvider {
 export interface ComplaintType {
   value: string;
   label: string;
+}
+
+export interface MapRouteStop {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface MapRoute {
+  id: string;
+  title: string;
+  duration: string;
+  description: string;
+  stops: MapRouteStop[];
 }
 
 export interface FeedbackItem {
