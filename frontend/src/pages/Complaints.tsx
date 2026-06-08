@@ -125,7 +125,7 @@ export function Complaints() {
                 >
                   <option value="">Авто (ИИ определит)</option>
                   {categories.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    <option key={c.value} value={c.label}>{c.label}</option>
                   ))}
                 </select>
               </div>
