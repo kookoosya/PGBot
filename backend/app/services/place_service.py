@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal, Optional, TypedDict
 
 from sqlalchemy import case, func, select
@@ -36,7 +35,7 @@ from app.schemas.place import (
     PlaceReviewResponse,
 )
 from app.services.map_routes import get_map_routes
-from app.services.notifications import notify_owner
+from app.services.notify_utils import safe_notify_owner
 from app.services.pagination_utils import normalize_pagination
 from app.services.schedule import format_opening_hours
 
@@ -99,6 +98,7 @@ _MAX_PAGE_SIZE = 500
 _REVIEWS_LIMIT = 10
 _COMPLAINTS_LIMIT = 5
 _REVIEW_DUPLICATE_HOURS = 24
+_COMPLAINT_DUPLICATE_HOURS = 24
 
 
 @dataclass(frozen=True, slots=True)
@@ -291,20 +291,17 @@ async def _load_place(db: AsyncSession, place_id: int) -> Place:
 
 
 async def _safe_notify_owner(message: str, *, context: str, place_id: int) -> bool:
-    """Notify site owner; return ``True`` on success."""
-    try:
-        await notify_owner(message)
-        return True
-    except Exception:
-        logger.exception(
-            "Owner notification failed for place #%s during %s",
-            place_id,
-            context,
-        )
-        return False
+    """Notify site owner about a place-related event; return ``True`` on success."""
+    return await safe_notify_owner(
+        message,
+        context=context,
+        resource="place",
+        resource_id=place_id,
+    )
 
 
 def _resolve_author_name(data_author: Optional[str], user: Optional[User]) -> str:
+    """Pick display name from form data or authenticated user."""
     if data_author:
         return data_author
     if user and user.full_name:
@@ -320,35 +317,83 @@ async def _check_duplicate_review(
     author_name: str,
 ) -> None:
     """Reject duplicate reviews from the same user or anonymous author."""
-    if user_id is not None:
-        existing = await db.execute(
+    try:
+        if user_id is not None:
+            existing = await db.execute(
+                select(PlaceReview.id)
+                .where(PlaceReview.place_id == place_id, PlaceReview.user_id == user_id)
+                .limit(1)
+            )
+            if existing.scalar_one_or_none() is not None:
+                raise PlaceValidationError(
+                    "Вы уже оставляли отзыв об этом месте",
+                    status_code=409,
+                )
+            return
+
+        since = datetime.now(timezone.utc) - timedelta(hours=_REVIEW_DUPLICATE_HOURS)
+        recent = await db.execute(
             select(PlaceReview.id)
-            .where(PlaceReview.place_id == place_id, PlaceReview.user_id == user_id)
+            .where(
+                PlaceReview.place_id == place_id,
+                PlaceReview.user_id.is_(None),
+                PlaceReview.author_name == author_name,
+                PlaceReview.created_at >= since,
+            )
             .limit(1)
         )
+        if recent.scalar_one_or_none() is not None:
+            raise PlaceValidationError(
+                "Отзыв с этим именем уже отправляли недавно — попробуйте позже",
+                status_code=429,
+            )
+    except PlaceValidationError:
+        raise
+    except Exception:
+        logger.exception(
+            "Duplicate review check failed for place #%s (user_id=%s)",
+            place_id,
+            user_id,
+        )
+        raise
+
+
+async def _check_duplicate_complaint(
+    db: AsyncSession,
+    place_id: int,
+    *,
+    user_id: Optional[int],
+    author_name: str,
+) -> None:
+    """Reject repeated complaints on the same place within the cooldown window."""
+    since = datetime.now(timezone.utc) - timedelta(hours=_COMPLAINT_DUPLICATE_HOURS)
+    try:
+        query = select(PlaceComplaint.id).where(
+            PlaceComplaint.place_id == place_id,
+            PlaceComplaint.created_at >= since,
+        )
+        if user_id is not None:
+            query = query.where(PlaceComplaint.user_id == user_id)
+        else:
+            query = query.where(
+                PlaceComplaint.user_id.is_(None),
+                PlaceComplaint.author_name == author_name,
+            )
+        existing = await db.execute(query.limit(1))
         if existing.scalar_one_or_none() is not None:
             raise PlaceValidationError(
-                "Вы уже оставляли отзыв об этом месте",
-                status_code=409,
+                "Вы уже отправляли жалобу на это место недавно — попробуйте позже",
+                status_code=429,
             )
-        return
-
-    since = datetime.now(timezone.utc) - timedelta(hours=_REVIEW_DUPLICATE_HOURS)
-    recent = await db.execute(
-        select(PlaceReview.id)
-        .where(
-            PlaceReview.place_id == place_id,
-            PlaceReview.user_id.is_(None),
-            PlaceReview.author_name == author_name,
-            PlaceReview.created_at >= since,
+    except PlaceValidationError:
+        raise
+    except Exception:
+        logger.exception(
+            "Duplicate complaint check failed for place #%s (user_id=%s)",
+            place_id,
+            user_id,
         )
-        .limit(1)
-    )
-    if recent.scalar_one_or_none() is not None:
-        raise PlaceValidationError(
-            "Отзыв с этим именем уже отправляли недавно — попробуйте позже",
-            status_code=429,
-        )
+        raise
 
 
 async def _recalculate_place_rating(db: AsyncSession, place: Place) -> None:
@@ -600,10 +645,21 @@ async def create_place_complaint(
     *,
     user: Optional[User] = None,
 ) -> PlaceComplaintResult:
-    """Create a place complaint, linked issue and notify the site owner."""
+    """Create a complaint, linked issue and notify the site owner safely.
+
+    Raises ``PlaceNotFoundError`` if the place is missing and
+    ``PlaceValidationError`` when a duplicate complaint is detected.
+    """
     place = await _load_place(db, place_id)
     author_name = _resolve_author_name(data.author_name, user)
     user_id = user.id if user else None
+
+    await _check_duplicate_complaint(
+        db,
+        place_id,
+        user_id=user_id,
+        author_name=author_name,
+    )
 
     complaint = PlaceComplaint(
         place_id=place_id,

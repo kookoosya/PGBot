@@ -27,7 +27,7 @@ from app.services.classified_antifraud import (
     validate_phone,
 )
 from app.services.ip_abuse import contains_suspicious_link
-from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
+from app.services.notify_utils import safe_notify_owner
 from app.services.pagination_utils import normalize_pagination
 from app.services.site_urls import public_site_url
 
@@ -533,25 +533,19 @@ async def _notify_owner_new_ad(
     """Notify site owner about a new pending ad; return ``True`` on success."""
     cat_label = CLASSIFIED_LABELS.get(data.category, data.category)
     fee_line = f"💳 {placement_fee} ₽" if placement_fee else "🆓 Бесплатное размещение"
-    try:
-        await notify_owner(
-            "📢 НОВОЕ ОБЪЯВЛЕНИЕ\n\n"
-            f"#{ad.id} · {cat_label}\n"
-            f"«{data.title}»\n"
-            f"{data.description[:200]}{'…' if len(data.description) > 200 else ''}\n\n"
-            f"👤 {data.author_name}\n"
-            f"📞 {data.phone}\n"
-            f"{fee_line}\n\n"
-            f"Модерация: {public_site_url()}/admin/classifieds"
-        )
-        return True
-    except Exception:
-        logger.exception(
-            "Owner notification failed for classified ad #%s (title=%r)",
-            ad.id,
-            data.title,
-        )
-        return False
+    return await safe_notify_owner(
+        "📢 НОВОЕ ОБЪЯВЛЕНИЕ\n\n"
+        f"#{ad.id} · {cat_label}\n"
+        f"«{data.title}»\n"
+        f"{data.description[:200]}{'…' if len(data.description) > 200 else ''}\n\n"
+        f"👤 {data.author_name}\n"
+        f"📞 {data.phone}\n"
+        f"{fee_line}\n\n"
+        f"Модерация: {public_site_url()}/admin/classifieds",
+        context="classified_create",
+        resource="classified",
+        resource_id=ad.id,
+    )
 
 
 async def _safe_classified_audit(

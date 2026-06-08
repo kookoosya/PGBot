@@ -34,6 +34,7 @@ from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
 from app.services.issue_service import (
     IssueActorContext,
+    IssueValidationError,
     add_issue_comment,
     archive_issue,
     get_issue_details,
@@ -287,8 +288,8 @@ async def reopen_issue_endpoint(
             actor=actor,
             target_status=data.target_status,
         )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except IssueValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     return _issue_to_response(issue)
 
 

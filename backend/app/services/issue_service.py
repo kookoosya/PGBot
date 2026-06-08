@@ -54,6 +54,15 @@ class IssueNotFoundError(Exception):
         self.status_code = status_code
 
 
+class IssueValidationError(Exception):
+    """Business validation failure for issue lifecycle actions."""
+
+    def __init__(self, detail: str, *, status_code: int = 400) -> None:
+        super().__init__(detail)
+        self.detail = detail
+        self.status_code = status_code
+
+
 async def _safe_audit(
     db: AsyncSession,
     action: str,
@@ -272,7 +281,7 @@ async def reopen_issue(
 ) -> Issue:
     """Reopen a closed issue — set status to ``NEW`` or ``UNDER_REVIEW`` and clear ``resolved_at``."""
     if target_status not in _REOPEN_TARGET_STATUSES:
-        raise ValueError(
+        raise IssueValidationError(
             f"target_status must be NEW or UNDER_REVIEW, got {target_status!r}"
         )
     return await _change_issue_status(
