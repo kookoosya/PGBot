@@ -30,6 +30,8 @@ _PREFIXES = (
     "фильм",
 )
 
+_STOCK_GALLERY_PREFIX = "/images/gallery/"
+
 _CATEGORY_IMAGES: dict[str, str] = {
     EventCategory.CULTURE.value: "/images/gallery/monastery.jpg",
     EventCategory.HOLIDAY.value: "/images/gallery/nkc.jpg",
@@ -39,6 +41,22 @@ _CATEGORY_IMAGES: dict[str, str] = {
     EventCategory.COMMUNITY.value: "/images/gallery/village.jpg",
     EventCategory.OTHER.value: "/images/gallery/monument.jpg",
 }
+
+
+def is_stock_gallery_poster(url: str | None) -> bool:
+    """Site gallery placeholders — not real event posters."""
+    return bool(url and url.strip().startswith(_STOCK_GALLERY_PREFIX))
+
+
+def is_real_poster_url(url: str | None, *, category: str | None = None) -> bool:
+    """True when URL is a real poster (Kinopoisk, VK, external), not a stock placeholder."""
+    if not (url or "").strip():
+        return False
+    if is_stock_gallery_poster(url):
+        return False
+    if category == EventCategory.CINEMA.value and url.strip().startswith("/images/"):
+        return False
+    return True
 
 
 def _clean_film_title(title: str) -> str:
@@ -55,7 +73,11 @@ def _clean_film_title(title: str) -> str:
             cleaned = cleaned[len(prefix) :].lstrip(" :«\"—-")
             lower = cleaned.lower()
     cleaned = _TITLE_CLEAN_RE.sub("", cleaned)
-    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" -–—,.«»\"")
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" -–—,.«»\"'")
+    if cleaned.startswith('"') and '"' in cleaned[1:]:
+        inner = cleaned.split('"', 2)[1].strip()
+        if inner:
+            return inner[:200]
     return cleaned[:200]
 
 
@@ -132,7 +154,7 @@ async def fetch_kinopoisk_poster(film_title: str) -> str | None:
                 if score > best_score:
                     best_score = score
                     best_id = int(fid)
-            if not best_id or best_score < 0.45:
+            if not best_id or best_score < 0.35:
                 _POSTER_CACHE[query] = None
                 return None
 
@@ -193,3 +215,12 @@ async def resolve_event_poster(
     if category == EventCategory.CINEMA.value:
         return await fetch_kinopoisk_poster(title)
     return category_fallback_image(category)
+
+
+def strip_invalid_cinema_poster(poster_url: str | None, *, category: str) -> str | None:
+    """Remove stock gallery images wrongly attached to cinema cards."""
+    if category != EventCategory.CINEMA.value:
+        return poster_url
+    if is_real_poster_url(poster_url, category=category):
+        return poster_url
+    return None

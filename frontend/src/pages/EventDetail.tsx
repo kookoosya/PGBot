@@ -6,6 +6,7 @@ import {
   categoryIcon,
   eventSourceLabel,
   isCinemaEvent,
+  isDisplayablePoster,
   regionChipClass,
   shareEventUrl,
 } from "@/lib/eventUtils";
@@ -50,6 +51,7 @@ export function EventDetail() {
   }
 
   const cinema = isCinemaEvent(event);
+  const posterUrl = isDisplayablePoster(event.poster_url, event.category) ? event.poster_url : null;
 
   return (
     <div className="afisha-detail page-section max-w-3xl">
@@ -62,11 +64,15 @@ export function EventDetail() {
       </nav>
 
       <article className={`afisha-detail-card literary-card ${cinema ? "literary-card--forest afisha-detail-card--cinema" : "literary-card--gold"}`}>
-        {event.poster_url && (
-          <div className="afisha-detail-poster">
-            <img src={event.poster_url} alt={`Постер: ${event.title}`} loading="eager" decoding="async" />
+        {posterUrl ? (
+          <div className={`afisha-detail-poster${cinema ? " afisha-detail-poster--cinema" : ""}`}>
+            <img src={posterUrl} alt={`Постер: ${event.title}`} loading="eager" decoding="async" />
           </div>
-        )}
+        ) : cinema ? (
+          <div className="afisha-detail-poster afisha-detail-poster--placeholder" aria-hidden>
+            <span className="afisha-detail-poster-icon">{categoryIcon(event.category)}</span>
+          </div>
+        ) : null}
         <div className="afisha-detail-hero">
           <span className="afisha-detail-icon" aria-hidden>{categoryIcon(event.category)}</span>
           <div className="afisha-detail-hero-copy">

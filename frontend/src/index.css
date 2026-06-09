@@ -2717,20 +2717,44 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .afisha-card-poster {
-    aspect-ratio: 2 / 3;
-    max-height: 280px;
+    position: relative;
+    width: 100%;
     overflow: hidden;
     background: hsl(var(--muted));
+    flex-shrink: 0;
+  }
+  .afisha-card-poster--cinema {
+    aspect-ratio: 2 / 3;
+    min-height: 220px;
+    max-height: 320px;
   }
   .afisha-card-poster--wide {
     aspect-ratio: 16 / 9;
+    min-height: 140px;
     max-height: 200px;
   }
   .afisha-card-poster img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center top;
     display: block;
+  }
+  .afisha-card-poster--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      145deg,
+      hsl(220 45% 14%) 0%,
+      hsl(248 38% 22%) 45%,
+      hsl(152 35% 18%) 100%
+    );
+  }
+  .afisha-card-poster--placeholder .afisha-card-icon {
+    font-size: 3rem;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 12px hsl(0 0% 0% / 0.35));
   }
   .afisha-card:hover {
     transform: translateY(-3px);
@@ -2844,15 +2868,43 @@
     margin: -0.5rem -0.5rem 1.25rem;
     border-radius: 0.75rem;
     overflow: hidden;
-    max-height: 420px;
+    max-height: 480px;
     background: hsl(var(--muted));
+  }
+  .afisha-detail-poster--cinema {
+    aspect-ratio: 2 / 3;
+    max-height: 520px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
   }
   .afisha-detail-poster img {
     width: 100%;
-    max-height: 420px;
-    object-fit: contain;
+    height: 100%;
+    max-height: 480px;
+    object-fit: cover;
+    object-position: center top;
     display: block;
     background: hsl(var(--muted));
+  }
+  .afisha-detail-poster--cinema img {
+    object-fit: cover;
+  }
+  .afisha-detail-poster--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    background: linear-gradient(
+      145deg,
+      hsl(220 45% 14%) 0%,
+      hsl(248 38% 22%) 45%,
+      hsl(152 35% 18%) 100%
+    );
+  }
+  .afisha-detail-poster-icon {
+    font-size: 4rem;
+    filter: drop-shadow(0 6px 16px hsl(0 0% 0% / 0.35));
   }
   .afisha-detail-hero {
     display: flex;

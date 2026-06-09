@@ -11,7 +11,13 @@ from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
-from app.services.poster_service import fetch_kinopoisk_poster, resolve_event_poster
+from app.services.poster_service import (
+    fetch_kinopoisk_poster,
+    is_real_poster_url,
+    is_stock_gallery_poster,
+    resolve_event_poster,
+    strip_invalid_cinema_poster,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +148,27 @@ async def enrich_missing_posters(db: AsyncSession, *, limit: int = 60) -> int:
     return updated
 
 
-async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 50) -> int:
+async def strip_bad_cinema_posters(db: AsyncSession) -> int:
+    """Drop gallery placeholders from cinema — they are not film posters."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.CINEMA.value,
+        )
+    )
+    cleared = 0
+    for event in result.scalars().all():
+        fixed = strip_invalid_cinema_poster(event.poster_url, category=event.category)
+        if fixed != event.poster_url:
+            event.poster_url = fixed
+            cleared += 1
+    if cleared:
+        await db.flush()
+        logger.info("Cleared %s bad cinema posters", cleared)
+    return cleared
+
+
+async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 80) -> int:
     """Re-fetch official Kinopoisk posters for cinema (fixes wrong matches)."""
     result = await db.execute(
         select(Event).where(
@@ -152,6 +178,11 @@ async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 50) -> int:
     )
     updated = 0
     for event in result.scalars().all():
+        if is_stock_gallery_poster(event.poster_url):
+            event.poster_url = None
+            updated += 1
+        if is_real_poster_url(event.poster_url, category=event.category):
+            continue
         poster = await fetch_kinopoisk_poster(event.title)
         if poster and poster != event.poster_url:
             event.poster_url = poster

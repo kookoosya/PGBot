@@ -75,6 +75,19 @@ export function isCinemaEvent(event: { category?: string }): boolean {
   return event.category === "cinema";
 }
 
+const STOCK_GALLERY_PREFIX = "/images/gallery/";
+
+/** Real poster URL — not a site gallery placeholder wrongly used for cinema. */
+export function isDisplayablePoster(
+  posterUrl: string | null | undefined,
+  category?: string,
+): boolean {
+  if (!posterUrl?.trim()) return false;
+  if (posterUrl.startsWith(STOCK_GALLERY_PREFIX)) return false;
+  if (category === "cinema" && posterUrl.startsWith("/images/")) return false;
+  return true;
+}
+
 /** One card per title+venue; extra showtimes attached to the nearest session. */
 export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
   const buckets = new Map<string, T[]>();

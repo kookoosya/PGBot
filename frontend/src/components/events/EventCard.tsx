@@ -5,6 +5,7 @@ import {
   eventTeaser,
   formatExtraSessions,
   isCinemaEvent,
+  isDisplayablePoster,
   regionChipClass,
   type GroupedPublicEvent,
 } from "@/lib/eventUtils";
@@ -30,18 +31,30 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
     .filter(Boolean)
     .join(" ");
 
-  const posterUrl = "poster_url" in event ? event.poster_url : null;
+  const rawPoster = "poster_url" in event ? event.poster_url : null;
+  const posterUrl = isDisplayablePoster(rawPoster, event.category) ? rawPoster : null;
   const extraSessions =
     "extraSessions" in event && event.extraSessions?.length ? event.extraSessions : null;
 
   return (
     <article className={cardClass}>
       {posterUrl ? (
-        <div className={`afisha-card-poster${cinema ? "" : " afisha-card-poster--wide"}`}>
+        <div
+          className={[
+            "afisha-card-poster",
+            cinema ? "afisha-card-poster--cinema" : "afisha-card-poster--wide",
+          ].join(" ")}
+        >
           <img src={posterUrl} alt="" loading="lazy" decoding="async" />
         </div>
       ) : (
-        <div className="afisha-card-accent" aria-hidden>
+        <div
+          className={[
+            "afisha-card-poster",
+            cinema ? "afisha-card-poster--cinema afisha-card-poster--placeholder" : "afisha-card-accent",
+          ].join(" ")}
+          aria-hidden={!cinema}
+        >
           <span className="afisha-card-icon">{categoryIcon(event.category || "other")}</span>
         </div>
       )}
