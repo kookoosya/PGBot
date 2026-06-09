@@ -2,10 +2,15 @@
 
 Creation and AI analysis live in ``issue_processor``.
 
-Public API: ``get_issue_details``, ``get_issues_for_user``, ``update_issue_status``,
-``resolve_issue``, ``reopen_issue``, ``archive_issue``, ``assign_issue``, ``add_issue_comment``.
+Public API
+----------
+- ``search_issues`` / ``get_issue_details`` / ``get_issues_for_user`` — read paths
+- ``require_issue_for_user`` / ``can_view_issue`` — access control
+- ``update_issue_fields`` / ``update_issue_status`` / ``resolve_issue`` / ``reopen_issue`` / ``archive_issue`` — writes
+- ``create_issue_from_web`` / ``apply_issue_status_update`` / ``build_my_issues_response`` — router helpers
+- ``issue_to_response`` / ``build_issue_list_response`` — response mappers
 
-Errors: ``IssueNotFoundError``, ``IssueValidationError`` (subclasses of ``ServiceError``).
+Errors: ``IssueNotFoundError``, ``IssueValidationError``, ``IssueAccessDeniedError`` (subclasses of ``ServiceError``).
 """
 
 from __future__ import annotations
@@ -20,12 +25,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.audit_log import AuditLog
+from app.constants.issue_config import JKH_CATEGORIES
 from app.core.deps import can_manage_issues, is_official_user, is_owner_user
 from app.models.enums import OFFICIAL_ROLES, IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue, IssueComment
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.notifications import issue_status_label, notify_issue_status
+from app.services.pagination_utils import normalize_pagination
 from app.services.service_errors import ServiceError
 
 logger = logging.getLogger(__name__)
@@ -44,10 +51,6 @@ _ISSUE_LIST_LOADS = (
 )
 
 _STATUS_AUDIT_ACTIONS = frozenset({"status_change", "reopen_issue", "archive_issue"})
-
-JKH_CATEGORIES = frozenset(
-    {IssueCategory.UTILITIES, IssueCategory.WATER, IssueCategory.SEWERAGE}
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,10 +105,15 @@ class IssueSearchParams:
 
 @dataclass(frozen=True, slots=True)
 class IssueSearchResult:
+    """Paginated issue search result."""
+
     items: list[Issue]
     total: int
     page: int
     page_size: int
+    total_pages: int
+    has_next: bool
+    has_prev: bool
 
 
 def _official_category_filter(user: User):
@@ -387,9 +395,6 @@ async def search_issues(
     params: IssueSearchParams,
 ) -> IssueSearchResult:
     """Search issues visible to ``user`` with pagination."""
-    page = max(1, params.page)
-    page_size = max(1, min(params.page_size, 100))
-
     query = select(Issue).options(*_ISSUE_LIST_LOADS)
     query = _apply_issue_access_filter(query, user)
 
@@ -401,13 +406,24 @@ async def search_issues(
         query = query.where(Issue.description.ilike(f"%{params.search.strip()}%"))
 
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    page, offset, page_size, total_pages, has_prev, has_next = normalize_pagination(
+        page=params.page,
+        page_size=params.page_size,
+        total=total,
+    )
     result = await db.execute(
-        query.order_by(Issue.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        query.order_by(Issue.created_at.desc()).offset(offset).limit(page_size)
     )
     items = list(result.scalars().all())
-    return IssueSearchResult(items=items, total=total, page=page, page_size=page_size)
+    return IssueSearchResult(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+        has_next=has_next,
+        has_prev=has_prev,
+    )
 
 
 async def get_issue_status_timeline(db: AsyncSession, issue: Issue) -> list[IssueStatusEvent]:
@@ -673,3 +689,132 @@ async def add_issue_comment(
         is_internal,
     )
     return comment
+
+
+def build_issue_actor(*, actor_id: int, ip_address: str | None = None) -> IssueActorContext:
+    """Build actor context for audit logging from request metadata."""
+    return IssueActorContext(actor_id=actor_id, ip_address=ip_address)
+
+
+def issue_to_response(issue: Issue):
+    """Map an ``Issue`` ORM instance to API response schema."""
+    from app.schemas.issue import IssueResponse
+
+    return IssueResponse.model_validate(issue)
+
+
+def issue_to_my_response(issue: Issue, timeline: list[IssueStatusEvent]):
+    """Map an issue plus status timeline to resident-facing response schema."""
+    from app.schemas.issue import IssueMyResponse, IssueStatusEventResponse
+
+    return IssueMyResponse(
+        **issue_to_response(issue).model_dump(),
+        status_timeline=[
+            IssueStatusEventResponse(
+                status=event.status,
+                label=event.label,
+                at=event.at,
+                previous_status=event.previous_status,
+            )
+            for event in timeline
+        ],
+    )
+
+
+def build_issue_list_response(result: IssueSearchResult):
+    """Convert search result to paginated API response."""
+    from app.schemas.issue import IssueListResponse
+
+    return IssueListResponse(
+        items=[issue_to_response(issue) for issue in result.items],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+    )
+
+
+async def build_my_issues_response(
+    db: AsyncSession,
+    user: User,
+    *,
+    status: IssueStatus | None = None,
+    limit: int = 50,
+):
+    """Load resident issues with status timelines for ``/issues/my``."""
+    from app.schemas.issue import IssueMyListResponse
+
+    if user.role.name != UserRole.RESIDENT:
+        raise IssueAccessDeniedError("Only residents can use /my")
+
+    safe_limit = max(1, min(limit, 100))
+    issues = await get_issues_for_user(db, user, status=status, limit=safe_limit)
+    timelines = await get_status_timelines_for_issues(db, issues)
+    return IssueMyListResponse(
+        items=[
+            issue_to_my_response(issue, timelines.get(issue.id, []))
+            for issue in issues
+        ],
+        total=len(issues),
+        page=1,
+        page_size=safe_limit,
+    )
+
+
+async def create_issue_from_web(
+    db: AsyncSession,
+    data,
+    *,
+    user: User | None,
+):
+    """Validate web form input, create issue and reject spam."""
+    from app.services.issue_processor import process_web_complaint
+
+    if data.website_url:
+        raise IssueValidationError("Не удалось отправить форму. Обновите страницу.")
+
+    if not user and (not data.phone or not data.full_name):
+        raise IssueValidationError("Укажите имя и телефон или войдите в кабинет")
+
+    category_value = data.category.value if data.category else None
+    issue = await process_web_complaint(
+        db,
+        data.description,
+        user=user,
+        phone=data.phone or (user.phone if user else None),
+        full_name=data.full_name or (user.full_name if user else None),
+        address=data.address,
+        category=category_value,
+    )
+
+    if issue.is_spam:
+        raise IssueValidationError(
+            "Обращение не принято. Опишите конкретную проблему без рекламы и оскорблений."
+        )
+
+    loaded = await get_issue_details(db, issue.id)
+    return loaded or issue
+
+
+async def apply_issue_status_update(
+    db: AsyncSession,
+    issue: Issue,
+    *,
+    status: IssueStatus,
+    resolution_text: str | None,
+    actor: IssueActorContext,
+) -> Issue:
+    """Apply status transition, routing resolved issues through ``resolve_issue``."""
+    if status == IssueStatus.RESOLVED:
+        return await resolve_issue(
+            db,
+            issue,
+            resolution_text=resolution_text,
+            actor=actor,
+        )
+    return await update_issue_status(
+        db,
+        issue,
+        status=status,
+        resolution_text=resolution_text,
+        actor=actor,
+    )

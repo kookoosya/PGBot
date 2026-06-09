@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.constants.vk_config import SUBSCRIPTION_ALIASES, SUBSCRIPTION_PRESETS
 from app.models.enums import (
     CLASSIFIED_LABELS,
     ClassifiedCategory,
@@ -9,28 +10,6 @@ from app.models.enums import (
     SERVICE_CLASSIFIED_CATEGORIES,
 )
 from app.models.vk_subscriber import VkSubscriber
-
-SUBSCRIPTION_PRESETS: dict[str, str] = {
-    "all": "все объявления",
-    "jobs": "работа и вакансии",
-    "services": "услуги и мастера",
-    "firewood": "дрова и колка",
-    "garden": "огород / перепашка",
-    "neighbor": "сосед помогает",
-}
-
-SUBSCRIPTION_ALIASES: dict[str, str] = {
-    "все": "all",
-    "работа": "jobs",
-    "вакансии": "jobs",
-    "услуги": "services",
-    "мастера": "services",
-    "дрова": "firewood",
-    "огород": "garden",
-    "сосед": "neighbor",
-    "помощь": "neighbor",
-    "neighbor_help": "neighbor",
-}
 
 VALID_CATEGORY_VALUES = {category.value for category in ClassifiedCategory}
 

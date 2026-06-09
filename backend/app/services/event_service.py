@@ -1,4 +1,13 @@
-"""Village events — upcoming list and admin CRUD."""
+"""Village events — upcoming list and admin CRUD.
+
+Public API
+----------
+- ``get_upcoming_events`` — public landing feed
+- ``create_event`` / ``update_event`` / ``list_events_admin`` — admin CRUD
+- ``event_to_response`` — API response mapper
+
+Errors: ``EventNotFoundError``, ``EventValidationError`` (subclasses of ``ServiceError``).
+"""
 
 from __future__ import annotations
 
@@ -20,17 +29,23 @@ logger = logging.getLogger(__name__)
 
 
 class EventNotFoundError(ServiceError):
+    """Raised when an event cannot be found."""
+
     def __init__(self, detail: str = "Событие не найдено") -> None:
         super().__init__(detail, status_code=404)
 
 
 class EventValidationError(ServiceError):
+    """Raised when event input fails validation."""
+
     def __init__(self, detail: str, *, status_code: int = 400) -> None:
         super().__init__(detail, status_code=status_code)
 
 
 @dataclass(frozen=True, slots=True)
 class EventCreateInput:
+    """Validated payload for creating a village event."""
+
     title: str
     description: Optional[str]
     starts_at: datetime
@@ -44,6 +59,8 @@ class EventCreateInput:
 
 @dataclass(frozen=True, slots=True)
 class EventUpdateInput:
+    """Partial update payload for a village event."""
+
     title: Optional[str] = None
     description: Optional[str] = None
     starts_at: Optional[datetime] = None
@@ -87,6 +104,7 @@ async def list_events_admin(
     include_unpublished: bool = True,
     limit: int = 50,
 ) -> list[Event]:
+    """Return events for the admin panel, newest first."""
     query = select(Event).order_by(Event.starts_at.desc()).limit(max(1, min(limit, 100)))
     if not include_unpublished:
         query = query.where(Event.is_published.is_(True))
@@ -95,6 +113,7 @@ async def list_events_admin(
 
 
 async def get_event_by_id(db: AsyncSession, event_id: int) -> Event | None:
+    """Load a single event by primary key."""
     result = await db.execute(select(Event).where(Event.id == event_id))
     return result.scalar_one_or_none()
 
@@ -105,6 +124,7 @@ async def create_event(
     *,
     actor_id: int | None = None,
 ) -> Event:
+    """Create and persist a new village event."""
     _validate_event_times(data.starts_at, data.ends_at)
     event = Event(
         title=data.title.strip(),
@@ -132,6 +152,7 @@ async def update_event(
     *,
     actor_id: int | None = None,
 ) -> Event:
+    """Apply partial updates to an existing event."""
     if data.title is not None:
         event.title = data.title.strip()
     if data.description is not None:
@@ -159,6 +180,7 @@ async def update_event(
 
 
 def event_category_label(category: str | None) -> str:
+    """Return a human-readable label for an event category code."""
     if not category:
         return EVENT_CATEGORY_LABELS.get(EventCategory.OTHER, "Событие")
     try:

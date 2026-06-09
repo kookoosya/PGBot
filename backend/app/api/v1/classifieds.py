@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -9,135 +8,34 @@ from app.core.deps import get_client_ip, get_optional_user, require_owner
 from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.models.classified import ClassifiedAd
-from app.models.enums import (
-    CLASSIFIED_LABELS,
-    ClassifiedCategory,
-    ClassifiedPaymentStatus,
-)
+from app.models.enums import ClassifiedCategory, ClassifiedPaymentStatus
 from app.models.user import User
+from app.schemas.classified import ClassifiedCreate, ClassifiedListResponse, ClassifiedPendingResponse, ClassifiedResponse
 from app.services.classified_service import (
     ClassifiedActorContext,
-    ClassifiedCreateInput,
     ClassifiedSearchParams,
     ClassifiedSortField,
     ClassifiedSortOrder,
     ClassifiedValidationError,
+    build_classified_list_response,
     build_marketing_stats,
+    classified_to_pending_response,
+    classified_to_response,
     create_classified_ad,
     get_classified_quota,
     increment_ad_views,
+    list_classified_category_options,
     moderate_classified_ad,
     search_classifieds,
+    to_classified_create_input,
 )
 
 router = APIRouter()
 settings = get_settings()
 
 
-class ClassifiedCreate(BaseModel):
-    category: ClassifiedCategory
-    title: str = Field(min_length=5, max_length=300)
-    description: str = Field(min_length=10, max_length=3000)
-    price: int | None = Field(None, ge=0)
-    price_unit: str | None = None
-    phone: str = Field(min_length=10, max_length=20)
-    author_name: str = Field(min_length=2, max_length=255)
-    address: str | None = None
-    contact_telegram: str | None = None
-    contact_vk: str | None = Field(None, max_length=100)
-    payment_confirmed: bool = False
-    payment_reference: str | None = Field(None, max_length=200)
-    website_url: str | None = Field(None, max_length=200)
-    agree_rules: bool = False
-
-
-class ClassifiedResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    category: ClassifiedCategory
-    category_label: str = ""
-    title: str
-    description: str
-    price: int | None
-    price_unit: str | None
-    phone: str
-    author_name: str
-    address: str | None
-    contact_telegram: str | None
-    views_count: int
-    created_at: str
-
-
-class ClassifiedPendingResponse(ClassifiedResponse):
-    payment_status: ClassifiedPaymentStatus
-    payment_reference: str | None
-    placement_fee: int
-    contact_vk: str | None = None
-
-
-def _to_create_input(data: ClassifiedCreate) -> ClassifiedCreateInput:
-    return ClassifiedCreateInput(
-        category=data.category,
-        title=data.title,
-        description=data.description,
-        phone=data.phone,
-        author_name=data.author_name,
-        price=data.price,
-        price_unit=data.price_unit,
-        address=data.address,
-        contact_telegram=data.contact_telegram,
-        contact_vk=data.contact_vk,
-        payment_confirmed=data.payment_confirmed,
-        payment_reference=data.payment_reference,
-        website_url=data.website_url,
-        agree_rules=data.agree_rules,
-    )
-
-
 def _classified_actor(request: Request, user: User) -> ClassifiedActorContext:
     return ClassifiedActorContext(actor_id=user.id, ip_address=get_client_ip(request))
-
-
-def _to_response(ad: ClassifiedAd) -> ClassifiedResponse:
-    return ClassifiedResponse(
-        id=ad.id,
-        category=ad.category,
-        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
-        title=ad.title,
-        description=ad.description,
-        price=ad.price,
-        price_unit=ad.price_unit,
-        phone=ad.phone,
-        author_name=ad.author_name,
-        address=ad.address,
-        contact_telegram=ad.contact_telegram,
-        views_count=ad.views_count,
-        created_at=ad.created_at.isoformat(),
-    )
-
-
-def _to_pending_response(ad: ClassifiedAd) -> ClassifiedPendingResponse:
-    return ClassifiedPendingResponse(
-        id=ad.id,
-        category=ad.category,
-        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
-        title=ad.title,
-        description=ad.description,
-        price=ad.price,
-        price_unit=ad.price_unit,
-        phone=ad.phone,
-        author_name=ad.author_name,
-        address=ad.address,
-        contact_telegram=ad.contact_telegram,
-        views_count=ad.views_count,
-        created_at=ad.created_at.isoformat(),
-        payment_status=ad.payment_status,
-        payment_reference=ad.payment_reference,
-        placement_fee=ad.placement_fee,
-        contact_vk=ad.contact_vk,
-    )
 
 
 @router.get("/payment-info")
@@ -160,10 +58,10 @@ async def marketing_stats(
 
 @router.get("/categories")
 async def list_categories():
-    return [{"value": c.value, "label": CLASSIFIED_LABELS[c]} for c in ClassifiedCategory]
+    return list_classified_category_options()
 
 
-@router.get("")
+@router.get("", response_model=ClassifiedListResponse)
 async def list_ads(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: ClassifiedCategory | None = None,
@@ -192,18 +90,10 @@ async def list_ads(
             sort_order=sort_order,
         ),
     )
-    return {
-        "items": [_to_response(ad) for ad in result.items],
-        "total": result.total,
-        "page": result.page,
-        "page_size": result.page_size,
-        "total_pages": result.total_pages,
-        "has_next": result.has_next,
-        "has_prev": result.has_prev,
-    }
+    return build_classified_list_response(result)
 
 
-@router.get("/pending")
+@router.get("/pending", response_model=list[ClassifiedPendingResponse])
 async def list_pending(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
@@ -217,7 +107,7 @@ async def list_pending(
             page_size=100,
         ),
     )
-    return [_to_pending_response(ad) for ad in result.items]
+    return [classified_to_pending_response(ad) for ad in result.items]
 
 
 @router.post("", status_code=201)
@@ -231,7 +121,7 @@ async def create_ad(
     try:
         result = await create_classified_ad(
             db,
-            _to_create_input(data),
+            to_classified_create_input(data),
             user=current_user,
         )
     except ClassifiedValidationError as exc:
@@ -280,7 +170,7 @@ async def reject_ad(
     return {"message": result.message}
 
 
-@router.get("/{ad_id}")
+@router.get("/{ad_id}", response_model=ClassifiedResponse)
 @limiter.limit("60/minute")
 async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
@@ -288,4 +178,4 @@ async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depen
     except ClassifiedValidationError as exc:
         raise_http_for_service_error(exc)
 
-    return _to_response(ad)
+    return classified_to_response(ad)

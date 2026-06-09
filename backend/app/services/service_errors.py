@@ -9,7 +9,10 @@ from __future__ import annotations
 
 
 class ServiceError(Exception):
-    """Base class for recoverable business errors raised by service modules."""
+    """Base service-layer exception used across domain services.
+
+Subclasses should set ``status_code`` for HTTP mapping via ``raise_http_for_service_error``.
+"""
 
     detail: str
     status_code: int

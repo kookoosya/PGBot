@@ -1,4 +1,4 @@
-"""Shared datetime formatting helpers."""
+"""Shared datetime formatting helpers for API responses and VK messages."""
 
 from __future__ import annotations
 
