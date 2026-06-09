@@ -15,6 +15,7 @@ from app.models.page_visit import PageVisit
 from app.models.site_feedback import SiteFeedback
 from app.models.user import Role, User
 from app.models.vk_subscriber import VkSubscriber
+from app.models.vk_moderation import VkModerationLog, VkUserModeration
 
 __all__ = [
     "User",
@@ -43,4 +44,6 @@ __all__ = [
     "PageVisit",
     "SiteFeedback",
     "VkSubscriber",
+    "VkModerationLog",
+    "VkUserModeration",
 ]

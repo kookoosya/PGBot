@@ -275,6 +275,16 @@ class ApiClient {
     });
   }
 
+  getVkModeration() {
+    return this.request<VkModerationOverview>("/admin/vk-moderation");
+  }
+
+  unblockVkUser(vkUserId: number) {
+    return this.request<{ ok: boolean; vk_user_id: number }>(`/admin/vk-moderation/${vkUserId}/unblock`, {
+      method: "POST",
+    });
+  }
+
   syncKudagoEvents(region?: EventRegion) {
     const q = region ? `?region=${region}` : "";
     return this.request<EventSyncResult[]>(`/admin/events/sync-kudago${q}`, {
@@ -1033,6 +1043,31 @@ export interface EventCreate {
 export interface EventListResponse {
   items: EventItem[];
   total: number;
+}
+
+export interface VkModerationState {
+  vk_user_id: number;
+  peer_id: number;
+  warning_count: number;
+  banned_until: string | null;
+  last_violation_at: string | null;
+  updated_at: string;
+}
+
+export interface VkModerationLog {
+  id: number;
+  vk_user_id: number;
+  peer_id: number;
+  message_excerpt: string;
+  reason: string;
+  action: string;
+  warning_number: number;
+  created_at: string;
+}
+
+export interface VkModerationOverview {
+  states: VkModerationState[];
+  recent_logs: VkModerationLog[];
 }
 
 export interface EventSyncResult {

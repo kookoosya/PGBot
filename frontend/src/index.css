@@ -2153,10 +2153,33 @@
     padding: 1.75rem;
     border-radius: calc(var(--radius) + 0.25rem);
     border: 1px solid hsl(var(--border));
-    border-top: 3px solid hsl(var(--gold));
+    border-top: 4px solid hsl(var(--gold));
     background:
-      linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
-    box-shadow: 0 16px 48px hsl(152 48% 12% / 0.07);
+      linear-gradient(165deg, hsl(42 58% 98% / 0.98), hsl(var(--card) / 0.94));
+    box-shadow:
+      0 16px 48px hsl(152 48% 12% / 0.08),
+      inset 0 1px 0 hsl(42 90% 99% / 0.75);
+  }
+
+  /* Reusable literary album card */
+  .literary-card {
+    padding: 1.25rem 1.5rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
+    box-shadow: 0 12px 36px hsl(152 48% 12% / 0.06);
+  }
+  .literary-card--gold { border-top: 3px solid hsl(var(--gold)); }
+  .literary-card--forest { border-top: 3px solid hsl(var(--forest)); }
+
+  .pushkin-table { @apply w-full text-sm; }
+  .pushkin-table th {
+    @apply text-left font-semibold pb-2;
+    color: hsl(var(--forest));
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .pushkin-table td {
+    @apply py-2 border-t border-border align-top;
   }
   .today-panel-head {
     display: flex;
@@ -2305,10 +2328,13 @@
     padding: 1.75rem;
     border-radius: calc(var(--radius) + 0.25rem);
     border: 1px solid hsl(var(--border));
-    border-top: 3px solid hsl(var(--forest));
+    border-top: 4px solid hsl(var(--gold));
+    border-left: 4px solid hsl(var(--forest));
     background:
-      linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
-    box-shadow: 0 16px 48px hsl(152 48% 12% / 0.07);
+      linear-gradient(165deg, hsl(42 58% 98% / 0.98) 0%, hsl(var(--card) / 0.96) 55%, hsl(152 28% 96% / 0.9) 100%);
+    box-shadow:
+      0 20px 56px hsl(152 48% 12% / 0.09),
+      inset 0 1px 0 hsl(42 90% 99% / 0.8);
   }
   .events-panel-head {
     display: flex;

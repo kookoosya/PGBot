@@ -712,15 +712,37 @@ async def route_complaint(ctx: VkRouteContext) -> bool:
     return True
 
 
+async def route_free_chat(ctx: VkRouteContext) -> bool:
+    """Free-form conversation via AI when message is not a command or complaint."""
+    text = ctx.text.strip()
+    if len(text) < 4:
+        return False
+    if ctx.text_lower in COMMAND_ALIASES:
+        return False
+    if looks_like_complaint(text):
+        return False
+    if len(text.split()) == 1 and len(text) < 12:
+        return False
+
+    enter_ai_mode(ctx.peer_id)
+    await _process_vk_ai(
+        ctx,
+        "Ты — дружелюбный помощник портала Пушкинские Горы. "
+        "Отвечай кратко и по делу о посёлке, туризме, услугах и событиях. "
+        f"Вопрос пользователя: {text}",
+    )
+    return True
+
+
 async def send_fallback_message(ctx: VkRouteContext) -> None:
     """Default reply when nothing else matched."""
     await _send_welcome(
         ctx,
         box(
             "Не понял сообщение",
-            "Выберите кнопку меню или:\n"
-            "🤖 ИИ-помощник — любые вопросы\n"
-            "⚠️ Жалобы — опишите проблему подробно\n\n"
-            "«Меню» — вернуться к разделам",
+            "Напишите свободно — отвечу как помощник.\n"
+            "Или выберите кнопку меню:\n"
+            "🤖 ИИ · ⚠️ Жалобы · 🗺 Карта\n\n"
+            "«Меню» — разделы портала",
         ),
     )

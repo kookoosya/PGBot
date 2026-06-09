@@ -15,6 +15,7 @@ import {
   Eye,
   Lock,
   Lightbulb,
+  MessageCircle,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -28,6 +29,7 @@ const navItems = [
   { to: "/admin/analytics", icon: BarChart3, label: "Аналитика" },
   { to: "/admin/marketing", icon: TrendingUp, label: "Статистика объявлений" },
   { to: "/admin/events", icon: CalendarDays, label: "События" },
+  { to: "/admin/vk-moderation", icon: MessageCircle, label: "VK модерация" },
   { to: "/admin/visits", icon: Eye, label: "Посещения сайта" },
   { to: "/admin/verification", icon: ShieldCheck, label: "Верификация" },
   { to: "/admin/classifieds", icon: Megaphone, label: "Модерация объявлений" },

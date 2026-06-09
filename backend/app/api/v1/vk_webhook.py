@@ -9,10 +9,12 @@ from app.services.vk_command_router import (
     VkRouteContext,
     route_ai_message,
     route_complaint,
+    route_free_chat,
     route_vk_message,
     route_welcome,
     send_fallback_message,
 )
+from app.services.vk_moderation_service import process_incoming_moderation
 from app.config import get_settings
 from app.core.rate_limit import limiter
 from app.database import get_db
@@ -48,6 +50,15 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         return PlainTextResponse("ok")
 
     ctx = VkRouteContext.from_parsed(db, parsed)
+
+    # Moderation: ban check + profanity/spam warnings
+    if ctx.text.strip():
+        mod = await process_incoming_moderation(db, ctx.from_id, ctx.peer_id, ctx.text)
+        await db.commit()
+        if not mod.allowed:
+            if mod.message:
+                await send_message(ctx.peer_id, mod.message)
+            return PlainTextResponse("ok")
 
     # Welcome before voice — preserves original processing order
     if await route_welcome(ctx):
@@ -85,6 +96,9 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
 
     # Complaints with text or photo
     if await route_complaint(ctx):
+        return PlainTextResponse("ok")
+
+    if await route_free_chat(ctx):
         return PlainTextResponse("ok")
 
     await send_fallback_message(ctx)

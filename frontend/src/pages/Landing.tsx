@@ -42,6 +42,9 @@ export function Landing() {
               <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
                 🗺 Открыть карту
               </Link>
+              <Link to="/events" className="epic-btn epic-btn-glass epic-btn-lg">
+                📅 Афиша событий
+              </Link>
             </div>
           </div>
         </div>

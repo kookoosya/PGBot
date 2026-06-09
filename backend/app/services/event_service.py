@@ -94,7 +94,7 @@ async def get_upcoming_events(
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),
-        Event.starts_at >= now - timedelta(days=1),
+        Event.starts_at >= now - timedelta(days=14),
     ]
     if region is not None:
         conditions.append(Event.region == region.value)
@@ -152,7 +152,7 @@ async def search_public_events(
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),
-        Event.starts_at >= now - timedelta(days=1),
+        Event.starts_at >= now - timedelta(days=14),
     ]
     if region is not None:
         conditions.append(Event.region == region.value)

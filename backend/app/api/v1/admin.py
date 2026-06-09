@@ -161,3 +161,40 @@ async def admin_sync_kudago_events(
     except EventValidationError as exc:
         raise_http_for_service_error(exc)
     return [EventSyncResponse(**result.__dict__) for result in results]
+
+
+@router.get("/vk-moderation")
+async def admin_vk_moderation_overview(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+    limit: int = Query(100, ge=1, le=200),
+):
+    """VK chat moderation states and recent violation logs."""
+    from app.schemas.vk_moderation import (
+        VkModerationLogResponse,
+        VkModerationOverviewResponse,
+        VkModerationStateResponse,
+    )
+    from app.services.vk_moderation_service import list_moderation_logs, list_moderation_states
+
+    states = await list_moderation_states(db, limit=limit)
+    logs = await list_moderation_logs(db, limit=limit)
+    return VkModerationOverviewResponse(
+        states=[VkModerationStateResponse.model_validate(s) for s in states],
+        recent_logs=[VkModerationLogResponse.model_validate(log) for log in logs],
+    )
+
+
+@router.post("/vk-moderation/{vk_user_id}/unblock")
+async def admin_unblock_vk_user(
+    vk_user_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+):
+    """Clear ban and reset warnings for a VK user."""
+    from app.services.vk_moderation_service import unblock_vk_user
+
+    state = await unblock_vk_user(db, vk_user_id)
+    if not state:
+        raise_http_for_service_error(EventNotFoundError("Пользователь VK не найден в модерации"))
+    return {"ok": True, "vk_user_id": vk_user_id}
