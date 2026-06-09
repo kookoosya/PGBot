@@ -36,8 +36,8 @@ from app.services.vk_bot import (
     subscribe_peer,
     unsubscribe_peer,
 )
+from app.services.vk_flow_store import clear_flow
 from app.services.vk_flows import (
-    clear_flow,
     format_jobs_message,
     format_routes_message,
     handle_flow_message,
@@ -221,7 +221,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         )
         if text_lower in menu_triggers:
             _ai_mode_peers.discard(peer_id)
-            clear_flow(peer_id)
+            await clear_flow(db, peer_id)
             await clear_ai_history(db, peer_id)
             await send_message(peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
@@ -340,22 +340,23 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
 
         if text_lower in ("🗺 ошибка карты", "ошибка карты", "ошибка на карте", "карта ошибка"):
             _ai_mode_peers.discard(peer_id)
-            await send_message(peer_id, start_map_report_flow(peer_id), keyboard=get_welcome_keyboard())
+            await send_message(peer_id, await start_map_report_flow(db, peer_id), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("➕ объявление", "подать объявление", "добавить объявление", "разместить объявление"):
             _ai_mode_peers.discard(peer_id)
-            await send_message(peer_id, start_classified_flow(peer_id), keyboard=get_welcome_keyboard())
+            await send_message(peer_id, await start_classified_flow(db, peer_id), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("вакансия работа",) or text_lower == "вакансию":
             _ai_mode_peers.discard(peer_id)
-            await send_message(peer_id, start_classified_flow(peer_id, jobs=True), keyboard=get_welcome_keyboard())
+            msg = await start_classified_flow(db, peer_id, jobs=True)
+            await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("💡 пожелания", "пожелания", "предложения", "идея для сайта"):
             _ai_mode_peers.discard(peer_id)
-            await send_message(peer_id, start_wish_flow(peer_id), keyboard=get_welcome_keyboard())
+            await send_message(peer_id, await start_wish_flow(db, peer_id), keyboard=get_welcome_keyboard())
             return PlainTextResponse("ok")
 
         if text_lower in ("🚕 такси", "такси"):

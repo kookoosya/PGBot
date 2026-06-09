@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,30 +31,21 @@ from app.services.classified_antifraud import (
 )
 from app.services.map_routes import get_map_routes
 from app.services.notifications import notify_owner
+from app.services.vk_flow_store import clear_flow, get_flow, save_flow
 from app.services.vk_messages import box
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 _SITE = settings.PUBLIC_SITE_URL.rstrip("/")
 
-# peer_id -> {kind, step, data}
-_flows: dict[int, dict[str, Any]] = {}
 
-
-def clear_flow(peer_id: int) -> None:
-    _flows.pop(peer_id, None)
-
-
-def get_flow(peer_id: int) -> dict[str, Any] | None:
-    return _flows.get(peer_id)
-
-
-def start_classified_flow(peer_id: int, *, jobs: bool = False) -> str:
-    _flows[peer_id] = {
+async def start_classified_flow(db: AsyncSession, peer_id: int, *, jobs: bool = False) -> str:
+    flow = {
         "kind": "classified",
         "step": "title",
         "data": {"category": ClassifiedCategory.JOB_TOURISM if jobs else ClassifiedCategory.OTHER},
     }
+    await save_flow(db, peer_id, flow)
     hint = "вакансию" if jobs else "объявление"
     return box(
         "Новое объявление",
@@ -63,8 +53,8 @@ def start_classified_flow(peer_id: int, *, jobs: bool = False) -> str:
     )
 
 
-def start_wish_flow(peer_id: int) -> str:
-    _flows[peer_id] = {"kind": "wish", "step": "message", "data": {}}
+async def start_wish_flow(db: AsyncSession, peer_id: int) -> str:
+    await save_flow(db, peer_id, {"kind": "wish", "step": "message", "data": {}})
     return box(
         "Пожелание",
         "Напишите идею или пожелание для портала — что улучшить, что добавить.\n\n" "«Отмена» — выйти.",
@@ -121,8 +111,8 @@ MAP_REPORT_TYPES = [
 ]
 
 
-def start_map_report_flow(peer_id: int) -> str:
-    _flows[peer_id] = {"kind": "map_report", "step": "search", "data": {}}
+async def start_map_report_flow(db: AsyncSession, peer_id: int) -> str:
+    await save_flow(db, peer_id, {"kind": "map_report", "step": "search", "data": {}})
     return box(
         "Ошибка на карте",
         "Напишите название места или улицу — найду в справочнике.\n\n" "«Отмена» — выйти.",
@@ -194,12 +184,12 @@ async def handle_flow_message(
     text: str,
 ) -> str | None:
     """Обработать сообщение в активном сценарии. None — сценарий не активен."""
-    flow = _flows.get(peer_id)
+    flow = await get_flow(db, peer_id)
     if not flow:
         return None
 
     if text.lower().strip() in ("отмена", "стоп", "меню", "🏠 меню"):
-        clear_flow(peer_id)
+        await clear_flow(db, peer_id)
         return "Отменено. Напишите «меню»."
 
     kind = flow["kind"]
@@ -215,7 +205,7 @@ async def handle_flow_message(
         )
         db.add(row)
         await db.flush()
-        clear_flow(peer_id)
+        await clear_flow(db, peer_id)
         return box(
             "Спасибо!",
             "Пожелание принято. Учтём при развитии портала.\n\n" f"Ещё идеи — кнопка «💡 Пожелания» или {_SITE}/wishes",
@@ -231,6 +221,7 @@ async def handle_flow_message(
                 return "Заголовок от 5 символов. Или «отмена»."
             data["title"] = title
             flow["step"] = "description"
+            await save_flow(db, peer_id, flow)
             return "Шаг 2 — опишите подробнее (от 10 символов):"
 
         if step == "description":
@@ -239,6 +230,7 @@ async def handle_flow_message(
                 return "Описание от 10 символов. Или «отмена»."
             data["description"] = desc
             flow["step"] = "phone"
+            await save_flow(db, peer_id, flow)
             return "Шаг 3 — телефон для связи (+7…):"
 
         if step == "phone":
@@ -248,6 +240,7 @@ async def handle_flow_message(
                 return f"{err}\nИли «отмена»."
             data["phone"] = phone
             flow["step"] = "name"
+            await save_flow(db, peer_id, flow)
             return "Шаг 4 — как к вам обращаться (имя):"
 
         if step == "name":
@@ -258,17 +251,17 @@ async def handle_flow_message(
 
             scam = find_scam_phrase(f"{data['title']} {data['description']}")
             if scam:
-                clear_flow(peer_id)
+                await clear_flow(db, peer_id)
                 return "Текст похож на мошенничество. Уберите предоплату и попробуйте снова."
 
             rate_err = await check_phone_rate_limit(db, data["phone"])
             if rate_err:
-                clear_flow(peer_id)
+                await clear_flow(db, peer_id)
                 return rate_err
 
             dup_err = await check_recent_duplicate(db, data["phone"], data["title"])
             if dup_err:
-                clear_flow(peer_id)
+                await clear_flow(db, peer_id)
                 return dup_err
 
             ad = ClassifiedAd(
@@ -284,7 +277,7 @@ async def handle_flow_message(
             )
             db.add(ad)
             await db.flush()
-            clear_flow(peer_id)
+            await clear_flow(db, peer_id)
 
             cat_label = CLASSIFIED_LABELS.get(ad.category, ad.category)
             await notify_owner(
@@ -311,6 +304,7 @@ async def handle_flow_message(
                 return "Не нашёл. Уточните название или «отмена»."
             data["places"] = [{"id": p.id, "name": p.name, "address": p.address or ""} for p in places]
             flow["step"] = "pick"
+            await save_flow(db, peer_id, flow)
             lines = ["Выберите номер места:\n"]
             for i, p in enumerate(places, 1):
                 lines.append(f"{i}. {p.name}")
@@ -327,6 +321,7 @@ async def handle_flow_message(
             data["place_id"] = picked["id"]
             data["place_name"] = picked["name"]
             flow["step"] = "type"
+            await save_flow(db, peer_id, flow)
             lines = ["Тип ошибки — напишите номер:\n"]
             for i, t in enumerate(MAP_REPORT_TYPES, 1):
                 lines.append(f"{i}. {MAP_REPORT_LABELS[t]}")
@@ -340,6 +335,7 @@ async def handle_flow_message(
                 return "Напишите номер типа (1–5) или «отмена»."
             data["report_type"] = report_type.value
             flow["step"] = "description"
+            await save_flow(db, peer_id, flow)
             return f"Опишите ошибку для «{data['place_name']}» (от 10 символов):"
 
         if step == "description":
@@ -349,11 +345,11 @@ async def handle_flow_message(
             result = await db.execute(select(Place).where(Place.id == data["place_id"]))
             place = result.scalar_one_or_none()
             if not place:
-                clear_flow(peer_id)
+                await clear_flow(db, peer_id)
                 return "Место не найдено. Начните заново."
             report_type = ShopComplaintType(data["report_type"])
             msg = await _submit_map_report(db, place, report_type, desc, peer_id)
-            clear_flow(peer_id)
+            await clear_flow(db, peer_id)
             return msg
 
     return None
