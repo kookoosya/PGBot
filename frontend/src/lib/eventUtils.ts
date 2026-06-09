@@ -30,6 +30,8 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   timepad: "TimePad",
   orbilet: "Orbilet",
   kinopskov: "Kinopskov60",
+  mirage: "Мираж Синема",
+  silver: "Silver Cinema",
   proculture: "PRO.Культура",
   manual: "Организатор",
 };

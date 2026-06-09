@@ -437,7 +437,7 @@ async def handle_afisha(ctx: VkRouteContext) -> None:
 
     lines: list[str] = []
     if cinema:
-        lines.append("🎬 Кино в Пскове (Победа, Смена):")
+        lines.append("🎬 Кино в Пскове (Победа, Смена, Мираж, Silver):")
         for event in cinema[:5]:
             when = format_event_datetime(event.starts_at)
             where = _short_location(event.location)

@@ -148,7 +148,7 @@ export function EventsPage() {
               <div className="afisha-section-head">
                 <h2 id="cinema-heading">🎬 Кино в Пскове</h2>
                 <p className="afisha-section-lead">
-                  Актуальные сеансы с жанром и описанием — удобно при планировании поездки из Пушкинских Гор.
+                  Победа, Смена, Мираж Синема, Silver Cinema — сеансы с постерами и жанрами.
                 </p>
               </div>
               <div className="afisha-cinema-grid">

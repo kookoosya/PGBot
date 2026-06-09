@@ -10,6 +10,8 @@ from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
 from app.services.event_sources.kinopskov_source import KinopskovEventSource
+from app.services.event_sources.mirage_source import MirageEventSource
+from app.services.event_sources.silver_source import SilverEventSource
 from app.services.event_sources.kudago_source import KudaGoEventSource
 from app.services.event_sources.orbilet_source import OrbiletEventSource
 from app.services.event_sources.proculture_source import ProCultureEventSource
@@ -31,6 +33,8 @@ _SOURCES: dict[str, EventSource] = {
     "timepad": TimePadEventSource(),
     "orbilet": OrbiletEventSource(),
     "kinopskov": KinopskovEventSource(),
+    "mirage": MirageEventSource(),
+    "silver": SilverEventSource(),
     "proculture": ProCultureEventSource(),
     "kudago": KudaGoEventSource(),
 }
@@ -89,7 +93,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "timepad", "kinopskov", "orbilet", "proculture", "kudago"):
+    for name in ("vk", "timepad", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue

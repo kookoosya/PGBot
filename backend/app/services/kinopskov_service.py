@@ -1,4 +1,4 @@
-"""Kinopskov60.com — Победа, Смена (Волшебный Город) cinema schedule scraper."""
+"""Kinopskov60.com — сеть Победа / Смена (p24.app), не все кинотеатры Пскова."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.constants.pskov_cinemas import format_cinema_location, match_pskov_cinema
-from app.models.enums import EventCategory, EventRegion
+from app.constants.pskov_cinemas import format_cinema_location
+from app.models.enums import EventCategory
 
 logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
@@ -111,11 +111,5 @@ async def fetch_kinopskov_events() -> list[KinopskovEvent]:
         return []
 
     events = _parse_page(page)
-    # Keep only known Pskov cinemas (Победа, Смена, …)
-    filtered = [
-        e for e in events
-        if match_pskov_cinema(e.location) or match_pskov_cinema(e.title)
-        or any(x in e.location.lower() for x in ("победа", "смена", "мираж", "silver"))
-    ]
-    logger.info("Kinopskov: parsed %s cinema sessions (%s total)", len(filtered), len(events))
-    return filtered if filtered else events
+    logger.info("Kinopskov: parsed %s cinema sessions", len(events))
+    return events
