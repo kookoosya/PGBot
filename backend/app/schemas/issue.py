@@ -96,6 +96,7 @@ class IssueStatusEventResponse(BaseModel):
     label: str
     at: str
     previous_status: str | None = None
+    resolution: str | None = None
 
 
 class IssueMyResponse(IssueResponse):

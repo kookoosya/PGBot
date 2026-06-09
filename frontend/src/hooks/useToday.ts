@@ -1,62 +1,97 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type TodayResponse } from "@/lib/api";
+import { api, type EventRegion, type TodayResponse } from "@/lib/api";
 
 const FALLBACK_REFRESH_MS = 5 * 60 * 1000;
 
-let sharedData: TodayResponse | null = null;
-let sharedPromise: Promise<TodayResponse | null> | null = null;
-let sharedListeners = new Set<(data: TodayResponse | null, error: string | null) => void>();
+type CacheEntry = {
+  data: TodayResponse | null;
+  promise: Promise<TodayResponse | null> | null;
+};
 
-async function fetchTodayShared(): Promise<TodayResponse | null> {
-  if (sharedPromise) {
-    return sharedPromise;
+const cacheByRegion = new Map<string, CacheEntry>();
+const listenersByRegion = new Map<string, Set<(data: TodayResponse | null, error: string | null) => void>>();
+
+function regionKey(region?: EventRegion): string {
+  return region ?? "all";
+}
+
+function getCache(region?: EventRegion): CacheEntry {
+  const key = regionKey(region);
+  let entry = cacheByRegion.get(key);
+  if (!entry) {
+    entry = { data: null, promise: null };
+    cacheByRegion.set(key, entry);
+  }
+  return entry;
+}
+
+function getListeners(region?: EventRegion): Set<(data: TodayResponse | null, error: string | null) => void> {
+  const key = regionKey(region);
+  let listeners = listenersByRegion.get(key);
+  if (!listeners) {
+    listeners = new Set();
+    listenersByRegion.set(key, listeners);
+  }
+  return listeners;
+}
+
+async function fetchTodayShared(region?: EventRegion): Promise<TodayResponse | null> {
+  const cache = getCache(region);
+  if (cache.promise) {
+    return cache.promise;
   }
 
-  sharedPromise = api
-    .getToday()
+  cache.promise = api
+    .getToday(region)
     .then((response) => {
-      sharedData = response;
-      sharedListeners.forEach((listener) => listener(response, null));
+      cache.data = response;
+      getListeners(region).forEach((listener) => listener(response, null));
       return response;
     })
     .catch((err: unknown) => {
       const message = err instanceof Error ? err.message : "Не удалось загрузить сводку";
-      sharedListeners.forEach((listener) => listener(sharedData, message));
-      return sharedData;
+      getListeners(region).forEach((listener) => listener(cache.data, message));
+      return cache.data;
     })
     .finally(() => {
-      sharedPromise = null;
+      cache.promise = null;
     });
 
-  return sharedPromise;
+  return cache.promise;
 }
 
-export function useToday() {
-  const [data, setData] = useState<TodayResponse | null>(sharedData);
-  const [loading, setLoading] = useState(!sharedData);
+export function useToday(eventRegion?: EventRegion) {
+  const cache = getCache(eventRegion);
+  const [data, setData] = useState<TodayResponse | null>(cache.data);
+  const [loading, setLoading] = useState(!cache.data);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(!sharedData);
-    const response = await fetchTodayShared();
+    const currentCache = getCache(eventRegion);
+    setLoading(!currentCache.data);
+    const response = await fetchTodayShared(eventRegion);
     setData(response);
     setLoading(false);
     return response;
-  }, []);
+  }, [eventRegion]);
 
   useEffect(() => {
+    const listeners = getListeners(eventRegion);
     const listener = (nextData: TodayResponse | null, nextError: string | null) => {
       setData(nextData);
       setError(nextError);
       setLoading(false);
     };
-    sharedListeners.add(listener);
-    void fetchTodayShared().finally(() => setLoading(false));
+    listeners.add(listener);
+    const currentCache = getCache(eventRegion);
+    setData(currentCache.data);
+    setLoading(!currentCache.data);
+    void fetchTodayShared(eventRegion).finally(() => setLoading(false));
     return () => {
-      sharedListeners.delete(listener);
+      listeners.delete(listener);
     };
-  }, []);
+  }, [eventRegion]);
 
   useEffect(() => {
     if (timerRef.current) {

@@ -14,6 +14,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
 import { api, ComplaintType, MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
@@ -392,15 +393,11 @@ export function MapPage() {
   return (
     <div>
       <div className="page-section pb-2">
-        <div className="page-header mb-0">
-          <div className="page-header-inner">
-            <span className="page-header-icon">🗺</span>
-            <div>
-              <h1 className="page-header-title">Карта посёлка</h1>
-              <p className="page-header-subtitle">{PUSHKIN_QUOTES.map}</p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon="🗺"
+          title="Карта посёлка"
+          subtitle={PUSHKIN_QUOTES.map}
+        />
       </div>
 
 

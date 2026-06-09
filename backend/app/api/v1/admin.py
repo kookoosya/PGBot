@@ -23,6 +23,7 @@ from app.services.event_service import (
     update_event,
 )
 from app.services.event_sync_service import sync_all_vk_event_sources, sync_events_from_vk
+from app.services.kudago_service import sync_all_kudago_sources, sync_events_from_kudago
 
 router = APIRouter()
 
@@ -140,6 +141,23 @@ async def admin_sync_vk_events(
             results = [await sync_events_from_vk(db, region, actor_id=current_user.id)]
         else:
             results = await sync_all_vk_event_sources(db, actor_id=current_user.id)
+    except EventValidationError as exc:
+        raise_http_for_service_error(exc)
+    return [EventSyncResponse(**result.__dict__) for result in results]
+
+
+@router.post("/events/sync-kudago", response_model=list[EventSyncResponse])
+async def admin_sync_kudago_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+    region: EventRegion | None = None,
+):
+    """Import cinema and concerts from KudaGo (Pskov)."""
+    try:
+        if region:
+            results = [await sync_events_from_kudago(db, region, actor_id=current_user.id)]
+        else:
+            results = await sync_all_kudago_sources(db, actor_id=current_user.id)
     except EventValidationError as exc:
         raise_http_for_service_error(exc)
     return [EventSyncResponse(**result.__dict__) for result in results]

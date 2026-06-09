@@ -131,12 +131,14 @@ export function AdminEvents() {
     }
   };
 
-  const syncVk = async (region?: EventRegion) => {
+  const runSync = async (source: "vk" | "kudago", region?: EventRegion) => {
     setSyncing(true);
     setMsg("");
     setError("");
     try {
-      const results = await api.syncVkEvents(region);
+      const results = source === "vk"
+        ? await api.syncVkEvents(region)
+        : await api.syncKudagoEvents(region);
       setMsg(formatSyncSummary(results));
       load();
     } catch (err) {
@@ -156,8 +158,11 @@ export function AdminEvents() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={syncing} onClick={() => syncVk()}>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("vk")}>
             {syncing ? "Синхронизация…" : "Синхронизировать из VK"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("kudago", "pskov")}>
+            {syncing ? "Синхронизация…" : "KudaGo (Псков)"}
           </Button>
           <Button onClick={() => { resetForm(); setShowForm(true); }}>
             {showForm && !editId ? "Отмена" : "+ Добавить событие"}
@@ -166,8 +171,8 @@ export function AdminEvents() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        VK: музей-заповедник Пушкина и официальная группа Пскова. Требуется <code>VK_GROUP_TOKEN</code> на сервере.
-        В будущем — KudaGo и Яндекс.Афиша для кино Пскова.
+        VK: музей-заповедник Пушкина и официальная группа Пскова (<code>VK_GROUP_TOKEN</code>).
+        KudaGo: кино и концерты Пскова — без токена, по открытому API.
       </p>
 
       {msg && <p className="text-green-700">{msg}</p>}

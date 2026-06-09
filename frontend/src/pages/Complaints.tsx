@@ -96,7 +96,7 @@ export function Complaints() {
           </div>
 
           {showForm && (
-            <form onSubmit={submit} className="pushkin-card p-6 space-y-4">
+            <form onSubmit={submit} className="pushkin-card p-6 space-y-4 form-glow">
               {!user && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -122,7 +122,7 @@ export function Complaints() {
               <div>
                 <label className="text-sm font-medium">Категория</label>
                 <select
-                  className="w-full h-10 rounded-md border px-3 text-sm bg-background"
+                  className="pushkin-select w-full"
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 >
@@ -230,10 +230,21 @@ export function Complaints() {
                           </p>
                           <ol className="issue-status-timeline">
                             {issue.status_timeline.map((event, index) => (
-                              <li key={`${event.at}-${event.status}-${index}`}>
+                              <li
+                                key={`${event.at}-${event.status}-${index}`}
+                                className={index === issue.status_timeline!.length - 1 ? "issue-status-timeline-item--current" : ""}
+                              >
                                 <span className="issue-status-timeline-dot" aria-hidden />
                                 <div>
                                   <p className="issue-status-timeline-label">{event.label}</p>
+                                  {event.previous_status && index > 0 && (
+                                    <p className="issue-status-timeline-prev">
+                                      из «{STATUS_LABELS[event.previous_status] || event.previous_status}»
+                                    </p>
+                                  )}
+                                  {event.resolution && (
+                                    <p className="issue-status-timeline-resolution">{event.resolution}</p>
+                                  )}
                                   <p className="issue-status-timeline-date">{formatDate(event.at)}</p>
                                 </div>
                               </li>

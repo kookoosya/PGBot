@@ -21,6 +21,27 @@ VK_EVENT_SOURCE_PRESETS: dict[EventRegion, dict[str, str]] = {
     },
 }
 
+# KudaGo location slugs (https://kudago.com/public-api/v1.4/locations/).
+KUDAGO_LOCATION_PRESETS: dict[EventRegion, dict[str, str]] = {
+    EventRegion.PSKOV: {
+        "location_slug": "pskov",
+        "label": "Псков",
+        "default_location": "Псков",
+    },
+}
+
+# Map KudaGo category slugs to internal event categories.
+KUDAGO_CATEGORY_MAP: dict[str, str] = {
+    "cinema": "cinema",
+    "concert": "culture",
+    "festival": "holiday",
+    "exhibition": "culture",
+    "theater": "culture",
+    "education": "education",
+    "sport": "sport",
+    "tour": "tourism",
+}
+
 # Keywords for automatic category detection when syncing from VK.
 EVENT_CATEGORY_KEYWORDS: dict[str, tuple[str, ...]] = {
     "cinema": ("кино", "фильм", "сеанс", "кинотеатр"),

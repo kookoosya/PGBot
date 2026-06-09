@@ -233,8 +233,9 @@ class ApiClient {
     return this.request<WeatherResponse>("/weather");
   }
 
-  getToday() {
-    return this.request<TodayResponse>("/public/today");
+  getToday(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<TodayResponse>(`/public/today${q}`);
   }
 
   getAdminEvents(includeUnpublished = true) {
@@ -259,6 +260,13 @@ class ApiClient {
   syncVkEvents(region?: EventRegion) {
     const q = region ? `?region=${region}` : "";
     return this.request<EventSyncResult[]>(`/admin/events/sync-vk${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncKudagoEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-kudago${q}`, {
       method: "POST",
     });
   }
@@ -493,6 +501,7 @@ export interface IssueStatusEvent {
   label: string;
   at: string;
   previous_status: string | null;
+  resolution?: string | null;
 }
 
 export interface IssueMyListResponse {

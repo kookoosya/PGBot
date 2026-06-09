@@ -1,4 +1,14 @@
+import { useMemo, useState } from "react";
+import { type EventRegion } from "@/lib/api";
 import { useToday } from "@/hooks/useToday";
+
+type RegionFilter = "all" | EventRegion;
+
+const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
+  { id: "all", label: "Все" },
+  { id: "pushkin_gory", label: "Пушкинские Горы" },
+  { id: "pskov", label: "Псков" },
+];
 
 function regionChipClass(regionLabel: string): string {
   if (regionLabel === "Псков") return "events-region-chip events-region-chip--pskov";
@@ -6,8 +16,16 @@ function regionChipClass(regionLabel: string): string {
 }
 
 export function UpcomingEvents() {
-  const { data, loading } = useToday();
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
+  const apiRegion = regionFilter === "all" ? undefined : regionFilter;
+  const { data, loading } = useToday(apiRegion);
   const events = data?.upcoming_events ?? [];
+
+  const visibleEvents = useMemo(() => {
+    if (regionFilter === "all") return events;
+    const label = regionFilter === "pskov" ? "Псков" : "Пушкинские Горы";
+    return events.filter((event) => event.region_label === label);
+  }, [events, regionFilter]);
 
   return (
     <section className="events-panel" aria-label="Ближайшие события">
@@ -21,15 +39,30 @@ export function UpcomingEvents() {
         </div>
       </div>
 
+      <div className="events-region-filters" role="group" aria-label="Фильтр по региону">
+        {REGION_FILTERS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
+            onClick={() => setRegionFilter(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       {loading && !data ? (
         <p className="events-muted">Загружаем афишу…</p>
-      ) : events.length === 0 ? (
+      ) : visibleEvents.length === 0 ? (
         <p className="events-muted">
-          Скоро здесь появятся концерты, ярмарки и встречи в музее-заповеднике и Пскове — следите за обновлениями.
+          {regionFilter === "all"
+            ? "Скоро здесь появятся концерты, ярмарки и встречи в музее-заповеднике и Пскове — следите за обновлениями."
+            : "В этом регионе пока нет ближайших событий — попробуйте другой фильтр или загляните позже."}
         </p>
       ) : (
         <ol className="events-list">
-          {events.map((event) => (
+          {visibleEvents.map((event) => (
             <li key={event.id} className="events-item">
               <div className="events-item-meta">
                 <span className={regionChipClass(event.region_label)}>{event.region_label}</span>

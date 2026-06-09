@@ -9,7 +9,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import CLASSIFIED_LABELS
+from app.models.enums import CLASSIFIED_LABELS, EventRegion
 from app.schemas.today import TodayResponse
 from app.services.classified_service import ClassifiedSearchParams, search_classifieds
 from app.services.datetime_utils import format_event_datetime
@@ -91,7 +91,11 @@ class TodaySnapshot:
         )
 
 
-async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
+async def build_today_snapshot(
+    db: AsyncSession,
+    *,
+    event_region: EventRegion | None = None,
+) -> TodaySnapshot:
     """Compose weather, latest classified ad and map stats for the public landing block."""
     weather: WeatherSnapshot | None = None
     try:
@@ -133,7 +137,7 @@ async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
 
     upcoming: list[TodayEventRow] = []
     try:
-        events = await get_upcoming_events(db, limit=6)
+        events = await get_upcoming_events(db, limit=6, region=event_region)
         upcoming = [
             TodayEventRow(
                 id=event.id,

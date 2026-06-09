@@ -61,6 +61,7 @@ class IssueStatusEvent:
     label: str
     at: str
     previous_status: str | None = None
+    resolution: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,11 +245,16 @@ async def _safe_audit(
 
 
 async def _safe_notify_status(issue: Issue, *, previous_status: str | None = None) -> bool:
-    """Notify resident in VK about status change; return ``True`` on success."""
+    """Notify resident in VK about status change; return ``True`` when delivered."""
     peer_id = getattr(issue, "vk_peer_id", None)
+    if not peer_id:
+        logger.info(
+            "Status notification skipped for issue #%s — no vk_peer_id (web-only resident)",
+            issue.id,
+        )
+        return False
     try:
-        await notify_issue_status(issue, previous_status=previous_status)
-        return True
+        return await notify_issue_status(issue, previous_status=previous_status)
     except Exception:
         logger.exception(
             "VK status notification failed for issue #%s (status=%s peer_id=%s)",
@@ -455,6 +461,7 @@ async def get_issue_status_timeline(db: AsyncSession, issue: Issue) -> list[Issu
                 label=issue_status_label(str(status)),
                 at=entry.created_at.isoformat(),
                 previous_status=details.get("previous_status"),
+                resolution=details.get("resolution"),
             )
         )
 
@@ -518,6 +525,7 @@ async def get_status_timelines_for_issues(
                 label=issue_status_label(str(status)),
                 at=entry.created_at.isoformat(),
                 previous_status=details.get("previous_status"),
+                resolution=details.get("resolution"),
             )
         )
 
@@ -715,6 +723,7 @@ def issue_to_my_response(issue: Issue, timeline: list[IssueStatusEvent]):
                 label=event.label,
                 at=event.at,
                 previous_status=event.previous_status,
+                resolution=event.resolution,
             )
             for event in timeline
         ],

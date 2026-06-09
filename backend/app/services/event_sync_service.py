@@ -1,6 +1,7 @@
 """Semi-automatic event import from VK communities (Pushkin Gory + Pskov).
 
-Future: KudaGo / Yandex.Afisha adapters can plug into ``sync_external_events``.
+KudaGo adapter: ``app.services.kudago_service`` (Pskov cinema/concerts).
+Future: Yandex.Afisha can follow the same upsert pattern.
 """
 
 from __future__ import annotations

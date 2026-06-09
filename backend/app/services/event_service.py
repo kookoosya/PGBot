@@ -79,18 +79,29 @@ def _validate_event_times(starts_at: datetime, ends_at: Optional[datetime]) -> N
         raise EventValidationError("Дата окончания не может быть раньше начала")
 
 
-async def get_upcoming_events(db: AsyncSession, *, limit: int = 6) -> list[Event]:
-    """Return published events that haven't ended yet, nearest first (both regions)."""
+async def get_upcoming_events(
+    db: AsyncSession,
+    *,
+    limit: int = 6,
+    region: EventRegion | None = None,
+) -> list[Event]:
+    """Return published events that haven't ended yet, nearest first.
+
+  When ``region`` is set, only events from that region are returned.
+    """
     now = datetime.now(timezone.utc)
     safe_limit = max(1, min(limit, 20))
+    conditions = [
+        Event.is_published.is_(True),
+        or_(Event.ends_at.is_(None), Event.ends_at >= now),
+        Event.starts_at >= now - timedelta(days=1),
+    ]
+    if region is not None:
+        conditions.append(Event.region == region.value)
     try:
         result = await db.execute(
             select(Event)
-            .where(
-                Event.is_published.is_(True),
-                or_(Event.ends_at.is_(None), Event.ends_at >= now),
-                Event.starts_at >= now - timedelta(days=1),
-            )
+            .where(*conditions)
             .order_by(Event.starts_at.asc())
             .limit(safe_limit)
         )
