@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -10,15 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.event import Event
+from app.services.event_title_utils import normalize_event_title
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
-_TITLE_NORMALIZE_RE = re.compile(r"[^\w\s]+", re.UNICODE)
-
-
-def normalize_event_title(title: str) -> str:
-    """Lowercase alphanumeric title for fuzzy duplicate checks."""
-    cleaned = _TITLE_NORMALIZE_RE.sub(" ", title.lower())
-    return " ".join(cleaned.split())
 
 
 async def find_existing_event(
