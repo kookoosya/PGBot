@@ -11,7 +11,7 @@ from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
-from app.services.poster_service import resolve_cinema_poster
+from app.services.poster_service import fetch_kinopoisk_poster, resolve_event_poster
 
 logger = logging.getLogger(__name__)
 
@@ -95,22 +95,44 @@ async def enrich_stale_events(db: AsyncSession) -> int:
     return updated
 
 
-async def enrich_missing_posters(db: AsyncSession, *, limit: int = 40) -> int:
-    """Attach posters to published cinema events that lack one."""
+async def enrich_missing_posters(db: AsyncSession, *, limit: int = 60) -> int:
+    """Attach posters/images to published events that lack one."""
     result = await db.execute(
         select(Event).where(
             Event.is_published.is_(True),
-            Event.category == EventCategory.CINEMA.value,
             or_(Event.poster_url.is_(None), Event.poster_url == ""),
         ).limit(limit)
     )
     updated = 0
     for event in result.scalars().all():
-        poster = await resolve_cinema_poster(event.title)
+        poster = await resolve_event_poster(
+            title=event.title,
+            category=event.category,
+        )
         if poster:
             event.poster_url = poster
             updated += 1
     if updated:
         await db.flush()
         logger.info("Batch poster enrichment: updated %s events", updated)
+    return updated
+
+
+async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 50) -> int:
+    """Re-fetch official Kinopoisk posters for cinema (fixes wrong matches)."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.CINEMA.value,
+        ).limit(limit)
+    )
+    updated = 0
+    for event in result.scalars().all():
+        poster = await fetch_kinopoisk_poster(event.title)
+        if poster and poster != event.poster_url:
+            event.poster_url = poster
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Cinema poster refresh: updated %s events", updated)
     return updated

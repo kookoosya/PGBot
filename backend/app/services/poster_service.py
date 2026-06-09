@@ -1,4 +1,4 @@
-"""Film poster resolution — Kinopoisk Unofficial API and VK attachments."""
+"""Event image resolution — Kinopoisk posters, VK photos, category fallbacks."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import re
 import httpx
 
 from app.config import get_settings
+from app.constants.cinema_catalog import lookup_film
+from app.models.enums import EventCategory
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +30,21 @@ _PREFIXES = (
     "фильм",
 )
 
+_CATEGORY_IMAGES: dict[str, str] = {
+    EventCategory.CULTURE.value: "/images/gallery/monastery.jpg",
+    EventCategory.HOLIDAY.value: "/images/gallery/nkc.jpg",
+    EventCategory.TOURISM.value: "/images/gallery/mikhailovskoe.jpg",
+    EventCategory.SPORT.value: "/images/gallery/petrovskoe.jpg",
+    EventCategory.EDUCATION.value: "/images/gallery/trigorskoe.jpg",
+    EventCategory.COMMUNITY.value: "/images/gallery/village.jpg",
+    EventCategory.OTHER.value: "/images/gallery/monument.jpg",
+}
+
 
 def _clean_film_title(title: str) -> str:
+    catalog = lookup_film(title)
+    if catalog:
+        return catalog.title
     cleaned = (title or "").strip()
     quoted = _QUOTED_TITLE_RE.search(cleaned)
     if quoted:
@@ -42,6 +57,23 @@ def _clean_film_title(title: str) -> str:
     cleaned = _TITLE_CLEAN_RE.sub("", cleaned)
     cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" -–—,.«»\"")
     return cleaned[:200]
+
+
+def _title_similarity(query: str, candidate: str) -> float:
+    q = query.lower().strip()
+    c = candidate.lower().strip()
+    if not q or not c:
+        return 0.0
+    if q == c:
+        return 1.0
+    if q in c or c in q:
+        return 0.85
+    q_tokens = set(q.split())
+    c_tokens = set(c.split())
+    if not q_tokens or not c_tokens:
+        return 0.0
+    overlap = len(q_tokens & c_tokens) / max(len(q_tokens), len(c_tokens))
+    return overlap
 
 
 def extract_vk_poster_url(post: dict) -> str | None:
@@ -64,7 +96,7 @@ def extract_vk_poster_url(post: dict) -> str | None:
 
 
 async def fetch_kinopoisk_poster(film_title: str) -> str | None:
-    """Search Kinopoisk and return the first POSTER image URL."""
+    """Search Kinopoisk, pick best title match, return official ``posterUrl``."""
     token = (get_settings().KINOPOISK_API_TOKEN or "").strip()
     if not token or token.startswith("your-"):
         return None
@@ -85,28 +117,45 @@ async def fetch_kinopoisk_poster(film_title: str) -> str | None:
             )
             search.raise_for_status()
             films = (search.json() or {}).get("films") or []
-            film_id = None
-            for item in films:
+            best_id: int | None = None
+            best_score = 0.0
+            for item in films[:12]:
                 fid = item.get("filmId") or item.get("kinopoiskId")
-                if fid:
-                    film_id = int(fid)
-                    break
-            if not film_id:
+                if not fid:
+                    continue
+                names = [
+                    item.get("nameRu") or "",
+                    item.get("nameEn") or "",
+                    item.get("nameOriginal") or "",
+                ]
+                score = max(_title_similarity(query, name) for name in names if name)
+                if score > best_score:
+                    best_score = score
+                    best_id = int(fid)
+            if not best_id or best_score < 0.45:
                 _POSTER_CACHE[query] = None
                 return None
 
-            images = await client.get(
-                f"{_KINOPOISK_BASE}/api/v2.2/films/{film_id}/images",
-                params={"type": "POSTER"},
+            details = await client.get(
+                f"{_KINOPOISK_BASE}/api/v2.2/films/{best_id}",
                 headers=headers,
             )
-            images.raise_for_status()
-            items = (images.json() or {}).get("items") or []
-            poster_url = None
-            for item in items:
-                poster_url = item.get("imageUrl") or item.get("url")
-                if poster_url:
-                    break
+            details.raise_for_status()
+            data = details.json() or {}
+            poster_url = data.get("posterUrl") or data.get("coverUrl")
+            if not poster_url:
+                images = await client.get(
+                    f"{_KINOPOISK_BASE}/api/v2.2/films/{best_id}/images",
+                    params={"type": "POSTER"},
+                    headers=headers,
+                )
+                images.raise_for_status()
+                items = (images.json() or {}).get("items") or []
+                for item in items:
+                    poster_url = item.get("imageUrl") or item.get("url")
+                    if poster_url and "preview" not in poster_url.lower():
+                        break
+
             _POSTER_CACHE[query] = poster_url
             return poster_url
     except Exception as exc:
@@ -120,7 +169,27 @@ async def resolve_cinema_poster(
     *,
     vk_poster_url: str | None = None,
 ) -> str | None:
-    """Prefer VK afisha photo; fall back to Kinopoisk."""
+    """Prefer VK afisha photo; fall back to Kinopoisk official poster."""
     if vk_poster_url:
         return vk_poster_url
     return await fetch_kinopoisk_poster(title)
+
+
+def category_fallback_image(category: str | None) -> str | None:
+    if not category:
+        return _CATEGORY_IMAGES.get(EventCategory.OTHER.value)
+    return _CATEGORY_IMAGES.get(category)
+
+
+async def resolve_event_poster(
+    *,
+    title: str,
+    category: str,
+    vk_poster_url: str | None = None,
+) -> str | None:
+    """Poster/image for any event type."""
+    if vk_poster_url:
+        return vk_poster_url
+    if category == EventCategory.CINEMA.value:
+        return await fetch_kinopoisk_poster(title)
+    return category_fallback_image(category)

@@ -27,8 +27,10 @@ async def find_existing_event(
     source_url: str | None,
     title: str,
     starts_at: datetime,
+    region: str | None = None,
+    location: str | None = None,
 ) -> Event | None:
-    """Find duplicate by ``source_url`` or similar title on the same calendar day."""
+    """Find duplicate by ``source_url`` or same show (title + minute + region + venue)."""
     if source_url:
         by_url = await db.execute(
             select(Event)
@@ -40,13 +42,35 @@ async def find_existing_event(
         if existing:
             return existing
 
-    starts_moscow = starts_at.astimezone(MOSCOW_TZ)
-    day_start = starts_moscow.replace(hour=0, minute=0, second=0, microsecond=0)
-    day_end = day_start + timedelta(days=1)
     normalized = normalize_event_title(title)
-    if len(normalized) < 8:
+    if len(normalized) < 4:
         return None
 
+    starts_moscow = starts_at.astimezone(MOSCOW_TZ).replace(second=0, microsecond=0)
+    window_start = starts_moscow - timedelta(minutes=5)
+    window_end = starts_moscow + timedelta(minutes=5)
+    loc_key = " ".join((location or "").lower().split())
+
+    result = await db.execute(
+        select(Event).where(
+            Event.starts_at >= window_start,
+            Event.starts_at <= window_end,
+        )
+    )
+    for candidate in result.scalars().all():
+        if region and candidate.region != region:
+            continue
+        cand_title = normalize_event_title(candidate.title)
+        if cand_title != normalized and not _titles_similar(normalized, cand_title):
+            continue
+        cand_loc = " ".join((candidate.location or "").lower().split())
+        if loc_key and cand_loc and loc_key != cand_loc:
+            continue
+        return candidate
+
+    # Fallback: same title on the same calendar day (merge orbilet session URL updates)
+    day_start = starts_moscow.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end = day_start + timedelta(days=1)
     result = await db.execute(
         select(Event).where(
             Event.starts_at >= day_start,
@@ -54,9 +78,13 @@ async def find_existing_event(
         )
     )
     for candidate in result.scalars().all():
-        if normalize_event_title(candidate.title) == normalized:
-            return candidate
-        if _titles_similar(normalized, normalize_event_title(candidate.title)):
+        if region and candidate.region != region:
+            continue
+        cand_title = normalize_event_title(candidate.title)
+        if cand_title == normalized or _titles_similar(normalized, cand_title):
+            cand_loc = " ".join((candidate.location or "").lower().split())
+            if loc_key and cand_loc and loc_key != cand_loc:
+                continue
             return candidate
     return None
 

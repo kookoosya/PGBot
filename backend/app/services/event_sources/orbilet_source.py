@@ -19,12 +19,15 @@ MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
 def _to_fetched(item: OrbiletEvent) -> FetchedEvent:
+    location = item.location
+    if item.category == EventCategory.CINEMA and location:
+        location = resolve_cinema_location_from_text(location, region=EventRegion.PSKOV) or location
     return FetchedEvent(
         title=item.title,
         description=item.description,
         starts_at=item.starts_at,
         ends_at=item.starts_at + timedelta(hours=2),
-        location=item.location,
+        location=location,
         region=EventRegion.PSKOV,
         category=item.category,
         source="orbilet",

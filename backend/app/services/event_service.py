@@ -22,8 +22,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
+from app.services.event_dedupe_service import dedupe_display_events
 from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
-from app.services.poster_service import resolve_cinema_poster
+from app.services.poster_service import resolve_event_poster
 from app.services.datetime_utils import format_event_datetime
 from app.services.service_errors import ServiceError
 
@@ -80,12 +81,14 @@ class EventUpdateInput:
     is_published: Optional[bool] = None
 
 
-async def _attach_cinema_poster(event: Event, *, vk_poster_url: str | None = None) -> None:
-    if event.category != EventCategory.CINEMA.value:
-        return
+async def _attach_event_poster(event: Event, *, vk_poster_url: str | None = None) -> None:
     if (event.poster_url or "").strip():
         return
-    poster = await resolve_cinema_poster(event.title, vk_poster_url=vk_poster_url)
+    poster = await resolve_event_poster(
+        title=event.title,
+        category=event.category,
+        vk_poster_url=vk_poster_url,
+    )
     if poster:
         event.poster_url = poster
 
@@ -138,9 +141,10 @@ async def get_upcoming_events(
             select(Event)
             .where(*conditions)
             .order_by(Event.starts_at.asc())
-            .limit(safe_limit)
+            .limit(safe_limit * 3)
         )
-        return list(result.scalars().all())
+        events = dedupe_display_events(list(result.scalars().all()))
+        return events[:safe_limit]
     except Exception:
         logger.exception("Failed to load upcoming events")
         raise
@@ -208,9 +212,10 @@ async def search_public_events(
         select(Event)
         .where(*conditions)
         .order_by(Event.starts_at.asc())
-        .limit(safe_limit)
+        .limit(safe_limit * 3)
     )
-    return list(result.scalars().all())
+    events = dedupe_display_events(list(result.scalars().all()))
+    return events[:safe_limit]
 
 
 async def create_event(
@@ -248,7 +253,7 @@ async def create_event(
     )
     db.add(event)
     await db.flush()
-    await _attach_cinema_poster(event)
+    await _attach_event_poster(event)
     if event.poster_url:
         await db.flush()
     if actor_id:
@@ -305,7 +310,7 @@ async def update_event(
     event.description = description
     if event.category == EventCategory.CINEMA.value and event.location:
         event.location = resolve_cinema_location_from_text(event.location, region=region) or event.location
-    await _attach_cinema_poster(event)
+    await _attach_event_poster(event)
     await db.flush()
     if actor_id:
         await log_action(db, "update_event", "event", event.id, user_id=actor_id)

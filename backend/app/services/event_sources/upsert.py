@@ -21,6 +21,8 @@ async def upsert_fetched_event(
         source_url=item.source_url,
         title=item.title,
         starts_at=item.starts_at,
+        region=item.region.value,
+        location=item.location,
     )
     payload = EventCreateInput(
         title=item.title,

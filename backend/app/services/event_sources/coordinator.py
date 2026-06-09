@@ -13,6 +13,7 @@ from app.services.event_sources.kudago_source import KudaGoEventSource
 from app.services.event_sources.orbilet_source import OrbiletEventSource
 from app.services.event_sources.proculture_source import ProCultureEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
+from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_stale_demo_cinema
 from app.services.event_enrichment_batch import enrich_missing_posters, enrich_stale_events
 from app.services.event_sources.vk_source import VkEventSource
 
@@ -56,10 +57,14 @@ async def sync_event_source(
     results = await source.sync_events(db, region=region, actor_id=actor_id)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
+    removed = await cleanup_duplicate_events(db)
+    demos = await unpublish_stale_demo_cinema(db)
     if enriched:
         logger.info("Post-sync event enrichment (%s): %s events updated", source_name, enriched)
     if posters:
         logger.info("Post-sync poster enrichment (%s): %s events updated", source_name, posters)
+    if removed or demos:
+        logger.info("Post-sync dedupe (%s): -%s dupes, -%s demo cinema", source_name, removed, demos)
     return results
 
 
@@ -97,8 +102,12 @@ async def sync_all_event_sources(
             ))
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
+    removed = await cleanup_duplicate_events(db)
+    demos = await unpublish_stale_demo_cinema(db)
     if enriched:
         logger.info("Post-sync event enrichment: %s events updated", enriched)
     if posters:
         logger.info("Post-sync poster enrichment: %s events updated", posters)
+    if removed or demos:
+        logger.info("Post-sync dedupe: -%s dupes, -%s demo cinema", removed, demos)
     return results

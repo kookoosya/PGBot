@@ -74,7 +74,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
     parsed = parse_vk_post(text)
     if parsed.category == EventCategory.CINEMA:
         location = resolve_cinema_location_from_text(f"{text} {location or ''}", region=preset.region) or location
-    poster_url = extract_vk_poster_url(post) if parsed.category == EventCategory.CINEMA else None
+    poster_url = extract_vk_poster_url(post)
     return FetchedEvent(
         title=parsed.title,
         description=parsed.body or text[:2000],

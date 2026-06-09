@@ -28,7 +28,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
   return (
     <article className={cardClass}>
       {posterUrl ? (
-        <div className="afisha-card-poster">
+        <div className={`afisha-card-poster${cinema ? "" : " afisha-card-poster--wide"}`}>
           <img src={posterUrl} alt="" loading="lazy" decoding="async" />
         </div>
       ) : (
