@@ -11,7 +11,6 @@ from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
-from app.services.event_sources.text_utils import infer_category_from_text
 from app.services.poster_service import fetch_kinopoisk_poster, resolve_event_poster
 
 logger = logging.getLogger(__name__)
