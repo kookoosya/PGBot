@@ -15,8 +15,12 @@ depends_on = None
 def upgrade() -> None:
     bind = op.get_bind()
     columns = {c["name"] for c in inspect(bind).get_columns("village_events")}
-    if "poster_url" not in columns:
-        op.add_column("village_events", sa.Column("poster_url", sa.String(1000), nullable=True))
+    if "poster_url" in columns:
+        return
+    # PostgreSQL: safe if column was added manually on prod
+    bind.execute(sa.text(
+        "ALTER TABLE village_events ADD COLUMN IF NOT EXISTS poster_url VARCHAR(1000)"
+    ))
 
 
 def downgrade() -> None:
