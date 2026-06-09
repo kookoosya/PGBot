@@ -996,6 +996,7 @@ export interface TodayMapSnippet {
 export interface TodayEventSnippet {
   id: number;
   title: string;
+  starts_at: string;
   starts_at_label: string;
   ends_at_label?: string | null;
   location?: string | null;

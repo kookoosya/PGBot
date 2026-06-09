@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
-from app.services.event_dedupe_service import dedupe_display_events
+from app.services.event_dedupe_service import dedupe_display_events, group_events_by_show
 from app.services.event_title_utils import normalize_event_title
 from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
 from app.services.poster_service import resolve_event_poster
@@ -145,6 +145,7 @@ async def get_upcoming_events(
             .limit(safe_limit * 3)
         )
         events = dedupe_display_events(list(result.scalars().all()))
+        events = group_events_by_show(events)
         return events[:safe_limit]
     except Exception:
         logger.exception("Failed to load upcoming events")
@@ -215,7 +216,7 @@ async def search_public_events(
 ) -> list[Event]:
     """Return upcoming published events for the public events page."""
     now = datetime.now(timezone.utc)
-    safe_limit = max(1, min(limit, 50))
+    safe_limit = max(1, min(limit, 60))
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),

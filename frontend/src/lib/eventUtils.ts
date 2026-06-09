@@ -1,6 +1,28 @@
 import type { EventRegion, PublicEvent, TodayEventSnippet } from "@/lib/api";
 
-export type EventCardEvent = PublicEvent | TodayEventSnippet;
+export type ShowGroupable = {
+  id: number;
+  title: string;
+  starts_at: string;
+  starts_at_label: string;
+  ends_at_label?: string | null;
+  location?: string | null;
+  region: EventRegion;
+  category?: string;
+  category_label?: string;
+  genre?: string | null;
+  poster_url?: string | null;
+  description?: string | null;
+  region_label?: string;
+  source?: string | null;
+  source_url?: string | null;
+};
+
+export type GroupedPublicEvent = ShowGroupable & {
+  extraSessions?: ShowGroupable[];
+};
+
+export type EventCardEvent = PublicEvent | TodayEventSnippet | GroupedPublicEvent;
 
 export const EVENT_SOURCE_LABELS: Record<string, string> = {
   vk: "ВКонтакте",
@@ -49,17 +71,13 @@ export function eventTeaser(event: EventCardEvent, maxLen = 140): string {
   return "";
 }
 
-export function isCinemaEvent(event: EventCardEvent): boolean {
+export function isCinemaEvent(event: { category?: string }): boolean {
   return event.category === "cinema";
 }
 
-export type GroupedPublicEvent = PublicEvent & {
-  extraSessions?: PublicEvent[];
-};
-
 /** One card per title+venue; extra showtimes attached to the nearest session. */
-export function groupEventsByShow(events: PublicEvent[]): GroupedPublicEvent[] {
-  const buckets = new Map<string, PublicEvent[]>();
+export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
+  const buckets = new Map<string, T[]>();
   for (const event of events) {
     const key = `${event.title}|${event.location || ""}|${event.region}`;
     const list = buckets.get(key) ?? [];
@@ -67,7 +85,7 @@ export function groupEventsByShow(events: PublicEvent[]): GroupedPublicEvent[] {
     buckets.set(key, list);
   }
 
-  const grouped: GroupedPublicEvent[] = [];
+  const grouped: (T & { extraSessions?: T[] })[] = [];
   for (const list of buckets.values()) {
     list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
     const [first, ...rest] = list;
@@ -76,7 +94,7 @@ export function groupEventsByShow(events: PublicEvent[]): GroupedPublicEvent[] {
   return grouped.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 }
 
-export function formatExtraSessions(sessions: PublicEvent[]): string {
+export function formatExtraSessions(sessions: Pick<PublicEvent, "starts_at_label">[]): string {
   if (!sessions.length) return "";
   const labels = sessions.slice(0, 3).map((s) => s.starts_at_label);
   const tail = sessions.length > 3 ? ` и ещё ${sessions.length - 3}` : "";

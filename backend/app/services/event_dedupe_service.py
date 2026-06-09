@@ -52,6 +52,35 @@ def _rank_event(event: Event) -> tuple[int, int, int, int]:
     return (source, poster, desc, -event.id)
 
 
+def group_events_by_show(events: list[Event]) -> list[Event]:
+    """Keep the nearest session per title+venue+region (cinema showtimes)."""
+    earliest: dict[tuple[str, str, str], Event] = {}
+    for event in events:
+        key = (
+            normalize_event_title(event.title),
+            _location_key(event.location),
+            event.region or "",
+        )
+        current = earliest.get(key)
+        if current is None or event.starts_at < current.starts_at:
+            earliest[key] = event
+
+    seen: set[int] = set()
+    grouped: list[Event] = []
+    for event in events:
+        key = (
+            normalize_event_title(event.title),
+            _location_key(event.location),
+            event.region or "",
+        )
+        winner = earliest[key]
+        if winner.id in seen:
+            continue
+        seen.add(winner.id)
+        grouped.append(winner)
+    return grouped
+
+
 def dedupe_display_events(events: list[Event]) -> list[Event]:
     """Keep the richest single card per show (same title, time, venue)."""
     best: dict[tuple[str, str, str, str, str], Event] = {}

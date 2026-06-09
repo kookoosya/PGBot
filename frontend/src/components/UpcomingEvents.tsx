@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { EventCard } from "@/components/events/EventCard";
 import { type EventRegion } from "@/lib/api";
 import { useToday } from "@/hooks/useToday";
+import { groupEventsByShow } from "@/lib/eventUtils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -37,7 +38,7 @@ export function UpcomingEvents() {
           e.category_label.toLowerCase().includes(q),
       );
     }
-    return list.slice(0, 6);
+    return groupEventsByShow(list).slice(0, 6);
   }, [events, regionFilter, searchInput]);
 
   return (

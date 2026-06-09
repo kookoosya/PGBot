@@ -31,6 +31,7 @@ class TodayEventSnippet(BaseModel):
     category: str
     category_label: str
     genre: str | None = None
+    poster_url: str | None = None
     description: str | None = None
     source: str | None = None
     source_url: str | None = None

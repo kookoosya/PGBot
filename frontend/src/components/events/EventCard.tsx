@@ -42,14 +42,18 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
         </div>
       ) : (
         <div className="afisha-card-accent" aria-hidden>
-          <span className="afisha-card-icon">{categoryIcon(event.category)}</span>
+          <span className="afisha-card-icon">{categoryIcon(event.category || "other")}</span>
         </div>
       )}
 
       <div className="afisha-card-body">
         <div className="afisha-card-meta">
-          <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-          <span className="events-category">{event.category_label}</span>
+          {event.region_label && (
+            <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
+          )}
+          {event.category_label && (
+            <span className="events-category">{event.category_label}</span>
+          )}
           {event.genre && <span className="afisha-genre-chip">{event.genre}</span>}
         </div>
 

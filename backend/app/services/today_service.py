@@ -35,6 +35,7 @@ class TodayEventRow:
     category: str
     category_label: str
     genre: str | None
+    poster_url: str | None
     description: str | None
     source: str | None
     source_url: str | None
@@ -90,6 +91,7 @@ class TodaySnapshot:
                     category=event.category,
                     category_label=event.category_label,
                     genre=event.genre,
+                    poster_url=event.poster_url,
                     description=event.description,
                     source=event.source,
                     source_url=event.source_url,
@@ -161,6 +163,7 @@ async def build_today_snapshot(
                 category=event.category,
                 category_label=event_category_label(event.category),
                 genre=event.genre,
+                poster_url=event.poster_url,
                 description=event.description,
                 source=event.source,
                 source_url=event.source_url,

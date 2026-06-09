@@ -57,5 +57,8 @@ _set_env_var KINOPOISK_API_TOKEN "${KINOPOISK_API_TOKEN:-}"
 _set_env_var VK_GROUP_TOKEN "${VK_GROUP_TOKEN:-}"
 _set_env_var VK_CONFIRMATION_CODE "${VK_CONFIRMATION_CODE:-}"
 _set_env_var VK_SECRET_KEY "${VK_SECRET_KEY:-}"
+_set_env_var VK_GROUP_ID "${VK_GROUP_ID:-}"
+_set_env_var VK_GROUP_URL "${VK_GROUP_URL:-}"
+_set_env_var VK_WALL_POST_ENABLED "${VK_WALL_POST_ENABLED:-}"
 
 echo "Env sync OK on $HOST"

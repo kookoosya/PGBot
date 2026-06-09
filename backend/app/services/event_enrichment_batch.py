@@ -33,6 +33,8 @@ def _needs_enrichment(event: Event) -> bool:
 
 async def recategorize_other_events(db: AsyncSession, *, limit: int = 100) -> int:
     """Move miscategorized Orbilet/VK events out of ``other``."""
+    from app.services.event_sources.text_utils import infer_category_from_text
+
     result = await db.execute(
         select(Event).where(
             Event.is_published.is_(True),
