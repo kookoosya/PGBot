@@ -102,6 +102,12 @@ class Settings(BaseSettings):
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""
 
+    # TimePad events (https://dev.timepad.ru/)
+    TIMEPAD_API_TOKEN: str = ""
+
+    # Auto-sync village events from external sources (hours; 0 = disabled)
+    EVENT_SYNC_INTERVAL_HOURS: int = 12
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

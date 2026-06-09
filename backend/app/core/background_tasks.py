@@ -47,6 +47,18 @@ async def _weather_cache_work() -> None:
     await refresh_weather_cache()
 
 
+async def _event_sync_work() -> None:
+    from app.database import AsyncSessionLocal
+    from app.services.event_sources.coordinator import sync_all_event_sources
+
+    async with AsyncSessionLocal() as db:
+        results = await sync_all_event_sources(db)
+        await db.commit()
+        created = sum(r.created for r in results)
+        if created:
+            logger.info("Event auto-sync: +%s new events", created)
+
+
 def _create_periodic_task(
     name: str,
     interval_seconds: float,
@@ -73,6 +85,17 @@ def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
             "Weather cache",
             settings.WEATHER_CACHE_TTL_SECONDS,
             _weather_cache_work,
+        ),
+        *(
+            [
+                _create_periodic_task(
+                    "Event sync",
+                    settings.EVENT_SYNC_INTERVAL_HOURS * 3600,
+                    _event_sync_work,
+                )
+            ]
+            if settings.EVENT_SYNC_INTERVAL_HOURS > 0
+            else []
         ),
     ]
 

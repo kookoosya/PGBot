@@ -85,6 +85,7 @@ class PublicEventListResponse(BaseModel):
 
 
 class EventSyncResponse(BaseModel):
+    source: str = "unknown"
     region: str
     fetched: int
     created: int
