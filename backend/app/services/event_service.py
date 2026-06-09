@@ -23,6 +23,7 @@ from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCa
 from app.models.event import Event
 from app.services.audit import log_action
 from app.services.event_dedupe_service import dedupe_display_events
+from app.services.event_title_utils import normalize_event_title
 from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
 from app.services.poster_service import resolve_event_poster
 from app.services.datetime_utils import format_event_datetime
@@ -176,6 +177,32 @@ async def get_public_event_by_id(db: AsyncSession, event_id: int) -> Event | Non
         select(Event).where(Event.id == event_id, Event.is_published.is_(True))
     )
     return result.scalar_one_or_none()
+
+
+async def get_related_event_sessions(db: AsyncSession, event: Event) -> list[Event]:
+    """Other upcoming sessions with the same title and venue."""
+    now = datetime.now(timezone.utc)
+    title_key = normalize_event_title(event.title)
+    loc_key = " ".join((event.location or "").lower().split())
+
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.id != event.id,
+            Event.region == event.region,
+            Event.starts_at >= now - timedelta(days=1),
+            or_(Event.ends_at.is_(None), Event.ends_at >= now),
+        ).order_by(Event.starts_at.asc())
+    )
+    related: list[Event] = []
+    for candidate in result.scalars().all():
+        if normalize_event_title(candidate.title) != title_key:
+            continue
+        cand_loc = " ".join((candidate.location or "").lower().split())
+        if loc_key and cand_loc and loc_key != cand_loc:
+            continue
+        related.append(candidate)
+    return related[:12]
 
 
 async def search_public_events(

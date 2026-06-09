@@ -11,6 +11,7 @@ from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
+from app.services.event_sources.text_utils import infer_category_from_text
 from app.services.poster_service import fetch_kinopoisk_poster, resolve_event_poster
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,28 @@ def _needs_enrichment(event: Event) -> bool:
     except ValueError:
         pass
     return False
+
+
+async def recategorize_other_events(db: AsyncSession, *, limit: int = 100) -> int:
+    """Move miscategorized Orbilet/VK events out of ``other``."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.OTHER.value,
+        ).limit(limit)
+    )
+    updated = 0
+    for event in result.scalars().all():
+        inferred = infer_category_from_text(
+            f"{event.title} {event.description or ''} {event.location or ''}"
+        )
+        if inferred != EventCategory.OTHER and inferred.value != event.category:
+            event.category = inferred.value
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Recategorized %s events from other", updated)
+    return updated
 
 
 async def enrich_stale_events(db: AsyncSession) -> int:

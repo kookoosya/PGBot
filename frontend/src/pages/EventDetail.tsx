@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { api, PublicEvent } from "@/lib/api";
+import { api, PublicEventDetail } from "@/lib/api";
 import {
   categoryIcon,
   eventSourceLabel,
@@ -12,7 +12,7 @@ import {
 
 export function EventDetail() {
   const { id } = useParams();
-  const [event, setEvent] = useState<PublicEvent | null>(null);
+  const [event, setEvent] = useState<PublicEventDetail | null>(null);
   const [error, setError] = useState("");
   const [shareMsg, setShareMsg] = useState("");
 
@@ -105,6 +105,22 @@ export function EventDetail() {
           <div className="afisha-detail-desc">
             <p className="event-detail-label">{cinema ? "О фильме" : "О событии"}</p>
             <p className="event-detail-text">{event.description}</p>
+          </div>
+        )}
+
+        {event.related_sessions?.length > 0 && (
+          <div className="afisha-detail-sessions">
+            <p className="event-detail-label">Другие сеансы</p>
+            <ul className="afisha-session-list">
+              {event.related_sessions.map((session) => (
+                <li key={session.id}>
+                  <Link to={`/events/${session.id}`}>
+                    {session.starts_at_label}
+                    {session.ends_at_label ? ` · до ${session.ends_at_label}` : ""}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

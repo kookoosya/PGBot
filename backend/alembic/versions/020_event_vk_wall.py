@@ -16,9 +16,13 @@ def upgrade() -> None:
     bind = op.get_bind()
     columns = {c["name"] for c in inspect(bind).get_columns("village_events")}
     if "vk_posted_at" not in columns:
-        op.add_column("village_events", sa.Column("vk_posted_at", sa.DateTime(timezone=True), nullable=True))
+        bind.execute(sa.text(
+            "ALTER TABLE village_events ADD COLUMN IF NOT EXISTS vk_posted_at TIMESTAMPTZ"
+        ))
     if "vk_post_id" not in columns:
-        op.add_column("village_events", sa.Column("vk_post_id", sa.String(50), nullable=True))
+        bind.execute(sa.text(
+            "ALTER TABLE village_events ADD COLUMN IF NOT EXISTS vk_post_id VARCHAR(50)"
+        ))
 
 
 def downgrade() -> None:

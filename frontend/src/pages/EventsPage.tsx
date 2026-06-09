@@ -4,7 +4,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
-import { isCinemaEvent } from "@/lib/eventUtils";
+import { groupEventsByShow, isCinemaEvent } from "@/lib/eventUtils";
 
 type RegionFilter = "all" | EventRegion;
 type CategoryFilter = "all" | string;
@@ -45,19 +45,21 @@ export function EventsPage() {
       .finally(() => setLoading(false));
   }, [regionFilter, categoryFilter, search]);
 
+  const groupedEvents = useMemo(() => groupEventsByShow(events), [events]);
+
   const cinemaPskov = useMemo(
-    () => events.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
-    [events],
+    () => groupedEvents.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
+    [groupedEvents],
   );
 
   const pushkinEvents = useMemo(
-    () => events.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
-    [events],
+    () => groupedEvents.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
+    [groupedEvents],
   );
 
   const pskovOther = useMemo(
-    () => events.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
-    [events],
+    () => groupedEvents.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
+    [groupedEvents],
   );
 
   const showSections =
@@ -65,8 +67,8 @@ export function EventsPage() {
 
   const flatList = useMemo(() => {
     if (showSections) return [];
-    return events;
-  }, [events, showSections]);
+    return groupedEvents;
+  }, [groupedEvents, showSections]);
 
   return (
     <div className="afisha-page page-section max-w-6xl">

@@ -87,6 +87,12 @@ class EventListResponse(BaseModel):
     total: int
 
 
+class PublicEventDetailResponse(PublicEventResponse):
+    """Event detail with sibling showtimes."""
+
+    related_sessions: list[PublicEventResponse] = Field(default_factory=list)
+
+
 class PublicEventListResponse(BaseModel):
     items: list[PublicEventResponse]
     total: int

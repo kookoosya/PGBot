@@ -62,7 +62,7 @@ def format_wall_post(event: Event) -> str:
     lines = [
         f"{emoji} {event.title.strip()}",
         "",
-        f"🗓 {event.starts_at.astimezone().strftime('%d.%m.%Y · %H:%M') if event.starts_at else 'скоро'}",
+        f"🗓 {format_event_datetime(event.starts_at) if event.starts_at else 'скоро'}",
     ]
     if event.location:
         lines.append(f"📍 {event.location.strip()}")
@@ -106,8 +106,6 @@ async def publish_event_to_wall(db: AsyncSession, event: Event) -> bool:
         "from_group": 1,
         "message": message,
     }
-    if (event.poster_url or "").startswith("http"):
-        params["attachments"] = event.poster_url
 
     try:
         result = await vk_api_call("wall.post", params)

@@ -53,6 +53,36 @@ export function isCinemaEvent(event: EventCardEvent): boolean {
   return event.category === "cinema";
 }
 
+export type GroupedPublicEvent = PublicEvent & {
+  extraSessions?: PublicEvent[];
+};
+
+/** One card per title+venue; extra showtimes attached to the nearest session. */
+export function groupEventsByShow(events: PublicEvent[]): GroupedPublicEvent[] {
+  const buckets = new Map<string, PublicEvent[]>();
+  for (const event of events) {
+    const key = `${event.title}|${event.location || ""}|${event.region}`;
+    const list = buckets.get(key) ?? [];
+    list.push(event);
+    buckets.set(key, list);
+  }
+
+  const grouped: GroupedPublicEvent[] = [];
+  for (const list of buckets.values()) {
+    list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+    const [first, ...rest] = list;
+    grouped.push(rest.length ? { ...first, extraSessions: rest } : first);
+  }
+  return grouped.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+}
+
+export function formatExtraSessions(sessions: PublicEvent[]): string {
+  if (!sessions.length) return "";
+  const labels = sessions.slice(0, 3).map((s) => s.starts_at_label);
+  const tail = sessions.length > 3 ? ` и ещё ${sessions.length - 3}` : "";
+  return `Ещё сеансы: ${labels.join(", ")}${tail}`;
+}
+
 export async function shareEventUrl(title: string): Promise<string | null> {
   const url = window.location.href;
   try {

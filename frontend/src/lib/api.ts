@@ -251,7 +251,7 @@ class ApiClient {
   }
 
   getPublicEvent(id: number) {
-    return this.request<PublicEvent>(`/public/events/${id}`);
+    return this.request<PublicEventDetail>(`/public/events/${id}`);
   }
 
   getAdminEvents(includeUnpublished = true) {
@@ -1038,6 +1038,10 @@ export interface PublicEvent {
   poster_url: string | null;
   source: string | null;
   source_url: string | null;
+}
+
+export interface PublicEventDetail extends PublicEvent {
+  related_sessions: PublicEvent[];
 }
 
 export interface PublicEventListResponse {

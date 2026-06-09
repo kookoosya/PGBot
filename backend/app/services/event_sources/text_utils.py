@@ -40,8 +40,13 @@ def infer_category_from_text(text: str) -> EventCategory:
                 return EventCategory(category)
             except ValueError:
                 continue
-    if any(word in lower for word in ("музей", "пушкин", "михайловск")):
+    if any(word in lower for word in (
+        "музей", "пушкин", "михайловск", "планетар", "полнокупольн",
+        "спектакл", "салон", "филармон", "библиотек", "сказк",
+    )):
         return EventCategory.CULTURE
+    if "экскурс" in lower:
+        return EventCategory.TOURISM
     return EventCategory.OTHER
 
 

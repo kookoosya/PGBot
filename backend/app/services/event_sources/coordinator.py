@@ -15,7 +15,11 @@ from app.services.event_sources.proculture_source import ProCultureEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
 from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_stale_demo_cinema
 from app.services.vk_wall_publisher import publish_relevant_events_to_wall
-from app.services.event_enrichment_batch import enrich_missing_posters, enrich_stale_events
+from app.services.event_enrichment_batch import (
+    enrich_missing_posters,
+    enrich_stale_events,
+    recategorize_other_events,
+)
 from app.services.event_sources.vk_source import VkEventSource
 
 logger = logging.getLogger(__name__)
@@ -56,6 +60,7 @@ async def sync_event_source(
             errors=[f"Неизвестный источник: {source_name}"],
         )]
     results = await source.sync_events(db, region=region, actor_id=actor_id)
+    recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
     removed = await cleanup_duplicate_events(db)
@@ -104,6 +109,7 @@ async def sync_all_event_sources(
                 skipped=0,
                 errors=[str(exc)],
             ))
+    recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
     removed = await cleanup_duplicate_events(db)

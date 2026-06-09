@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.enums import EventCategory, EventRegion
-from app.schemas.event import PublicEventListResponse, PublicEventResponse
+from app.schemas.event import PublicEventDetailResponse, PublicEventListResponse, PublicEventResponse
 from app.schemas.today import TodayResponse
 from app.services.event_service import (
     event_to_public_response,
     get_public_event_by_id,
+    get_related_event_sessions,
     search_public_events,
 )
 from app.services.site_service import build_public_info
@@ -51,7 +52,7 @@ async def public_list_events(
     )
 
 
-@router.get("/events/{event_id}", response_model=PublicEventResponse)
+@router.get("/events/{event_id}", response_model=PublicEventDetailResponse)
 async def public_get_event(
     event_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -60,4 +61,9 @@ async def public_get_event(
     event = await get_public_event_by_id(db, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Событие не найдено")
-    return PublicEventResponse(**event_to_public_response(event))
+    related = await get_related_event_sessions(db, event)
+    payload = event_to_public_response(event)
+    payload["related_sessions"] = [
+        event_to_public_response(item) for item in related
+    ]
+    return PublicEventDetailResponse(**payload)

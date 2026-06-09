@@ -2798,6 +2798,29 @@
     color: hsl(var(--foreground) / 0.85);
     flex: 1;
   }
+  .afisha-card-sessions {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-detail-sessions {
+    margin: 1rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border) / 0.6);
+  }
+  .afisha-session-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.9rem;
+  }
+  .afisha-session-list a {
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .afisha-session-list a:hover {
+    text-decoration: underline;
+  }
   .afisha-card-cta {
     margin-top: 0.35rem;
     font-size: 0.8125rem;

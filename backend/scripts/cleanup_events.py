@@ -16,6 +16,7 @@ from app.services.event_dedupe_service import cleanup_duplicate_events, unpublis
 from app.services.event_enrichment_batch import (
     enrich_missing_posters,
     enrich_stale_events,
+    recategorize_other_events,
     refresh_cinema_posters,
 )
 
@@ -28,12 +29,13 @@ async def main() -> None:
     async with Session() as db:
         demos = await unpublish_stale_demo_cinema(db)
         removed = await cleanup_duplicate_events(db)
+        recategorized = await recategorize_other_events(db, limit=200)
         enriched = await enrich_stale_events(db)
         refreshed = await refresh_cinema_posters(db, limit=80)
         posters = await enrich_missing_posters(db, limit=100)
         await db.commit()
     print(
-        f"demo_cinema={demos} dupes={removed} enriched={enriched} "
+        f"demo_cinema={demos} dupes={removed} recategorized={recategorized} enriched={enriched} "
         f"refreshed={refreshed} posters={posters}"
     )
 

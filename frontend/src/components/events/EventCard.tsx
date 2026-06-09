@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import type { PublicEvent, TodayEventSnippet } from "@/lib/api";
-import { categoryIcon, eventTeaser, isCinemaEvent, regionChipClass } from "@/lib/eventUtils";
+import {
+  categoryIcon,
+  eventTeaser,
+  formatExtraSessions,
+  isCinemaEvent,
+  regionChipClass,
+  type GroupedPublicEvent,
+} from "@/lib/eventUtils";
 
 type EventCardVariant = "grid" | "cinema" | "compact";
 
-type EventCardEvent = PublicEvent | TodayEventSnippet;
+type EventCardEvent = PublicEvent | TodayEventSnippet | GroupedPublicEvent;
 
 interface EventCardProps {
   event: EventCardEvent;
@@ -24,6 +31,8 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
     .join(" ");
 
   const posterUrl = "poster_url" in event ? event.poster_url : null;
+  const extraSessions =
+    "extraSessions" in event && event.extraSessions?.length ? event.extraSessions : null;
 
   return (
     <article className={cardClass}>
@@ -66,6 +75,10 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
 
         {event.description && (
           <p className="afisha-card-desc">{eventTeaser(event)}</p>
+        )}
+
+        {extraSessions && (
+          <p className="afisha-card-sessions">{formatExtraSessions(extraSessions)}</p>
         )}
 
         <Link to={`/events/${event.id}`} className="afisha-card-cta">

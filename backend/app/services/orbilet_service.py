@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.constants.event_config import EVENT_CATEGORY_KEYWORDS
 from app.models.enums import EventCategory
+from app.services.event_sources.text_utils import infer_category_from_text
 
 logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
@@ -38,17 +38,8 @@ class OrbiletEvent:
     genre: str | None = None
 
 
-def _map_category(title: str) -> EventCategory:
-    lower = title.lower()
-    if any(word in lower for word in ("фильм", "кино", "полнокупольн")):
-        return EventCategory.CINEMA
-    for category, keywords in EVENT_CATEGORY_KEYWORDS.items():
-        if any(keyword in lower for keyword in keywords):
-            try:
-                return EventCategory(category)
-            except ValueError:
-                continue
-    return EventCategory.OTHER
+def _map_category(title: str, venue: str | None = None) -> EventCategory:
+    return infer_category_from_text(f"{title} {venue or ''}")
 
 
 def _build_description(title: str, venue: str | None, date_label: str) -> str:
@@ -94,7 +85,7 @@ async def fetch_orbilet_events() -> list[OrbiletEvent]:
         if len(title) < 3:
             continue
 
-        category = _map_category(title)
+        category = _map_category(title, venue)
         events.append(
             OrbiletEvent(
                 title=title[:300],
