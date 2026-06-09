@@ -86,11 +86,16 @@ async def seed() -> None:
 
         from app.services.map_sync import sync_all_map_data
         from app.services.seed_services import seed_service_providers
-        try:
-            map_result = await sync_all_map_data(db)
-            print(f"Map sync: {map_result}")
-        except Exception as e:
-            print(f"Map sync partial: {e}")
+        if os.getenv("SEED_SKIP_MAP_SYNC", "").lower() in ("1", "true", "yes"):
+            print("Map sync skipped (SEED_SKIP_MAP_SYNC)")
+        else:
+            try:
+                map_result = await asyncio.wait_for(sync_all_map_data(db), timeout=90.0)
+                print(f"Map sync: {map_result}")
+            except asyncio.TimeoutError:
+                print("Map sync timed out after 90s — continuing startup")
+            except Exception as e:
+                print(f"Map sync partial: {e}")
 
         svc_count = await seed_service_providers(db)
         print(f"Seeded {svc_count} service providers")

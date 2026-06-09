@@ -30,6 +30,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pgbot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-narodny_kontrol}
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-pgbot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-narodny_kontrol}
+      SEED_SKIP_MAP_SYNC: "true"
     depends_on:
       postgres:
         condition: service_healthy

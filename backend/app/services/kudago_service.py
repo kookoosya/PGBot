@@ -176,6 +176,23 @@ async def sync_events_from_kudago(
 
     try:
         items = await fetch_kudago_events(preset["location_slug"], page_size=page_size)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 400:
+            logger.warning(
+                "KudaGo location %r unavailable (API: %s)",
+                preset["location_slug"],
+                exc.response.text[:200],
+            )
+            return EventSyncResult(
+                region=region.value,
+                fetched=0,
+                created=0,
+                updated=0,
+                skipped=0,
+                errors=[f"Локация KudaGo «{preset['label']}» недоступна в API"],
+            )
+        logger.exception("KudaGo API request failed for %s", region.value)
+        raise EventValidationError(f"KudaGo API недоступен: {exc}") from exc
     except httpx.HTTPError as exc:
         logger.exception("KudaGo API request failed for %s", region.value)
         raise EventValidationError(f"KudaGo API недоступен: {exc}") from exc
