@@ -170,17 +170,12 @@ async def seed() -> None:
 
     async with Session() as db:
         upcoming = await get_upcoming_events(db, limit=20)
-        if len(upcoming) >= MIN_UPCOMING:
-            logger.info("Events seed skipped: %s upcoming (min %s)", len(upcoming), MIN_UPCOMING)
-            return
 
-        kudago_created = await _try_kudago_sync(db)
-        await db.commit()
-
-        upcoming = await get_upcoming_events(db, limit=20)
-        if len(upcoming) >= MIN_UPCOMING:
-            logger.info("Events seed done via KudaGo (+%s)", kudago_created)
-            return
+        kudago_created = 0
+        if len(upcoming) < MIN_UPCOMING:
+            kudago_created = await _try_kudago_sync(db)
+            await db.commit()
+            upcoming = await get_upcoming_events(db, limit=20)
 
         created = await _insert_demo_events(db)
         await db.commit()
