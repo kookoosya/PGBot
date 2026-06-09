@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
+from app.services.event_sources.kinopskov_source import KinopskovEventSource
 from app.services.event_sources.kudago_source import KudaGoEventSource
 from app.services.event_sources.orbilet_source import OrbiletEventSource
 from app.services.event_sources.proculture_source import ProCultureEventSource
@@ -19,6 +20,7 @@ from app.services.event_enrichment_batch import (
     enrich_missing_posters,
     enrich_stale_events,
     recategorize_other_events,
+    recategorize_planetarium_from_cinema,
 )
 from app.services.event_sources.vk_source import VkEventSource
 
@@ -28,6 +30,7 @@ _SOURCES: dict[str, EventSource] = {
     "vk": VkEventSource(),
     "timepad": TimePadEventSource(),
     "orbilet": OrbiletEventSource(),
+    "kinopskov": KinopskovEventSource(),
     "proculture": ProCultureEventSource(),
     "kudago": KudaGoEventSource(),
 }
@@ -60,11 +63,14 @@ async def sync_event_source(
             errors=[f"Неизвестный источник: {source_name}"],
         )]
     results = await source.sync_events(db, region=region, actor_id=actor_id)
+    planetarium = await recategorize_planetarium_from_cinema(db)
     recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
     removed = await cleanup_duplicate_events(db)
     demos = await unpublish_stale_demo_cinema(db)
+    if planetarium:
+        logger.info("Post-sync planetarium recategorize (%s): %s events", source_name, planetarium)
     if enriched:
         logger.info("Post-sync event enrichment (%s): %s events updated", source_name, enriched)
     if posters:
@@ -83,7 +89,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "timepad", "orbilet", "proculture", "kudago"):
+    for name in ("vk", "timepad", "kinopskov", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue
@@ -109,11 +115,14 @@ async def sync_all_event_sources(
                 skipped=0,
                 errors=[str(exc)],
             ))
+    planetarium = await recategorize_planetarium_from_cinema(db)
     recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
     removed = await cleanup_duplicate_events(db)
     demos = await unpublish_stale_demo_cinema(db)
+    if planetarium:
+        logger.info("Post-sync planetarium recategorize: %s events", planetarium)
     if enriched:
         logger.info("Post-sync event enrichment: %s events updated", enriched)
     if posters:

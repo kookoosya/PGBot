@@ -123,10 +123,10 @@ async def publish_event_to_wall(db: AsyncSession, event: Event) -> bool:
 
 async def publish_relevant_events_to_wall(db: AsyncSession) -> int:
     """Post top unscored events that pass relevance threshold."""
-    if not getattr(settings, "VK_WALL_POST_ENABLED", True):
+    if not getattr(settings, "VK_WALL_POST_ENABLED", False):
         return 0
 
-    max_posts = max(1, min(getattr(settings, "VK_WALL_POST_MAX_PER_RUN", 3), 10))
+    max_posts = max(1, min(getattr(settings, "VK_WALL_POST_MAX_PER_RUN", 1), 10))
     now = datetime.now(timezone.utc)
 
     result = await db.execute(
@@ -138,7 +138,7 @@ async def publish_relevant_events_to_wall(db: AsyncSession) -> int:
     )
     candidates = [
         e for e in result.scalars().all()
-        if is_wall_worthy(e, min_score=getattr(settings, "VK_WALL_POST_MIN_SCORE", 40))
+        if is_wall_worthy(e, min_score=getattr(settings, "VK_WALL_POST_MIN_SCORE", 65))
     ]
     candidates.sort(key=score_event_for_promotion, reverse=True)
 

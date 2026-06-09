@@ -12,6 +12,7 @@ from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
 from app.services.poster_service import (
+    _is_planetarium_event,
     fetch_kinopoisk_poster_for_event,
     is_real_poster_url,
     is_stock_gallery_poster,
@@ -35,6 +36,25 @@ def _needs_enrichment(event: Event) -> bool:
     except ValueError:
         pass
     return False
+
+
+async def recategorize_planetarium_from_cinema(db: AsyncSession, *, limit: int = 200) -> int:
+    """Planetarium full-dome shows are culture, not commercial cinema."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.CINEMA.value,
+        ).limit(limit)
+    )
+    updated = 0
+    for event in result.scalars().all():
+        if _is_planetarium_event(event.title, event.location):
+            event.category = EventCategory.CULTURE.value
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Recategorized %s planetarium events from cinema to culture", updated)
+    return updated
 
 
 async def recategorize_other_events(db: AsyncSession, *, limit: int = 100) -> int:

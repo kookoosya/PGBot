@@ -2725,6 +2725,7 @@
   }
   .afisha-card-poster--cinema {
     aspect-ratio: 2 / 3;
+    max-height: 420px;
   }
   .afisha-card-poster--wide {
     aspect-ratio: 16 / 9;
@@ -2733,8 +2734,30 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center center;
+    object-position: center top;
     display: block;
+  }
+  .afisha-card--cinema-wide {
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 520px) {
+    .afisha-card--cinema-wide {
+      flex-direction: row;
+      align-items: stretch;
+    }
+    .afisha-card--cinema-wide .afisha-card-poster--cinema {
+      width: 38%;
+      max-width: 200px;
+      flex-shrink: 0;
+      max-height: none;
+      aspect-ratio: 2 / 3;
+    }
+    .afisha-card--cinema-wide .afisha-card-body {
+      flex: 1;
+      min-width: 0;
+      padding-top: 0.85rem;
+    }
   }
   .afisha-card-poster--placeholder {
     display: flex;

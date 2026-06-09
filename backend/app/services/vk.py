@@ -105,8 +105,12 @@ def get_welcome_keyboard() -> dict:
         "inline": False,
         "buttons": [
             [
-                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "🎬 Афиша"}, "color": "positive"},
                 {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
             ],
             [
                 {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
@@ -130,10 +134,9 @@ def get_welcome_keyboard() -> dict:
             ],
             [
                 {"action": {"type": "text", "label": "🔕 Отписаться"}, "color": "secondary"},
-                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
             ],
             [
-                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
                 {"action": {"type": "text", "label": "📋 Мои обращения"}, "color": "default"},
             ],
             [

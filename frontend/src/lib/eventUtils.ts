@@ -29,6 +29,7 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   kudago: "KudaGo",
   timepad: "TimePad",
   orbilet: "Orbilet",
+  kinopskov: "Kinopskov60",
   proculture: "PRO.Культура",
   manual: "Организатор",
 };

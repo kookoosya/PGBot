@@ -34,6 +34,8 @@ VK_AD_KEYWORDS = (
 def infer_category_from_text(text: str) -> EventCategory:
     """Guess event category from post text keywords."""
     lower = text.lower()
+    if "планетар" in lower:
+        return EventCategory.CULTURE
     for category, keywords in EVENT_CATEGORY_KEYWORDS.items():
         if any(keyword in lower for keyword in keywords):
             try:

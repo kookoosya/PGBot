@@ -46,9 +46,9 @@ class Settings(BaseSettings):
     VK_GROUP_ID: str = ""
     VK_ADMIN_PEER_ID: str = ""
     # Auto-post relevant events to community wall after sync
-    VK_WALL_POST_ENABLED: bool = True
-    VK_WALL_POST_MAX_PER_RUN: int = 3
-    VK_WALL_POST_MIN_SCORE: int = 40
+    VK_WALL_POST_ENABLED: bool = False
+    VK_WALL_POST_MAX_PER_RUN: int = 1
+    VK_WALL_POST_MIN_SCORE: int = 65
     PUBLIC_SITE_URL: str = "https://pushkinskie-gory.ru"
 
     # Telegram
