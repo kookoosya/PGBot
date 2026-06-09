@@ -92,3 +92,21 @@ class IssueListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class IssueStatusEventResponse(BaseModel):
+    status: str
+    label: str
+    at: str
+    previous_status: str | None = None
+
+
+class IssueMyResponse(IssueResponse):
+    status_timeline: list[IssueStatusEventResponse] = []
+
+
+class IssueMyListResponse(BaseModel):
+    items: list[IssueMyResponse]
+    total: int
+    page: int
+    page_size: int
