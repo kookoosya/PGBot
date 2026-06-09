@@ -94,11 +94,11 @@ def build_limit_reached_reply(limit: int, *, is_paid: bool = False, plan_name: s
     if payment["card_number"]:
         return (
             f"🪶 Бесплатный лимит исчерпан — {limit} сообщений на сегодня.\n\n"
-            f"Для постоянной работы с GPT Pro (учёба, код, тексты) — оплата {pro_price} ₽/мес "
-            "переводом на карту. После перевода напишите администратору — доступ включится вручную.\n\n"
+            f"Постоянный доступ — тариф «ИИ Pro» {pro_price} ₽/мес переводом на карту. "
+            "Работает через наш сервер и прокси из России, без зарубежных подписок.\n\n"
             f"💳 {payment['card_number']}\n"
             f"👤 {payment['card_holder']}\n"
-            f"💰 {pro_price} ₽ · GPT Pro\n\n"
+            f"💰 {pro_price} ₽ · ИИ Pro\n\n"
             f"Завтра бесплатные {limit} сообщений снова доступны."
         )
     return (
@@ -132,7 +132,7 @@ async def process_public_chat(
 
     access = await resolve_ai_access(db, user=user, web_identifier=identifier)
     if chat_mode not in access["chat_modes"]:
-        raise AIValidationError("Этот режим доступен только в тарифе GPT Pro")
+        raise AIValidationError("Этот режим доступен в пробном периоде и тарифе ИИ Pro")
 
     used = await get_usage_today(db, identifier)
     limit = access["daily_limit"]
@@ -157,7 +157,13 @@ async def process_public_chat(
         }
 
     system_prompt = build_system_prompt(chat_mode)
-    reply = await chat_with_ai(message, history, model_id=model, system_prompt=system_prompt)
+    reply = await chat_with_ai(
+        message,
+        history,
+        model_id=model,
+        system_prompt=system_prompt,
+        prefer_proxy_providers=access["is_paid"],
+    )
     new_count = await increment_usage(db, identifier, "web")
     return {
         "reply": reply,
@@ -273,11 +279,18 @@ async def chat_with_ai(
     history: list[dict] | None = None,
     model_id: str | None = None,
     system_prompt: str | None = None,
+    *,
+    prefer_proxy_providers: bool = False,
 ) -> str:
-    model_id = model_id or "openai-fast"
+    model_id = model_id or "gemini-flash"
     prompt = system_prompt or CHAT_SYSTEM_PROMPT
 
-    if model_id in ("openai", "openai-fast", "gemini-flash") and is_valid_openai_key(settings.OPENAI_API_KEY):
+    if prefer_proxy_providers and is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+        poll_text = await pollinations_chat(message, history, prompt, model_id)
+        if poll_text:
+            return _maybe_quote(poll_text)
+
+    if model_id in ("openai", "openai-fast") and is_valid_openai_key(settings.OPENAI_API_KEY):
         openai_text = await openai_chat(message, history, prompt, model_id)
         if openai_text:
             return _maybe_quote(openai_text)

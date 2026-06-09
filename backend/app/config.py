@@ -88,6 +88,8 @@ class Settings(BaseSettings):
     AI_PRO_PRICE: int = 299
     AI_PRO_PLUS_PRICE: int = 599
     AI_PRO_PERIOD_DAYS: int = 30
+    AI_TRIAL_DAILY_LIMIT: int = 25
+    AI_TRIAL_PERIOD_DAYS: int = 7
     AI_MAX_MESSAGE_LENGTH: int = 1000
 
     # Outbound proxy for OpenAI/OpenRouter (optional — e.g. EU proxy if API blocked from RU VPS)

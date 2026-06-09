@@ -53,15 +53,53 @@ async def find_active_entitlement(
     return None
 
 
+async def maybe_grant_auto_trial(
+    db: AsyncSession,
+    user: User | None,
+) -> AIEntitlement | None:
+    """One-time trial for logged-in users — no paid API keys needed on their side."""
+    if user is None:
+        return None
+
+    active = await find_active_entitlement(db, user_id=user.id)
+    if active:
+        return active
+
+    prior = await db.execute(
+        select(AIEntitlement).where(AIEntitlement.user_id == user.id).limit(1)
+    )
+    if prior.scalar_one_or_none():
+        return None
+
+    trial = plan_by_id("trial")
+    if not trial:
+        return None
+
+    entitlement = AIEntitlement(
+        user_id=user.id,
+        plan_id=trial.id,
+        expires_at=_now() + timedelta(days=trial.period_days),
+        notes="Авто-пробный период после входа",
+        is_active=True,
+    )
+    db.add(entitlement)
+    await db.flush()
+    return entitlement
+
+
 async def resolve_ai_access(
     db: AsyncSession,
     *,
     user: User | None = None,
     web_identifier: str,
     vk_id: int | None = None,
+    auto_trial: bool = True,
 ) -> dict:
     free_plan = plan_by_id("free")
     assert free_plan is not None
+
+    if auto_trial and user is not None:
+        await maybe_grant_auto_trial(db, user)
 
     entitlement = await find_active_entitlement(
         db,
@@ -166,7 +204,7 @@ def public_plans_payload() -> dict:
     return {
         "plans": plans,
         "notice": (
-            "Бесплатный доступ ограничен. Для постоянной работы с GPT Pro / Pro+ — оплата "
-            "переводом и активация доступа администратором после проверки платежа."
+            "Бесплатно — 10 запросов в день. После входа — 7 дней пробного Pro через наш сервер "
+            "(Gemini/Pollinations, прокси из РФ). Платная подписка — переводом, без зарубежных карт."
         ),
     }

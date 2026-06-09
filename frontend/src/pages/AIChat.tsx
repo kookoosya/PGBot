@@ -28,7 +28,7 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "🪶 Привет! Бесплатно — 10 сообщений или картинок в день. Для постоянной работы с GPT Pro — тарифы во вкладке «Тарифы».",
+        "🪶 Привет! Бесплатно — 10 сообщений или картинок в день. После входа — 7 дней пробного доступа. Постоянный ИИ Pro — через наш сервер и прокси из России, без зарубежных подписок.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -42,7 +42,7 @@ export function AIChat() {
   const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
   const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
-  const [chatModel, setChatModel] = useState("openai-fast");
+  const [chatModel, setChatModel] = useState("gemini-flash");
   const [chatMode, setChatMode] = useState("chat");
   const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -67,7 +67,8 @@ export function AIChat() {
       setChatModels(m.chat_models);
       setImageModels(m.image_models);
       if (m.status) setAiStatus(m.status);
-      const preferred = m.chat_models.find((x) => x.id === "openai-fast")
+      const preferred = m.chat_models.find((x) => x.id === "gemini-flash")
+        || m.chat_models.find((x) => x.id === "gemini")
         || m.chat_models.find((x) => x.fast)
         || m.chat_models[0];
       if (preferred) setChatModel(preferred.id);
@@ -169,15 +170,29 @@ export function AIChat() {
       <div className="ai-limits-info" role="note">
         <strong>Как это работает</strong>
         <p>
-          Бесплатно — <strong>10 сообщений или генераций картинок в день</strong>. Лимиты у провайдера
-          (OpenAI) тоже ограничены — при их исчерпании ответ может быть недоступен.
+          Бесплатно — <strong>10 сообщений или картинок в день</strong>. После{" "}
+          {user ? (
+            <>входа активен тариф «{access?.plan_name ?? "…"}»</>
+          ) : (
+            <>
+              <Link to="/cabinet/login">входа</Link> — 7 дней пробного доступа (25 сообщений/день)
+            </>
+          )}
+          .
         </p>
         <p>
-          Для постоянной работы — <strong>GPT Pro</strong> (учёба, код, тексты) или <strong>Pro+</strong>.
-          Оплата переводом → администратор включает доступ к вашему аккаунту.
+          Платный <strong>ИИ Pro</strong> — умные модели (Gemini, Pollinations) через наш сервер и прокси.
+          Работает из России, без зарубежных API-ключей и подписок. Оплата переводом в рублях.
         </p>
-        {isPaid && access?.expires_at && (
-          <p className="ai-limits-providers">Pro активен до {new Date(access.expires_at).toLocaleDateString("ru-RU")}</p>
+        {access?.plan_id === "trial" && access.expires_at && (
+          <p className="ai-limits-providers">
+            Пробный период до {new Date(access.expires_at).toLocaleDateString("ru-RU")}
+          </p>
+        )}
+        {isPaid && access?.plan_id !== "trial" && access?.expires_at && (
+          <p className="ai-limits-providers">
+            {access.plan_name} активен до {new Date(access.expires_at).toLocaleDateString("ru-RU")}
+          </p>
         )}
       </div>
 
@@ -187,7 +202,7 @@ export function AIChat() {
           <p>
             {isPaid
               ? "Завтра счётчик обновится. Нужен больший объём — напишите администратору."
-              : "Завтра снова будет 10 бесплатных сообщений. Для GPT Pro — вкладка «Тарифы»."}
+              : "Завтра снова будет 10 бесплатных сообщений. Пробный период и ИИ Pro — вкладка «Тарифы»."}
           </p>
         </div>
       )}
@@ -236,7 +251,7 @@ export function AIChat() {
                     ) : paymentInfo?.card_number ? (
                       <>
                         <p className="text-sm m-0 mb-2">
-                          Перевод {plan.price_rub} ₽ с пометкой «GPT {plan.name} · {user.username}»
+                          Перевод {plan.price_rub} ₽ с пометкой «ИИ {plan.name} · {user.username}»
                         </p>
                         <p className="text-sm m-0 font-mono">💳 {paymentInfo.card_number}</p>
                         <p className="text-sm m-0">{paymentInfo.card_holder}</p>

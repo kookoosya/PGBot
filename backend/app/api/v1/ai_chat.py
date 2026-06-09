@@ -69,6 +69,7 @@ async def ai_access(
 ):
     identifier = _web_identifier(request, user)
     access = await resolve_ai_access(db, user=user, web_identifier=identifier)
+    await db.commit()
     used = await get_usage_today(db, identifier)
     limit = access["daily_limit"]
     return AIAccessResponse(

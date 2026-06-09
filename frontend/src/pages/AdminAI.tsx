@@ -64,14 +64,15 @@ export function AdminAI() {
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
-      <PageHeader icon="🤖" title="ИИ — доступ Pro" subtitle="После оплаты переводом" />
+      <PageHeader icon="🤖" title="ИИ — доступ Pro" subtitle="Пробный период и оплата переводом" />
 
       <div className="rounded-lg border bg-card p-4 text-sm space-y-2">
-        <p className="m-0"><strong>Бесплатно:</strong> 10 сообщений/день (настройка AI_FREE_DAILY_LIMIT).</p>
-        <p className="m-0"><strong>Pro:</strong> GPT-4o, режимы учёба/код, 200 сообщений/день.</p>
-        <p className="m-0"><strong>Pro+:</strong> 500 сообщений/день.</p>
+        <p className="m-0"><strong>Бесплатно:</strong> 10 сообщений/день.</p>
+        <p className="m-0"><strong>Пробный:</strong> 7 дней после первого входа, 25 сообщений/день (авто).</p>
+        <p className="m-0"><strong>ИИ Pro:</strong> Gemini/Pollinations через прокси, режимы учёба/код, 200/день.</p>
+        <p className="m-0"><strong>ИИ Pro+:</strong> 500 сообщений/день, приоритет на шлюзе.</p>
         <p className="m-0 text-muted-foreground">
-          Ключ OpenAI — в .env (OPENAI_API_KEY). Если API блокируется с VPS — AI_HTTPS_PROXY в .env (прокси другой страны, не влияет на сайт).
+          Ключи Gemini/Pollinations и AI_HTTPS_PROXY — в .env на VPS. Прокси только для AI-запросов, сайт не затрагивает.
         </p>
       </div>
 
@@ -85,8 +86,8 @@ export function AdminAI() {
               value={form.plan_id}
               onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
             >
-              <option value="pro">GPT Pro</option>
-              <option value="pro_plus">GPT Pro+</option>
+              <option value="pro">ИИ Pro</option>
+              <option value="pro_plus">ИИ Pro+</option>
             </select>
           </label>
           <label className="text-sm">
@@ -120,7 +121,7 @@ export function AdminAI() {
               className="mt-1"
               value={form.payment_reference}
               onChange={(e) => setForm((f) => ({ ...f, payment_reference: e.target.value }))}
-              placeholder="GPT Pro · username"
+              placeholder="ИИ Pro · username"
             />
           </label>
           <label className="text-sm sm:col-span-2">

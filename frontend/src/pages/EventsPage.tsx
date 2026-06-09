@@ -147,9 +147,9 @@ export function EventsPage() {
   const flatLayout = categoryFilter === "cinema" ? "cinema" : "auto";
 
   const sectionCount =
-    (cinemaPskov.length > 0 ? 1 : 0) +
     (pushkinEvents.length > 0 ? 1 : 0) +
-    (pskovOther.length > 0 ? 1 : 0);
+    (pskovOther.length > 0 ? 1 : 0) +
+    (cinemaPskov.length > 0 ? 1 : 0);
 
   return (
     <div className="afisha-page page-section max-w-6xl">
@@ -224,18 +224,6 @@ export function EventsPage() {
         <p className="events-muted">Событий не найдено — попробуйте другой фильтр.</p>
       ) : showSections ? (
         <div className="afisha-sections">
-          {cinemaPskov.length > 0 && (
-            <section className="afisha-section" aria-labelledby="cinema-heading">
-              <div className="afisha-section-head">
-                <h2 id="cinema-heading">🎬 Кино в Пскове</h2>
-                <p className="afisha-section-lead">
-                  Победа, Смена, Мираж Синема, Silver Cinema — только кинотеатры, с постерами и сеансами.
-                </p>
-              </div>
-              <EventsGrid events={cinemaPskov} layout="cinema" />
-            </section>
-          )}
-
           {pushkinEvents.length > 0 && (
             <section className="afisha-section" aria-labelledby="pg-heading">
               <div className="afisha-section-head">
@@ -253,6 +241,18 @@ export function EventsPage() {
                 <p className="afisha-section-lead">Концерты, выставки, театр и городские мероприятия.</p>
               </div>
               <EventsGrid events={pskovOther} layout="default" />
+            </section>
+          )}
+
+          {cinemaPskov.length > 0 && (
+            <section className="afisha-section" aria-labelledby="cinema-heading">
+              <div className="afisha-section-head">
+                <h2 id="cinema-heading">🎬 Кино в Пскове</h2>
+                <p className="afisha-section-lead">
+                  Победа, Смена, Мираж Синема, Silver Cinema — для гостей региона.
+                </p>
+              </div>
+              <EventsGrid events={cinemaPskov} layout="cinema" />
             </section>
           )}
 

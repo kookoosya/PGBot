@@ -46,11 +46,11 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
+      <section className="page-section village-dashboard">
+        <UpcomingEvents />
         <WeatherWidgetDetailed />
         <SeasonalTip />
         <TodayInVillage />
-        <UpcomingEvents />
       </section>
 
       <section className="epic-vk-section">

@@ -14,6 +14,7 @@ interface EventsGridProps {
   events: GridEvent[];
   layout?: EventsGridLayout;
   landing?: boolean;
+  landingCinemaStrip?: boolean;
   emptyMessage?: string;
 }
 
@@ -21,11 +22,16 @@ export function resolveEventsGridClass(
   events: GridEvent[],
   layout: EventsGridLayout = "auto",
   landing = false,
+  landingCinemaStrip = false,
 ): string {
   const cinemaLayout =
     layout === "cinema" ||
     (layout === "auto" && events.length > 0 && events.every(isCinemaEvent));
-  if (cinemaLayout) return "afisha-cinema-grid";
+  if (cinemaLayout) {
+    if (landing && landingCinemaStrip) return "afisha-cinema-grid afisha-cinema-grid--landing-strip";
+    if (landing) return "afisha-cinema-grid afisha-cinema-grid--landing";
+    return "afisha-cinema-grid";
+  }
   return landing ? "afisha-grid afisha-grid--landing" : "afisha-grid";
 }
 
@@ -33,6 +39,7 @@ export function EventsGrid({
   events,
   layout = "auto",
   landing = false,
+  landingCinemaStrip = false,
   emptyMessage,
 }: EventsGridProps) {
   if (!events.length) {
@@ -40,7 +47,7 @@ export function EventsGrid({
   }
 
   return (
-    <div className={resolveEventsGridClass(events, layout, landing)}>
+    <div className={resolveEventsGridClass(events, layout, landing, landingCinemaStrip)}>
       {events.map((event) => (
         <EventCard
           key={event.id}

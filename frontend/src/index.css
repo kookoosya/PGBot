@@ -2255,9 +2255,10 @@
   .village-dashboard {
     display: grid;
     gap: 1.25rem;
+    width: 100%;
   }
   .today-panel {
-    margin: 2rem auto 0;
+    margin: 0;
     padding: 1.75rem;
     border-radius: calc(var(--radius) + 0.25rem);
     border: 1px solid hsl(var(--border));
@@ -2653,7 +2654,12 @@
   }
   .landing-events-preview {
     display: grid;
-    gap: 1.75rem;
+    gap: 1.25rem;
+    width: 100%;
+  }
+  .landing-events-block--cinema {
+    padding-top: 0.25rem;
+    border-top: 1px dashed hsl(var(--border));
   }
   .landing-events-block-head {
     display: flex;
@@ -2873,6 +2879,44 @@
     .afisha-cinema-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+  }
+  .afisha-cinema-grid--landing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  .afisha-cinema-grid--landing .afisha-card-poster--cinema {
+    aspect-ratio: 2 / 3;
+    max-height: 200px;
+  }
+  .afisha-cinema-grid--landing .afisha-card-body {
+    padding: 0.45rem 0.65rem 0.75rem;
+  }
+  .afisha-cinema-grid--landing .afisha-card-title {
+    font-size: 0.9375rem;
+  }
+  .afisha-cinema-grid--landing-strip {
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x mandatory;
+    margin-top: 0.5rem;
+  }
+  .afisha-cinema-grid--landing-strip .afisha-card {
+    flex: 0 0 min(42vw, 150px);
+    scroll-snap-align: start;
+  }
+  .afisha-cinema-grid--landing-strip .afisha-card-poster--cinema {
+    aspect-ratio: 2 / 3;
+    max-height: 190px;
+  }
+  .afisha-cinema-grid--landing-strip .afisha-card-desc,
+  .afisha-cinema-grid--landing-strip .afisha-card-sessions {
+    display: none;
+  }
+  .afisha-grid--landing .afisha-card--compact .afisha-card-desc {
+    display: none;
   }
   .afisha-card {
     display: flex;

@@ -150,10 +150,29 @@ async def get_upcoming_events(
         if not mix_categories:
             return grouped[:safe_limit]
 
-        cinema_cap = max(2, safe_limit // 2)
-        cinema = [e for e in grouped if e.category == EventCategory.CINEMA.value][:cinema_cap]
-        others = [e for e in grouped if e.category != EventCategory.CINEMA.value][: safe_limit - len(cinema)]
-        mixed = sorted(cinema + others, key=lambda e: e.starts_at)
+        pushkin_cap = max(4, safe_limit - 2)
+        cinema_cap = 2
+        pushkin = [
+            e for e in grouped if e.region == EventRegion.PUSHKIN_GORY.value
+        ][:pushkin_cap]
+        used_ids = {e.id for e in pushkin}
+        cinema = [
+            e
+            for e in grouped
+            if e.category == EventCategory.CINEMA.value
+            and e.region == EventRegion.PSKOV.value
+            and e.id not in used_ids
+        ][:cinema_cap]
+        used_ids.update(e.id for e in cinema)
+        pskov_other = [
+            e
+            for e in grouped
+            if e.region == EventRegion.PSKOV.value
+            and e.category != EventCategory.CINEMA.value
+            and e.id not in used_ids
+        ][: max(0, safe_limit - len(pushkin) - len(cinema))]
+        # Пушкинские Горы — первыми, кино Пскова — в конце подборки
+        mixed = pushkin + pskov_other + cinema
         return mixed[:safe_limit]
     except Exception:
         logger.exception("Failed to load upcoming events")
