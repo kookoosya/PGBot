@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.deps import get_client_ip, require_owner
 from app.core.rate_limit import limiter
 from app.database import get_db
@@ -14,6 +15,7 @@ from app.models.user import User
 from app.schemas.visits import DailyVisitStat, PageStat, VisitStatsResponse, VisitTrackRequest
 
 router = APIRouter()
+settings = get_settings()
 
 PAGE_LABELS = {
     "/": "Главная",
@@ -37,7 +39,7 @@ def _visitor_key(ip: str, user_agent: str | None) -> str:
 
 
 @router.post("/track", status_code=204)
-@limiter.limit("120/minute")
+@limiter.limit(settings.RATE_LIMIT)
 async def track_visit(
     data: VisitTrackRequest,
     request: Request,

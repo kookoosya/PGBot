@@ -16,15 +16,17 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/narodny_kontrol"
     DATABASE_URL_SYNC: str = "postgresql://postgres:postgres@postgres:5432/narodny_kontrol"
 
+    # Redis (rate limiting, shared counters across workers)
+    REDIS_URL: str = "redis://redis:6379/0"
+    REDIS_SOCKET_TIMEOUT: float = 2.0
+
     # JWT
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14
-    REFRESH_RATE_LIMIT: str = "30/minute"
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 30
-    LOGIN_RATE_LIMIT: str = "10/minute"
 
     # Owner-only admin panel (comma-separated logins; empty = SUPER_ADMIN_USERNAME)
     OWNER_USERNAME: str = ""
@@ -57,8 +59,13 @@ class Settings(BaseSettings):
         "https://192-210-213-135.sslip.io"
     )
 
-    # Rate limiting
+    # Rate limiting (SlowAPI + Redis storage when REDIS_URL is set)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_STORAGE: str = "auto"  # auto | redis | memory
+    RATE_LIMIT_KEY_PREFIX: str = "pgbot:rl:"
     RATE_LIMIT: str = "120/minute"
+    LOGIN_RATE_LIMIT: str = "10/minute"
+    REFRESH_RATE_LIMIT: str = "30/minute"
     ISSUE_RATE_LIMIT: str = "6/hour"
     CLASSIFIED_RATE_LIMIT: str = "12/hour"
     AI_CHAT_RATE_LIMIT: str = "40/hour"
@@ -66,6 +73,12 @@ class Settings(BaseSettings):
     BOOKING_RATE_LIMIT: str = "8/hour"
     FEEDBACK_RATE_LIMIT: str = "8/hour"
     VK_CALLBACK_RATE_LIMIT: str = "120/minute"
+    REGISTER_RATE_LIMIT: str = "5/hour"
+    VERIFICATION_RATE_LIMIT: str = "5/hour"
+    PLACE_REPORT_RATE_LIMIT: str = "20/hour"
+    PLACE_COMPLAINT_RATE_LIMIT: str = "10/hour"
+    CLASSIFIED_VIEW_RATE_LIMIT: str = "60/minute"
+    HEALTH_RATE_LIMIT: str = "30/minute"
 
     # Duplicate threshold
     DUPLICATE_THRESHOLD: float = 0.80
@@ -106,6 +119,20 @@ class Settings(BaseSettings):
     def owner_usernames(self) -> set[str]:
         raw = self.OWNER_USERNAME.strip() or self.SUPER_ADMIN_USERNAME
         return {u.strip() for u in raw.split(",") if u.strip()}
+
+    @property
+    def rate_limit_storage_uri(self) -> str | None:
+        """Resolve SlowAPI storage URI from settings."""
+        mode = self.RATE_LIMIT_STORAGE.strip().lower()
+        if mode == "memory":
+            return None
+        if mode == "redis":
+            if not self.REDIS_URL:
+                raise RuntimeError("RATE_LIMIT_STORAGE=redis requires REDIS_URL")
+            return self.REDIS_URL
+        if self.REDIS_URL:
+            return self.REDIS_URL
+        return None
 
 
 @lru_cache

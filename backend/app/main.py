@@ -42,7 +42,7 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")
-@limiter.limit("30/minute")
+@limiter.limit(settings.HEALTH_RATE_LIMIT)
 async def health(request: Request):
     return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
 

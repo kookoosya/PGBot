@@ -3,6 +3,17 @@
 from __future__ import annotations
 
 import os
+
+# Configure test environment before importing the FastAPI app (limiter storage is resolved at import).
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only")
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("RATE_LIMIT_STORAGE", "memory")
+os.environ.setdefault("REDIS_URL", "")
+os.environ.setdefault("LOGIN_RATE_LIMIT", "1000/second")
+os.environ.setdefault("ISSUE_RATE_LIMIT", "1000/second")
+os.environ.setdefault("CLASSIFIED_RATE_LIMIT", "1000/second")
+os.environ.setdefault("RATE_LIMIT", "1000/second")
+
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
@@ -47,6 +58,8 @@ def test_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SECRET_KEY", "test-secret-key-for-pytest-only")
     monkeypatch.setenv("DEBUG", "true")
     monkeypatch.setenv("DATABASE_URL", DATABASE_URL)
+    monkeypatch.setenv("RATE_LIMIT_STORAGE", "memory")
+    monkeypatch.setenv("REDIS_URL", "")
     monkeypatch.setenv("LOGIN_RATE_LIMIT", "1000/second")
     monkeypatch.setenv("ISSUE_RATE_LIMIT", "1000/second")
     monkeypatch.setenv("CLASSIFIED_RATE_LIMIT", "1000/second")
