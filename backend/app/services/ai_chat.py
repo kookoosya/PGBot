@@ -16,9 +16,12 @@ from app.services.ai_status import (
     is_valid_openrouter_key,
     is_valid_pollinations_key,
 )
+from app.utils.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+AI_CAPABILITIES: list[str] = []
 
 PUSHKIN_QUOTES = [
     "«Ученье — свет, а неученье — тьма.»",
@@ -50,6 +53,108 @@ def make_identifier(ip: str | None, user_agent: str | None, vk_id: int | None = 
         return f"vk:{vk_id}"
     raw = f"{ip or 'unknown'}:{user_agent or 'unknown'}"
     return f"web:{hashlib.sha256(raw.encode()).hexdigest()[:32]}"
+
+
+class AIValidationError(ServiceError):
+    def __init__(self, detail: str, *, status_code: int = 400) -> None:
+        super().__init__(detail, status_code=status_code)
+
+
+class AILimitError(ServiceError):
+    def __init__(self, detail: str = "Дневной лимит ИИ исчерпан") -> None:
+        super().__init__(detail, status_code=429)
+
+
+def get_daily_limit(source: str = "web") -> int:
+    """Return daily AI message limit for the given source."""
+    return settings.AI_VK_DAILY_LIMIT if source == "vk" else settings.AI_FREE_DAILY_LIMIT
+
+
+def build_limit_reached_reply(limit: int) -> str:
+    """Compose a friendly message when the daily AI limit is reached."""
+    payment = get_payment_info()
+    if payment["card_number"]:
+        return (
+            f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
+            f"ИИ-помощник работает за счёт добровольных пожертвований.\n\n"
+            f"💳 Перевод: {payment['card_number']}\n"
+            f"Получатель: {payment['card_holder']}\n"
+            f"Сумма: от {payment['amount_suggested']} ₽\n\n"
+            f"Завтра лимит обновится!"
+        )
+    return (
+        f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
+        f"{payment['message']}\n\n"
+        f"Завтра лимит обновится!"
+    )
+
+
+async def process_public_chat(
+    db: AsyncSession,
+    *,
+    message: str,
+    history: list[dict],
+    model_id: str | None,
+    identifier: str,
+) -> dict:
+    """Run a public AI chat turn with usage tracking and limit handling."""
+    if len(message) > settings.AI_MAX_MESSAGE_LENGTH:
+        raise AIValidationError("Сообщение слишком длинное")
+
+    used = await get_usage_today(db, identifier)
+    limit = get_daily_limit()
+    model = model_id or settings.GEMINI_MODEL
+
+    if used >= limit:
+        payment = get_payment_info()
+        return {
+            "reply": build_limit_reached_reply(limit),
+            "remaining": 0,
+            "daily_limit": limit,
+            "limit_reached": True,
+            "payment_info": payment,
+            "model": model,
+        }
+
+    reply = await chat_with_ai(message, history, model_id=model)
+    new_count = await increment_usage(db, identifier, "web")
+    return {
+        "reply": reply,
+        "remaining": max(0, limit - new_count),
+        "daily_limit": limit,
+        "limit_reached": False,
+        "model": model,
+    }
+
+
+async def process_image_generation(
+    db: AsyncSession,
+    *,
+    prompt: str,
+    model: str,
+    width: int,
+    height: int,
+    identifier: str,
+) -> dict:
+    """Generate an image if within daily usage limits."""
+    from app.services.ai_media import generate_image
+
+    used = await get_usage_today(db, identifier)
+    limit = get_daily_limit()
+    if used >= limit:
+        raise AILimitError()
+
+    result = await generate_image(prompt, model, width, height)
+    if result.get("error"):
+        return {
+            "url": None,
+            "model": model,
+            "prompt": prompt,
+            "error": result["error"],
+        }
+
+    await increment_usage(db, identifier, "web")
+    return result
 
 
 async def get_usage_today(db: AsyncSession, identifier: str) -> int:

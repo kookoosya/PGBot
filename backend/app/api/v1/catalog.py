@@ -1,13 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import require_owner
+from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
-from app.models.catalog_item import CatalogItem
-from app.models.enums import CATALOG_CATEGORY_LABELS, CatalogCategory, CatalogSource
+from app.models.enums import CatalogCategory
 from app.models.user import User
 from app.schemas.catalog import (
     CatalogItemAdminResponse,
@@ -15,41 +14,23 @@ from app.schemas.catalog import (
     CatalogItemResponse,
     CatalogItemUpdate,
 )
+from app.services.catalog_service import (
+    CatalogNotFoundError,
+    catalog_item_to_response,
+    create_catalog_item,
+    delete_catalog_item,
+    list_admin_items,
+    list_catalog_category_options,
+    search_public_items,
+    update_catalog_item,
+)
 
 router = APIRouter()
 
 
-def _item_response(item: CatalogItem, *, admin: bool = False) -> dict:
-    base = {
-        "id": item.id,
-        "name": item.name,
-        "category": item.category,
-        "category_label": CATALOG_CATEGORY_LABELS.get(item.category, item.category),
-        "description": item.description,
-        "phone": item.phone,
-        "external_url": item.external_url,
-        "price_hint": item.price_hint,
-        "address": item.address,
-        "source": item.source,
-        "is_internal": item.is_internal,
-        "sort_order": item.sort_order,
-    }
-    if admin:
-        base.update({
-            "is_active": item.is_active,
-            "seed_key": item.seed_key,
-            "created_at": item.created_at,
-        })
-    return base
-
-
 @router.get("/categories")
 async def list_catalog_categories():
-    return [
-        {"value": c.value, "label": CATALOG_CATEGORY_LABELS[c]}
-        for c in CatalogCategory
-        if c not in (CatalogCategory.AVITO,)
-    ]
+    return list_catalog_category_options()
 
 
 @router.get("/items", response_model=list[CatalogItemResponse])
@@ -57,37 +38,18 @@ async def list_public_items(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: CatalogCategory | None = None,
 ):
-    query = (
-        select(CatalogItem)
-        .where(
-            CatalogItem.is_active.is_(True),
-            CatalogItem.is_internal.is_(False),
-            CatalogItem.source != CatalogSource.AVITO,
-            CatalogItem.category != CatalogCategory.AVITO,
-        )
-        .order_by(CatalogItem.sort_order, CatalogItem.name)
-    )
-    if category:
-        query = query.where(CatalogItem.category == category)
-    result = await db.execute(query)
-    return [_item_response(i) for i in result.scalars().all()]
+    items = await search_public_items(db, category=category)
+    return [catalog_item_to_response(item) for item in items]
 
 
 @router.get("/admin/items", response_model=list[CatalogItemAdminResponse])
-async def list_admin_items(
+async def list_admin_items_endpoint(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
     internal_only: bool = Query(False),
 ):
-    query = select(CatalogItem).order_by(
-        CatalogItem.is_internal.desc(),
-        CatalogItem.sort_order,
-        CatalogItem.name,
-    )
-    if internal_only:
-        query = query.where(CatalogItem.is_internal.is_(True))
-    result = await db.execute(query)
-    return [_item_response(i, admin=True) for i in result.scalars().all()]
+    items = await list_admin_items(db, internal_only=internal_only)
+    return [catalog_item_to_response(item, admin=True) for item in items]
 
 
 @router.post("/admin/items", response_model=CatalogItemAdminResponse, status_code=201)
@@ -96,23 +58,8 @@ async def create_admin_item(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
 ):
-    item = CatalogItem(
-        name=data.name,
-        category=data.category,
-        description=data.description,
-        phone=data.phone,
-        external_url=data.external_url,
-        price_hint=data.price_hint,
-        address=data.address,
-        source=CatalogSource.INTERNAL,
-        is_internal=data.is_internal,
-        is_active=True,
-        sort_order=data.sort_order,
-    )
-    db.add(item)
-    await db.flush()
-    await db.refresh(item)
-    return _item_response(item, admin=True)
+    item = await create_catalog_item(db, data)
+    return catalog_item_to_response(item, admin=True)
 
 
 @router.patch("/admin/items/{item_id}", response_model=CatalogItemAdminResponse)
@@ -122,15 +69,11 @@ async def update_admin_item(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(select(CatalogItem).where(CatalogItem.id == item_id))
-    item = result.scalar_one_or_none()
-    if not item:
-        raise HTTPException(404, "Запись не найдена")
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(item, field, value)
-    await db.flush()
-    await db.refresh(item)
-    return _item_response(item, admin=True)
+    try:
+        item = await update_catalog_item(db, item_id, data)
+    except CatalogNotFoundError as exc:
+        raise_http_for_service_error(exc)
+    return catalog_item_to_response(item, admin=True)
 
 
 @router.delete("/admin/items/{item_id}", status_code=204)
@@ -139,11 +82,7 @@ async def delete_admin_item(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(select(CatalogItem).where(CatalogItem.id == item_id))
-    item = result.scalar_one_or_none()
-    if not item:
-        raise HTTPException(404, "Запись не найдена")
-    if item.seed_key:
-        item.is_active = False
-    else:
-        await db.delete(item)
+    try:
+        await delete_catalog_item(db, item_id)
+    except CatalogNotFoundError as exc:
+        raise_http_for_service_error(exc)

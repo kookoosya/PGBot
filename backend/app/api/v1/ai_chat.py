@@ -1,13 +1,14 @@
 import re
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.core.deps import get_client_ip
 from app.core.rate_limit import limiter
+from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
 from app.schemas.ai import (
     AIStatusResponse,
@@ -19,25 +20,23 @@ from app.schemas.ai import (
     PaymentInfoResponse,
     UsageResponse,
 )
+from app.services.ai_image_store import image_media_type, image_path
+from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS
 from app.services.ai_status import get_ai_status
 from app.services.ai_chat import (
-    chat_with_ai,
+    AIValidationError,
+    AILimitError,
+    get_daily_limit,
     get_payment_info,
     get_usage_today,
-    increment_usage,
     make_identifier,
+    process_image_generation,
+    process_public_chat,
+    AI_CAPABILITIES,
 )
-from app.services.ai_image_store import image_media_type, image_path
-from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
 
 router = APIRouter()
 settings = get_settings()
-
-AI_CAPABILITIES: list[str] = []
-
-
-def _get_limit(source: str = "web") -> int:
-    return settings.AI_VK_DAILY_LIMIT if source == "vk" else settings.AI_FREE_DAILY_LIMIT
 
 
 @router.get("/status", response_model=AIStatusResponse)
@@ -64,7 +63,7 @@ async def payment_info():
 async def get_usage(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     identifier = make_identifier(get_client_ip(request), request.headers.get("User-Agent"))
     used = await get_usage_today(db, identifier)
-    limit = _get_limit()
+    limit = get_daily_limit()
     return UsageResponse(
         used=used,
         remaining=max(0, limit - used),
@@ -80,51 +79,18 @@ async def public_chat(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    if len(data.message) > settings.AI_MAX_MESSAGE_LENGTH:
-        raise HTTPException(status_code=400, detail="Сообщение слишком длинное")
-
     identifier = make_identifier(get_client_ip(request), request.headers.get("User-Agent"))
-    used = await get_usage_today(db, identifier)
-    limit = _get_limit()
-    model_id = data.model or settings.GEMINI_MODEL
-
-    if used >= limit:
-        payment = get_payment_info()
-        if payment["card_number"]:
-            limit_reply = (
-                f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
-                f"ИИ-помощник работает за счёт добровольных пожертвований.\n\n"
-                f"💳 Перевод: {payment['card_number']}\n"
-                f"Получатель: {payment['card_holder']}\n"
-                f"Сумма: от {payment['amount_suggested']} ₽\n\n"
-                f"Завтра лимит обновится!"
-            )
-        else:
-            limit_reply = (
-                f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
-                f"{payment['message']}\n\n"
-                f"Завтра лимит обновится!"
-            )
-        return ChatResponse(
-            reply=limit_reply,
-            remaining=0,
-            daily_limit=limit,
-            limit_reached=True,
-            payment_info=payment,
-            model=model_id,
+    try:
+        result = await process_public_chat(
+            db,
+            message=data.message,
+            history=[{"role": message.role, "content": message.content} for message in data.history],
+            model_id=data.model,
+            identifier=identifier,
         )
-
-    history = [{"role": m.role, "content": m.content} for m in data.history]
-    reply = await chat_with_ai(data.message, history, model_id=model_id)
-    new_count = await increment_usage(db, identifier, "web")
-
-    return ChatResponse(
-        reply=reply,
-        remaining=max(0, limit - new_count),
-        daily_limit=limit,
-        limit_reached=False,
-        model=model_id,
-    )
+    except AIValidationError as exc:
+        raise_http_for_service_error(exc)
+    return ChatResponse(**result)
 
 
 @router.get("/images/{image_id}")
@@ -145,20 +111,15 @@ async def generate_image_endpoint(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     identifier = make_identifier(get_client_ip(request), request.headers.get("User-Agent"))
-    used = await get_usage_today(db, identifier)
-    limit = _get_limit()
-
-    if used >= limit:
-        raise HTTPException(status_code=429, detail="Дневной лимит ИИ исчерпан")
-
-    result = await generate_image(data.prompt, data.model, data.width, data.height)
-    if result.get("error"):
-        return ImageResponse(
-            url=None,
-            model=data.model,
+    try:
+        result = await process_image_generation(
+            db,
             prompt=data.prompt,
-            error=result["error"],
+            model=data.model,
+            width=data.width,
+            height=data.height,
+            identifier=identifier,
         )
-
-    await increment_usage(db, identifier, "web")
+    except AILimitError as exc:
+        raise_http_for_service_error(exc)
     return ImageResponse(**result)
