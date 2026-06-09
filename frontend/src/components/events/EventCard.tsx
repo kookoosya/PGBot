@@ -25,7 +25,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
     "afisha-card",
     "literary-card",
     cinema ? "afisha-card--cinema literary-card--forest" : "literary-card--gold",
-    variant === "cinema" ? "afisha-card--cinema-wide" : "",
+    variant === "cinema" ? "afisha-card--cinema-tile" : "",
     variant === "compact" ? "afisha-card--compact" : "",
   ]
     .filter(Boolean)

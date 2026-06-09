@@ -2701,12 +2701,18 @@
   }
   .afisha-cinema-grid {
     display: grid;
-    gap: 1rem;
+    gap: 1.25rem;
     margin-top: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  @media (min-width: 768px) {
+  @media (min-width: 720px) {
     .afisha-cinema-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .afisha-cinema-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
   .afisha-card {
@@ -2725,7 +2731,7 @@
   }
   .afisha-card-poster--cinema {
     aspect-ratio: 2 / 3;
-    max-height: 420px;
+    background: hsl(220 28% 14%);
   }
   .afisha-card-poster--wide {
     aspect-ratio: 16 / 9;
@@ -2733,31 +2739,24 @@
   .afisha-card-poster img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center top;
     display: block;
   }
-  .afisha-card--cinema-wide {
-    display: flex;
-    flex-direction: column;
+  .afisha-card-poster--wide img {
+    object-fit: cover;
+    object-position: center center;
   }
-  @media (min-width: 520px) {
-    .afisha-card--cinema-wide {
-      flex-direction: row;
-      align-items: stretch;
-    }
-    .afisha-card--cinema-wide .afisha-card-poster--cinema {
-      width: 38%;
-      max-width: 200px;
-      flex-shrink: 0;
-      max-height: none;
-      aspect-ratio: 2 / 3;
-    }
-    .afisha-card--cinema-wide .afisha-card-body {
-      flex: 1;
-      min-width: 0;
-      padding-top: 0.85rem;
-    }
+  .afisha-card-poster--cinema img {
+    object-fit: contain;
+    object-position: center center;
+  }
+  .afisha-card--cinema-tile .afisha-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .afisha-card--cinema-tile .afisha-card-body {
+    padding-top: 0.65rem;
   }
   .afisha-card-poster--placeholder {
     display: flex;
@@ -2892,22 +2891,27 @@
   }
   .afisha-detail-poster--cinema {
     aspect-ratio: 2 / 3;
-    max-height: 520px;
-    max-width: 360px;
+    max-height: none;
+    max-width: 320px;
     margin-left: auto;
     margin-right: auto;
+    background: hsl(220 28% 14%);
   }
   .afisha-detail-poster img {
     width: 100%;
     height: 100%;
-    max-height: 480px;
-    object-fit: cover;
-    object-position: center top;
     display: block;
     background: hsl(var(--muted));
   }
-  .afisha-detail-poster--cinema img {
+  .afisha-detail-poster--wide img,
+  .afisha-detail-poster:not(.afisha-detail-poster--cinema) img {
+    max-height: 480px;
     object-fit: cover;
+    object-position: center center;
+  }
+  .afisha-detail-poster--cinema img {
+    object-fit: contain;
+    object-position: center center;
   }
   .afisha-detail-poster--placeholder {
     display: flex;
