@@ -120,10 +120,10 @@ export function AdminAI() {
       <div className="rounded-lg border bg-card p-4 text-sm space-y-2">
         <p className="m-0"><strong>Гость:</strong> 10 сообщений/день без входа.</p>
         <p className="m-0"><strong>Пробный:</strong> 10/день, 7 дней после входа (авто).</p>
-        <p className="m-0"><strong>ИИ Pro:</strong> 50/день после оплаты.</p>
-        <p className="m-0"><strong>ИИ Pro+:</strong> 100/день после оплаты.</p>
+        <p className="m-0"><strong>ИИ Pro:</strong> платная подписка после оплаты (лимит в .env: AI_PRO_DAILY_LIMIT).</p>
         <p className="m-0 text-muted-foreground">
-          Ключи Gemini крутятся по очереди. Новый ключ — сразу для всех активных подписок, включая старые.
+          Лимиты: гость AI_FREE_DAILY_LIMIT, пробный AI_TRIAL_DAILY_LIMIT, Pro AI_PRO_DAILY_LIMIT — в .env на сервере.
+          Ключи Gemini крутятся по очереди для всех активных подписок.
         </p>
       </div>
 
@@ -220,7 +220,6 @@ export function AdminAI() {
               onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
             >
               <option value="pro">ИИ Pro</option>
-              <option value="pro_plus">ИИ Pro+</option>
             </select>
           </label>
           <label className="text-sm">

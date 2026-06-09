@@ -8,7 +8,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
-PUBLIC_PLAN_IDS = ("trial", "pro", "pro_plus")
+PUBLIC_PLAN_IDS = ("trial", "pro")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,25 +72,7 @@ def build_ai_plans() -> list[AIPlan]:
                 f"До {settings.AI_PRO_DAILY_LIMIT} сообщений в день",
                 "Режимы «Учёба» и «Код»",
                 "Картинки в общем лимите",
-                "Оплата переводом на карту портала",
-            ),
-            chat_modes=("chat", "study", "code"),
-            model_id="gemini",
-            requires_login=True,
-            requires_payment=True,
-        ),
-        AIPlan(
-            id="pro_plus",
-            name="ИИ Pro+",
-            daily_limit=settings.AI_PRO_PLUS_DAILY_LIMIT,
-            price_rub=settings.AI_PRO_PLUS_PRICE,
-            period_days=settings.AI_PRO_PERIOD_DAYS,
-            tagline="Максимальный лимит",
-            features=(
-                f"До {settings.AI_PRO_PLUS_DAILY_LIMIT} сообщений в день",
-                "Все режимы и картинки",
-                "Приоритетная обработка",
-                "Оплата переводом на карту портала",
+                "Оплата картой — доступ сразу после оплаты",
             ),
             chat_modes=("chat", "study", "code"),
             model_id="gemini",

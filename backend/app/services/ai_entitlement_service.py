@@ -213,7 +213,6 @@ def public_plans_payload() -> dict:
         "notice": (
             f"Гостям — {settings.AI_FREE_DAILY_LIMIT} сообщений в день без входа. "
             f"После входа — пробный тариф {settings.AI_TRIAL_DAILY_LIMIT}/день на {settings.AI_TRIAL_PERIOD_DAYS} дней. "
-            f"Дальше — ИИ Pro ({settings.AI_PRO_DAILY_LIMIT}/день) или Pro+ ({settings.AI_PRO_PLUS_DAILY_LIMIT}/день) "
-            "после оплаты переводом."
+            f"Дальше — подписка ИИ Pro ({settings.AI_PRO_DAILY_LIMIT}/день) после оплаты картой."
         ),
     }
