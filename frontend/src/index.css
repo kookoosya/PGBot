@@ -2213,6 +2213,30 @@
     .today-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+    .today-grid--duo {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .today-quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .today-quick-links a {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.8);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .today-quick-links a:hover {
+    background: hsl(var(--forest) / 0.08);
   }
   .today-card {
     display: flex;
@@ -2517,6 +2541,33 @@
     white-space: nowrap;
   }
   .events-all-link:hover {
+    text-decoration: underline;
+  }
+  .landing-events-preview {
+    display: grid;
+    gap: 1.75rem;
+  }
+  .landing-events-block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .landing-events-block-head h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
+  .landing-events-block-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .landing-events-block-link:hover {
     text-decoration: underline;
   }
   .events-panel-head {

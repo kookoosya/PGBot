@@ -123,6 +123,7 @@ async def get_upcoming_events(
     *,
     limit: int = 6,
     region: EventRegion | None = None,
+    mix_categories: bool = False,
 ) -> list[Event]:
     """Return published events that haven't ended yet, nearest first.
 
@@ -145,8 +146,15 @@ async def get_upcoming_events(
             .limit(safe_limit * 3)
         )
         events = dedupe_display_events(list(result.scalars().all()))
-        events = group_events_by_show(events)
-        return events[:safe_limit]
+        grouped = group_events_by_show(events)
+        if not mix_categories:
+            return grouped[:safe_limit]
+
+        cinema_cap = max(2, safe_limit // 2)
+        cinema = [e for e in grouped if e.category == EventCategory.CINEMA.value][:cinema_cap]
+        others = [e for e in grouped if e.category != EventCategory.CINEMA.value][: safe_limit - len(cinema)]
+        mixed = sorted(cinema + others, key=lambda e: e.starts_at)
+        return mixed[:safe_limit]
     except Exception:
         logger.exception("Failed to load upcoming events")
         raise
@@ -216,7 +224,7 @@ async def search_public_events(
 ) -> list[Event]:
     """Return upcoming published events for the public events page."""
     now = datetime.now(timezone.utc)
-    safe_limit = max(1, min(limit, 60))
+    safe_limit = max(1, min(limit, 100 if category == EventCategory.CINEMA else 60))
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),

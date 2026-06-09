@@ -1,45 +1,22 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { EventCard } from "@/components/events/EventCard";
-import { type EventRegion } from "@/lib/api";
+import { EventsGrid } from "@/components/events/EventsGrid";
 import { useToday } from "@/hooks/useToday";
-import { groupEventsByShow } from "@/lib/eventUtils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
-type RegionFilter = "all" | EventRegion;
-
-const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
-  { id: "all", label: "Все" },
-  { id: "pushkin_gory", label: "Пушкинские Горы" },
-  { id: "pskov", label: "Псков" },
-];
+import { groupEventsByShow, isCinemaEvent } from "@/lib/eventUtils";
 
 export function UpcomingEvents() {
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
-  const [searchInput, setSearchInput] = useState("");
-  const apiRegion = regionFilter === "all" ? undefined : regionFilter;
-  const { data, loading } = useToday(apiRegion);
+  const { data, loading } = useToday();
   const events = data?.upcoming_events ?? [];
 
-  const visibleEvents = useMemo(() => {
-    let list = events;
-    if (regionFilter !== "all") {
-      const label = regionFilter === "pskov" ? "Псков" : "Пушкинские Горы";
-      list = list.filter((event) => event.region_label === label);
-    }
-    const q = searchInput.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          (e.description?.toLowerCase().includes(q) ?? false) ||
-          (e.genre?.toLowerCase().includes(q) ?? false) ||
-          e.category_label.toLowerCase().includes(q),
-      );
-    }
-    return groupEventsByShow(list).slice(0, 6);
-  }, [events, regionFilter, searchInput]);
+  const { cinemaPreview, otherPreview } = useMemo(() => {
+    const grouped = groupEventsByShow(events);
+    return {
+      cinemaPreview: grouped.filter(isCinemaEvent).slice(0, 4),
+      otherPreview: grouped.filter((e) => !isCinemaEvent(e)).slice(0, 4),
+    };
+  }, [events]);
+
+  const hasEvents = cinemaPreview.length > 0 || otherPreview.length > 0;
 
   return (
     <section className="events-panel" aria-label="Ближайшие события">
@@ -48,57 +25,41 @@ export function UpcomingEvents() {
           <p className="events-kicker">📅 Афиша региона</p>
           <h2>Ближайшие события</h2>
           <p className="events-lead">
-            Экскурсии и праздники в Пушкинских Горах, кино и концерты в Пскове.
+            Кино в Пскове и события в Пушкинских Горах — краткая подборка. Полное расписание на странице афиши.
           </p>
         </div>
         <Link to="/events" className="events-all-link">Вся афиша →</Link>
       </div>
 
-      <div className="events-toolbar">
-        <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
-          {REGION_FILTERS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
-              onClick={() => setRegionFilter(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div className="events-search-row">
-          <Input
-            placeholder="Поиск…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="events-search-input"
-          />
-          {searchInput && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setSearchInput("")}>
-              Сброс
-            </Button>
-          )}
-        </div>
-      </div>
-
       {loading && !data ? (
         <p className="events-muted">Загружаем афишу…</p>
-      ) : visibleEvents.length === 0 ? (
-        <p className="events-muted">
-          {searchInput
-            ? "Ничего не найдено — попробуйте другой запрос."
-            : "Скоро здесь появятся события — откройте всю афишу."}
-        </p>
+      ) : !hasEvents ? (
+        <p className="events-muted">Скоро здесь появятся события — откройте всю афишу.</p>
       ) : (
-        <div className="afisha-grid afisha-grid--landing">
-          {visibleEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant={event.category === "cinema" ? "cinema" : "compact"}
-            />
-          ))}
+        <div className="landing-events-preview">
+          {cinemaPreview.length > 0 && (
+            <div className="landing-events-block">
+              <div className="landing-events-block-head">
+                <h3>🎬 Кино в Пскове</h3>
+                <Link to="/events?category=cinema" className="landing-events-block-link">
+                  Все сеансы →
+                </Link>
+              </div>
+              <EventsGrid events={cinemaPreview} layout="cinema" landing />
+            </div>
+          )}
+
+          {otherPreview.length > 0 && (
+            <div className="landing-events-block">
+              <div className="landing-events-block-head">
+                <h3>🏛 События региона</h3>
+                <Link to="/events" className="landing-events-block-link">
+                  Вся афиша →
+                </Link>
+              </div>
+              <EventsGrid events={otherPreview} layout="default" landing />
+            </div>
+          )}
         </div>
       )}
     </section>

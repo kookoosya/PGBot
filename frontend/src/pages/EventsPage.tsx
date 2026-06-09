@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { EventCard } from "@/components/events/EventCard";
+import { Link, useSearchParams } from "react-router-dom";
+import { EventsGrid } from "@/components/events/EventsGrid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
@@ -23,7 +23,16 @@ const CATEGORY_TABS: { id: CategoryFilter; label: string; icon: string }[] = [
   { id: "tourism", label: "Туризм", icon: "🧭" },
 ];
 
+function filterByRegion<T extends { region: EventRegion }>(
+  events: T[],
+  region: RegionFilter,
+): T[] {
+  if (region === "all") return events;
+  return events.filter((event) => event.region === region);
+}
+
 export function EventsPage() {
+  const [searchParams] = useSearchParams();
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
@@ -32,13 +41,25 @@ export function EventsPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    const category = searchParams.get("category");
+    if (category && CATEGORY_TABS.some((tab) => tab.id === category)) {
+      setCategoryFilter(category);
+    }
+    const region = searchParams.get("region");
+    if (region && REGION_FILTERS.some((item) => item.id === region)) {
+      setRegionFilter(region as RegionFilter);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     setLoading(true);
+    const limit = categoryFilter === "cinema" ? "80" : "60";
     api
       .getPublicEvents({
         region: regionFilter === "all" ? undefined : regionFilter,
         category: categoryFilter === "all" ? undefined : categoryFilter,
         search: search || undefined,
-        limit: "60",
+        limit,
       })
       .then((r) => setEvents(r.items))
       .catch(console.error)
@@ -47,28 +68,36 @@ export function EventsPage() {
 
   const groupedEvents = useMemo(() => groupEventsByShow(events), [events]);
 
+  const showSections = categoryFilter === "all" && !search;
+
   const cinemaPskov = useMemo(
-    () => groupedEvents.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
-    [groupedEvents],
+    () =>
+      filterByRegion(
+        groupedEvents.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
+        regionFilter,
+      ),
+    [groupedEvents, regionFilter],
   );
 
   const pushkinEvents = useMemo(
-    () => groupedEvents.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
-    [groupedEvents],
+    () =>
+      filterByRegion(
+        groupedEvents.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
+        regionFilter,
+      ),
+    [groupedEvents, regionFilter],
   );
 
   const pskovOther = useMemo(
-    () => groupedEvents.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
-    [groupedEvents],
+    () =>
+      filterByRegion(
+        groupedEvents.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
+        regionFilter,
+      ),
+    [groupedEvents, regionFilter],
   );
 
-  const showSections =
-    categoryFilter === "all" && !search && regionFilter === "all";
-
-  const flatList = useMemo(() => {
-    if (showSections) return [];
-    return groupedEvents;
-  }, [groupedEvents, showSections]);
+  const flatLayout = categoryFilter === "cinema" ? "cinema" : "auto";
 
   return (
     <div className="afisha-page page-section max-w-6xl">
@@ -151,11 +180,7 @@ export function EventsPage() {
                   Победа, Смена, Мираж Синема, Silver Cinema — сеансы с постерами и жанрами.
                 </p>
               </div>
-              <div className="afisha-cinema-grid">
-                {cinemaPskov.map((event) => (
-                  <EventCard key={event.id} event={event} variant="cinema" />
-                ))}
-              </div>
+              <EventsGrid events={cinemaPskov} layout="cinema" />
             </section>
           )}
 
@@ -165,11 +190,7 @@ export function EventsPage() {
                 <h2 id="pg-heading">🏛 Пушкинские Горы</h2>
                 <p className="afisha-section-lead">Музей-заповедник, экскурсии и праздники для туристов и жителей.</p>
               </div>
-              <div className="afisha-grid">
-                {pushkinEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              <EventsGrid events={pushkinEvents} layout="default" />
             </section>
           )}
 
@@ -179,24 +200,12 @@ export function EventsPage() {
                 <h2 id="pskov-heading">🏰 Псков</h2>
                 <p className="afisha-section-lead">Концерты, выставки и городские мероприятия.</p>
               </div>
-              <div className="afisha-grid">
-                {pskovOther.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              <EventsGrid events={pskovOther} layout="default" />
             </section>
           )}
         </div>
       ) : (
-        <div className="afisha-grid">
-          {flatList.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant={isCinemaEvent(event) ? "cinema" : "grid"}
-            />
-          ))}
-        </div>
+        <EventsGrid events={groupedEvents} layout={flatLayout} />
       )}
     </div>
   );
