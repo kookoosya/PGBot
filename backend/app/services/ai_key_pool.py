@@ -30,15 +30,9 @@ def _now() -> datetime:
 
 
 def _parse_env_gemini_keys() -> list[str]:
-    keys: list[str] = []
-    seen: set[str] = set()
-    for raw in (settings.GEMINI_API_KEY, settings.GEMINI_API_KEYS):
-        for part in (raw or "").replace("\n", ",").split(","):
-            key = part.strip()
-            if key and key not in seen and is_valid_gemini_key(key):
-                keys.append(key)
-                seen.add(key)
-    return keys
+    from app.services.ai_status import env_gemini_keys
+
+    return env_gemini_keys()
 
 
 def mask_api_key(key: str) -> str:

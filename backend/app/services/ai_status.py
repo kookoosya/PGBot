@@ -1,7 +1,6 @@
 """Статус AI-провайдеров на сервере."""
 
 from app.config import get_settings
-from app.services.ai_key_pool import _parse_env_gemini_keys
 
 _PLACEHOLDER_MARKERS = ("your-gemini", "your-gemini-api-key", "change-me", "example")
 
