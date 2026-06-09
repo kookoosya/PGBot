@@ -157,22 +157,22 @@ async def _insert_demo_events(db: AsyncSession) -> int:
         existing = await db.execute(select(Event).where(Event.title == item["title"]))
         if existing.scalar_one_or_none():
             continue
-            await create_event(
-                db,
-                EventCreateInput(
-                    title=item["title"],
-                    description=item["description"],
-                    starts_at=starts_at,
-                    ends_at=ends_at,
-                    location=item["location"],
-                    region=item["region"],
-                    category=item["category"],
-                    genre=item.get("genre"),
-                    source=item.get("source", "manual"),
-                    source_url=item.get("source_url"),
-                    is_published=True,
-                ),
-            )
+        await create_event(
+            db,
+            EventCreateInput(
+                title=item["title"],
+                description=item["description"],
+                starts_at=starts_at,
+                ends_at=ends_at,
+                location=item["location"],
+                region=item["region"],
+                category=item["category"],
+                genre=item.get("genre"),
+                source=item.get("source", "manual"),
+                source_url=item.get("source_url"),
+                is_published=True,
+            ),
+        )
         created += 1
     return created
 

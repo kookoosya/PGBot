@@ -1,10 +1,10 @@
-"""Cinema metadata extraction — genre and teaser descriptions."""
+"""Cinema metadata extraction — genre, title resolution and teaser descriptions."""
 
 from __future__ import annotations
 
 import re
-from typing import Optional
 
+from app.constants.cinema_catalog import FilmMetadata, is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory
 
 _GENRE_RE = re.compile(
@@ -45,6 +45,29 @@ def _normalize_genre(raw: str) -> str:
     return cleaned[0].upper() + cleaned[1:].lower()
 
 
+def resolve_cinema_from_catalog(text: str) -> FilmMetadata | None:
+    return lookup_film(text)
+
+
+def enrich_cinema_title(
+    title: str,
+    description: str | None,
+    *,
+    catalog: FilmMetadata | None = None,
+) -> str:
+    """Replace generic cinema titles with catalog or quoted film names."""
+    catalog = catalog or lookup_film(f"{title} {description or ''}")
+    if catalog and is_generic_cinema_title(title):
+        return catalog.title
+    if catalog and catalog.title.lower() in f"{title} {description or ''}".lower():
+        return catalog.title
+    if not is_generic_cinema_title(title):
+        return title.strip()
+    if catalog:
+        return catalog.title
+    return title.strip()
+
+
 def build_cinema_description(
     *,
     title: str,
@@ -57,13 +80,19 @@ def build_cinema_description(
     if genre:
         parts.append(f"Жанр: {genre}.")
     body = (raw_description or "").strip()
+    if genre:
+        body = re.sub(r"(?i)жанр[:\s]+[^.!\n]+[.!\n]?", "", body).strip()
     if body and not body.lower().startswith("жанр:"):
         teaser = body.split("\n")[0].strip()
         if len(teaser) > 220:
             teaser = teaser[:217].rstrip() + "…"
-        parts.append(teaser)
+        if teaser.lower() != title.lower():
+            parts.append(teaser)
     elif not parts:
-        parts.append(f"Сеанс в {location or 'кинотеатре Пскова'}. Удобно совместить с поездкой из Пушкинских Гор.")
+        parts.append(
+            f"Сеанс «{title}» в {location or 'кинотеатре Пскова'}. "
+            "Удобно совместить с поездкой из Пушкинских Гор."
+        )
     return " ".join(parts)
 
 
@@ -75,17 +104,27 @@ def enrich_cinema_fields(
     genre: str | None = None,
     location: str | None = None,
 ) -> tuple[str | None, str | None]:
-    """Return (genre, enriched_description) for cinema events."""
+    """Return (genre, enriched_description) for cinema events.
+
+    Deprecated: prefer ``event_enrichment_service.enrich_event_fields``.
+    """
     if category != EventCategory.CINEMA:
         if description and len(description.strip()) < 24 and title:
             return genre, f"{title}. {description}".strip()[:2000]
         return genre, description
 
-    resolved_genre = genre or extract_genre(f"{title} {description or ''}")
+    catalog = resolve_cinema_from_catalog(f"{title} {description or ''}")
+    resolved_title = enrich_cinema_title(title, description, catalog=catalog)
+    resolved_genre = genre or (catalog.genre if catalog else None) or extract_genre(
+        f"{resolved_title} {description or ''}"
+    )
+    body = description
+    if catalog and (not body or len(body) < 40):
+        body = catalog.teaser
     enriched = build_cinema_description(
-        title=title,
+        title=resolved_title,
         genre=resolved_genre,
-        raw_description=description,
+        raw_description=body,
         location=location,
     )
     return resolved_genre, enriched

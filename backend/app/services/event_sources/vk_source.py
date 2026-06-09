@@ -11,16 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventRegion
+from app.services.event_enrichment_service import enrich_event_fields
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
-from app.services.cinema_enrichment import enrich_cinema_fields, extract_genre
-from app.services.event_sources.text_utils import (
-    infer_category_from_text,
-    is_relevant_event_post,
-    parse_event_datetime,
-    post_title,
-)
+from app.services.event_sources.text_utils import parse_event_datetime
 from app.services.event_sources.upsert import upsert_fetched_event
+from app.services.event_sources.vk_parsing import is_relevant_vk_event_post, parse_vk_post
 from app.services.vk import vk_api_call
 
 logger = logging.getLogger(__name__)
@@ -59,9 +55,10 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
 
     text = (post.get("text") or "").strip()
     post_date = datetime.fromtimestamp(post.get("date", 0), tz=timezone.utc)
-    starts_at = parse_event_datetime(text, fallback=post_date) or post_date.astimezone(MOSCOW_TZ)
+    parsed_date = parse_event_datetime(text, fallback=post_date)
+    starts_at = parsed_date or post_date.astimezone(MOSCOW_TZ)
 
-    if not is_relevant_event_post(text, parsed_date=parse_event_datetime(text, fallback=post_date)):
+    if not is_relevant_vk_event_post(text, parsed_date=parsed_date):
         return None
     if starts_at < datetime.now(MOSCOW_TZ) - timedelta(days=2):
         return None
@@ -73,14 +70,14 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
                 location = line.replace("📍", "").strip()[:500]
                 break
 
-    category = infer_category_from_text(text)
-    title = post_title(text)
-    genre, description = enrich_cinema_fields(
-        title=title,
-        description=text[:2000],
-        category=category,
-        genre=extract_genre(text),
+    parsed = parse_vk_post(text)
+    title, genre, description = enrich_event_fields(
+        title=parsed.title,
+        description=parsed.body or text[:2000],
+        category=parsed.category,
+        genre=parsed.genre,
         location=location,
+        region=preset.region,
     )
     return FetchedEvent(
         title=title,
@@ -89,7 +86,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
         ends_at=None,
         location=location,
         region=preset.region,
-        category=category,
+        category=parsed.category,
         source="vk",
         source_url=f"https://vk.com/wall-{group_id}_{post_id}",
         genre=genre,

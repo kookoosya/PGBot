@@ -27,6 +27,7 @@ VK_AD_KEYWORDS = (
     "спонсор", "партнёр", "партнер", "купить", "заказать",
     "доставк", "ваканси", "требуется", "набор сотрудник",
     "опрос", "голосован", "репост", "конкурс репост",
+    "выиграй", "приз", "кэшбэк", "кешбэк", "cashback",
 )
 
 
@@ -78,25 +79,6 @@ def post_title(text: str) -> str:
 
 def is_relevant_event_post(text: str, *, parsed_date: datetime | None) -> bool:
     """Filter VK posts: require event signals, drop ads and noise."""
-    lower = text.lower().strip()
-    if len(lower) < 20:
-        return False
-    if any(keyword in lower for keyword in VK_AD_KEYWORDS):
-        return False
+    from app.services.event_sources.vk_parsing import is_relevant_vk_event_post
 
-    has_keyword = any(
-        keyword in lower
-        for keywords in EVENT_CATEGORY_KEYWORDS.values()
-        for keyword in keywords
-    )
-    has_month = any(month in lower for month in _MONTH_NAMES)
-    has_weekday = any(
-        day in lower
-        for day in ("понедельник", "вторник", "сред", "четверг", "пятниц", "суббот", "воскресен")
-    )
-
-    if parsed_date is not None:
-        return True
-    if has_keyword and (has_month or has_weekday or len(lower) >= 50):
-        return True
-    return False
+    return is_relevant_vk_event_post(text, parsed_date=parsed_date)

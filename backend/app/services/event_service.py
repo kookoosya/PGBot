@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
-from app.services.cinema_enrichment import enrich_cinema_fields
+from app.services.event_enrichment_service import enrich_event_fields
 from app.services.datetime_utils import format_event_datetime
 from app.services.service_errors import ServiceError
 
@@ -77,22 +77,23 @@ class EventUpdateInput:
     is_published: Optional[bool] = None
 
 
-def _apply_cinema_enrichment(
+def _apply_event_enrichment(
     *,
     title: str,
     description: Optional[str],
     category: EventCategory,
     genre: Optional[str],
     location: Optional[str],
-) -> tuple[Optional[str], Optional[str]]:
-    g, desc = enrich_cinema_fields(
+    region: EventRegion,
+) -> tuple[str, Optional[str], Optional[str]]:
+    return enrich_event_fields(
         title=title,
         description=description,
         category=category,
         genre=genre,
         location=location,
+        region=region,
     )
-    return g, desc
 
 
 def _validate_event_times(starts_at: datetime, ends_at: Optional[datetime]) -> None:
@@ -207,15 +208,16 @@ async def create_event(
 ) -> Event:
     """Create and persist a new village event."""
     _validate_event_times(data.starts_at, data.ends_at)
-    genre, description = _apply_cinema_enrichment(
+    title, genre, description = _apply_event_enrichment(
         title=data.title.strip(),
         description=(data.description or "").strip() or None,
         category=data.category,
         genre=data.genre,
         location=(data.location or "").strip() or None,
+        region=data.region,
     )
     event = Event(
-        title=data.title.strip(),
+        title=title,
         description=description,
         starts_at=data.starts_at,
         ends_at=data.ends_at,
@@ -267,13 +269,16 @@ async def update_event(
         event.is_published = data.is_published
 
     _validate_event_times(event.starts_at, event.ends_at)
-    genre, description = _apply_cinema_enrichment(
+    region = EventRegion(event.region)
+    title, genre, description = _apply_event_enrichment(
         title=event.title,
         description=event.description,
         category=EventCategory(event.category),
         genre=event.genre,
         location=event.location,
+        region=region,
     )
+    event.title = title
     event.genre = genre
     event.description = description
     await db.flush()

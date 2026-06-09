@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-enrich existing events with genre and cinema descriptions."""
+"""Re-enrich existing events with genre, titles and teaser descriptions."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
-from app.models.enums import EventCategory
+from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
-from app.services.cinema_enrichment import enrich_cinema_fields
+from app.services.event_enrichment_service import enrich_event_fields
 
 
 async def enrich() -> None:
@@ -29,16 +29,23 @@ async def enrich() -> None:
         for event in result.scalars().all():
             try:
                 category = EventCategory(event.category)
+                region = EventRegion(event.region)
             except ValueError:
                 continue
-            genre, description = enrich_cinema_fields(
+            title, genre, description = enrich_event_fields(
                 title=event.title,
                 description=event.description,
                 category=category,
                 genre=event.genre,
                 location=event.location,
+                region=region,
             )
-            if genre != event.genre or description != event.description:
+            if (
+                title != event.title
+                or genre != event.genre
+                or description != event.description
+            ):
+                event.title = title
                 event.genre = genre
                 event.description = description
                 updated += 1
