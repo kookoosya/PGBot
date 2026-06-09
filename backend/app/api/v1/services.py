@@ -67,7 +67,7 @@ async def list_service_types():
 
 
 @router.post("/register", status_code=201)
-@limiter.limit("5/hour")
+@limiter.limit(settings.REGISTER_RATE_LIMIT)
 async def register_provider(
     request: Request,
     data: ProviderRegisterRequest,

@@ -195,7 +195,7 @@ async def reject_ad(
 
 
 @router.get("/{ad_id}")
-@limiter.limit("60/minute")
+@limiter.limit(settings.CLASSIFIED_VIEW_RATE_LIMIT)
 async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         ad = await increment_ad_views(db, ad_id)

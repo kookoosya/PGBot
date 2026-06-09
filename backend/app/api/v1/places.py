@@ -285,7 +285,7 @@ async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)])
 
 
 @router.post("/{place_id}/reviews", response_model=PlaceReviewResponse, status_code=201)
-@limiter.limit("20/hour")
+@limiter.limit(settings.PLACE_REPORT_RATE_LIMIT)
 async def add_review(
     place_id: int,
     request: Request,
@@ -319,7 +319,7 @@ async def add_review(
 
 
 @router.post("/{place_id}/complaints", response_model=PlaceComplaintResponse, status_code=201)
-@limiter.limit("10/hour")
+@limiter.limit(settings.PLACE_COMPLAINT_RATE_LIMIT)
 async def add_complaint(
     place_id: int,
     request: Request,

@@ -190,7 +190,7 @@ async def change_password(
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("5/hour")
+@limiter.limit(settings.REGISTER_RATE_LIMIT)
 async def register(request: Request, data: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
     if data.role != UserRole.RESIDENT:
         raise HTTPException(

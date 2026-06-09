@@ -29,7 +29,7 @@ settings = get_settings()
 
 
 @router.post("/register-organization", response_model=VerificationRequestResponse, status_code=201)
-@limiter.limit("5/hour")
+@limiter.limit(settings.VERIFICATION_RATE_LIMIT)
 async def register_organization(
     request: Request,
     data: OrganizationRegisterRequest,
@@ -102,7 +102,7 @@ async def register_organization(
 
 
 @router.post("/register-official", response_model=VerificationRequestResponse, status_code=201)
-@limiter.limit("5/hour")
+@limiter.limit(settings.VERIFICATION_RATE_LIMIT)
 async def register_official(
     request: Request,
     data: OfficialRegisterRequest,
