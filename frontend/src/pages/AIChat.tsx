@@ -50,6 +50,7 @@ export function AIChat() {
   const [imageProvider, setImageProvider] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const [paymentInfo, setPaymentInfo] = useState<Awaited<ReturnType<typeof api.getPaymentInfo>> | null>(null);
+  const [bankPayment, setBankPayment] = useState<Awaited<ReturnType<typeof api.createBankPaymentOrder>> | null>(null);
   const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
   const [paymentNotice, setPaymentNotice] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,33 @@ export function AIChat() {
   }, [messages]);
 
   useEffect(() => {
+    if (!user || tab !== "plans") return undefined;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const latest = await api.getLatestAIPayment();
+        if (cancelled) return;
+        if (latest?.activated) {
+          setPaymentNotice("Перевод получен — ИИ Pro активирован!");
+          refreshAccess();
+          return;
+        }
+        if (bankPayment || latest) {
+          setPaymentNotice("Ожидаем перевод… Обычно 1–5 минут после оплаты с кодом в комментарии.");
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    void poll();
+    const timer = window.setInterval(poll, 12000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [user?.id, tab, bankPayment?.order_id]);
+
+  useEffect(() => {
     if (searchParams.get("paid") !== "1" || !user) return;
 
     setTab("plans");
@@ -115,7 +143,7 @@ export function AIChat() {
       }
       if (!cancelled) {
         setPaymentNotice(
-          "Если деньги списались, доступ включится в течение минуты. Обновите страницу или напишите администратору.",
+          "Если деньги списались, доступ включится в течение минуты. Обновите страницу.",
         );
       }
     };
@@ -134,6 +162,20 @@ export function AIChat() {
       window.location.href = res.payment_url;
     } catch (e) {
       setPaymentNotice(e instanceof Error ? e.message : "Не удалось создать платёж");
+      setPayingPlanId(null);
+    }
+  };
+
+  const requestBankPayment = async (planId: string) => {
+    setPayingPlanId(planId);
+    setPaymentNotice("");
+    try {
+      const res = await api.createBankPaymentOrder();
+      setBankPayment(res);
+      setPaymentNotice("Переведите точную сумму с кодом в комментарии — Pro включится сам.");
+    } catch (e) {
+      setPaymentNotice(e instanceof Error ? e.message : "Не удалось получить реквизиты");
+    } finally {
       setPayingPlanId(null);
     }
   };
@@ -232,8 +274,8 @@ export function AIChat() {
           .
         </p>
         <p>
-          Подписка <strong>ИИ Pro</strong> — больше запросов в день, оплата картой онлайн,
-          доступ включается автоматически. Перевод на карту — резерв, если онлайн-оплата недоступна.
+          Подписка <strong>ИИ Pro</strong> — перевод на карту или СБП с кодом в комментарии.
+          Доступ включается <strong>автоматически</strong> — вам ничего подтверждать не нужно.
         </p>
         {access?.plan_id === "trial" && access.expires_at && (
           <p className="ai-limits-providers">
@@ -317,7 +359,36 @@ export function AIChat() {
                             : `Оплатить ${plan.price_rub} ₽ картой`}
                         </Button>
                         <p className="text-xs text-muted-foreground mt-2 m-0">
-                          После оплаты доступ включится автоматически — вам не нужно быть у компьютера.
+                          После оплаты доступ включится автоматически.
+                        </p>
+                      </>
+                    ) : paymentInfo?.bank_transfer_available ? (
+                      <>
+                        <Button
+                          type="button"
+                          className="w-full"
+                          disabled={payingPlanId !== null || isPaid}
+                          onClick={() => requestBankPayment(plan.id)}
+                        >
+                          {payingPlanId === plan.id
+                            ? "Готовим реквизиты…"
+                            : `Получить реквизиты · ${plan.price_rub} ₽`}
+                        </Button>
+                        {bankPayment && (
+                          <div className="text-sm space-y-2 mt-3">
+                            <p className="m-0 font-semibold">Код: {bankPayment.payment_code}</p>
+                            <p className="m-0">{bankPayment.instructions}</p>
+                            {bankPayment.phone && (
+                              <p className="m-0">📱 СБП: <span className="font-mono">{bankPayment.phone}</span></p>
+                            )}
+                            {bankPayment.card_number && (
+                              <p className="m-0">💳 Карта: <span className="font-mono">{bankPayment.card_number}</span></p>
+                            )}
+                            <p className="m-0">{bankPayment.card_holder} · {bankPayment.bank_name}</p>
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2 m-0">
+                          После перевода с кодом Pro включится сам — обычно за 1–5 минут.
                         </p>
                       </>
                     ) : paymentInfo?.card_number ? (

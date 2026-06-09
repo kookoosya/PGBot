@@ -17,6 +17,7 @@ from app.schemas.ai import (
     AIStatusResponse,
     AISubscribeRequest,
     AISubscribeResponse,
+    BankPaymentResponse,
     ChatRequest,
     ChatResponse,
     ImageRequest,
@@ -38,6 +39,13 @@ from app.services.ai_chat import (
     make_identifier,
     process_image_generation,
     process_public_chat,
+)
+from app.services.ai_bank_payment_service import (
+    AIPaymentError as BankPaymentError,
+    bank_auto_enabled,
+    bank_payment_payload,
+    create_bank_payment_order,
+    payment_destination_configured,
 )
 from app.services.ai_payment_service import (
     AIPaymentError,
@@ -105,7 +113,23 @@ async def list_models():
 async def payment_info():
     info = get_payment_info()
     info["auto_payment_available"] = yookassa_enabled()
+    info["bank_auto_available"] = bank_auto_enabled()
+    info["bank_transfer_available"] = payment_destination_configured()
     return PaymentInfoResponse(**info)
+
+
+@router.post("/payment/bank-order", response_model=BankPaymentResponse)
+async def create_bank_order(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        order = await create_bank_payment_order(db, user=user, plan_id="pro")
+        await db.commit()
+    except BankPaymentError as exc:
+        raise_http_for_service_error(exc)
+    payload = bank_payment_payload(order, username=user.username)
+    return BankPaymentResponse(**payload)
 
 
 @router.post("/subscribe", response_model=AISubscribeResponse)
@@ -160,6 +184,8 @@ async def ai_payment_status(
         plan_id=order.plan_id,
         entitlement_id=order.entitlement_id,
         activated=order.status == "succeeded",
+        payment_code=getattr(order, "payment_code", None),
+        amount_rub=order.amount_rub,
     )
 
 
@@ -180,6 +206,8 @@ async def ai_payment_latest(
         plan_id=order.plan_id,
         entitlement_id=order.entitlement_id,
         activated=order.status == "succeeded",
+        payment_code=getattr(order, "payment_code", None),
+        amount_rub=order.amount_rub,
     )
 
 

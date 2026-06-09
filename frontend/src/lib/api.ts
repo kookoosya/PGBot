@@ -202,6 +202,10 @@ class ApiClient {
     return this.request<PaymentInfo>("/ai/payment-info");
   }
 
+  createBankPaymentOrder() {
+    return this.request<BankPaymentInfo>("/ai/payment/bank-order", { method: "POST" });
+  }
+
   subscribeAI(planId: string) {
     return this.request<AISubscribeResult>("/ai/subscribe", {
       method: "POST",
@@ -856,11 +860,30 @@ export interface ClassifiedMarketingStats {
 
 export interface PaymentInfo {
   card_number: string;
+  phone?: string;
   card_holder?: string;
   bank_name?: string;
   amount_suggested: number;
   message: string;
   auto_payment_available?: boolean;
+  bank_auto_available?: boolean;
+  bank_transfer_available?: boolean;
+}
+
+export interface BankPaymentInfo {
+  order_id: number;
+  plan_id: string;
+  amount_rub: number;
+  payment_code: string;
+  status: string;
+  card_number: string;
+  phone: string;
+  card_holder: string;
+  bank_name: string;
+  comment: string;
+  instructions: string;
+  auto_enabled: boolean;
+  activated: boolean;
 }
 
 export interface AISubscribeResult {

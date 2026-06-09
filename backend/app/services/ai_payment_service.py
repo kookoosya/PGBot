@@ -134,7 +134,13 @@ async def fetch_yookassa_payment(external_id: str) -> dict | None:
         return None
 
 
-async def _fulfill_order(db: AsyncSession, order: AIPaymentOrder, *, payment_id: str) -> AIPaymentOrder:
+async def fulfill_payment_order(
+    db: AsyncSession,
+    order: AIPaymentOrder,
+    *,
+    reference: str,
+    source: str = "yookassa",
+) -> AIPaymentOrder:
     if order.status == "succeeded" and order.entitlement_id:
         return order
 
@@ -144,15 +150,19 @@ async def _fulfill_order(db: AsyncSession, order: AIPaymentOrder, *, payment_id:
         plan_id=order.plan_id,
         granted_by=owner,
         user_id=order.user_id,
-        payment_reference=f"yookassa:{payment_id}",
+        payment_reference=f"{source}:{reference}",
         payment_amount=order.amount_rub,
-        notes="Автоактивация после оплаты YooKassa",
+        notes=f"Автоактивация после оплаты ({source})",
     )
     order.status = "succeeded"
     order.paid_at = datetime.now(timezone.utc)
     order.entitlement_id = entitlement.id
     await db.flush()
     return order
+
+
+async def _fulfill_order(db: AsyncSession, order: AIPaymentOrder, *, payment_id: str) -> AIPaymentOrder:
+    return await fulfill_payment_order(db, order, reference=payment_id, source="yookassa")
 
 
 async def process_yookassa_webhook(db: AsyncSession, payload: dict) -> bool:

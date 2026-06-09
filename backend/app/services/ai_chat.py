@@ -352,23 +352,24 @@ async def chat_with_ai(
 
 def get_payment_info() -> dict:
     card = (settings.PAYMENT_CARD_NUMBER or "").strip()
-    if card:
+    phone = (settings.PAYMENT_PHONE or "").strip()
+    if card or phone:
         payment_hint = (
-            f"ИИ-помощник работает за счёт добровольных переводов — от {settings.PAYMENT_AMOUNT_SUGGESTED} ₽. "
-            "Объявления, услуги и жалобы на портале бесплатны."
+            f"ИИ Pro — {settings.AI_PRO_PRICE} ₽ переводом на карту или СБП. "
+            "Доступ включается автоматически после перевода с кодом."
         )
     else:
         payment_hint = (
             "ИИ-помощник работает за счёт добровольных пожертвований. "
-            f"Реквизиты уточняйте по {settings.PAYMENT_CONTACT_EMAIL}. "
-            "Объявления, услуги и жалобы на портале бесплатны."
+            f"Реквизиты уточняйте по {settings.PAYMENT_CONTACT_EMAIL}."
         )
     return {
         "card_number": card,
+        "phone": phone,
         "card_holder": settings.PAYMENT_CARD_HOLDER,
         "bank_name": settings.PAYMENT_BANK_NAME,
         "description": settings.PAYMENT_DESCRIPTION,
-        "amount_suggested": settings.PAYMENT_AMOUNT_SUGGESTED,
+        "amount_suggested": settings.AI_PRO_PRICE,
         "contact_email": settings.PAYMENT_CONTACT_EMAIL,
         "message": payment_hint,
     }

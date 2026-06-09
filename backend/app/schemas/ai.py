@@ -98,6 +98,7 @@ class UsageResponse(BaseModel):
 
 class PaymentInfoResponse(BaseModel):
     card_number: str
+    phone: str = ""
     card_holder: str
     bank_name: str
     description: str
@@ -105,6 +106,8 @@ class PaymentInfoResponse(BaseModel):
     contact_email: str
     message: str
     auto_payment_available: bool = False
+    bank_auto_available: bool = False
+    bank_transfer_available: bool = False
 
 
 class ModelsResponse(BaseModel):
@@ -145,4 +148,22 @@ class AIPaymentStatusResponse(BaseModel):
     status: str
     plan_id: str
     entitlement_id: int | None = None
+    activated: bool = False
+    payment_code: str | None = None
+    amount_rub: int | None = None
+
+
+class BankPaymentResponse(BaseModel):
+    order_id: int
+    plan_id: str
+    amount_rub: int
+    payment_code: str
+    status: str
+    card_number: str
+    phone: str
+    card_holder: str
+    bank_name: str
+    comment: str
+    instructions: str
+    auto_enabled: bool = False
     activated: bool = False

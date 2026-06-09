@@ -60,6 +60,17 @@ async def _event_sync_work() -> None:
             logger.info("Event auto-sync: +%s created, %s updated", created, updated)
 
 
+async def _bank_inbox_work() -> None:
+    from app.database import AsyncSessionLocal
+    from app.services.bank_email_watcher import process_bank_inbox
+
+    async with AsyncSessionLocal() as db:
+        activated = await process_bank_inbox(db)
+        await db.commit()
+        if activated:
+            logger.info("Bank inbox activated %s AI Pro subscriptions", activated)
+
+
 def _create_periodic_task(
     name: str,
     interval_seconds: float,
@@ -71,7 +82,7 @@ def _create_periodic_task(
 
 
 def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
-    return [
+    tasks = [
         _create_periodic_task(
             "Map auto-sync",
             settings.MAP_AUTO_SYNC_HOURS * 3600,
@@ -99,6 +110,19 @@ def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
             else []
         ),
     ]
+    if (
+        settings.BANK_IMAP_HOST.strip()
+        and settings.BANK_IMAP_USER.strip()
+        and settings.BANK_IMAP_PASSWORD.strip()
+    ):
+        tasks.append(
+            _create_periodic_task(
+                "Bank inbox",
+                settings.BANK_IMAP_POLL_SECONDS,
+                _bank_inbox_work,
+            )
+        )
+    return tasks
 
 
 async def stop_background_tasks(tasks: list[asyncio.Task]) -> None:

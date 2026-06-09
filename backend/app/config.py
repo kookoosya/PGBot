@@ -99,6 +99,7 @@ class Settings(BaseSettings):
 
     # Payment / support (card transfer)
     PAYMENT_CARD_NUMBER: str = ""
+    PAYMENT_PHONE: str = ""
     PAYMENT_CARD_HOLDER: str = "Портал ПГ"
     PAYMENT_BANK_NAME: str = "Сбербанк"
     PAYMENT_DESCRIPTION: str = "Портал посёлка ПГ"
@@ -109,6 +110,13 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: str = ""
     YOOKASSA_SECRET_KEY: str = ""
     YOOKASSA_RETURN_URL: str = ""
+
+    # Bank email watcher — auto Pro after card/SBP transfer
+    BANK_IMAP_HOST: str = ""
+    BANK_IMAP_USER: str = ""
+    BANK_IMAP_PASSWORD: str = ""
+    BANK_IMAP_FOLDER: str = "INBOX"
+    BANK_IMAP_POLL_SECONDS: int = 90
 
     # Classified ads: 3 free, then 150 ₽ per ad per 30 days
     CLASSIFIED_FREE_LIMIT: int = 3

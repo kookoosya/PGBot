@@ -1,6 +1,7 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.ai_entitlement import AIEntitlement
 from app.models.ai_payment_order import AIPaymentOrder
+from app.models.bank_inbox_message import BankInboxMessage
 from app.models.ai_provider_key import AIProviderKey
 from app.models.ai_usage import AIUsage
 from app.models.place import Place, PlaceComplaint, PlaceReview
@@ -36,6 +37,7 @@ __all__ = [
     "AIEntitlement",
     "AIProviderKey",
     "AIPaymentOrder",
+    "BankInboxMessage",
     "Place",
     "PlaceReview",
     "PlaceComplaint",
