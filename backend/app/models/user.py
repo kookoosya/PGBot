@@ -53,8 +53,10 @@ class User(Base):
     assigned_issues: Mapped[list["Issue"]] = relationship(back_populates="assignee", foreign_keys="Issue.assignee_id")
     comments: Mapped[list["IssueComment"]] = relationship(back_populates="author")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user")
 
 
 from app.models.audit_log import AuditLog  # noqa: E402
 from app.models.department import Department  # noqa: E402
 from app.models.issue import Issue, IssueComment  # noqa: E402
+from app.models.refresh_token import RefreshToken  # noqa: E402

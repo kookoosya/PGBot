@@ -9,6 +9,7 @@ from app.models.notification import Notification
 from app.models.page_visit import PageVisit
 from app.models.place import Place, PlaceComplaint, PlaceReview
 from app.models.provider_busy import ProviderBusyBlock
+from app.models.refresh_token import RefreshToken
 from app.models.service import (
     ProviderSchedule,
     ProviderService,
@@ -50,4 +51,5 @@ __all__ = [
     "VkSubscriber",
     "VkAiSession",
     "VkFlowState",
+    "RefreshToken",
 ]

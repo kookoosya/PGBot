@@ -26,6 +26,11 @@ DATABASE_URL = os.getenv(
 TEST_PASSWORD = "TestPass123!"
 API_PREFIX = "/api/v1"
 
+
+def xhr_headers(**extra: str) -> dict[str, str]:
+    return {"X-Requested-With": "XMLHttpRequest", **extra}
+
+
 ROLES = [
     (UserRole.RESIDENT, "Житель"),
     (UserRole.MODERATOR, "Модератор"),

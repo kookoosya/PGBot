@@ -11,7 +11,7 @@ interface UserAuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -22,40 +22,37 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const clearSession = () => {
-    localStorage.removeItem("user_token");
+    api.setUserToken(null);
     setUser(null);
   };
 
   const refresh = async () => {
-    const token = localStorage.getItem("user_token");
-    if (!token) {
-      setUser(null);
+    const restored = await api.refreshAccessToken("user");
+    if (!restored) {
+      clearSession();
       return;
     }
-    api.setUserToken(token);
     const me = await api.getMe();
     setUser(me);
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("user_token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    api.setUserToken(token);
-    api.getMe()
-      .then(setUser)
+    api.refreshAccessToken("user")
+      .then(async (restored) => {
+        if (!restored) return;
+        const me = await api.getMe();
+        setUser(me);
+      })
       .catch(() => clearSession())
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (username: string, password: string) => {
-    const { access_token } = await api.login(username, password);
-    localStorage.setItem("user_token", access_token);
+    const { access_token } = await api.login(username, password, "user");
     api.setUserToken(access_token);
     const me = await api.getMe();
     if (me.role === "super_admin") {
+      await api.logoutAuth("user");
       clearSession();
       throw new Error("Для владельца сайта — отдельный вход в личную панель");
     }
@@ -63,8 +60,8 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
     return me;
   };
 
-  const logout = () => {
-    api.setUserToken(null);
+  const logout = async () => {
+    await api.logoutAuth("user");
     clearSession();
   };
 

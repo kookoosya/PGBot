@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     # JWT
     SECRET_KEY: str = "change-me-in-production-use-long-random-string"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 4
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 14
+    REFRESH_RATE_LIMIT: str = "30/minute"
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_MINUTES: int = 30
     LOGIN_RATE_LIMIT: str = "10/minute"

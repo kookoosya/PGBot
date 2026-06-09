@@ -1,8 +1,13 @@
 const API_BASE = "/api/v1";
 
+export type AuthScope = "admin" | "user";
+
+type AuthState = { token: string; scope: AuthScope } | null;
+
 class ApiClient {
   private token: string | null = null;
   private userToken: string | null = null;
+  private refreshPromises: Partial<Record<AuthScope, Promise<boolean>>> = {};
 
   setToken(token: string | null) {
     this.token = token;
@@ -12,21 +17,108 @@ class ApiClient {
     this.userToken = token;
   }
 
-  private authHeader(): string | null {
-    return this.token || this.userToken;
+  private authState(): AuthState {
+    if (this.token) return { token: this.token, scope: "admin" };
+    if (this.userToken) return { token: this.userToken, scope: "user" };
+    return null;
   }
 
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const headers: Record<string, string> = {
+  private applyAccessToken(scope: AuthScope, accessToken: string) {
+    if (scope === "admin") {
+      this.token = accessToken;
+    } else {
+      this.userToken = accessToken;
+    }
+  }
+
+  private clearScope(scope: AuthScope) {
+    if (scope === "admin") {
+      this.token = null;
+    } else {
+      this.userToken = null;
+    }
+  }
+
+  private defaultHeaders(extra?: Record<string, string>): Record<string, string> {
+    return {
       "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
+      "X-Requested-With": "XMLHttpRequest",
+      ...(extra ?? {}),
     };
-    const auth = this.authHeader();
+  }
+
+  private isAuthPath(path: string): boolean {
+    return path.startsWith("/auth/login") || path.startsWith("/auth/refresh") || path.startsWith("/auth/logout");
+  }
+
+  async refreshAccessToken(scope: AuthScope): Promise<boolean> {
+    const pending = this.refreshPromises[scope];
+    if (pending) return pending;
+
+    const promise = (async () => {
+      try {
+        const response = await fetch(`${API_BASE}/auth/refresh?client=${scope}`, {
+          method: "POST",
+          credentials: "include",
+          headers: this.defaultHeaders(),
+        });
+        if (!response.ok) {
+          this.clearScope(scope);
+          return false;
+        }
+        const data = (await response.json()) as { access_token: string };
+        this.applyAccessToken(scope, data.access_token);
+        return true;
+      } catch {
+        this.clearScope(scope);
+        return false;
+      }
+    })();
+
+    this.refreshPromises[scope] = promise;
+    try {
+      return await promise;
+    } finally {
+      delete this.refreshPromises[scope];
+    }
+  }
+
+  async logoutAuth(scope: AuthScope): Promise<void> {
+    try {
+      await fetch(`${API_BASE}/auth/logout?client=${scope}`, {
+        method: "POST",
+        credentials: "include",
+        headers: this.defaultHeaders(),
+      });
+    } finally {
+      this.clearScope(scope);
+    }
+  }
+
+  private async request<T>(path: string, options: RequestInit = {}, retried = false): Promise<T> {
+    const headers = this.defaultHeaders(options.headers as Record<string, string> | undefined);
+    const auth = this.authState();
     if (auth) {
-      headers["Authorization"] = `Bearer ${auth}`;
+      headers["Authorization"] = `Bearer ${auth.token}`;
     }
 
-    const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+
+    if (
+      response.status === 401 &&
+      !retried &&
+      auth &&
+      !this.isAuthPath(path)
+    ) {
+      const refreshed = await this.refreshAccessToken(auth.scope);
+      if (refreshed) {
+        return this.request<T>(path, options, true);
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: "Request failed" }));
@@ -37,8 +129,8 @@ class ApiClient {
     return response.json();
   }
 
-  login(username: string, password: string) {
-    return this.request<{ access_token: string }>("/auth/login", {
+  login(username: string, password: string, client: AuthScope = "user") {
+    return this.request<{ access_token: string }>(`/auth/login?client=${client}`, {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });

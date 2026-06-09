@@ -8,7 +8,7 @@ interface AuthContextType {
   isOwner: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -19,23 +19,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const clearSession = () => {
-    localStorage.removeItem("token");
     api.setToken(null);
     setUser(null);
     setIsOwner(false);
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    api.setToken(token);
-    api.getMe()
-      .then(async (me) => {
+    api.refreshAccessToken("admin")
+      .then(async (restored) => {
+        if (!restored) return;
         await api.ownerCheck();
+        const me = await api.getMe();
         setUser(me);
         setIsOwner(true);
       })
@@ -44,8 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    const { access_token } = await api.login(username, password);
-    localStorage.setItem("token", access_token);
+    const { access_token } = await api.login(username, password, "admin");
     api.setToken(access_token);
     try {
       await api.ownerCheck();
@@ -53,12 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(me);
       setIsOwner(true);
     } catch (err) {
+      await api.logoutAuth("admin");
       clearSession();
       throw err instanceof Error ? err : new Error(OWNER_DENIED);
     }
   };
 
-  const logout = () => clearSession();
+  const logout = async () => {
+    await api.logoutAuth("admin");
+    clearSession();
+  };
 
   return (
     <AuthContext.Provider value={{ user, isOwner, loading, login, logout }}>

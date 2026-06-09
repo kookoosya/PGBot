@@ -1,21 +1,36 @@
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
+from app.core.auth_cookies import (
+    AuthClient,
+    assert_refresh_csrf,
+    clear_refresh_cookie,
+    get_refresh_cookie,
+    set_refresh_cookie,
+)
 from app.core.deps import get_client_ip, get_current_user, require_owner
 from app.core.password_policy import validate_password
 from app.core.rate_limit import limiter
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import get_password_hash, verify_password
 from app.database import get_db
 from app.models.enums import UserRole, VerificationStatus
 from app.models.user import Role, User
 from app.schemas.auth import ChangePasswordRequest, LoginRequest, Token, UserCreate, UserResponse
 from app.services.audit import log_action
+from app.services.refresh_tokens import (
+    build_access_token,
+    get_valid_refresh_token,
+    issue_refresh_token,
+    revoke_all_for_user,
+    revoke_refresh_token,
+    rotate_refresh_token,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -37,9 +52,7 @@ async def _record_failed_login(user: User, db: AsyncSession) -> None:
         user.failed_login_attempts = 0
 
 
-@router.post("/login", response_model=Token)
-@limiter.limit(settings.LOGIN_RATE_LIMIT)
-async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)]):
+async def _authenticate_user(request: Request, data: LoginRequest, db: AsyncSession) -> User:
     result = await db.execute(select(User).options(selectinload(User.role)).where(User.username == data.username))
     user = result.scalar_one_or_none()
 
@@ -70,18 +83,82 @@ async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession
     user.failed_login_attempts = 0
     user.locked_until = None
     user.last_login_at = datetime.now(UTC)
+    return user
 
-    pwd_ts = int((user.password_changed_at or user.created_at).timestamp())
-    role_name = user.role.name.value if hasattr(user.role.name, "value") else user.role.name
-    token = create_access_token({"sub": str(user.id), "role": role_name, "pwd": pwd_ts})
-    await log_action(db, "login_success", "user", user.id, user_id=user.id, ip_address=get_client_ip(request))
-    return Token(access_token=token)
+
+@router.post("/login", response_model=Token)
+@limiter.limit(settings.LOGIN_RATE_LIMIT)
+async def login(
+    request: Request,
+    response: Response,
+    data: LoginRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    client: AuthClient = Query(default="user"),
+):
+    user = await _authenticate_user(request, data, db)
+    access_token = build_access_token(user)
+    refresh_token = await issue_refresh_token(db, user, client)
+    set_refresh_cookie(response, client, refresh_token)
+
+    await log_action(
+        db,
+        "login_success",
+        "user",
+        user.id,
+        user_id=user.id,
+        details={"client": client},
+        ip_address=get_client_ip(request),
+    )
+    return Token(access_token=access_token)
+
+
+@router.post("/refresh", response_model=Token)
+@limiter.limit(settings.REFRESH_RATE_LIMIT)
+async def refresh_session(
+    request: Request,
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    client: AuthClient = Query(default="user"),
+):
+    assert_refresh_csrf(request)
+    raw = get_refresh_cookie(request, client)
+    if not raw:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
+
+    row = await get_valid_refresh_token(db, raw, client)
+    if not row or not row.user.is_active:
+        clear_refresh_cookie(response, client)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+    if row.user.locked_until and row.user.locked_until > datetime.now(UTC):
+        clear_refresh_cookie(response, client)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account locked")
+
+    new_raw, user = await rotate_refresh_token(db, row)
+    set_refresh_cookie(response, client, new_raw)
+    return Token(access_token=build_access_token(user))
+
+
+@router.post("/logout")
+async def logout(
+    request: Request,
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    client: AuthClient = Query(default="user"),
+):
+    assert_refresh_csrf(request)
+    raw = get_refresh_cookie(request, client)
+    if raw:
+        await revoke_refresh_token(db, raw, client)
+    clear_refresh_cookie(response, client)
+    return {"message": "Logged out"}
 
 
 @router.post("/change-password")
 async def change_password(
     data: ChangePasswordRequest,
     request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
@@ -96,6 +173,10 @@ async def change_password(
     current_user.password_changed_at = datetime.now(UTC)
     current_user.failed_login_attempts = 0
     current_user.locked_until = None
+    await revoke_all_for_user(db, current_user.id)
+
+    for scope in ("admin", "user"):
+        clear_refresh_cookie(response, scope)  # type: ignore[arg-type]
 
     await log_action(
         db,
