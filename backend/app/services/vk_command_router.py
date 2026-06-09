@@ -253,7 +253,7 @@ async def _process_vk_ai(ctx: VkRouteContext, text: str) -> None:
         return
 
     history = await get_ai_history(ctx.db, ctx.peer_id)
-    reply, _provider = await chat_with_ai(text, history=history)
+    reply, _provider = await chat_with_ai(None, text, history=history)
     await increment_usage(ctx.db, identifier, "vk")
     await append_ai_turn(ctx.db, ctx.peer_id, text, reply)
     remaining = limit - used - 1

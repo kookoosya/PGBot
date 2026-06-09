@@ -1,6 +1,7 @@
 """Статус AI-провайдеров на сервере."""
 
 from app.config import get_settings
+from app.services.ai_key_pool import _parse_env_gemini_keys
 
 _PLACEHOLDER_MARKERS = ("your-gemini", "your-gemini-api-key", "change-me", "example")
 
@@ -60,7 +61,7 @@ def get_ai_status() -> dict:
     poll_img_ok = is_valid_pollinations_image_key(s.POLLINATIONS_API_KEY)
     or_ok = is_valid_openrouter_key(s.OPENROUTER_API_KEY)
     openai_ok = is_valid_openai_key(s.OPENAI_API_KEY)
-    gemini_ok = is_valid_gemini_key(s.GEMINI_API_KEY)
+    gemini_ok = bool(_parse_env_gemini_keys())
 
     if openai_ok:
         chat_provider = "openai"
@@ -95,10 +96,7 @@ def get_ai_status() -> dict:
         message = "ИИ работает (только чат)."
     else:
         ready = False
-        if s.GEMINI_API_KEY.strip() and not gemini_ok:
-            message = "Ключ Gemini на сервере — заглушка. Нужен OPENAI_API_KEY, OPENROUTER_API_KEY или POLLINATIONS_API_KEY."
-        else:
-            message = "ИИ не настроен: нет рабочего API-ключа на сервере."
+        message = "ИИ не настроен: добавьте ключ Gemini в админке (/admin/ai) или POLLINATIONS_API_KEY в .env."
 
     providers = []
     if openai_ok:

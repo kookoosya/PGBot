@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     # Gemini
     GEMINI_API_KEY: str = ""
+    GEMINI_API_KEYS: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
     POLLINATIONS_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
@@ -83,7 +84,7 @@ class Settings(BaseSettings):
     # Public AI chat limits
     AI_FREE_DAILY_LIMIT: int = 10
     AI_VK_DAILY_LIMIT: int = 20
-    AI_TRIAL_DAILY_LIMIT: int = 25
+    AI_TRIAL_DAILY_LIMIT: int = 10
     AI_TRIAL_PERIOD_DAYS: int = 7
     AI_PRO_DAILY_LIMIT: int = 50
     AI_PRO_PLUS_DAILY_LIMIT: int = 100

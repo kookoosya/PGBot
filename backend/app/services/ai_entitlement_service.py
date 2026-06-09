@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.ai_entitlement import AIEntitlement
 from app.models.user import User
-from app.services.ai_plans import build_ai_plans, effective_daily_limit, plan_by_id, plan_to_dict
+from app.services.ai_plans import PUBLIC_PLAN_IDS, build_ai_plans, effective_daily_limit, plan_by_id, plan_to_dict
 
 settings = get_settings()
 
@@ -203,14 +203,17 @@ async def list_entitlements(db: AsyncSession, *, limit: int = 50) -> list[AIEnti
 
 
 def public_plans_payload() -> dict:
-    plans = [plan_to_dict(plan) for plan in build_ai_plans()]
+    plans = [
+        plan_to_dict(plan)
+        for plan in build_ai_plans()
+        if plan.id in PUBLIC_PLAN_IDS
+    ]
     return {
         "plans": plans,
         "notice": (
-            f"Бесплатно — {settings.AI_FREE_DAILY_LIMIT} запросов в день. "
-            f"После входа — {settings.AI_TRIAL_PERIOD_DAYS} дней пробного доступа "
-            f"({settings.AI_TRIAL_DAILY_LIMIT}/день). "
-            f"ИИ Pro — до {settings.AI_PRO_DAILY_LIMIT}, Pro+ — до {settings.AI_PRO_PLUS_DAILY_LIMIT} "
-            "сообщений в сутки. Оплата переводом."
+            f"Гостям — {settings.AI_FREE_DAILY_LIMIT} сообщений в день без входа. "
+            f"После входа — пробный тариф {settings.AI_TRIAL_DAILY_LIMIT}/день на {settings.AI_TRIAL_PERIOD_DAYS} дней. "
+            f"Дальше — ИИ Pro ({settings.AI_PRO_DAILY_LIMIT}/день) или Pro+ ({settings.AI_PRO_PLUS_DAILY_LIMIT}/день) "
+            "после оплаты переводом."
         ),
     }

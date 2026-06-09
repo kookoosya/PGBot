@@ -8,6 +8,8 @@ from app.config import get_settings
 
 settings = get_settings()
 
+PUBLIC_PLAN_IDS = ("trial", "pro", "pro_plus")
+
 
 @dataclass(frozen=True, slots=True)
 class AIPlan:
@@ -28,15 +30,14 @@ def build_ai_plans() -> list[AIPlan]:
     return [
         AIPlan(
             id="free",
-            name="Бесплатно",
+            name="Гость",
             daily_limit=settings.AI_FREE_DAILY_LIMIT,
             price_rub=0,
             period_days=1,
-            tagline="Попробовать ИИ на сайте",
+            tagline="Без регистрации",
             features=(
                 f"{settings.AI_FREE_DAILY_LIMIT} сообщений или картинок в день",
-                "Обычный режим чата",
-                "Без сохранения истории между днями",
+                "Только обычный чат",
             ),
             chat_modes=("chat",),
             model_id="gemini-flash",
@@ -45,15 +46,15 @@ def build_ai_plans() -> list[AIPlan]:
         ),
         AIPlan(
             id="trial",
-            name="Пробный период",
+            name="Пробный",
             daily_limit=settings.AI_TRIAL_DAILY_LIMIT,
             price_rub=0,
             period_days=settings.AI_TRIAL_PERIOD_DAYS,
-            tagline="7 дней после входа в аккаунт",
+            tagline=f"{settings.AI_TRIAL_PERIOD_DAYS} дней после входа",
             features=(
                 f"{settings.AI_TRIAL_DAILY_LIMIT} сообщений в день",
                 "Режимы: чат, учёба, код",
-                "Без оплаты — автоматически после входа",
+                "Без оплаты — включается автоматически",
             ),
             chat_modes=("chat", "study", "code"),
             model_id="gemini",
@@ -66,7 +67,7 @@ def build_ai_plans() -> list[AIPlan]:
             daily_limit=settings.AI_PRO_DAILY_LIMIT,
             price_rub=settings.AI_PRO_PRICE,
             period_days=settings.AI_PRO_PERIOD_DAYS,
-            tagline="Расширенный доступ к ИИ",
+            tagline="Платный доступ",
             features=(
                 f"До {settings.AI_PRO_DAILY_LIMIT} сообщений в день",
                 "Режимы «Учёба» и «Код»",
@@ -84,12 +85,12 @@ def build_ai_plans() -> list[AIPlan]:
             daily_limit=settings.AI_PRO_PLUS_DAILY_LIMIT,
             price_rub=settings.AI_PRO_PLUS_PRICE,
             period_days=settings.AI_PRO_PERIOD_DAYS,
-            tagline="Для активных пользователей",
+            tagline="Максимальный лимит",
             features=(
                 f"До {settings.AI_PRO_PLUS_DAILY_LIMIT} сообщений в день",
                 "Все режимы и картинки",
-                "Приоритетная обработка запросов",
-                "Подходит для ежедневной работы с текстами и кодом",
+                "Приоритетная обработка",
+                "Оплата переводом на карту портала",
             ),
             chat_modes=("chat", "study", "code"),
             model_id="gemini",

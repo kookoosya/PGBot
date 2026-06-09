@@ -3,7 +3,6 @@ import logging
 import random
 from datetime import date
 
-import google.generativeai as genai
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +14,6 @@ from app.services.ai_local import local_chat_reply, should_use_local_fallback
 from app.services.ai_plans import CHAT_MODE_PROMPTS, plan_by_id
 from app.services.ai_providers import openrouter_chat, openai_chat, pollinations_chat, pollinations_text
 from app.services.ai_status import (
-    is_valid_gemini_key,
     is_valid_openai_key,
     is_valid_openrouter_key,
     is_valid_pollinations_key,
@@ -159,12 +157,14 @@ async def process_public_chat(
     gemini_used = await get_gemini_usage_today(db, identifier)
     allow_gemini = gemini_used < settings.AI_GEMINI_DAILY_LIMIT
     reply, provider = await chat_with_ai(
+        db,
         message,
         history,
         model_id=model,
         system_prompt=system_prompt,
         prefer_paid_providers=access["is_paid"],
         allow_gemini=allow_gemini,
+        paid_user=access["is_paid"],
     )
     new_count = await increment_usage(
         db,
@@ -278,33 +278,19 @@ def _ai_unavailable_message() -> str:
 
 
 async def _chat_gemini(
+    db: AsyncSession | None,
     message: str,
     history: list[dict] | None,
     model_id: str | None,
     system_prompt: str,
 ) -> str | None:
-    if not is_valid_gemini_key(settings.GEMINI_API_KEY):
-        return None
-    try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model_name = model_id if model_id and model_id.startswith("gemini") else settings.GEMINI_MODEL
-        model = genai.GenerativeModel(model_name, system_instruction=system_prompt)
+    from app.services.ai_key_pool import chat_with_gemini_pool
 
-        chat_history = []
-        if history:
-            for msg in history[-6:]:
-                role = "user" if msg.get("role") == "user" else "model"
-                chat_history.append({"role": role, "parts": [msg.get("content", "")]})
-
-        chat = model.start_chat(history=chat_history)
-        response = chat.send_message(message)
-        return response.text.strip()
-    except Exception as e:
-        logger.warning("Gemini chat failed: %s", e)
-        return None
+    return await chat_with_gemini_pool(db, message, history, model_id, system_prompt)
 
 
 async def chat_with_ai(
+    db: AsyncSession | None,
     message: str,
     history: list[dict] | None = None,
     model_id: str | None = None,
@@ -312,9 +298,15 @@ async def chat_with_ai(
     *,
     prefer_paid_providers: bool = False,
     allow_gemini: bool = True,
+    paid_user: bool = False,
 ) -> tuple[str, str | None]:
     model_id = model_id or "gemini-flash"
     prompt = system_prompt or CHAT_SYSTEM_PROMPT
+
+    if paid_user and allow_gemini:
+        gemini_text = await _chat_gemini(db, message, history, model_id, prompt)
+        if gemini_text:
+            return _maybe_quote(gemini_text), "gemini"
 
     if prefer_paid_providers and is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
         poll_text = await pollinations_chat(message, history, prompt, model_id)
@@ -341,8 +333,8 @@ async def chat_with_ai(
         if openai_text:
             return _maybe_quote(openai_text), "openai"
 
-    if allow_gemini and model_id not in ("pollinations", "openai-fast", "openai"):
-        gemini_text = await _chat_gemini(message, history, model_id, prompt)
+    if allow_gemini and not paid_user:
+        gemini_text = await _chat_gemini(db, message, history, model_id, prompt)
         if gemini_text:
             return _maybe_quote(gemini_text), "gemini"
 

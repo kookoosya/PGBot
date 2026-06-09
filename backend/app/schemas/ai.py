@@ -56,6 +56,12 @@ class AIEntitlementGrantRequest(BaseModel):
     notes: str | None = Field(default=None, max_length=500)
 
 
+class AIProviderKeyCreateRequest(BaseModel):
+    api_key: str = Field(min_length=20, max_length=512)
+    label: str | None = Field(default=None, max_length=120)
+    priority: int = Field(default=100, ge=1, le=1000)
+
+
 class ImageRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=500)
     model: str = "nano-banana"

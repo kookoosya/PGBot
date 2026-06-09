@@ -1,5 +1,6 @@
 from app.models.ai_analysis import AIAnalysis
 from app.models.ai_entitlement import AIEntitlement
+from app.models.ai_provider_key import AIProviderKey
 from app.models.ai_usage import AIUsage
 from app.models.place import Place, PlaceComplaint, PlaceReview
 from app.models.taxi import TaxiService
@@ -32,6 +33,7 @@ __all__ = [
     "AIAnalysis",
     "AIUsage",
     "AIEntitlement",
+    "AIProviderKey",
     "Place",
     "PlaceReview",
     "PlaceComplaint",

@@ -170,6 +170,29 @@ class ApiClient {
     });
   }
 
+  getAIKeys() {
+    return this.request<{ items: AIProviderKeyRow[] }>("/admin/ai/keys");
+  }
+
+  addAIKey(data: { api_key: string; label?: string; priority?: number }) {
+    return this.request<{ item: AIProviderKeyRow; message: string }>("/admin/ai/keys", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  activateAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}/activate`, { method: "PATCH" });
+  }
+
+  deactivateAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}/deactivate`, { method: "PATCH" });
+  }
+
+  deleteAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}`, { method: "DELETE" });
+  }
+
   // Public AI
   getAIUsage() {
     return this.request<UsageInfo>("/ai/usage");
@@ -757,6 +780,21 @@ export interface AIEntitlementRow {
   payment_amount: number | null;
   notes: string | null;
   is_active: boolean;
+  created_at: string | null;
+}
+
+export interface AIProviderKeyRow {
+  id: number;
+  provider: string;
+  label: string | null;
+  masked_key: string;
+  is_active: boolean;
+  priority: number;
+  use_count: number;
+  error_count: number;
+  last_used_at: string | null;
+  last_error_at: string | null;
+  last_error: string | null;
   created_at: string | null;
 }
 
