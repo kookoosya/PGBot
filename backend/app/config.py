@@ -84,10 +84,10 @@ class Settings(BaseSettings):
     # Public AI chat limits
     AI_FREE_DAILY_LIMIT: int = 10
     AI_VK_DAILY_LIMIT: int = 20
-    AI_TRIAL_DAILY_LIMIT: int = 10
+    AI_TRIAL_DAILY_LIMIT: int = 50
     AI_TRIAL_PERIOD_DAYS: int = 7
-    AI_PRO_DAILY_LIMIT: int = 50
-    AI_MAX_DAILY_LIMIT: int = 50
+    AI_PRO_DAILY_LIMIT: int = 150
+    AI_MAX_DAILY_LIMIT: int = 150
     AI_GEMINI_DAILY_LIMIT: int = 50
     AI_PRO_PRICE: int = 299
     AI_PRO_PERIOD_DAYS: int = 30
