@@ -57,6 +57,18 @@ export function UpcomingEvents() {
             </div>
           )}
 
+          {pushkinPreview.length === 0 && (
+            <div className="landing-events-block">
+              <div className="landing-events-block-head">
+                <h3>🏛 Пушкинские Горы</h3>
+                <Link to="/events?region=pushkin_gory" className="landing-events-block-link">
+                  Все события →
+                </Link>
+              </div>
+              <p className="events-muted m-0">Ближайших событий пока нет — загляните во всю афишу.</p>
+            </div>
+          )}
+
           {cinemaPreview.length > 0 && (
             <div className="landing-events-block landing-events-block--cinema">
               <div className="landing-events-block-head">
@@ -65,7 +77,7 @@ export function UpcomingEvents() {
                   Все сеансы →
                 </Link>
               </div>
-              <EventsGrid events={cinemaPreview} layout="cinema" landing landingCinemaStrip />
+              <EventsGrid events={cinemaPreview} layout="cinema" landing />
             </div>
           )}
         </div>

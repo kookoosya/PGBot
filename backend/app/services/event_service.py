@@ -118,6 +118,43 @@ def _validate_event_times(starts_at: datetime, ends_at: Optional[datetime]) -> N
         raise EventValidationError("Дата окончания не может быть раньше начала")
 
 
+def _upcoming_base_conditions(now: datetime) -> list:
+    return [
+        Event.is_published.is_(True),
+        or_(Event.ends_at.is_(None), Event.ends_at >= now),
+        Event.starts_at >= now - timedelta(days=14),
+    ]
+
+
+async def _load_upcoming_grouped(
+    db: AsyncSession,
+    *,
+    now: datetime,
+    limit: int,
+    region: EventRegion | None = None,
+    category: EventCategory | None = None,
+    exclude_category: EventCategory | None = None,
+) -> list[Event]:
+    """Load deduplicated show groups for one slice of the feed."""
+    conditions = _upcoming_base_conditions(now)
+    if region is not None:
+        conditions.append(Event.region == region.value)
+    if category is not None:
+        conditions.append(Event.category == category.value)
+    if exclude_category is not None:
+        conditions.append(Event.category != exclude_category.value)
+
+    fetch_limit = max(limit * 4, 12)
+    result = await db.execute(
+        select(Event)
+        .where(*conditions)
+        .order_by(Event.starts_at.asc())
+        .limit(fetch_limit)
+    )
+    events = dedupe_display_events(list(result.scalars().all()))
+    return group_events_by_show(events)[:limit]
+
+
 async def get_upcoming_events(
     db: AsyncSession,
     *,
@@ -131,46 +168,44 @@ async def get_upcoming_events(
     """
     now = datetime.now(timezone.utc)
     safe_limit = max(1, min(limit, 20))
-    conditions = [
-        Event.is_published.is_(True),
-        or_(Event.ends_at.is_(None), Event.ends_at >= now),
-        Event.starts_at >= now - timedelta(days=14),
-    ]
-    if region is not None:
-        conditions.append(Event.region == region.value)
     try:
-        result = await db.execute(
-            select(Event)
-            .where(*conditions)
-            .order_by(Event.starts_at.asc())
-            .limit(safe_limit * 3)
-        )
-        events = dedupe_display_events(list(result.scalars().all()))
-        grouped = group_events_by_show(events)
         if not mix_categories:
-            return grouped[:safe_limit]
+            grouped = await _load_upcoming_grouped(
+                db,
+                now=now,
+                limit=safe_limit,
+                region=region,
+            )
+            return grouped
 
         pushkin_cap = max(4, safe_limit - 2)
         cinema_cap = 2
-        pushkin = [
-            e for e in grouped if e.region == EventRegion.PUSHKIN_GORY.value
-        ][:pushkin_cap]
-        used_ids = {e.id for e in pushkin}
-        cinema = [
-            e
-            for e in grouped
-            if e.category == EventCategory.CINEMA.value
-            and e.region == EventRegion.PSKOV.value
-            and e.id not in used_ids
-        ][:cinema_cap]
-        used_ids.update(e.id for e in cinema)
-        pskov_other = [
-            e
-            for e in grouped
-            if e.region == EventRegion.PSKOV.value
-            and e.category != EventCategory.CINEMA.value
-            and e.id not in used_ids
-        ][: max(0, safe_limit - len(pushkin) - len(cinema))]
+        pushkin = await _load_upcoming_grouped(
+            db,
+            now=now,
+            limit=pushkin_cap,
+            region=EventRegion.PUSHKIN_GORY,
+        )
+        cinema = await _load_upcoming_grouped(
+            db,
+            now=now,
+            limit=cinema_cap,
+            region=EventRegion.PSKOV,
+            category=EventCategory.CINEMA,
+        )
+        used_ids = {e.id for e in (*pushkin, *cinema)}
+        pskov_other_cap = max(0, safe_limit - len(pushkin) - len(cinema))
+        pskov_other: list[Event] = []
+        if pskov_other_cap:
+            pskov_other = await _load_upcoming_grouped(
+                db,
+                now=now,
+                limit=pskov_other_cap,
+                region=EventRegion.PSKOV,
+                exclude_category=EventCategory.CINEMA,
+            )
+            pskov_other = [e for e in pskov_other if e.id not in used_ids]
+
         # Пушкинские Горы — первыми, кино Пскова — в конце подборки
         mixed = pushkin + pskov_other + cinema
         return mixed[:safe_limit]

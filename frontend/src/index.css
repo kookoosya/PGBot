@@ -2253,9 +2253,21 @@
 
   /* Today in village */
   .village-dashboard {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 1.25rem;
     width: 100%;
+  }
+  .village-dashboard > * {
+    width: 100%;
+    max-width: none;
+  }
+  .village-dashboard .weather-panel {
+    margin: 0;
+  }
+  .village-dashboard .seasonal-tip {
+    width: 100%;
+    margin: 0;
   }
   .today-panel {
     margin: 0;
@@ -2861,7 +2873,7 @@
   }
   @media (min-width: 1100px) {
     .afisha-grid--landing {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
   .afisha-cinema-grid {
@@ -2882,38 +2894,37 @@
   }
   .afisha-cinema-grid--landing {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: 0.85rem;
     margin-top: 0.5rem;
+    max-width: 36rem;
   }
   .afisha-cinema-grid--landing .afisha-card-poster--cinema {
     aspect-ratio: 2 / 3;
-    max-height: 200px;
+    max-height: 220px;
   }
   .afisha-cinema-grid--landing .afisha-card-body {
-    padding: 0.45rem 0.65rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.85rem;
   }
   .afisha-cinema-grid--landing .afisha-card-title {
     font-size: 0.9375rem;
+    line-height: 1.35;
   }
-  .afisha-cinema-grid--landing-strip {
-    display: flex;
-    gap: 0.65rem;
-    overflow-x: auto;
-    padding-bottom: 0.35rem;
-    scroll-snap-type: x mandatory;
-    margin-top: 0.5rem;
+  .afisha-cinema-grid--landing .afisha-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.8125rem;
   }
-  .afisha-cinema-grid--landing-strip .afisha-card {
-    flex: 0 0 min(42vw, 150px);
-    scroll-snap-align: start;
+  @media (min-width: 768px) {
+    .afisha-grid--landing {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
-  .afisha-cinema-grid--landing-strip .afisha-card-poster--cinema {
-    aspect-ratio: 2 / 3;
-    max-height: 190px;
-  }
-  .afisha-cinema-grid--landing-strip .afisha-card-desc,
-  .afisha-cinema-grid--landing-strip .afisha-card-sessions {
-    display: none;
+  @media (min-width: 1024px) {
+    .afisha-grid--landing {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
   .afisha-grid--landing .afisha-card--compact .afisha-card-desc {
     display: none;
