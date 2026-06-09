@@ -17,12 +17,30 @@ _TITLE_CLEAN_RE = re.compile(
     r"\s*(?:\d{1,2}[:.]\d{2}|3d|2d|imax|4dx|сеанс|билет).*$",
     re.IGNORECASE,
 )
+_QUOTED_TITLE_RE = re.compile(r"[«\"“]([^»\"”]+)[»\"”]")
+_PREFIXES = (
+    "полнокупольная программа",
+    "полнокупольный фильм",
+    "полнокупольный",
+    "киносеанс",
+    "кинопоказ",
+    "премьера",
+    "фильм",
+)
 
 
 def _clean_film_title(title: str) -> str:
     cleaned = (title or "").strip()
+    quoted = _QUOTED_TITLE_RE.search(cleaned)
+    if quoted:
+        return quoted.group(1).strip()[:200]
+    lower = cleaned.lower()
+    for prefix in _PREFIXES:
+        if lower.startswith(prefix):
+            cleaned = cleaned[len(prefix) :].lstrip(" :«\"—-")
+            lower = cleaned.lower()
     cleaned = _TITLE_CLEAN_RE.sub("", cleaned)
-    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" -–—,.")
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" -–—,.«»\"")
     return cleaned[:200]
 
 

@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
-from app.services.event_enrichment_batch import enrich_stale_events
+from app.services.event_enrichment_batch import enrich_missing_posters, enrich_stale_events
 
 
 async def enrich() -> None:
@@ -22,8 +22,9 @@ async def enrich() -> None:
 
     async with Session() as db:
         updated = await enrich_stale_events(db)
+        posters = await enrich_missing_posters(db, limit=80)
         await db.commit()
-    print(f"Enriched {updated} events")
+    print(f"Enriched {updated} events, posters {posters}")
 
 
 if __name__ == "__main__":
