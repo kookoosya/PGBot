@@ -13,7 +13,7 @@ from app.models.enums import CLASSIFIED_LABELS
 from app.schemas.today import TodayResponse
 from app.services.classified_service import ClassifiedSearchParams, search_classifieds
 from app.services.datetime_utils import format_event_datetime
-from app.services.event_service import event_category_label, get_upcoming_events
+from app.services.event_service import event_category_label, event_region_label, get_upcoming_events
 from app.services.place_service import get_map_stats
 from app.services.weather_service import WeatherFetchError, WeatherSnapshot, get_weather
 
@@ -29,6 +29,7 @@ class TodayEventRow:
     starts_at_label: str
     ends_at_label: str | None
     location: str | None
+    region_label: str
     category_label: str
     description: str | None
     source_url: str | None
@@ -78,6 +79,7 @@ class TodaySnapshot:
                     starts_at_label=event.starts_at_label,
                     ends_at_label=event.ends_at_label,
                     location=event.location,
+                    region_label=event.region_label,
                     category_label=event.category_label,
                     description=event.description,
                     source_url=event.source_url,
@@ -131,7 +133,7 @@ async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
 
     upcoming: list[TodayEventRow] = []
     try:
-        events = await get_upcoming_events(db, limit=5)
+        events = await get_upcoming_events(db, limit=6)
         upcoming = [
             TodayEventRow(
                 id=event.id,
@@ -139,6 +141,7 @@ async def build_today_snapshot(db: AsyncSession) -> TodaySnapshot:
                 starts_at_label=format_event_datetime(event.starts_at),
                 ends_at_label=format_event_datetime(event.ends_at) if event.ends_at else None,
                 location=event.location,
+                region_label=event_region_label(event.region),
                 category_label=event_category_label(event.category),
                 description=event.description,
                 source_url=event.source_url,

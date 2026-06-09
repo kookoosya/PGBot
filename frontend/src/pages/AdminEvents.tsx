@@ -1,7 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { api, EventCreate, EventItem } from "@/lib/api";
+import { api, EventCreate, EventItem, EventRegion } from "@/lib/api";
+
+const REGIONS: { value: EventRegion; label: string }[] = [
+  { value: "pushkin_gory", label: "Пушкинские Горы" },
+  { value: "pskov", label: "Псков" },
+];
 
 const CATEGORIES = [
   { value: "culture", label: "Культура" },
@@ -10,6 +15,7 @@ const CATEGORIES = [
   { value: "education", label: "Образование" },
   { value: "community", label: "Общее" },
   { value: "tourism", label: "Туризм" },
+  { value: "cinema", label: "Кино" },
   { value: "other", label: "Другое" },
 ];
 
@@ -32,11 +38,22 @@ const emptyForm: EventCreate = {
   starts_at: "",
   ends_at: "",
   location: "",
+  region: "pushkin_gory",
   category: "culture",
   source: "manual",
   source_url: "",
   is_published: true,
 };
+
+function formatSyncSummary(results: Awaited<ReturnType<typeof api.syncVkEvents>>): string {
+  return results
+    .map((r) => {
+      const label = r.region === "pskov" ? "Псков" : "Пушкинские Горы";
+      if (r.errors.length) return `${label}: ${r.errors[0]}`;
+      return `${label}: +${r.created} новых, обновлено ${r.updated}`;
+    })
+    .join(" · ");
+}
 
 export function AdminEvents() {
   const [items, setItems] = useState<EventItem[]>([]);
@@ -45,6 +62,7 @@ export function AdminEvents() {
   const [editId, setEditId] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   const load = () => {
     api
@@ -71,6 +89,7 @@ export function AdminEvents() {
       starts_at: event.starts_at,
       ends_at: event.ends_at,
       location: event.location || "",
+      region: event.region,
       category: event.category,
       source: event.source || "manual",
       source_url: event.source_url || "",
@@ -112,19 +131,44 @@ export function AdminEvents() {
     }
   };
 
+  const syncVk = async (region?: EventRegion) => {
+    setSyncing(true);
+    setMsg("");
+    setError("");
+    try {
+      const results = await api.syncVkEvents(region);
+      setMsg(formatSyncSummary(results));
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Синхронизация не удалась");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">События посёлка</h1>
+          <h1 className="text-2xl font-bold">События региона</h1>
           <p className="text-muted-foreground mt-1">
-            Опубликованные события автоматически появляются на главной в блоке «Ближайшие события».
+            Афиша для Пушкинских Гор и Пскова. Опубликованные события появляются на главной в блоке «Ближайшие события».
           </p>
         </div>
-        <Button onClick={() => { resetForm(); setShowForm(true); }}>
-          {showForm && !editId ? "Отмена" : "+ Добавить событие"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={syncing} onClick={() => syncVk()}>
+            {syncing ? "Синхронизация…" : "Синхронизировать из VK"}
+          </Button>
+          <Button onClick={() => { resetForm(); setShowForm(true); }}>
+            {showForm && !editId ? "Отмена" : "+ Добавить событие"}
+          </Button>
+        </div>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        VK: музей-заповедник Пушкина и официальная группа Пскова. Требуется <code>VK_GROUP_TOKEN</code> на сервере.
+        В будущем — KudaGo и Яндекс.Афиша для кино Пскова.
+      </p>
 
       {msg && <p className="text-green-700">{msg}</p>}
       {error && <p className="text-destructive">{error}</p>}
@@ -170,6 +214,18 @@ export function AdminEvents() {
                 />
               </label>
               <label className="grid gap-1">
+                <span className="text-sm font-medium">Регион</span>
+                <select
+                  className="rounded-md border px-3 py-2"
+                  value={form.region || "pushkin_gory"}
+                  onChange={(e) => setForm({ ...form, region: e.target.value as EventRegion })}
+                >
+                  {REGIONS.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1">
                 <span className="text-sm font-medium">Место</span>
                 <input
                   className="rounded-md border px-3 py-2"
@@ -188,6 +244,15 @@ export function AdminEvents() {
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
                 </select>
+              </label>
+              <label className="grid gap-1">
+                <span className="text-sm font-medium">Источник</span>
+                <input
+                  className="rounded-md border px-3 py-2"
+                  value={form.source || "manual"}
+                  onChange={(e) => setForm({ ...form, source: e.target.value })}
+                  placeholder="manual / vk"
+                />
               </label>
               <label className="md:col-span-2 grid gap-1">
                 <span className="text-sm font-medium">Ссылка (необязательно)</span>
@@ -221,12 +286,13 @@ export function AdminEvents() {
             <CardContent className="pt-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {event.category_label} · {event.starts_at_label}
+                  {event.region_label} · {event.category_label} · {event.starts_at_label}
+                  {event.source === "vk" && " · VK"}
                   {!event.is_published && " · черновик"}
                 </p>
                 <p className="font-semibold text-lg">{event.title}</p>
                 {event.location && <p className="text-sm text-muted-foreground">{event.location}</p>}
-                {event.description && <p className="text-sm mt-1">{event.description}</p>}
+                {event.description && <p className="text-sm mt-1 line-clamp-3">{event.description}</p>}
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => startEdit(event)}>Изменить</Button>
@@ -238,7 +304,7 @@ export function AdminEvents() {
           </Card>
         ))}
         {items.length === 0 && !error && (
-          <p className="text-muted-foreground">Пока нет событий — добавьте первое.</p>
+          <p className="text-muted-foreground">Пока нет событий — добавьте вручную или синхронизируйте из VK.</p>
         )}
       </div>
     </div>

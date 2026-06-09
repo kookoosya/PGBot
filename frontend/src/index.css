@@ -2301,12 +2301,14 @@
 
   /* Upcoming events */
   .events-panel {
-    margin: 0 auto 2.5rem;
+    margin: 0;
     padding: 1.75rem;
     border-radius: calc(var(--radius) + 0.25rem);
     border: 1px solid hsl(var(--border));
-    background: hsl(40 55% 99% / 0.92);
-    box-shadow: 0 12px 36px hsl(152 48% 12% / 0.05);
+    border-top: 3px solid hsl(var(--forest));
+    background:
+      linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
+    box-shadow: 0 16px 48px hsl(152 48% 12% / 0.07);
   }
   .events-panel-head {
     display: flex;
@@ -2324,7 +2326,16 @@
   }
   .events-panel-head h2 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.625rem;
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
+  .events-lead {
+    margin: 0.5rem 0 0;
+    max-width: 42rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: hsl(var(--muted-foreground));
   }
   .events-muted {
     margin: 0;
@@ -2338,6 +2349,16 @@
     padding: 0;
     display: grid;
     gap: 0.85rem;
+  }
+  @media (min-width: 768px) {
+    .events-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .events-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
   .events-item {
     position: relative;
@@ -2356,11 +2377,29 @@
     font-size: 0.75rem;
     color: hsl(var(--muted-foreground));
   }
+  .events-region-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .events-region-chip--pushkin {
+    background: hsl(var(--forest) / 0.12);
+    color: hsl(var(--forest));
+  }
+  .events-region-chip--pskov {
+    background: hsl(var(--gold) / 0.18);
+    color: hsl(32 55% 28%);
+  }
   .events-category {
     font-weight: 600;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: hsl(var(--forest));
+    color: hsl(var(--muted-foreground));
   }
   .events-date {
     font-variant-numeric: tabular-nums;

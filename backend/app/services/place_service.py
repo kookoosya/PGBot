@@ -905,3 +905,22 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
         active_taxi_count=active_taxi_count,
         route_count=route_count,
     )
+
+
+def list_place_category_options() -> list[dict[str, str]]:
+    """Return place category enum values for map filters."""
+    return [{"value": c.value, "label": PLACE_CATEGORY_LABELS[c]} for c in PlaceCategory]
+
+
+def list_complaint_type_options() -> list[dict[str, str]]:
+    """Return shop complaint types available for place reports."""
+    return [
+        {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]}
+        for t in ShopComplaintType
+        if t not in MAP_REPORT_LABELS
+    ]
+
+
+def list_map_report_type_options() -> list[dict[str, str]]:
+    """Return map-specific report types (e.g. missing POI)."""
+    return [{"value": t.value, "label": MAP_REPORT_LABELS[t]} for t in MAP_REPORT_LABELS]

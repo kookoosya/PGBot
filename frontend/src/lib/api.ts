@@ -256,6 +256,13 @@ class ApiClient {
     });
   }
 
+  syncVkEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-vk${q}`, {
+      method: "POST",
+    });
+  }
+
   getMyIssues(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<IssueMyListResponse>(`/issues/my${query}`);
@@ -931,6 +938,7 @@ export interface TodayEventSnippet {
   starts_at_label: string;
   ends_at_label?: string | null;
   location?: string | null;
+  region_label: string;
   category_label: string;
   description?: string | null;
   source_url?: string | null;
@@ -945,6 +953,8 @@ export interface TodayResponse {
   cache_ttl_seconds: number;
 }
 
+export type EventRegion = "pushkin_gory" | "pskov";
+
 export interface EventItem {
   id: number;
   title: string;
@@ -954,6 +964,8 @@ export interface EventItem {
   starts_at_label: string;
   ends_at_label: string | null;
   location: string | null;
+  region: EventRegion;
+  region_label: string;
   category: string;
   category_label: string;
   source: string | null;
@@ -969,6 +981,7 @@ export interface EventCreate {
   starts_at: string;
   ends_at?: string | null;
   location?: string;
+  region?: EventRegion;
   category: string;
   source?: string;
   source_url?: string;
@@ -978,4 +991,13 @@ export interface EventCreate {
 export interface EventListResponse {
   items: EventItem[];
   total: number;
+}
+
+export interface EventSyncResult {
+  region: string;
+  fetched: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
 }

@@ -17,6 +17,9 @@ class Event(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     location: Mapped[str | None] = mapped_column(String(500))
+    region: Mapped[str] = mapped_column(
+        String(50), default="pushkin_gory", server_default="pushkin_gory", index=True
+    )
     category: Mapped[str] = mapped_column(String(50), default="other", server_default="other", index=True)
     source: Mapped[str | None] = mapped_column(String(100))
     source_url: Mapped[str | None] = mapped_column(String(1000))

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import EventCategory
+from app.models.enums import EventCategory, EventRegion
 
 
 class EventCreate(BaseModel):
@@ -13,6 +13,7 @@ class EventCreate(BaseModel):
     starts_at: datetime
     ends_at: datetime | None = None
     location: str | None = Field(None, max_length=500)
+    region: EventRegion = EventRegion.PUSHKIN_GORY
     category: EventCategory = EventCategory.OTHER
     source: str | None = Field(None, max_length=100)
     source_url: str | None = Field(None, max_length=1000)
@@ -25,6 +26,7 @@ class EventUpdate(BaseModel):
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     location: str | None = Field(None, max_length=500)
+    region: EventRegion | None = None
     category: EventCategory | None = None
     source: str | None = Field(None, max_length=100)
     source_url: str | None = Field(None, max_length=1000)
@@ -40,6 +42,8 @@ class EventResponse(BaseModel):
     starts_at_label: str
     ends_at_label: str | None = None
     location: str | None
+    region: str
+    region_label: str
     category: str
     category_label: str
     source: str | None
@@ -54,3 +58,12 @@ class EventResponse(BaseModel):
 class EventListResponse(BaseModel):
     items: list[EventResponse]
     total: int
+
+
+class EventSyncResponse(BaseModel):
+    region: str
+    fetched: int
+    created: int
+    updated: int
+    skipped: int
+    errors: list[str] = Field(default_factory=list)

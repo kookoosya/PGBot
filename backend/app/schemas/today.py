@@ -25,6 +25,7 @@ class TodayEventSnippet(BaseModel):
     starts_at_label: str
     ends_at_label: str | None = None
     location: str | None = None
+    region_label: str
     category_label: str
     description: str | None = None
     source_url: str | None = None

@@ -19,7 +19,7 @@ from typing import Optional
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import EVENT_CATEGORY_LABELS, EventCategory
+from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
 from app.services.datetime_utils import format_event_datetime
@@ -51,6 +51,7 @@ class EventCreateInput:
     starts_at: datetime
     ends_at: Optional[datetime]
     location: Optional[str]
+    region: EventRegion = EventRegion.PUSHKIN_GORY
     category: EventCategory
     source: Optional[str]
     source_url: Optional[str]
@@ -66,6 +67,7 @@ class EventUpdateInput:
     starts_at: Optional[datetime] = None
     ends_at: Optional[datetime] = None
     location: Optional[str] = None
+    region: Optional[EventRegion] = None
     category: Optional[EventCategory] = None
     source: Optional[str] = None
     source_url: Optional[str] = None
@@ -77,8 +79,8 @@ def _validate_event_times(starts_at: datetime, ends_at: Optional[datetime]) -> N
         raise EventValidationError("Дата окончания не может быть раньше начала")
 
 
-async def get_upcoming_events(db: AsyncSession, *, limit: int = 5) -> list[Event]:
-    """Return published events that haven't ended yet, nearest first."""
+async def get_upcoming_events(db: AsyncSession, *, limit: int = 6) -> list[Event]:
+    """Return published events that haven't ended yet, nearest first (both regions)."""
     now = datetime.now(timezone.utc)
     safe_limit = max(1, min(limit, 20))
     try:
@@ -132,6 +134,7 @@ async def create_event(
         starts_at=data.starts_at,
         ends_at=data.ends_at,
         location=(data.location or "").strip() or None,
+        region=data.region.value,
         category=data.category.value,
         source=(data.source or "manual").strip() or "manual",
         source_url=(data.source_url or "").strip() or None,
@@ -163,6 +166,8 @@ async def update_event(
         event.ends_at = data.ends_at
     if data.location is not None:
         event.location = data.location.strip() or None
+    if data.region is not None:
+        event.region = data.region.value
     if data.category is not None:
         event.category = data.category.value
     if data.source is not None:
@@ -189,6 +194,16 @@ def event_category_label(category: str | None) -> str:
         return category
 
 
+def event_region_label(region: str | None) -> str:
+    """Return a human-readable label for an event region code."""
+    if not region:
+        return EVENT_REGION_LABELS.get(EventRegion.PUSHKIN_GORY, "Пушкинские Горы")
+    try:
+        return EVENT_REGION_LABELS.get(EventRegion(region), region)
+    except ValueError:
+        return region
+
+
 def event_to_response(event: Event) -> dict:
     """Build API payload with formatted labels."""
     return {
@@ -200,6 +215,8 @@ def event_to_response(event: Event) -> dict:
         "starts_at_label": format_event_datetime(event.starts_at),
         "ends_at_label": format_event_datetime(event.ends_at) if event.ends_at else None,
         "location": event.location,
+        "region": event.region,
+        "region_label": event_region_label(event.region),
         "category": event.category,
         "category_label": event_category_label(event.category),
         "source": event.source,
@@ -208,3 +225,13 @@ def event_to_response(event: Event) -> dict:
         "created_at": event.created_at,
         "updated_at": event.updated_at,
     }
+
+
+def build_event_list_response(events: list[Event]) -> dict:
+    """Convert event ORM rows to admin list API payload."""
+    from app.schemas.event import EventListResponse, EventResponse
+
+    return EventListResponse(
+        items=[EventResponse(**event_to_response(event)) for event in events],
+        total=len(events),
+    ).model_dump()

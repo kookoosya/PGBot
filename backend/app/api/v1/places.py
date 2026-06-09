@@ -7,13 +7,7 @@ from app.core.deps import get_optional_user, require_owner
 from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.models.enums import (
-    MAP_REPORT_LABELS,
-    PLACE_CATEGORY_LABELS,
-    SHOP_COMPLAINT_LABELS,
-    PlaceCategory,
-    ShopComplaintType,
-)
+from app.models.enums import PlaceCategory
 from app.models.user import User
 from app.schemas.place import (
     MapStatsResponse,
@@ -43,6 +37,9 @@ from app.services.place_service import (
     get_map_stats,
     get_place_details,
     list_active_taxi,
+    list_complaint_type_options,
+    list_map_report_type_options,
+    list_place_category_options,
     search_places,
 )
 from app.services.yandex_sync import sync_places_from_yandex
@@ -52,24 +49,17 @@ router = APIRouter()
 
 @router.get("/categories")
 async def list_place_categories():
-    return [
-        {"value": c.value, "label": PLACE_CATEGORY_LABELS[c]}
-        for c in PlaceCategory
-    ]
+    return list_place_category_options()
 
 
 @router.get("/complaint-types")
 async def list_complaint_types():
-    return [
-        {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]}
-        for t in ShopComplaintType
-        if t not in MAP_REPORT_LABELS
-    ]
+    return list_complaint_type_options()
 
 
 @router.get("/map-report-types")
 async def list_map_report_types():
-    return [{"value": t.value, "label": MAP_REPORT_LABELS[t]} for t in MAP_REPORT_LABELS]
+    return list_map_report_type_options()
 
 
 @router.get("/routes")
