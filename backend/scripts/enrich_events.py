@@ -41,14 +41,25 @@ async def enrich() -> None:
                 location=event.location,
                 region=region,
             )
-            if (
-                title != event.title
-                or genre != event.genre
-                or description != event.description
-            ):
+            changed = False
+            if title != event.title:
                 event.title = title
+                changed = True
+            if genre != event.genre:
                 event.genre = genre
+                changed = True
+            if description != event.description:
                 event.description = description
+                changed = True
+            if (
+                category == EventCategory.CINEMA
+                and is_generic_cinema_title(event.title)
+                and not lookup_film(f"{event.title} {event.description or ''}")
+                and event.is_published
+            ):
+                event.is_published = False
+                changed = True
+            if changed:
                 updated += 1
         await db.commit()
     print(f"Enriched {updated} events")
