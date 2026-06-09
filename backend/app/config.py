@@ -41,7 +41,12 @@ class Settings(BaseSettings):
     VK_SECRET_KEY: str = ""
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
+    VK_GROUP_ID: str = ""
     VK_ADMIN_PEER_ID: str = ""
+    # Auto-post relevant events to community wall after sync
+    VK_WALL_POST_ENABLED: bool = True
+    VK_WALL_POST_MAX_PER_RUN: int = 3
+    VK_WALL_POST_MIN_SCORE: int = 40
     PUBLIC_SITE_URL: str = "https://pushkinskie-gory.ru"
 
     # Telegram
