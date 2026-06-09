@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash"
     POLLINATIONS_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    OPENAI_CHAT_MODEL: str = "gpt-4o-mini"
+    OPENAI_CHAT_MODEL_SMART: str = "gpt-4o"
+    PERPLEXITY_API_KEY: str = ""
+    PERPLEXITY_CHAT_MODEL: str = "sonar"
     AI_IMAGE_DIR: str = "/tmp/pgbot-ai-images"
 
     # VK

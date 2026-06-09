@@ -28,6 +28,22 @@ POLLINATIONS_CHAT_MODELS = {
 }
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions"
+
+OPENAI_CHAT_MODELS = {
+    "openai-fast": "gpt-4o-mini",
+    "gemini-flash": "gpt-4o-mini",
+    "openai": "gpt-4o",
+    "gemini": "gpt-4o",
+    "gemini-2.0-flash": "gpt-4o-mini",
+    "gemini-1.5-pro": "gpt-4o",
+}
+
+PERPLEXITY_CHAT_MODELS = {
+    "perplexity": "sonar",
+    "perplexity-pro": "sonar-pro",
+}
 
 OPENROUTER_CHAT_MODELS = {
     "gemini-flash": "openai/gpt-4o-mini",
@@ -184,6 +200,112 @@ async def pollinations_image_bytes(
     return None
 
 
+def _build_chat_messages(
+    message: str,
+    history: list[dict] | None,
+    system_prompt: str,
+) -> list[dict[str, str]]:
+    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
+    if history:
+        for msg in history[-8:]:
+            role = msg.get("role", "user")
+            if role not in ("user", "assistant"):
+                continue
+            openai_role = "assistant" if role == "assistant" else "user"
+            content = (msg.get("content") or "")[:2000]
+            if content:
+                messages.append({"role": openai_role, "content": content})
+    messages.append({"role": "user", "content": message[:2000]})
+    return messages
+
+
+def _openai_headers() -> dict[str, str]:
+    key = settings.OPENAI_API_KEY.strip()
+    if not key:
+        return {}
+    return {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+
+
+def _perplexity_headers() -> dict[str, str]:
+    key = settings.PERPLEXITY_API_KEY.strip()
+    if not key:
+        return {}
+    return {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+
+
+async def openai_chat(
+    message: str,
+    history: list[dict] | None,
+    system_prompt: str,
+    model_id: str = "openai-fast",
+    timeout: float = 120.0,
+) -> str | None:
+    if not settings.OPENAI_API_KEY.strip():
+        return None
+
+    model = OPENAI_CHAT_MODELS.get(model_id)
+    if not model:
+        model = (
+            settings.OPENAI_CHAT_MODEL_SMART
+            if model_id == "openai"
+            else settings.OPENAI_CHAT_MODEL
+        )
+
+    messages = _build_chat_messages(message, history, system_prompt)
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(
+                OPENAI_URL,
+                headers=_openai_headers(),
+                json={"model": model, "messages": messages, "max_tokens": 1800},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                return text.strip() if text else None
+            logger.warning("OpenAI chat HTTP %s: %s", resp.status_code, resp.text[:300])
+    except Exception as exc:
+        logger.error("OpenAI chat failed: %s", exc)
+    return None
+
+
+async def perplexity_chat(
+    message: str,
+    history: list[dict] | None,
+    system_prompt: str,
+    model_id: str = "perplexity",
+    timeout: float = 120.0,
+) -> str | None:
+    if not settings.PERPLEXITY_API_KEY.strip():
+        return None
+
+    model = PERPLEXITY_CHAT_MODELS.get(model_id, settings.PERPLEXITY_CHAT_MODEL)
+    messages = _build_chat_messages(message, history, system_prompt)
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(
+                PERPLEXITY_URL,
+                headers=_perplexity_headers(),
+                json={"model": model, "messages": messages, "max_tokens": 1800},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                return text.strip() if text else None
+            logger.warning("Perplexity chat HTTP %s: %s", resp.status_code, resp.text[:300])
+    except Exception as exc:
+        logger.error("Perplexity chat failed: %s", exc)
+    return None
+
+
 def _openrouter_headers() -> dict[str, str]:
     key = settings.OPENROUTER_API_KEY.strip()
     if not key:
@@ -206,18 +328,7 @@ async def openrouter_chat(
     if not settings.OPENROUTER_API_KEY.strip():
         return None
 
-    messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
-    if history:
-        for msg in history[-8:]:
-            role = msg.get("role", "user")
-            if role not in ("user", "assistant"):
-                continue
-            openai_role = "assistant" if role == "assistant" else "user"
-            content = (msg.get("content") or "")[:2000]
-            if content:
-                messages.append({"role": openai_role, "content": content})
-    messages.append({"role": "user", "content": message[:2000]})
-
+    messages = _build_chat_messages(message, history, system_prompt)
     or_model = OPENROUTER_CHAT_MODELS.get(model_id, "openai/gpt-4o-mini")
 
     try:

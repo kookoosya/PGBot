@@ -52,6 +52,8 @@ print('set', name)
 
 _set_env_var POLLINATIONS_API_KEY "${POLLINATIONS_API_KEY:-}"
 _set_env_var OPENROUTER_API_KEY "${OPENROUTER_API_KEY:-}"
+_set_env_var OPENAI_API_KEY "${OPENAI_API_KEY:-}"
+_set_env_var PERPLEXITY_API_KEY "${PERPLEXITY_API_KEY:-}"
 _set_env_var GEMINI_API_KEY "${GEMINI_API_KEY:-}"
 _set_env_var KINOPOISK_API_TOKEN "${KINOPOISK_API_TOKEN:-}"
 _set_env_var VK_GROUP_TOKEN "${VK_GROUP_TOKEN:-}"

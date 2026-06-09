@@ -861,6 +861,24 @@
     background: hsl(42 45% 96%);
     border: 1px solid hsl(42 40% 82%);
   }
+  .ai-limits-info {
+    @apply rounded-xl p-4 mb-4 text-sm;
+    background: hsl(152 28% 96%);
+    border: 1px solid hsl(152 25% 82%);
+    color: hsl(152 35% 18%);
+  }
+  .ai-limits-info p { margin: 0.35rem 0 0; }
+  .ai-limits-providers {
+    font-weight: 600;
+  }
+  .ai-limits-hint {
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .ai-limits-hint a {
+    color: hsl(var(--forest));
+    text-decoration: underline;
+  }
 
   .ai-chat-panel {
     height: calc(100vh - 380px);

@@ -658,6 +658,8 @@ export interface AIStatus {
   image_provider: string;
   pollinations_configured: boolean;
   openrouter_configured?: boolean;
+  openai_configured?: boolean;
+  perplexity_configured?: boolean;
   gemini_configured: boolean;
   providers?: string[];
   message: string;

@@ -10,9 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.ai_usage import AIUsage
 from app.services.ai_local import local_chat_reply, should_use_local_fallback
-from app.services.ai_providers import openrouter_chat, pollinations_chat, pollinations_text
+from app.services.ai_providers import openrouter_chat, openai_chat, perplexity_chat, pollinations_chat, pollinations_text
 from app.services.ai_status import (
     is_valid_gemini_key,
+    is_valid_openai_key,
+    is_valid_perplexity_key,
     is_valid_openrouter_key,
     is_valid_pollinations_key,
 )
@@ -216,7 +218,22 @@ async def _chat_gemini(message: str, history: list[dict] | None, model_id: str |
 
 
 async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
-    model_id = model_id or "gemini-flash"
+    model_id = model_id or "openai-fast"
+
+    if model_id.startswith("perplexity") and is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
+        perplexity_text = await perplexity_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if perplexity_text:
+            return _maybe_quote(perplexity_text)
+
+    if model_id in ("openai", "openai-fast", "gemini-flash") and is_valid_openai_key(settings.OPENAI_API_KEY):
+        openai_text = await openai_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if openai_text:
+            return _maybe_quote(openai_text)
+
+    if model_id.startswith("perplexity") and is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
+        or_text = await openrouter_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if or_text:
+            return _maybe_quote(or_text)
 
     # 1. Pollinations
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
@@ -230,20 +247,32 @@ async def chat_with_ai(message: str, history: list[dict] | None = None, model_id
         if or_text:
             return _maybe_quote(or_text)
 
-    # 3. Прямой Gemini
-    if model_id not in ("pollinations", "openai-fast", "openai"):
+    # 3. Прямой OpenAI — резерв для любой модели
+    if is_valid_openai_key(settings.OPENAI_API_KEY):
+        openai_text = await openai_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if openai_text:
+            return _maybe_quote(openai_text)
+
+    # 4. Perplexity — резерв
+    if is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
+        perplexity_text = await perplexity_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        if perplexity_text:
+            return _maybe_quote(perplexity_text)
+
+    # 5. Прямой Gemini
+    if model_id not in ("pollinations", "openai-fast", "openai", "perplexity"):
         gemini_text = await _chat_gemini(message, history, model_id)
         if gemini_text:
             return _maybe_quote(gemini_text)
 
-    # 4. Старый GET-текст Pollinations
+    # 6. Старый GET-текст Pollinations
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
         lines = [CHAT_SYSTEM_PROMPT, f"Пользователь: {message}", "Ассистент:"]
         poll_text = await pollinations_text("\n".join(lines))
         if poll_text:
             return _maybe_quote(poll_text)
 
-    # 5. Локальный справочник — только для вопросов о посёлке
+    # 7. Локальный справочник — только для вопросов о посёлке
     if should_use_local_fallback(message):
         return local_chat_reply(message)
 

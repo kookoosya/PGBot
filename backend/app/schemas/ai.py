@@ -66,6 +66,8 @@ class AIStatusResponse(BaseModel):
     image_provider: str
     pollinations_configured: bool
     openrouter_configured: bool = False
+    openai_configured: bool = False
+    perplexity_configured: bool = False
     gemini_configured: bool
     providers: list[str] = []
     message: str

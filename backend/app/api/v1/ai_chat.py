@@ -21,7 +21,7 @@ from app.schemas.ai import (
     UsageResponse,
 )
 from app.services.ai_image_store import image_media_type, image_path
-from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS
+from app.services.ai_media import IMAGE_MODELS, get_chat_models
 from app.services.ai_status import get_ai_status
 from app.services.ai_chat import (
     AIValidationError,
@@ -47,7 +47,7 @@ async def ai_status():
 @router.get("/models", response_model=ModelsResponse)
 async def list_models():
     return ModelsResponse(
-        chat_models=CHAT_MODELS,
+        chat_models=get_chat_models(),
         image_models=IMAGE_MODELS,
         capabilities=AI_CAPABILITIES,
         status=get_ai_status(),
