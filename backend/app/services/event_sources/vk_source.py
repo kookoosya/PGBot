@@ -10,12 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
-from app.models.enums import EventRegion
+from app.models.enums import EventCategory, EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.text_utils import parse_event_datetime
 from app.services.event_sources.upsert import upsert_fetched_event
+from app.services.event_enrichment_service import resolve_cinema_location_from_text
 from app.services.event_sources.vk_parsing import is_relevant_vk_event_post, parse_vk_post
+from app.services.poster_service import extract_vk_poster_url
 from app.services.vk import vk_api_call
 
 logger = logging.getLogger(__name__)
@@ -70,6 +72,9 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
                 break
 
     parsed = parse_vk_post(text)
+    if parsed.category == EventCategory.CINEMA:
+        location = resolve_cinema_location_from_text(f"{text} {location or ''}", region=preset.region) or location
+    poster_url = extract_vk_poster_url(post) if parsed.category == EventCategory.CINEMA else None
     return FetchedEvent(
         title=parsed.title,
         description=parsed.body or text[:2000],
@@ -81,6 +86,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
         source="vk",
         source_url=f"https://vk.com/wall-{group_id}_{post_id}",
         genre=parsed.genre,
+        poster_url=poster_url,
     )
 
 

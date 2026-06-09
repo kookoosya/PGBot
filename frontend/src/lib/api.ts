@@ -1004,6 +1004,7 @@ export interface TodayEventSnippet {
   category: string;
   category_label: string;
   genre?: string | null;
+  poster_url?: string | null;
   description?: string | null;
   source?: string | null;
   source_url?: string | null;
@@ -1034,6 +1035,7 @@ export interface PublicEvent {
   category: string;
   category_label: string;
   genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
 }
@@ -1057,6 +1059,7 @@ export interface EventItem {
   category: string;
   category_label: string;
   genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
   is_published: boolean;
@@ -1073,6 +1076,7 @@ export interface EventCreate {
   region?: EventRegion;
   category: string;
   genre?: string | null;
+  poster_url?: string | null;
   source?: string;
   source_url?: string;
   is_published?: boolean;

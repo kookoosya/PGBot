@@ -8,7 +8,8 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import EventRegion
+from app.models.enums import EventCategory, EventRegion
+from app.services.event_enrichment_service import resolve_cinema_location_from_text
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.services.orbilet_service import OrbiletEvent, fetch_orbilet_events

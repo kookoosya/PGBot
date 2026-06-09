@@ -22,7 +22,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
-from app.services.event_enrichment_service import enrich_event_fields
+from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
+from app.services.poster_service import resolve_cinema_poster
 from app.services.datetime_utils import format_event_datetime
 from app.services.service_errors import ServiceError
 
@@ -57,6 +58,7 @@ class EventCreateInput:
     source_url: Optional[str]
     region: EventRegion = EventRegion.PUSHKIN_GORY
     genre: Optional[str] = None
+    poster_url: Optional[str] = None
     is_published: bool = True
 
 
@@ -74,7 +76,18 @@ class EventUpdateInput:
     source: Optional[str] = None
     source_url: Optional[str] = None
     genre: Optional[str] = None
+    poster_url: Optional[str] = None
     is_published: Optional[bool] = None
+
+
+async def _attach_cinema_poster(event: Event, *, vk_poster_url: str | None = None) -> None:
+    if event.category != EventCategory.CINEMA.value:
+        return
+    if (event.poster_url or "").strip():
+        return
+    poster = await resolve_cinema_poster(event.title, vk_poster_url=vk_poster_url)
+    if poster:
+        event.poster_url = poster
 
 
 def _apply_event_enrichment(
@@ -208,12 +221,15 @@ async def create_event(
 ) -> Event:
     """Create and persist a new village event."""
     _validate_event_times(data.starts_at, data.ends_at)
+    location = (data.location or "").strip() or None
+    if data.category == EventCategory.CINEMA and location:
+        location = resolve_cinema_location_from_text(location, region=data.region) or location
     title, genre, description = _apply_event_enrichment(
         title=data.title.strip(),
         description=(data.description or "").strip() or None,
         category=data.category,
         genre=data.genre,
-        location=(data.location or "").strip() or None,
+        location=location,
         region=data.region,
     )
     event = Event(
@@ -221,16 +237,20 @@ async def create_event(
         description=description,
         starts_at=data.starts_at,
         ends_at=data.ends_at,
-        location=(data.location or "").strip() or None,
+        location=location,
         region=data.region.value,
         category=data.category.value,
         genre=genre,
+        poster_url=(data.poster_url or "").strip() or None,
         source=(data.source or "manual").strip() or "manual",
         source_url=(data.source_url or "").strip() or None,
         is_published=data.is_published,
     )
     db.add(event)
     await db.flush()
+    await _attach_cinema_poster(event)
+    if event.poster_url:
+        await db.flush()
     if actor_id:
         await log_action(db, "create_event", "event", event.id, user_id=actor_id, details={"title": event.title})
     logger.info("Event #%s created: %s", event.id, event.title)
@@ -251,6 +271,8 @@ async def update_event(
         event.description = data.description.strip() or None
     if data.genre is not None:
         event.genre = data.genre.strip() or None
+    if data.poster_url is not None:
+        event.poster_url = data.poster_url.strip() or None
     if data.starts_at is not None:
         event.starts_at = data.starts_at
     if data.ends_at is not None:
@@ -281,6 +303,9 @@ async def update_event(
     event.title = title
     event.genre = genre
     event.description = description
+    if event.category == EventCategory.CINEMA.value and event.location:
+        event.location = resolve_cinema_location_from_text(event.location, region=region) or event.location
+    await _attach_cinema_poster(event)
     await db.flush()
     if actor_id:
         await log_action(db, "update_event", "event", event.id, user_id=actor_id)
@@ -323,6 +348,7 @@ def event_to_response(event: Event) -> dict:
         "category": event.category,
         "category_label": event_category_label(event.category),
         "genre": event.genre,
+        "poster_url": event.poster_url,
         "source": event.source,
         "source_url": event.source_url,
         "is_published": event.is_published,

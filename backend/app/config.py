@@ -109,6 +109,9 @@ class Settings(BaseSettings):
     PROCULTURE_API_KEY: str = ""
     PROCULTURE_PSKOV_LOCALE_ID: int = 0
 
+    # Kinopoisk Unofficial API — posters for cinema (https://kinopoiskapiunofficial.tech/signup)
+    KINOPOISK_API_TOKEN: str = ""
+
     # Auto-sync village events from external sources (hours; 0 = disabled)
     EVENT_SYNC_INTERVAL_HOURS: int = 12
 

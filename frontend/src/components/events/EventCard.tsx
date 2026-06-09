@@ -23,11 +23,19 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
     .filter(Boolean)
     .join(" ");
 
+  const posterUrl = "poster_url" in event ? event.poster_url : null;
+
   return (
     <article className={cardClass}>
-      <div className="afisha-card-accent" aria-hidden>
-        <span className="afisha-card-icon">{categoryIcon(event.category)}</span>
-      </div>
+      {posterUrl ? (
+        <div className="afisha-card-poster">
+          <img src={posterUrl} alt="" loading="lazy" decoding="async" />
+        </div>
+      ) : (
+        <div className="afisha-card-accent" aria-hidden>
+          <span className="afisha-card-icon">{categoryIcon(event.category)}</span>
+        </div>
+      )}
 
       <div className="afisha-card-body">
         <div className="afisha-card-meta">

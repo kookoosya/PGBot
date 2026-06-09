@@ -62,6 +62,11 @@ export function EventDetail() {
       </nav>
 
       <article className={`afisha-detail-card literary-card ${cinema ? "literary-card--forest afisha-detail-card--cinema" : "literary-card--gold"}`}>
+        {event.poster_url && (
+          <div className="afisha-detail-poster">
+            <img src={event.poster_url} alt={`Постер: ${event.title}`} loading="eager" decoding="async" />
+          </div>
+        )}
         <div className="afisha-detail-hero">
           <span className="afisha-detail-icon" aria-hidden>{categoryIcon(event.category)}</span>
           <div className="afisha-detail-hero-copy">

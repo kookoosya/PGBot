@@ -16,6 +16,7 @@ class EventCreate(BaseModel):
     region: EventRegion = EventRegion.PUSHKIN_GORY
     category: EventCategory = EventCategory.OTHER
     genre: str | None = Field(None, max_length=120)
+    poster_url: str | None = Field(None, max_length=1000)
     source: str | None = Field(None, max_length=100)
     source_url: str | None = Field(None, max_length=1000)
     is_published: bool = True
@@ -30,6 +31,7 @@ class EventUpdate(BaseModel):
     region: EventRegion | None = None
     category: EventCategory | None = None
     genre: str | None = Field(None, max_length=120)
+    poster_url: str | None = Field(None, max_length=1000)
     source: str | None = Field(None, max_length=100)
     source_url: str | None = Field(None, max_length=1000)
     is_published: bool | None = None
@@ -49,6 +51,7 @@ class EventResponse(BaseModel):
     category: str
     category_label: str
     genre: str | None = None
+    poster_url: str | None = None
     source: str | None
     source_url: str | None
     is_published: bool
@@ -74,6 +77,7 @@ class PublicEventResponse(BaseModel):
     category: str
     category_label: str
     genre: str | None = None
+    poster_url: str | None = None
     source: str | None
     source_url: str | None
 

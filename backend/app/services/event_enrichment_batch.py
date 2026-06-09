@@ -11,6 +11,7 @@ from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
+from app.services.poster_service import resolve_cinema_poster
 
 logger = logging.getLogger(__name__)
 
@@ -91,4 +92,25 @@ async def enrich_stale_events(db: AsyncSession) -> int:
     if updated:
         await db.flush()
         logger.info("Batch event enrichment: updated %s events", updated)
+    return updated
+
+
+async def enrich_missing_posters(db: AsyncSession, *, limit: int = 40) -> int:
+    """Attach posters to published cinema events that lack one."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.CINEMA.value,
+            or_(Event.poster_url.is_(None), Event.poster_url == ""),
+        ).limit(limit)
+    )
+    updated = 0
+    for event in result.scalars().all():
+        poster = await resolve_cinema_poster(event.title)
+        if poster:
+            event.poster_url = poster
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Batch poster enrichment: updated %s events", updated)
     return updated

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from app.constants.pskov_cinemas import format_cinema_location, match_pskov_cinema
 from app.models.enums import EventCategory, EventRegion
 from app.services.text_cleaning import first_sentences, normalize_event_text
 from app.services.cinema_enrichment import (
@@ -77,11 +78,14 @@ def _enrich_cinema(
     body = description
     if catalog and (not body or len(body) < MIN_DESCRIPTION_LEN):
         body = catalog.teaser
+    resolved_location = format_cinema_location(location) if location else None
+    if not resolved_location and region == EventRegion.PSKOV:
+        resolved_location = _default_cinema_location(region)
     enriched = build_cinema_description(
         title=resolved_title,
         genre=resolved_genre,
         raw_description=body,
-        location=location or _default_cinema_location(region),
+        location=resolved_location or location or _default_cinema_location(region),
     )
     if len(enriched) < MIN_DESCRIPTION_LEN:
         enriched = _pad_description(resolved_title, enriched, category=EventCategory.CINEMA)
@@ -141,8 +145,18 @@ def _region_label(region: EventRegion | None) -> str | None:
 
 def _default_cinema_location(region: EventRegion | None) -> str:
     if region == EventRegion.PSKOV:
-        return "кинотеатре Пскова"
+        return "кинотеатрах Пскова (Победа, Смена, Мираж, Silver Cinema)"
     return "кинотеатре"
+
+
+def resolve_cinema_location_from_text(text: str, *, region: EventRegion | None) -> str | None:
+    """Infer cinema venue from post title or body."""
+    if region != EventRegion.PSKOV:
+        return format_cinema_location(text)
+    cinema = match_pskov_cinema(text)
+    if cinema:
+        return f"{cinema.name}, {cinema.address}"
+    return format_cinema_location(text)
 
 
 def _pad_description(title: str, description: str, *, category: EventCategory) -> str:

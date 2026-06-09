@@ -39,6 +39,7 @@ class FetchedEvent:
     source: str
     source_url: str
     genre: str | None = None
+    poster_url: str | None = None
 
 
 class EventSource(ABC):
