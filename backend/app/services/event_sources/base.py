@@ -38,6 +38,7 @@ class FetchedEvent:
     category: EventCategory
     source: str
     source_url: str
+    genre: str | None = None
 
 
 class EventSource(ABC):

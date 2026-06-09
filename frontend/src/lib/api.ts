@@ -238,7 +238,12 @@ class ApiClient {
     return this.request<TodayResponse>(`/public/today${q}`);
   }
 
-  getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+  getPublicEvents(params?: {
+    region?: EventRegion;
+    category?: string;
+    search?: string;
+    limit?: string;
+  }) {
     const query = params ? "?" + new URLSearchParams(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")) as Record<string, string>,
     ).toString() : "";
@@ -981,9 +986,13 @@ export interface TodayEventSnippet {
   starts_at_label: string;
   ends_at_label?: string | null;
   location?: string | null;
+  region: EventRegion;
   region_label: string;
+  category: string;
   category_label: string;
+  genre?: string | null;
   description?: string | null;
+  source?: string | null;
   source_url?: string | null;
 }
 
@@ -1011,6 +1020,7 @@ export interface PublicEvent {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
   source: string | null;
   source_url: string | null;
 }
@@ -1033,6 +1043,7 @@ export interface EventItem {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
   source: string | null;
   source_url: string | null;
   is_published: boolean;
@@ -1048,6 +1059,7 @@ export interface EventCreate {
   location?: string;
   region?: EventRegion;
   category: string;
+  genre?: string | null;
   source?: string;
   source_url?: string;
   is_published?: boolean;

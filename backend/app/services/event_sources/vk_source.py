@@ -13,6 +13,7 @@ from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
+from app.services.cinema_enrichment import enrich_cinema_fields, extract_genre
 from app.services.event_sources.text_utils import (
     infer_category_from_text,
     is_relevant_event_post,
@@ -72,16 +73,26 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
                 location = line.replace("📍", "").strip()[:500]
                 break
 
-    return FetchedEvent(
-        title=post_title(text),
+    category = infer_category_from_text(text)
+    title = post_title(text)
+    genre, description = enrich_cinema_fields(
+        title=title,
         description=text[:2000],
+        category=category,
+        genre=extract_genre(text),
+        location=location,
+    )
+    return FetchedEvent(
+        title=title,
+        description=description,
         starts_at=starts_at,
         ends_at=None,
         location=location,
         region=preset.region,
-        category=infer_category_from_text(text),
+        category=category,
         source="vk",
         source_url=f"https://vk.com/wall-{group_id}_{post_id}",
+        genre=genre,
     )
 
 

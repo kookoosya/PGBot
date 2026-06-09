@@ -40,6 +40,7 @@ const emptyForm: EventCreate = {
   location: "",
   region: "pushkin_gory",
   category: "culture",
+  genre: "",
   source: "manual",
   source_url: "",
   is_published: true,
@@ -99,6 +100,7 @@ export function AdminEvents() {
       location: event.location || "",
       region: event.region,
       category: event.category,
+      genre: event.genre || "",
       source: event.source || "manual",
       source_url: event.source_url || "",
       is_published: event.is_published,
@@ -114,6 +116,7 @@ export function AdminEvents() {
       ...form,
       starts_at: fromLocalInputValue(toLocalInputValue(form.starts_at) || form.starts_at),
       ends_at: form.ends_at ? fromLocalInputValue(toLocalInputValue(form.ends_at) || form.ends_at) : null,
+      genre: form.category === "cinema" ? form.genre?.trim() || null : null,
     };
     try {
       if (editId) {
@@ -269,6 +272,17 @@ export function AdminEvents() {
                   ))}
                 </select>
               </label>
+              {form.category === "cinema" && (
+                <label className="grid gap-1">
+                  <span className="text-sm font-medium">Жанр</span>
+                  <input
+                    className="rounded-md border px-3 py-2"
+                    value={form.genre || ""}
+                    onChange={(e) => setForm({ ...form, genre: e.target.value })}
+                    placeholder="Драма, комедия, фантастика…"
+                  />
+                </label>
+              )}
               <label className="grid gap-1">
                 <span className="text-sm font-medium">Источник</span>
                 <input
@@ -316,7 +330,12 @@ export function AdminEvents() {
                   {event.source === "kudago" && " · KudaGo"}
                   {!event.is_published && " · черновик"}
                 </p>
-                <p className="font-semibold text-lg">{event.title}</p>
+                <p className="font-semibold text-lg">
+                  {event.title}
+                  {event.genre && (
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">· {event.genre}</span>
+                  )}
+                </p>
                 {event.location && <p className="text-sm text-muted-foreground">{event.location}</p>}
                 {event.description && <p className="text-sm mt-1 line-clamp-3">{event.description}</p>}
               </div>

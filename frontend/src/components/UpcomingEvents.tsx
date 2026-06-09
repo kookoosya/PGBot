@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { EventCard } from "@/components/events/EventCard";
 import { type EventRegion } from "@/lib/api";
-import { regionChipClass } from "@/lib/eventUtils";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,11 @@ export function UpcomingEvents() {
         (e) =>
           e.title.toLowerCase().includes(q) ||
           (e.description?.toLowerCase().includes(q) ?? false) ||
+          (e.genre?.toLowerCase().includes(q) ?? false) ||
           e.category_label.toLowerCase().includes(q),
       );
     }
-    return list;
+    return list.slice(0, 6);
   }, [events, regionFilter, searchInput]);
 
   return (
@@ -46,7 +47,7 @@ export function UpcomingEvents() {
           <p className="events-kicker">📅 Афиша региона</p>
           <h2>Ближайшие события</h2>
           <p className="events-lead">
-            Концерты и праздники в Пушкинских Горах, кино и мероприятия в Пскове — для жителей и гостей.
+            Экскурсии и праздники в Пушкинских Горах, кино и концерты в Пскове.
           </p>
         </div>
         <Link to="/events" className="events-all-link">Вся афиша →</Link>
@@ -86,30 +87,18 @@ export function UpcomingEvents() {
         <p className="events-muted">
           {searchInput
             ? "Ничего не найдено — попробуйте другой запрос."
-            : regionFilter === "all"
-              ? "Скоро здесь появятся концерты, ярмарки и встречи — следите за обновлениями или откройте всю афишу."
-              : "В этом регионе пока нет ближайших событий."}
+            : "Скоро здесь появятся события — откройте всю афишу."}
         </p>
       ) : (
-        <ol className="events-list">
+        <div className="afisha-grid afisha-grid--landing">
           {visibleEvents.map((event) => (
-            <li key={event.id} className="events-item literary-card literary-card--gold">
-              <div className="events-item-meta">
-                <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-                <span className="events-category">{event.category_label}</span>
-                <time className="events-date">{event.starts_at_label}</time>
-                {event.ends_at_label && (
-                  <span className="events-date-end">до {event.ends_at_label}</span>
-                )}
-              </div>
-              <Link to={`/events/${event.id}`} className="events-title events-title-link">
-                {event.title}
-              </Link>
-              {event.location && <p className="events-location">📍 {event.location}</p>}
-              {event.description && <p className="events-desc">{event.description.slice(0, 120)}{event.description.length > 120 ? "…" : ""}</p>}
-            </li>
+            <EventCard
+              key={event.id}
+              event={event}
+              variant={event.category === "cinema" ? "cinema" : "compact"}
+            />
           ))}
-        </ol>
+        </div>
       )}
     </section>
   );

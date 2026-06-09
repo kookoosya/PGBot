@@ -13,6 +13,8 @@ from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
+from app.models.enums import EventCategory
+from app.services.cinema_enrichment import enrich_cinema_fields, extract_genre
 from app.services.timepad_service import (
     _parse_timepad_datetime,
     _event_location,
@@ -38,19 +40,31 @@ def _item_to_fetched(item: dict) -> FetchedEvent | None:
     if len(title) < 3:
         return None
 
-    description = (item.get("description_short") or item.get("description_html") or "")[:2000]
+    raw_description = (item.get("description_short") or item.get("description_html") or "")[:2000]
     ends_at = _parse_timepad_datetime(item.get("ends_at"))
+    category = map_timepad_category(item)
+    location = _event_location(item)
+    genre, description = enrich_cinema_fields(
+        title=title,
+        description=raw_description or None,
+        category=category,
+        genre=extract_genre(f"{title} {raw_description}"),
+        location=location,
+    )
+    if category != EventCategory.CINEMA and not description and raw_description:
+        description = raw_description
 
     return FetchedEvent(
         title=title[:300],
-        description=description or None,
+        description=description,
         starts_at=starts_at,
         ends_at=ends_at,
-        location=_event_location(item),
+        location=location,
         region=infer_timepad_region(item),
-        category=map_timepad_category(item),
+        category=category,
         source="timepad",
         source_url=timepad_event_url(item),
+        genre=genre,
     )
 
 

@@ -40,6 +40,7 @@ services:
       sh -c "alembic upgrade head &&
              python scripts/seed_db.py &&
              python scripts/seed_events.py &&
+             python scripts/enrich_events.py &&
              python scripts/cleanup_demo_providers.py &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
 

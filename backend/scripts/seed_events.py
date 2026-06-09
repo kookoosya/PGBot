@@ -60,16 +60,29 @@ DEMO_EVENTS: list[dict] = [
         "source": "manual",
     },
     {
-        "title": "Кино в Пскове — премьера недели",
-        "description": "Актуальный сеанс в городском кинотеатре. Удобно совместить с поездкой из Пушкинских Гор.",
+        "title": "«Граф Монте-Кристо»",
+        "description": "Экранизация романа Дюма — история мести, свободы и приключений.",
+        "genre": "Приключения",
         "days_from_now": 3,
         "hour": 19,
         "duration_hours": 2,
-        "location": "Псков, кинотеатр",
+        "location": "Псков, кинотеатр «Победа»",
         "region": EventRegion.PSKOV,
         "category": EventCategory.CINEMA,
         "source": "manual",
         "source_url": "https://kudago.com/pskov/",
+    },
+    {
+        "title": "«Дюна: Часть вторая»",
+        "description": "Пол Атрейдес продолжает путь на Арракисе. Масштабная фантастическая сага.",
+        "genre": "Фантастика",
+        "days_from_now": 4,
+        "hour": 20,
+        "duration_hours": 2,
+        "location": "Псков, кинотеатр «Русь»",
+        "region": EventRegion.PSKOV,
+        "category": EventCategory.CINEMA,
+        "source": "manual",
     },
     {
         "title": "Концерт в Псковском кремле",
@@ -144,21 +157,22 @@ async def _insert_demo_events(db: AsyncSession) -> int:
         existing = await db.execute(select(Event).where(Event.title == item["title"]))
         if existing.scalar_one_or_none():
             continue
-        await create_event(
-            db,
-            EventCreateInput(
-                title=item["title"],
-                description=item["description"],
-                starts_at=starts_at,
-                ends_at=ends_at,
-                location=item["location"],
-                region=item["region"],
-                category=item["category"],
-                source=item.get("source", "manual"),
-                source_url=item.get("source_url"),
-                is_published=True,
-            ),
-        )
+            await create_event(
+                db,
+                EventCreateInput(
+                    title=item["title"],
+                    description=item["description"],
+                    starts_at=starts_at,
+                    ends_at=ends_at,
+                    location=item["location"],
+                    region=item["region"],
+                    category=item["category"],
+                    genre=item.get("genre"),
+                    source=item.get("source", "manual"),
+                    source_url=item.get("source_url"),
+                    is_published=True,
+                ),
+            )
         created += 1
     return created
 

@@ -2567,6 +2567,293 @@
     border-top: 1px solid hsl(var(--border));
   }
 
+  /* Afisha — literary album */
+  .afisha-page {
+    padding-bottom: 3rem;
+  }
+  .afisha-breadcrumb {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-breadcrumb a {
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .afisha-breadcrumb a:hover {
+    text-decoration: underline;
+  }
+  .afisha-breadcrumb-current {
+    color: hsl(var(--foreground));
+  }
+  .afisha-hero {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .afisha-kicker {
+    margin: 0 0 0.35rem;
+    font-size: 0.8125rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1.75rem, 4vw, 2.35rem);
+    color: hsl(var(--forest));
+    line-height: 1.15;
+  }
+  .afisha-lead {
+    margin: 0.75rem 0 0;
+    max-width: 42rem;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-filters {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .afisha-search-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .afisha-search-input {
+    flex: 1;
+    min-width: 12rem;
+  }
+  .afisha-filter-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .afisha-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .afisha-category-tab {
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background) / 0.7);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .afisha-category-tab:hover {
+    border-color: hsl(var(--gold) / 0.5);
+  }
+  .afisha-category-tab--active {
+    border-color: hsl(var(--forest));
+    background: hsl(var(--forest) / 0.1);
+    color: hsl(var(--forest));
+    font-weight: 600;
+  }
+  .afisha-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .afisha-section-head h2 {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.5rem;
+    color: hsl(var(--forest));
+  }
+  .afisha-section-lead {
+    margin: 0.4rem 0 0;
+    font-size: 0.9375rem;
+    color: hsl(var(--muted-foreground));
+    max-width: 40rem;
+  }
+  .afisha-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .afisha-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .afisha-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .afisha-grid--landing {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px) {
+    .afisha-grid--landing {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .afisha-grid--landing {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .afisha-cinema-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .afisha-cinema-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .afisha-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .afisha-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 48px hsl(152 48% 12% / 0.12);
+  }
+  .afisha-card--cinema {
+    border-left: 4px solid hsl(var(--forest));
+  }
+  .afisha-card-accent {
+    padding: 0.85rem 1.15rem 0;
+  }
+  .afisha-card-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .afisha-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.45rem;
+    padding: 0.5rem 1.15rem 1.15rem;
+  }
+  .afisha-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+  }
+  .afisha-genre-chip {
+    display: inline-flex;
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: hsl(var(--gold) / 0.2);
+    color: hsl(32 55% 28%);
+  }
+  .afisha-card-date {
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-card-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.125rem;
+    line-height: 1.3;
+  }
+  .afisha-card-link {
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .afisha-card-link:hover {
+    color: hsl(var(--gold));
+  }
+  .afisha-card-location {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-card-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: hsl(var(--foreground) / 0.85);
+    flex: 1;
+  }
+  .afisha-card-cta {
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .afisha-card-cta:hover {
+    text-decoration: underline;
+  }
+  .afisha-card--compact .afisha-card-title {
+    font-size: 1rem;
+  }
+  .afisha-detail-card {
+    padding: 1.75rem;
+  }
+  .afisha-detail-card--cinema {
+    border-left: 5px solid hsl(var(--forest));
+  }
+  .afisha-detail-hero {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+  }
+  .afisha-detail-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+  .afisha-detail-title {
+    margin: 0.35rem 0 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    color: hsl(var(--forest));
+    line-height: 1.2;
+  }
+  .afisha-detail-genre-line {
+    margin: 0.5rem 0 0;
+    font-size: 0.9375rem;
+    color: hsl(32 55% 28%);
+    font-weight: 600;
+  }
+  .afisha-detail-facts {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  @media (min-width: 480px) {
+    .afisha-detail-facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .afisha-detail-desc {
+    margin-bottom: 1rem;
+  }
+  .afisha-detail-source {
+    margin: 0 0 1rem;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .afisha-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+  .afisha-loading {
+    padding: 2rem 0;
+    text-align: center;
+  }
+
   /* Seasonal tip */
   .seasonal-tip {
     display: flex;
