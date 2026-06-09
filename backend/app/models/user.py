@@ -33,9 +33,7 @@ class User(Base):
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"))
     organization: Mapped[str | None] = mapped_column(String(255))
     position: Mapped[str | None] = mapped_column(String(255))
-    verification_status: Mapped[VerificationStatus] = mapped_column(
-        String(30), default=VerificationStatus.NOT_REQUIRED
-    )
+    verification_status: Mapped[VerificationStatus] = mapped_column(String(30), default=VerificationStatus.NOT_REQUIRED)
     verification_note: Mapped[str | None] = mapped_column(Text)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     verified_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
@@ -51,16 +49,12 @@ class User(Base):
 
     role: Mapped["Role"] = relationship(back_populates="users")
     department: Mapped["Department | None"] = relationship(back_populates="users")
-    issues: Mapped[list["Issue"]] = relationship(
-        back_populates="resident", foreign_keys="Issue.resident_id"
-    )
-    assigned_issues: Mapped[list["Issue"]] = relationship(
-        back_populates="assignee", foreign_keys="Issue.assignee_id"
-    )
+    issues: Mapped[list["Issue"]] = relationship(back_populates="resident", foreign_keys="Issue.resident_id")
+    assigned_issues: Mapped[list["Issue"]] = relationship(back_populates="assignee", foreign_keys="Issue.assignee_id")
     comments: Mapped[list["IssueComment"]] = relationship(back_populates="author")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
 
 
+from app.models.audit_log import AuditLog  # noqa: E402
 from app.models.department import Department  # noqa: E402
 from app.models.issue import Issue, IssueComment  # noqa: E402
-from app.models.audit_log import AuditLog  # noqa: E402

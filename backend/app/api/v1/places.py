@@ -45,8 +45,11 @@ router = APIRouter()
 settings = get_settings()
 
 SHOP_CATEGORIES = {
-    PlaceCategory.SHOP, PlaceCategory.SUPERMARKET, PlaceCategory.PHARMACY,
-    PlaceCategory.TYRE, PlaceCategory.AUTO,
+    PlaceCategory.SHOP,
+    PlaceCategory.SUPERMARKET,
+    PlaceCategory.PHARMACY,
+    PlaceCategory.TYRE,
+    PlaceCategory.AUTO,
 }
 
 LODGING_CATEGORIES = {PlaceCategory.HOTEL}
@@ -117,13 +120,19 @@ def _rating_meta(p: Place) -> dict:
 def _place_response(p: Place) -> PlaceResponse:
     meta = _rating_meta(p)
     return PlaceResponse(
-        id=p.id, name=p.name, category=p.category,
+        id=p.id,
+        name=p.name,
+        category=p.category,
         category_label=PLACE_CATEGORY_LABELS.get(p.category, p.category),
-        description=p.description, address=p.address,
-        latitude=p.latitude, longitude=p.longitude,
-        phone=p.phone, website=p.website,
+        description=p.description,
+        address=p.address,
+        latitude=p.latitude,
+        longitude=p.longitude,
+        phone=p.phone,
+        website=p.website,
         opening_hours=format_opening_hours(p.opening_hours) or p.opening_hours,
-        avg_rating=p.avg_rating, review_count=p.review_count,
+        avg_rating=p.avg_rating,
+        review_count=p.review_count,
         external_rating=p.external_rating,
         external_review_count=p.external_review_count,
         yandex_url=p.yandex_url,
@@ -135,18 +144,13 @@ def _place_response(p: Place) -> PlaceResponse:
 
 @router.get("/categories")
 async def list_place_categories():
-    return [
-        {"value": c.value, "label": PLACE_CATEGORY_LABELS[c]}
-        for c in PlaceCategory
-    ]
+    return [{"value": c.value, "label": PLACE_CATEGORY_LABELS[c]} for c in PlaceCategory]
 
 
 @router.get("/complaint-types")
 async def list_complaint_types():
     return [
-        {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]}
-        for t in ShopComplaintType
-        if t not in MAP_REPORT_LABELS
+        {"value": t.value, "label": SHOP_COMPLAINT_LABELS[t]} for t in ShopComplaintType if t not in MAP_REPORT_LABELS
     ]
 
 
@@ -174,9 +178,7 @@ async def list_taxi(db: Annotated[AsyncSession, Depends(get_db)]):
 async def map_stats(db: Annotated[AsyncSession, Depends(get_db)]):
     total = (await db.execute(select(func.count(Place.id)).where(Place.is_active.is_(True)))).scalar() or 0
     cat_result = await db.execute(
-        select(Place.category, func.count(Place.id))
-        .where(Place.is_active.is_(True))
-        .group_by(Place.category)
+        select(Place.category, func.count(Place.id)).where(Place.is_active.is_(True)).group_by(Place.category)
     )
     by_cat = {PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): row[1] for row in cat_result.all()}
     last = (await db.execute(select(func.max(Place.last_synced_at)))).scalar()
@@ -213,22 +215,24 @@ async def list_places(
     if useful_only:
         query = query.where(Place.category.in_(USEFUL_CATEGORIES))
     if search:
-        query = query.where(
-            Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%")
-        )
+        query = query.where(Place.name.ilike(f"%{search}%") | Place.address.ilike(f"%{search}%"))
     if min_rating:
-        query = query.where(EFFECTIVE_RATING >= min_rating)
+        query = query.where(min_rating <= EFFECTIVE_RATING)
     if all(v is not None for v in (south, west, north, east)):
         query = query.where(
-            Place.latitude >= south, Place.latitude <= north,
-            Place.longitude >= west, Place.longitude <= east,
+            Place.latitude >= south,
+            Place.latitude <= north,
+            Place.longitude >= west,
+            Place.longitude <= east,
         )
     else:
         use_district = district or category in LODGING_CATEGORIES
         lat_min, lat_max, lng_min, lng_max = _district_bbox() if use_district else _settlement_bbox()
         query = query.where(
-            Place.latitude >= lat_min, Place.latitude <= lat_max,
-            Place.longitude >= lng_min, Place.longitude <= lng_max,
+            Place.latitude >= lat_min,
+            Place.latitude <= lat_max,
+            Place.longitude >= lng_min,
+            Place.longitude <= lng_max,
         )
 
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
@@ -250,9 +254,7 @@ async def list_places(
 @router.get("/{place_id}", response_model=PlaceDetailResponse)
 async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
-        select(Place)
-        .options(selectinload(Place.reviews), selectinload(Place.complaints))
-        .where(Place.id == place_id)
+        select(Place).options(selectinload(Place.reviews), selectinload(Place.complaints)).where(Place.id == place_id)
     )
     place = result.scalar_one_or_none()
     if not place:
@@ -267,11 +269,15 @@ async def get_place(place_id: int, db: Annotated[AsyncSession, Depends(get_db)])
         reviews=[PlaceReviewResponse.model_validate(r) for r in reviews],
         recent_complaints=[
             PlaceComplaintResponse(
-                id=c.id, complaint_type=c.complaint_type,
+                id=c.id,
+                complaint_type=c.complaint_type,
                 complaint_label=MAP_REPORT_LABELS.get(c.complaint_type)
                 or SHOP_COMPLAINT_LABELS.get(c.complaint_type, c.complaint_type),
-                description=c.description, price_tagged=c.price_tagged,
-                price_charged=c.price_charged, status=c.status, created_at=c.created_at,
+                description=c.description,
+                price_tagged=c.price_tagged,
+                price_charged=c.price_charged,
+                status=c.status,
+                created_at=c.created_at,
             )
             for c in complaints
         ],
@@ -303,8 +309,7 @@ async def add_review(
     await db.flush()
 
     avg_result = await db.execute(
-        select(func.avg(PlaceReview.rating), func.count(PlaceReview.id))
-        .where(PlaceReview.place_id == place_id)
+        select(func.avg(PlaceReview.rating), func.count(PlaceReview.id)).where(PlaceReview.place_id == place_id)
     )
     avg_row = avg_result.one()
     place.avg_rating = round(float(avg_row[0] or 0), 1)
@@ -368,6 +373,7 @@ async def add_complaint(
     complaint.issue_id = issue.id
 
     from app.services.notifications import notify_owner
+
     await notify_owner(
         f"⚠️ Жалоба на организацию\n\n"
         f"«{place.name}» — {place.address or 'адрес не указан'}\n"
@@ -376,11 +382,14 @@ async def add_complaint(
     )
 
     return PlaceComplaintResponse(
-        id=complaint.id, complaint_type=complaint.complaint_type,
+        id=complaint.id,
+        complaint_type=complaint.complaint_type,
         complaint_label=MAP_REPORT_LABELS.get(complaint.complaint_type)
         or SHOP_COMPLAINT_LABELS.get(complaint.complaint_type, ""),
-        description=complaint.description, price_tagged=complaint.price_tagged,
-        price_charged=complaint.price_charged, status=complaint.status,
+        description=complaint.description,
+        price_tagged=complaint.price_tagged,
+        price_charged=complaint.price_charged,
+        status=complaint.status,
         created_at=complaint.created_at,
     )
 

@@ -1,9 +1,7 @@
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-
-from app.core.rate_limit import limiter
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,11 +9,17 @@ from sqlalchemy.orm import selectinload
 from app.config import get_settings
 from app.core.deps import get_current_user, require_owner
 from app.core.password_policy import validate_password
+from app.core.rate_limit import limiter
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import SERVICE_TYPE_LABELS, ServiceType, UserRole, VerificationStatus
 from app.models.provider_busy import ProviderBusyBlock
-from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
+from app.models.service import (
+    ProviderSchedule,
+    ProviderService,
+    ServiceAppointment,
+    ServiceProvider,
+)
 from app.models.user import Role, User
 from app.schemas.service import (
     AppointmentResponse,
@@ -47,10 +51,13 @@ settings = get_settings()
 
 def _service_resp(s: ProviderService) -> ProviderServiceResponse:
     return ProviderServiceResponse(
-        id=s.id, service_type=s.service_type,
+        id=s.id,
+        service_type=s.service_type,
         service_label=SERVICE_TYPE_LABELS.get(s.service_type, s.service_type),
-        name=s.name, description=s.description,
-        duration_minutes=s.duration_minutes, price=s.price,
+        name=s.name,
+        description=s.description,
+        duration_minutes=s.duration_minutes,
+        price=s.price,
     )
 
 
@@ -70,9 +77,7 @@ async def register_provider(
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
 
-    existing = await db.execute(select(User).where(
-        (User.username == data.username) | (User.email == data.email)
-    ))
+    existing = await db.execute(select(User).where((User.username == data.username) | (User.email == data.email)))
     if existing.scalar_one_or_none():
         raise HTTPException(400, "Логин или email уже заняты")
 
@@ -110,23 +115,27 @@ async def register_provider(
     await db.flush()
 
     for svc in data.services:
-        db.add(ProviderService(
-            provider_id=provider.id,
-            service_type=svc.service_type,
-            name=svc.name,
-            description=svc.description,
-            duration_minutes=svc.duration_minutes,
-            price=svc.price,
-        ))
+        db.add(
+            ProviderService(
+                provider_id=provider.id,
+                service_type=svc.service_type,
+                name=svc.name,
+                description=svc.description,
+                duration_minutes=svc.duration_minutes,
+                price=svc.price,
+            )
+        )
 
     for sch in data.schedule:
-        db.add(ProviderSchedule(
-            provider_id=provider.id,
-            day_of_week=sch.day_of_week,
-            start_time=parse_time(sch.start_time),
-            end_time=parse_time(sch.end_time),
-            is_working=sch.is_working,
-        ))
+        db.add(
+            ProviderSchedule(
+                provider_id=provider.id,
+                day_of_week=sch.day_of_week,
+                start_time=parse_time(sch.start_time),
+                end_time=parse_time(sch.end_time),
+                is_working=sch.is_working,
+            )
+        )
 
     svc_names = ", ".join(s.name for s in data.services)
     await notify_owner(
@@ -161,11 +170,20 @@ async def list_providers(
         if service_type and not any(s.service_type == service_type for s in p.services):
             continue
         status, next_slot = await get_provider_status_today(db, p)
-        items.append(ProviderListItem(
-            id=p.id, full_name=p.full_name, phone=p.phone, bio=p.bio, address=p.address,
-            avg_rating=p.avg_rating, review_count=p.review_count, services=services,
-            status_today=status, next_free_slot=next_slot,
-        ))
+        items.append(
+            ProviderListItem(
+                id=p.id,
+                full_name=p.full_name,
+                phone=p.phone,
+                bio=p.bio,
+                address=p.address,
+                avg_rating=p.avg_rating,
+                review_count=p.review_count,
+                services=services,
+                status_today=status,
+                next_free_slot=next_slot,
+            )
+        )
     return items
 
 
@@ -181,8 +199,11 @@ async def list_pending_providers(
     )
     return [
         {
-            "id": p.id, "full_name": p.full_name, "phone": p.phone,
-            "address": p.address, "services": [s.name for s in p.services],
+            "id": p.id,
+            "full_name": p.full_name,
+            "phone": p.phone,
+            "address": p.address,
+            "services": [s.name for s in p.services],
         }
         for p in result.scalars().all()
     ]
@@ -260,18 +281,27 @@ async def get_provider(provider_id: int, db: Annotated[AsyncSession, Depends(get
     status, next_slot = await get_provider_status_today(db, p)
     schedule = [
         ScheduleResponse(
-            day_of_week=s.day_of_week, day_label=DAY_LABELS[s.day_of_week],
-            start_time=format_time(s.start_time), end_time=format_time(s.end_time),
+            day_of_week=s.day_of_week,
+            day_label=DAY_LABELS[s.day_of_week],
+            start_time=format_time(s.start_time),
+            end_time=format_time(s.end_time),
             is_working=s.is_working,
         )
         for s in sorted(p.schedule, key=lambda x: x.day_of_week)
     ]
     return ProviderDetailResponse(
-        id=p.id, full_name=p.full_name, phone=p.phone, bio=p.bio, address=p.address,
-        avg_rating=p.avg_rating, review_count=p.review_count,
+        id=p.id,
+        full_name=p.full_name,
+        phone=p.phone,
+        bio=p.bio,
+        address=p.address,
+        avg_rating=p.avg_rating,
+        review_count=p.review_count,
         services=[_service_resp(s) for s in p.services if s.is_active],
-        status_today=status, next_free_slot=next_slot,
-        schedule=schedule, verification_status=p.verification_status,
+        status_today=status,
+        next_free_slot=next_slot,
+        schedule=schedule,
+        verification_status=p.verification_status,
     )
 
 
@@ -287,11 +317,13 @@ async def get_slots(
     if not service:
         raise HTTPException(404, "Услуга не найдена")
 
-    prov_result = await db.execute(select(ServiceProvider).where(
-        ServiceProvider.id == provider_id,
-        ServiceProvider.is_active.is_(True),
-        ServiceProvider.verification_status == VerificationStatus.APPROVED,
-    ))
+    prov_result = await db.execute(
+        select(ServiceProvider).where(
+            ServiceProvider.id == provider_id,
+            ServiceProvider.is_active.is_(True),
+            ServiceProvider.verification_status == VerificationStatus.APPROVED,
+        )
+    )
     provider = prov_result.scalar_one_or_none()
     if not provider:
         raise HTTPException(404, "Мастер не найден")
@@ -324,11 +356,13 @@ async def book_appointment(
     if not service:
         raise HTTPException(404, "Услуга не найдена")
 
-    prov_result = await db.execute(select(ServiceProvider).where(
-        ServiceProvider.id == provider_id,
-        ServiceProvider.is_active.is_(True),
-        ServiceProvider.verification_status == VerificationStatus.APPROVED,
-    ))
+    prov_result = await db.execute(
+        select(ServiceProvider).where(
+            ServiceProvider.id == provider_id,
+            ServiceProvider.is_active.is_(True),
+            ServiceProvider.verification_status == VerificationStatus.APPROVED,
+        )
+    )
     provider = prov_result.scalar_one_or_none()
     if not provider:
         raise HTTPException(404, "Мастер недоступен для записи")
@@ -416,18 +450,27 @@ async def my_profile(
     status, next_slot = await get_provider_status_today(db, p)
     schedule = [
         ScheduleResponse(
-            day_of_week=s.day_of_week, day_label=DAY_LABELS[s.day_of_week],
-            start_time=format_time(s.start_time), end_time=format_time(s.end_time),
+            day_of_week=s.day_of_week,
+            day_label=DAY_LABELS[s.day_of_week],
+            start_time=format_time(s.start_time),
+            end_time=format_time(s.end_time),
             is_working=s.is_working,
         )
         for s in sorted(p.schedule, key=lambda x: x.day_of_week)
     ]
     return ProviderDetailResponse(
-        id=p.id, full_name=p.full_name, phone=p.phone, bio=p.bio, address=p.address,
-        avg_rating=p.avg_rating, review_count=p.review_count,
+        id=p.id,
+        full_name=p.full_name,
+        phone=p.phone,
+        bio=p.bio,
+        address=p.address,
+        avg_rating=p.avg_rating,
+        review_count=p.review_count,
         services=[_service_resp(s) for s in p.services if s.is_active],
-        status_today=status, next_free_slot=next_slot,
-        schedule=schedule, verification_status=p.verification_status,
+        status_today=status,
+        next_free_slot=next_slot,
+        schedule=schedule,
+        verification_status=p.verification_status,
     )
 
 
@@ -449,9 +492,12 @@ async def add_busy_block(
     db.add(block)
     await db.flush()
     return BusyBlockResponse(
-        id=block.id, block_date=block.block_date,
-        start_time=format_time(block.start_time), end_time=format_time(block.end_time),
-        reason=block.reason, note=block.note,
+        id=block.id,
+        block_date=block.block_date,
+        start_time=format_time(block.start_time),
+        end_time=format_time(block.end_time),
+        reason=block.reason,
+        note=block.note,
     )
 
 
@@ -469,9 +515,12 @@ async def list_busy_blocks(
     )
     return [
         BusyBlockResponse(
-            id=b.id, block_date=b.block_date,
-            start_time=format_time(b.start_time), end_time=format_time(b.end_time),
-            reason=b.reason, note=b.note,
+            id=b.id,
+            block_date=b.block_date,
+            start_time=format_time(b.start_time),
+            end_time=format_time(b.end_time),
+            reason=b.reason,
+            note=b.note,
         )
         for b in result.scalars().all()
     ]
@@ -529,13 +578,15 @@ async def update_my_schedule(
     await db.flush()
 
     for sch in data.schedule:
-        db.add(ProviderSchedule(
-            provider_id=provider.id,
-            day_of_week=sch.day_of_week,
-            start_time=parse_time(sch.start_time),
-            end_time=parse_time(sch.end_time),
-            is_working=sch.is_working,
-        ))
+        db.add(
+            ProviderSchedule(
+                provider_id=provider.id,
+                day_of_week=sch.day_of_week,
+                start_time=parse_time(sch.start_time),
+                end_time=parse_time(sch.end_time),
+                is_working=sch.is_working,
+            )
+        )
     return {"status": "ok"}
 
 
@@ -555,12 +606,14 @@ async def my_appointments(
     )
     return [
         AppointmentResponse(
-            id=a.id, provider_name=provider.full_name,
+            id=a.id,
+            provider_name=provider.full_name,
             service_name=a.service.name if a.service else "—",
             appointment_date=a.appointment_date,
             start_time=format_time(a.start_time),
             end_time=format_time(a.end_time),
-            status=a.status, client_name=a.client_name,
+            status=a.status,
+            client_name=a.client_name,
         )
         for a in appts.scalars().all()
     ]

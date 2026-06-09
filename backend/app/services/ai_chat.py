@@ -54,18 +54,14 @@ def make_identifier(ip: str | None, user_agent: str | None, vk_id: int | None = 
 
 async def get_usage_today(db: AsyncSession, identifier: str) -> int:
     today = date.today()
-    result = await db.execute(
-        select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today)
-    )
+    result = await db.execute(select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today))
     usage = result.scalar_one_or_none()
     return usage.message_count if usage else 0
 
 
 async def increment_usage(db: AsyncSession, identifier: str, source: str = "web") -> int:
     today = date.today()
-    result = await db.execute(
-        select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today)
-    )
+    result = await db.execute(select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today))
     usage = result.scalar_one_or_none()
     if usage:
         usage.message_count += 1

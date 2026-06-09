@@ -1,7 +1,7 @@
 import re
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +19,6 @@ from app.schemas.ai import (
     PaymentInfoResponse,
     UsageResponse,
 )
-from app.services.ai_status import get_ai_status
 from app.services.ai_chat import (
     chat_with_ai,
     get_payment_info,
@@ -29,6 +28,7 @@ from app.services.ai_chat import (
 )
 from app.services.ai_image_store import image_media_type, image_path
 from app.services.ai_media import CHAT_MODELS, IMAGE_MODELS, generate_image
+from app.services.ai_status import get_ai_status
 
 router = APIRouter()
 settings = get_settings()

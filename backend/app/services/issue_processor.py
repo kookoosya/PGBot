@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,13 @@ from sqlalchemy.orm import selectinload
 from app.config import get_settings
 from app.models.ai_analysis import AIAnalysis
 from app.models.department import Department
-from app.models.enums import IssueStatus, NotificationPriority, NotificationStatus, Priority, UserRole
+from app.models.enums import (
+    IssueStatus,
+    NotificationPriority,
+    NotificationStatus,
+    Priority,
+    UserRole,
+)
 from app.models.issue import Issue, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.user import User
@@ -32,9 +38,7 @@ async def get_or_create_web_resident(
         return user
 
     if phone:
-        result = await db.execute(
-            select(User).options(selectinload(User.role)).where(User.phone == phone)
-        )
+        result = await db.execute(select(User).options(selectinload(User.role)).where(User.phone == phone))
         existing = result.scalar_one_or_none()
         if existing:
             return existing
@@ -45,7 +49,7 @@ async def get_or_create_web_resident(
     role = role_result.scalar_one()
     suffix = phone or "web"
     user = User(
-        username=f"web_{suffix.replace('+', '').replace(' ', '')}_{int(datetime.now(timezone.utc).timestamp())}",
+        username=f"web_{suffix.replace('+', '').replace(' ', '')}_{int(datetime.now(UTC).timestamp())}",
         phone=phone,
         full_name=full_name or "Житель сайта",
         role_id=role.id,
@@ -56,9 +60,7 @@ async def get_or_create_web_resident(
 
 
 async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
-    result = await db.execute(
-        select(User).options(selectinload(User.role)).where(User.vk_id == vk_id)
-    )
+    result = await db.execute(select(User).options(selectinload(User.role)).where(User.vk_id == vk_id))
     user = result.scalar_one_or_none()
     if user:
         return user
@@ -115,8 +117,7 @@ async def process_incoming_message(
     if not text or len(text.strip()) < 5:
         await send_message(
             peer_id,
-            "Пожалуйста, опишите проблему подробнее (минимум 5 символов). "
-            "Можно приложить фото.",
+            "Пожалуйста, опишите проблему подробнее (минимум 5 символов). " "Можно приложить фото.",
         )
         return None
 
@@ -251,7 +252,7 @@ async def process_incoming_message(
         )
         if sent:
             notification.status = NotificationStatus.SENT
-            notification.sent_at = datetime.now(timezone.utc)
+            notification.sent_at = datetime.now(UTC)
 
     await send_message(
         peer_id,
@@ -274,9 +275,7 @@ async def process_web_complaint(
     address: str | None = None,
     category: str | None = None,
 ) -> Issue:
-    resident = await get_or_create_web_resident(
-        db, user=user, phone=phone, full_name=full_name
-    )
+    resident = await get_or_create_web_resident(db, user=user, phone=phone, full_name=full_name)
 
     existing = await find_similar_issues(db, text, category)
     context_lines = []
@@ -388,6 +387,6 @@ async def process_web_complaint(
         )
         if sent:
             notification.status = NotificationStatus.SENT
-            notification.sent_at = datetime.now(timezone.utc)
+            notification.sent_at = datetime.now(UTC)
 
     return issue

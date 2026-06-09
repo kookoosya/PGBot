@@ -1,7 +1,6 @@
 from datetime import date, datetime, time
 
 from sqlalchemy import (
-    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -29,9 +28,7 @@ class ServiceProvider(Base):
     bio: Mapped[str | None] = mapped_column(Text)
     address: Mapped[str | None] = mapped_column(String(500))
     place_id: Mapped[int | None] = mapped_column(ForeignKey("places.id", ondelete="SET NULL"))
-    verification_status: Mapped[VerificationStatus] = mapped_column(
-        String(30), default=VerificationStatus.PENDING
-    )
+    verification_status: Mapped[VerificationStatus] = mapped_column(String(30), default=VerificationStatus.PENDING)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     avg_rating: Mapped[float] = mapped_column(default=0.0)
     review_count: Mapped[int] = mapped_column(Integer, default=0)

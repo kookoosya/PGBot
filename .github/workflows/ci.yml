@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "cursor/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "cursor/**"]
 
 jobs:
   backend:
@@ -24,6 +24,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+      DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
+      SECRET_KEY: ci-test-secret-key-not-for-production-use
+      DEBUG: "true"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -33,14 +39,33 @@ jobs:
 
       - name: Install dependencies
         working-directory: backend
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
-      - name: Lint import check
+      - name: Ruff lint
         working-directory: backend
-        env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
-          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
+        run: ruff check app tests scripts
+
+      - name: Ruff format
+        working-directory: backend
+        run: ruff format --check app tests scripts
+
+      - name: Alembic migrations
+        working-directory: backend
+        run: alembic upgrade head
+
+      - name: Pytest
+        working-directory: backend
+        run: pytest -q
+
+      - name: Import smoke
+        working-directory: backend
         run: python -c "from app.main import app; print('OK:', app.title)"
+
+      - name: pip-audit
+        working-directory: backend
+        run: pip-audit -r requirements.txt
 
   frontend:
     runs-on: ubuntu-latest
@@ -51,8 +76,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install and build
+      - name: Install
         working-directory: frontend
-        run: |
-          npm install
-          npm run build
+        run: npm install
+
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build

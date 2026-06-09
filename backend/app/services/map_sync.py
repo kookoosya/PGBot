@@ -2,11 +2,11 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
 from app.services.lodging_seed import seed_lodging_places
+from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
 from app.services.place_cleanup import cleanup_map_places
-from app.services.village_services_seed import seed_village_services
 from app.services.pushkin_places_seed import seed_taxi_services, seed_village_places
+from app.services.village_services_seed import seed_village_services
 from app.services.yandex_sync import sync_places_from_yandex
 
 logger = logging.getLogger(__name__)

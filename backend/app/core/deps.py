@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -36,14 +36,12 @@ async def get_current_user(
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-    result = await db.execute(
-        select(User).options(selectinload(User.role)).where(User.id == int(user_id))
-    )
+    result = await db.execute(select(User).options(selectinload(User.role)).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
 
-    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+    if user.locked_until and user.locked_until > datetime.now(UTC):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account locked")
 
     token_pwd = payload.get("pwd")
@@ -90,10 +88,7 @@ def require_owner():
 
 def is_owner_user(user: User) -> bool:
     settings = get_settings()
-    return (
-        user.role.name == UserRole.SUPER_ADMIN
-        and user.username in settings.owner_usernames
-    )
+    return user.role.name == UserRole.SUPER_ADMIN and user.username in settings.owner_usernames
 
 
 def is_official_user(user: User) -> bool:

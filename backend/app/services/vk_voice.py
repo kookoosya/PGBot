@@ -35,10 +35,12 @@ async def transcribe_audio_url(url: str) -> str | None:
         mime = "audio/ogg" if ".ogg" in url.lower() else "audio/mpeg"
         genai.configure(api_key=settings.GEMINI_API_KEY)
         model = genai.GenerativeModel(settings.GEMINI_MODEL)
-        result = model.generate_content([
-            "Распознай голосовое сообщение на русском. Верни только текст без пояснений.",
-            {"mime_type": mime, "data": audio_bytes},
-        ])
+        result = model.generate_content(
+            [
+                "Распознай голосовое сообщение на русском. Верни только текст без пояснений.",
+                {"mime_type": mime, "data": audio_bytes},
+            ]
+        )
         text = (result.text or "").strip()
         return text if len(text) >= 3 else None
     except Exception as exc:

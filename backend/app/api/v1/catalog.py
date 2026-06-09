@@ -35,11 +35,13 @@ def _item_response(item: CatalogItem, *, admin: bool = False) -> dict:
         "sort_order": item.sort_order,
     }
     if admin:
-        base.update({
-            "is_active": item.is_active,
-            "seed_key": item.seed_key,
-            "created_at": item.created_at,
-        })
+        base.update(
+            {
+                "is_active": item.is_active,
+                "seed_key": item.seed_key,
+                "created_at": item.created_at,
+            }
+        )
     return base
 
 

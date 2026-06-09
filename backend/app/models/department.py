@@ -22,5 +22,5 @@ class Department(Base):
     issues: Mapped[list["Issue"]] = relationship(back_populates="department")
 
 
-from app.models.user import User  # noqa: E402
 from app.models.issue import Issue  # noqa: E402
+from app.models.user import User  # noqa: E402

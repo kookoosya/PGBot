@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from sqlalchemy import select
@@ -118,7 +118,7 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
         logger.error("OSM sync failed on all mirrors: %s", last_error)
         return {"error": str(last_error), "synced": 0}
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for element in data.get("elements", []):
         tags = element.get("tags", {})
@@ -155,20 +155,22 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
             updated += 1
         else:
             cat_label = PLACE_CATEGORY_LABELS.get(category, "Объект")
-            db.add(Place(
-                name=name,
-                category=category,
-                description=f"{cat_label} — данные OpenStreetMap",
-                address=_build_address(tags),
-                latitude=lat,
-                longitude=lon,
-                phone=phone,
-                website=website,
-                opening_hours=hours,
-                osm_id=osm_id,
-                external_source="osm",
-                last_synced_at=now,
-            ))
+            db.add(
+                Place(
+                    name=name,
+                    category=category,
+                    description=f"{cat_label} — данные OpenStreetMap",
+                    address=_build_address(tags),
+                    latitude=lat,
+                    longitude=lon,
+                    phone=phone,
+                    website=website,
+                    opening_hours=hours,
+                    osm_id=osm_id,
+                    external_source="osm",
+                    last_synced_at=now,
+                )
+            )
             created += 1
         synced += 1
 

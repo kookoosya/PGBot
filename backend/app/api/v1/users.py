@@ -1,11 +1,11 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import get_current_user, require_owner
+from app.core.deps import require_owner
 from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.database import get_db
@@ -32,9 +32,16 @@ async def list_users(
     users = result.scalars().all()
     return [
         UserResponse(
-            id=u.id, username=u.username, email=u.email, full_name=u.full_name,
-            phone=u.phone, vk_id=u.vk_id, role=u.role.name,
-            department_id=u.department_id, is_active=u.is_active, created_at=u.created_at,
+            id=u.id,
+            username=u.username,
+            email=u.email,
+            full_name=u.full_name,
+            phone=u.phone,
+            vk_id=u.vk_id,
+            role=u.role.name,
+            department_id=u.department_id,
+            is_active=u.is_active,
+            created_at=u.created_at,
         )
         for u in users
     ]
@@ -68,9 +75,16 @@ async def create_user(
     await db.flush()
     await db.refresh(user, ["role"])
     return UserResponse(
-        id=user.id, username=user.username, email=user.email, full_name=user.full_name,
-        phone=user.phone, vk_id=user.vk_id, role=user.role.name,
-        department_id=user.department_id, is_active=user.is_active, created_at=user.created_at,
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        vk_id=user.vk_id,
+        role=user.role.name,
+        department_id=user.department_id,
+        is_active=user.is_active,
+        created_at=user.created_at,
     )
 
 
@@ -97,7 +111,14 @@ async def update_user(
         setattr(user, field, value)
 
     return UserResponse(
-        id=user.id, username=user.username, email=user.email, full_name=user.full_name,
-        phone=user.phone, vk_id=user.vk_id, role=user.role.name,
-        department_id=user.department_id, is_active=user.is_active, created_at=user.created_at,
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        vk_id=user.vk_id,
+        role=user.role.name,
+        department_id=user.department_id,
+        is_active=user.is_active,
+        created_at=user.created_at,
     )

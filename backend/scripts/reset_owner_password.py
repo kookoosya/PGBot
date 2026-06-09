@@ -7,13 +7,11 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from sqlalchemy import select
-
 from app.config import get_settings
 from app.core.security import get_password_hash
 from app.database import AsyncSessionLocal
-from app.models.enums import UserRole
 from app.models.user import User
+from sqlalchemy import select
 
 
 async def main() -> None:

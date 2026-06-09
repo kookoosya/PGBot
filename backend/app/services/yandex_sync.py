@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from sqlalchemy import select
@@ -92,7 +92,7 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
         return {"source": "reference_seed", "synced": seeded, "api": False}
 
     synced = created = updated = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     seen_ids: set[str] = set()
 
     async with httpx.AsyncClient(timeout=30) as client:
@@ -160,15 +160,24 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
                     updated += 1
                 else:
                     cat_label = PLACE_CATEGORY_LABELS.get(category, "Объект")
-                    db.add(Place(
-                        name=name, category=category, latitude=lat, longitude=lng,
-                        address=address, phone=phone, opening_hours=hours,
-                        description=f"{cat_label} — Яндекс.Карты",
-                        yandex_id=str(yid), yandex_url=yandex_url,
-                        external_source="yandex",
-                        external_rating=rating, external_review_count=reviews,
-                        last_synced_at=now,
-                    ))
+                    db.add(
+                        Place(
+                            name=name,
+                            category=category,
+                            latitude=lat,
+                            longitude=lng,
+                            address=address,
+                            phone=phone,
+                            opening_hours=hours,
+                            description=f"{cat_label} — Яндекс.Карты",
+                            yandex_id=str(yid),
+                            yandex_url=yandex_url,
+                            external_source="yandex",
+                            external_rating=rating,
+                            external_review_count=reviews,
+                            last_synced_at=now,
+                        )
+                    )
                     created += 1
                 synced += 1
 

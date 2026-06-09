@@ -7,22 +7,25 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from sqlalchemy import delete, select
-
 from app.config import get_settings
 from app.database import AsyncSessionLocal
-from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
+from app.models.service import (
+    ProviderSchedule,
+    ProviderService,
+    ServiceAppointment,
+    ServiceProvider,
+)
+from sqlalchemy import delete, select
 
 DEMO_PHONES = ["+79111234501", "+79111234502", "+79111234503"]
 
 
 async def cleanup() -> None:
     async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(ServiceProvider).where(ServiceProvider.phone.in_(DEMO_PHONES))
-        )
+        result = await db.execute(select(ServiceProvider).where(ServiceProvider.phone.in_(DEMO_PHONES)))
         providers = result.scalars().all()
         from app.models.provider_busy import ProviderBusyBlock
+
         for p in providers:
             await db.execute(delete(ServiceAppointment).where(ServiceAppointment.provider_id == p.id))
             await db.execute(delete(ProviderBusyBlock).where(ProviderBusyBlock.provider_id == p.id))

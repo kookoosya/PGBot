@@ -12,12 +12,12 @@ from app.config import get_settings
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
+    JOB_CLASSIFIED_CATEGORIES,
+    MAP_REPORT_LABELS,
     ClassifiedCategory,
     ClassifiedPaymentStatus,
     IssueCategory,
     IssueStatus,
-    JOB_CLASSIFIED_CATEGORIES,
-    MAP_REPORT_LABELS,
     Priority,
     ShopComplaintType,
 )
@@ -59,9 +59,7 @@ def start_classified_flow(peer_id: int, *, jobs: bool = False) -> str:
     hint = "вакансию" if jobs else "объявление"
     return box(
         "Новое объявление",
-        f"Размещение бесплатно, без регистрации.\n"
-        f"Шаг 1 из 4 — напишите заголовок {hint}.\n\n"
-        "«Отмена» — выйти.",
+        f"Размещение бесплатно, без регистрации.\n" f"Шаг 1 из 4 — напишите заголовок {hint}.\n\n" "«Отмена» — выйти.",
     )
 
 
@@ -69,8 +67,7 @@ def start_wish_flow(peer_id: int) -> str:
     _flows[peer_id] = {"kind": "wish", "step": "message", "data": {}}
     return box(
         "Пожелание",
-        "Напишите идею или пожелание для портала — что улучшить, что добавить.\n\n"
-        "«Отмена» — выйти.",
+        "Напишите идею или пожелание для портала — что улучшить, что добавить.\n\n" "«Отмена» — выйти.",
     )
 
 
@@ -87,10 +84,7 @@ async def format_jobs_message(db: AsyncSession, limit: int = 6) -> str:
     )
     ads = list(result.scalars().all())
     if not ads:
-        return (
-            "💼 Вакансий пока нет.\n\n"
-            f"Разместите первую — кнопка «➕ Объявление» или:\n{_SITE}/jobs"
-        )
+        return "💼 Вакансий пока нет.\n\n" f"Разместите первую — кнопка «➕ Объявление» или:\n{_SITE}/jobs"
     lines = [f"💼 Работа и вакансии ({len(ads)}):\n"]
     for ad in ads:
         cat = CLASSIFIED_LABELS.get(ad.category, ad.category)
@@ -131,8 +125,7 @@ def start_map_report_flow(peer_id: int) -> str:
     _flows[peer_id] = {"kind": "map_report", "step": "search", "data": {}}
     return box(
         "Ошибка на карте",
-        "Напишите название места или улицу — найду в справочнике.\n\n"
-        "«Отмена» — выйти.",
+        "Напишите название места или улицу — найду в справочнике.\n\n" "«Отмена» — выйти.",
     )
 
 
@@ -169,10 +162,7 @@ async def _submit_map_report(
     db.add(complaint)
     place.complaint_count += 1
 
-    issue_desc = (
-        f"Ошибка на карте: {place.name} ({place.address or ''})\n"
-        f"Тип: {type_label}\n{description}"
-    )
+    issue_desc = f"Ошибка на карте: {place.name} ({place.address or ''})\n" f"Тип: {type_label}\n{description}"
     issue = Issue(
         title=f"Карта: {place.name}",
         description=issue_desc,
@@ -189,9 +179,7 @@ async def _submit_map_report(
     complaint.issue_id = issue.id
 
     await notify_owner(
-        f"🗺 ОШИБКА НА КАРТЕ (VK)\n\n"
-        f"«{place.name}» — {place.address or '—'}\n"
-        f"{type_label}\n{description[:300]}"
+        f"🗺 ОШИБКА НА КАРТЕ (VK)\n\n" f"«{place.name}» — {place.address or '—'}\n" f"{type_label}\n{description[:300]}"
     )
     return box(
         "Спасибо!",
@@ -230,8 +218,7 @@ async def handle_flow_message(
         clear_flow(peer_id)
         return box(
             "Спасибо!",
-            "Пожелание принято. Учтём при развитии портала.\n\n"
-            f"Ещё идеи — кнопка «💡 Пожелания» или {_SITE}/wishes",
+            "Пожелание принято. Учтём при развитии портала.\n\n" f"Ещё идеи — кнопка «💡 Пожелания» или {_SITE}/wishes",
         )
 
     if kind == "classified":

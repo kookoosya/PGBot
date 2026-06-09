@@ -1,3 +1,4 @@
+from datetime import UTC
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -8,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.core.deps import require_owner
 from app.database import get_db
 from app.models.audit_log import AuditLog
-from app.models.enums import NotificationStatus, UserRole
+from app.models.enums import NotificationStatus
 from app.models.notification import Notification
 from app.models.user import User
 
@@ -75,15 +76,13 @@ async def process_notification_queue(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
 ):
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    from app.services.telegram import send_telegram_message
     from app.config import get_settings
+    from app.services.telegram import send_telegram_message
 
     settings = get_settings()
-    result = await db.execute(
-        select(Notification).where(Notification.status == NotificationStatus.PENDING).limit(50)
-    )
+    result = await db.execute(select(Notification).where(Notification.status == NotificationStatus.PENDING).limit(50))
     pending = result.scalars().all()
     sent_count = 0
 
@@ -91,7 +90,7 @@ async def process_notification_queue(
         success = await send_telegram_message(settings.TELEGRAM_ADMIN_CHAT_ID, notif.message)
         if success:
             notif.status = NotificationStatus.SENT
-            notif.sent_at = datetime.now(timezone.utc)
+            notif.sent_at = datetime.now(UTC)
             sent_count += 1
 
     return {"processed": len(pending), "sent": sent_count}

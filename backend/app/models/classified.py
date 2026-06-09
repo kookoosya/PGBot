@@ -24,9 +24,7 @@ class ClassifiedAd(Base):
     contact_telegram: Mapped[str | None] = mapped_column(String(100))
     contact_vk: Mapped[str | None] = mapped_column(String(100))
     is_active: Mapped[bool] = mapped_column(default=False)
-    payment_status: Mapped[ClassifiedPaymentStatus] = mapped_column(
-        String(20), default=ClassifiedPaymentStatus.PENDING
-    )
+    payment_status: Mapped[ClassifiedPaymentStatus] = mapped_column(String(20), default=ClassifiedPaymentStatus.PENDING)
     payment_reference: Mapped[str | None] = mapped_column(String(200))
     placement_fee: Mapped[int] = mapped_column(Integer, default=150)
     views_count: Mapped[int] = mapped_column(Integer, default=0)

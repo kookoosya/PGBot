@@ -1,7 +1,7 @@
 """Ежедневная сводка для подписчиков VK."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,11 +10,11 @@ from app.config import get_settings
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
-    ClassifiedPaymentStatus,
     JOB_CLASSIFIED_CATEGORIES,
+    ClassifiedPaymentStatus,
 )
 from app.models.vk_subscriber import VkSubscriber
-from app.services.vk import send_message, get_welcome_keyboard
+from app.services.vk import get_welcome_keyboard, send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -33,7 +33,7 @@ def _subscriber_wants_category(sub: VkSubscriber, category) -> bool:
 
 
 async def send_daily_digest(db: AsyncSession) -> int:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if now.hour != DIGEST_HOUR_UTC:
         return 0
 
@@ -54,12 +54,14 @@ async def send_daily_digest(db: AsyncSession) -> int:
     )
     recent_ads = list(ads_result.scalars().all())
 
-    total_count = (await db.execute(
-        select(func.count(ClassifiedAd.id)).where(
-            ClassifiedAd.is_active.is_(True),
-            ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
+    total_count = (
+        await db.execute(
+            select(func.count(ClassifiedAd.id)).where(
+                ClassifiedAd.is_active.is_(True),
+                ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     jobs_count = sum(1 for a in recent_ads if a.category in JOB_CLASSIFIED_CATEGORIES)
     sent = 0

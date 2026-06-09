@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,6 +16,7 @@ from app.core.deps import (
     is_owner_user,
     require_owner_or_official,
 )
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import IssueCategory, IssueStatus, UserRole
 from app.models.issue import Issue, IssueComment
@@ -29,7 +30,6 @@ from app.schemas.issue import (
     IssueStatusUpdate,
     IssueUpdate,
 )
-from app.core.rate_limit import limiter
 from app.services.audit import log_action
 from app.services.issue_processor import process_web_complaint
 
@@ -63,9 +63,8 @@ def _can_view_issue(user: User, issue: Issue) -> bool:
         return True
     if is_official_user(user):
         if user.role.name == UserRole.SOCIAL_SERVICE:
-            return (
-                issue.category in JKH_CATEGORIES
-                or (user.department_id and issue.department_id == user.department_id)
+            return issue.category in JKH_CATEGORIES or (
+                user.department_id and issue.department_id == user.department_id
             )
         return True
     return False
@@ -106,9 +105,7 @@ async def create_issue(
         )
 
     result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue.id)
+        select(Issue).options(selectinload(Issue.photos), selectinload(Issue.ai_analysis)).where(Issue.id == issue.id)
     )
     return _issue_to_response(result.scalar_one())
 
@@ -166,9 +163,7 @@ async def get_issue(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
+        select(Issue).options(selectinload(Issue.photos), selectinload(Issue.ai_analysis)).where(Issue.id == issue_id)
     )
     issue = result.scalar_one_or_none()
     if not issue:
@@ -187,9 +182,7 @@ async def update_issue(
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
     result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
+        select(Issue).options(selectinload(Issue.photos), selectinload(Issue.ai_analysis)).where(Issue.id == issue_id)
     )
     issue = result.scalar_one_or_none()
     if not issue:
@@ -206,8 +199,13 @@ async def update_issue(
         setattr(issue, field, value)
 
     await log_action(
-        db, "update_issue", "issue", issue.id,
-        user_id=current_user.id, details=update_data, ip_address=get_client_ip(request),
+        db,
+        "update_issue",
+        "issue",
+        issue.id,
+        user_id=current_user.id,
+        details=update_data,
+        ip_address=get_client_ip(request),
     )
     return _issue_to_response(issue)
 
@@ -221,9 +219,7 @@ async def update_issue_status(
     current_user: Annotated[User, Depends(require_owner_or_official())],
 ):
     result = await db.execute(
-        select(Issue)
-        .options(selectinload(Issue.photos), selectinload(Issue.ai_analysis))
-        .where(Issue.id == issue_id)
+        select(Issue).options(selectinload(Issue.photos), selectinload(Issue.ai_analysis)).where(Issue.id == issue_id)
     )
     issue = result.scalar_one_or_none()
     if not issue:
@@ -235,16 +231,20 @@ async def update_issue_status(
     if data.resolution_text:
         issue.resolution_text = data.resolution_text
     if data.status == IssueStatus.RESOLVED:
-        issue.resolved_at = datetime.now(timezone.utc)
+        issue.resolved_at = datetime.now(UTC)
 
     await log_action(
-        db, "status_change", "issue", issue.id,
+        db,
+        "status_change",
+        "issue",
+        issue.id,
         user_id=current_user.id,
         details={"status": data.status.value, "resolution": data.resolution_text},
         ip_address=get_client_ip(request),
     )
 
     from app.services.notifications import notify_issue_status
+
     await notify_issue_status(issue)
 
     return _issue_to_response(issue)

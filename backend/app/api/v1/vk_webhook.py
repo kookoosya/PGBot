@@ -31,7 +31,6 @@ from app.services.vk import (
     send_message,
 )
 from app.services.vk_ai_history import append_ai_turn, clear_ai_history, get_ai_history
-from app.services.vk_voice import extract_audio_url, transcribe_audio_url
 from app.services.vk_bot import (
     format_ads_message,
     subscribe_peer,
@@ -55,6 +54,7 @@ from app.services.vk_messages import (
     looks_like_ai_question,
     looks_like_complaint,
 )
+from app.services.vk_voice import extract_audio_url, transcribe_audio_url
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -143,13 +143,15 @@ async def _try_map_keywords(db: AsyncSession, peer_id: int, text_lower: str) -> 
         return True
     if any(k in text_lower for k in ("магазин", "продукт", "пятёроч", "магнит", "супермаркет")):
         await _reply_places(
-            db, peer_id,
+            db,
+            peer_id,
             categories=(PlaceCategory.SHOP, PlaceCategory.SUPERMARKET),
         )
         return True
     if any(k in text_lower for k in ("кафе", "ресторан", "поесть")):
         await _reply_places(
-            db, peer_id,
+            db,
+            peer_id,
             categories=(PlaceCategory.CAFE, PlaceCategory.RESTAURANT),
         )
         return True
@@ -207,8 +209,15 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         text_lower = text.lower()
 
         menu_triggers = (
-            "начать", "start", "привет", "здравствуйте", "hello", "меню",
-            "🏠 меню", "главная", "🏠 главная",
+            "начать",
+            "start",
+            "привет",
+            "здравствуйте",
+            "hello",
+            "меню",
+            "🏠 меню",
+            "главная",
+            "🏠 главная",
         )
         if text_lower in menu_triggers:
             _ai_mode_peers.discard(peer_id)
@@ -384,9 +393,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 peer_id,
                 box(
                     "Регистрация",
-                    f"{_SITE}/register\n\n"
-                    "🏠 Житель\n🏢 Организация\n"
-                    "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
+                    f"{_SITE}/register\n\n" "🏠 Житель\n🏢 Организация\n" "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
                 ),
                 keyboard=get_welcome_keyboard(),
             )
@@ -430,9 +437,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
                 )
             else:
                 status_emoji = {
-                    IssueStatus.NEW: "🆕", IssueStatus.UNDER_REVIEW: "🔍",
-                    IssueStatus.ASSIGNED: "👤", IssueStatus.IN_PROGRESS: "🔧",
-                    IssueStatus.RESOLVED: "✅", IssueStatus.REJECTED: "❌",
+                    IssueStatus.NEW: "🆕",
+                    IssueStatus.UNDER_REVIEW: "🔍",
+                    IssueStatus.ASSIGNED: "👤",
+                    IssueStatus.IN_PROGRESS: "🔧",
+                    IssueStatus.RESOLVED: "✅",
+                    IssueStatus.REJECTED: "❌",
                 }
                 lines = ["📋 Ваши обращения:\n"]
                 for issue in issues:
@@ -469,8 +479,12 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
         if looks_like_complaint(complaint_text) or parsed.get("photos"):
             try:
                 await process_incoming_message(
-                    db, text=complaint_text, vk_id=from_id, peer_id=peer_id,
-                    message_id=parsed.get("message_id"), photos=parsed.get("photos"),
+                    db,
+                    text=complaint_text,
+                    vk_id=from_id,
+                    peer_id=peer_id,
+                    message_id=parsed.get("message_id"),
+                    photos=parsed.get("photos"),
                 )
             except Exception as e:
                 logger.exception("Error processing VK message: %s", e)

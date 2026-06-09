@@ -26,7 +26,7 @@ def create_svg_poster(prompt: str, width: int = 1024, height: int = 768) -> byte
     lines = _wrap_lines(prompt)
     line_ys = [300 + i * 34 for i in range(len(lines))]
     tspans = "\n".join(
-        f'    <tspan x="64" y="{y}">{_esc(line)}</tspan>' for y, line in zip(line_ys, lines)
+        f'    <tspan x="64" y="{y}">{_esc(line)}</tspan>' for y, line in zip(line_ys, lines, strict=False)
     )
 
     svg = f"""<?xml version="1.0" encoding="UTF-8"?>

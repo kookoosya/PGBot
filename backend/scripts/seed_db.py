@@ -7,15 +7,14 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
 from app.config import get_settings
 from app.core.password_policy import validate_password
 from app.core.security import get_password_hash
 from app.models.department import Department
 from app.models.enums import UserRole
 from app.models.user import Role, User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 settings = get_settings()
 
@@ -75,17 +74,20 @@ async def seed() -> None:
                     sys.exit(1)
             role_result = await db.execute(select(Role).where(Role.name == UserRole.SUPER_ADMIN))
             role = role_result.scalar_one()
-            db.add(User(
-                username=admin_username,
-                email="admin@pushkinskie-gory.local",
-                hashed_password=get_password_hash(admin_password),
-                full_name="Суперадминистратор",
-                role_id=role.id,
-            ))
+            db.add(
+                User(
+                    username=admin_username,
+                    email="admin@pushkinskie-gory.local",
+                    hashed_password=get_password_hash(admin_password),
+                    full_name="Суперадминистратор",
+                    role_id=role.id,
+                )
+            )
             print(f"Created super admin: {admin_username}")
 
         from app.services.map_sync import sync_all_map_data
         from app.services.seed_services import seed_service_providers
+
         try:
             map_result = await sync_all_map_data(db)
             print(f"Map sync: {map_result}")
@@ -96,7 +98,10 @@ async def seed() -> None:
         print(f"Seeded {svc_count} service providers")
 
         import subprocess
-        subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "cleanup_demo_providers.py")], check=False)
+
+        subprocess.run(
+            [sys.executable, os.path.join(os.path.dirname(__file__), "cleanup_demo_providers.py")], check=False
+        )
 
         await db.commit()
         print("Database seeded successfully")

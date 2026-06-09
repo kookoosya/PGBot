@@ -12,9 +12,7 @@ import { PUSHKIN_QUOTES } from "@/lib/pushkin";
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
-  if (searchParams.get("jobs") === "1") {
-    return <Navigate to="/jobs" replace />;
-  }
+  const isJobsRedirect = searchParams.get("jobs") === "1";
 
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [total, setTotal] = useState(0);
@@ -96,6 +94,10 @@ export function Classifieds() {
       setMsg(err instanceof Error ? err.message : "Ошибка");
     }
   };
+
+  if (isJobsRedirect) {
+    return <Navigate to="/jobs" replace />;
+  }
 
   return (
     <div className="page-section max-w-5xl">

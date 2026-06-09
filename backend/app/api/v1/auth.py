@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -8,8 +8,8 @@ from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.deps import get_client_ip, get_current_user, require_owner
-from app.core.rate_limit import limiter
 from app.core.password_policy import validate_password
+from app.core.rate_limit import limiter
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.database import get_db
 from app.models.enums import UserRole, VerificationStatus
@@ -22,8 +22,8 @@ settings = get_settings()
 
 
 def _check_lockout(user: User) -> None:
-    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
-        remaining = int((user.locked_until - datetime.now(timezone.utc)).total_seconds() / 60)
+    if user.locked_until and user.locked_until > datetime.now(UTC):
+        remaining = int((user.locked_until - datetime.now(UTC)).total_seconds() / 60)
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
             detail=f"Аккаунт заблокирован. Попробуйте через {remaining} мин.",
@@ -33,16 +33,14 @@ def _check_lockout(user: User) -> None:
 async def _record_failed_login(user: User, db: AsyncSession) -> None:
     user.failed_login_attempts += 1
     if user.failed_login_attempts >= settings.LOGIN_MAX_ATTEMPTS:
-        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=settings.LOGIN_LOCKOUT_MINUTES)
+        user.locked_until = datetime.now(UTC) + timedelta(minutes=settings.LOGIN_LOCKOUT_MINUTES)
         user.failed_login_attempts = 0
 
 
 @router.post("/login", response_model=Token)
 @limiter.limit(settings.LOGIN_RATE_LIMIT)
 async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(
-        select(User).options(selectinload(User.role)).where(User.username == data.username)
-    )
+    result = await db.execute(select(User).options(selectinload(User.role)).where(User.username == data.username))
     user = result.scalar_one_or_none()
 
     if not user or not user.hashed_password:
@@ -53,8 +51,12 @@ async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession
     if not verify_password(data.password, user.hashed_password):
         await _record_failed_login(user, db)
         await log_action(
-            db, "login_failed", "user", user.id,
-            details={"ip": get_client_ip(request)}, ip_address=get_client_ip(request),
+            db,
+            "login_failed",
+            "user",
+            user.id,
+            details={"ip": get_client_ip(request)},
+            ip_address=get_client_ip(request),
         )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный логин или пароль")
 
@@ -67,7 +69,7 @@ async def login(request: Request, data: LoginRequest, db: Annotated[AsyncSession
 
     user.failed_login_attempts = 0
     user.locked_until = None
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
 
     pwd_ts = int((user.password_changed_at or user.created_at).timestamp())
     role_name = user.role.name.value if hasattr(user.role.name, "value") else user.role.name
@@ -91,13 +93,17 @@ async def change_password(
         raise HTTPException(status_code=400, detail=msg)
 
     current_user.hashed_password = get_password_hash(data.new_password)
-    current_user.password_changed_at = datetime.now(timezone.utc)
+    current_user.password_changed_at = datetime.now(UTC)
     current_user.failed_login_attempts = 0
     current_user.locked_until = None
 
     await log_action(
-        db, "password_change", "user", current_user.id,
-        user_id=current_user.id, ip_address=get_client_ip(request),
+        db,
+        "password_change",
+        "user",
+        current_user.id,
+        user_id=current_user.id,
+        ip_address=get_client_ip(request),
     )
     return {"message": "Пароль изменён"}
 
@@ -136,15 +142,22 @@ async def register(request: Request, data: UserCreate, db: Annotated[AsyncSessio
         full_name=data.full_name,
         phone=data.phone,
         role_id=role.id,
-        password_changed_at=datetime.now(timezone.utc),
+        password_changed_at=datetime.now(UTC),
     )
     db.add(user)
     await db.flush()
     await db.refresh(user, ["role"])
     return UserResponse(
-        id=user.id, username=user.username, email=user.email, full_name=user.full_name,
-        phone=user.phone, vk_id=user.vk_id, role=user.role.name,
-        department_id=user.department_id, is_active=user.is_active, created_at=user.created_at,
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        vk_id=user.vk_id,
+        role=user.role.name,
+        department_id=user.department_id,
+        is_active=user.is_active,
+        created_at=user.created_at,
     )
 
 
@@ -156,10 +169,17 @@ async def owner_check(current_user: Annotated[User, Depends(require_owner())]):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: Annotated[User, Depends(get_current_user)]):
     return UserResponse(
-        id=current_user.id, username=current_user.username, email=current_user.email,
-        full_name=current_user.full_name, phone=current_user.phone, vk_id=current_user.vk_id,
-        role=current_user.role.name, department_id=current_user.department_id,
-        is_active=current_user.is_active, organization=current_user.organization,
-        position=current_user.position, verification_status=current_user.verification_status,
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        phone=current_user.phone,
+        vk_id=current_user.vk_id,
+        role=current_user.role.name,
+        department_id=current_user.department_id,
+        is_active=current_user.is_active,
+        organization=current_user.organization,
+        position=current_user.position,
+        verification_status=current_user.verification_status,
         created_at=current_user.created_at,
     )

@@ -71,7 +71,7 @@ async def stop_background_tasks(tasks: list[asyncio.Task]) -> None:
         if not task.done():
             task.cancel()
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    for task, result in zip(tasks, results):
+    for task, result in zip(tasks, results, strict=False):
         if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
             logger.warning(
                 "Task %s finished with error during shutdown: %s",

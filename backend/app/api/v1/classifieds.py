@@ -12,20 +12,19 @@ from app.database import get_db
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
-    ClassifiedCategory,
-    ClassifiedPaymentStatus,
     JOB_CLASSIFIED_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
+    ClassifiedCategory,
+    ClassifiedPaymentStatus,
 )
-from app.services.ip_abuse import contains_suspicious_link
+from app.models.user import User
 from app.services.classified_antifraud import (
     check_phone_rate_limit,
     check_recent_duplicate,
     find_scam_phrase,
-    normalize_phone,
     validate_phone,
 )
-from app.models.user import User
+from app.services.ip_abuse import contains_suspicious_link
 from app.services.notifications import notify_owner, notify_vk_user, parse_vk_id
 
 router = APIRouter()
@@ -79,10 +78,12 @@ async def _count_user_ads(db: AsyncSession, phone: str, user_id: int | None = No
     from sqlalchemy import or_
 
     filters = [
-        ClassifiedAd.payment_status.in_([
-            ClassifiedPaymentStatus.PENDING,
-            ClassifiedPaymentStatus.APPROVED,
-        ]),
+        ClassifiedAd.payment_status.in_(
+            [
+                ClassifiedPaymentStatus.PENDING,
+                ClassifiedPaymentStatus.APPROVED,
+            ]
+        ),
     ]
     if user_id:
         filters.append(or_(ClassifiedAd.phone == phone, ClassifiedAd.user_id == user_id))
@@ -128,9 +129,9 @@ async def marketing_stats(
         ClassifiedAd.payment_status == ClassifiedPaymentStatus.APPROVED,
     )
     total_ads = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    total_views = (await db.execute(
-        select(func.coalesce(func.sum(ClassifiedAd.views_count), 0)).select_from(base.subquery())
-    )).scalar() or 0
+    total_views = (
+        await db.execute(select(func.coalesce(func.sum(ClassifiedAd.views_count), 0)).select_from(base.subquery()))
+    ).scalar() or 0
 
     cat_rows = await db.execute(
         select(ClassifiedAd.category, func.count(ClassifiedAd.id), func.coalesce(func.sum(ClassifiedAd.views_count), 0))
@@ -244,13 +245,19 @@ async def list_ads(
     )
     items = [
         ClassifiedResponse(
-            id=a.id, category=a.category,
+            id=a.id,
+            category=a.category,
             category_label=CLASSIFIED_LABELS.get(a.category, a.category),
-            title=a.title, description=a.description,
-            price=a.price, price_unit=a.price_unit,
-            phone=a.phone, author_name=a.author_name,
-            address=a.address, contact_telegram=a.contact_telegram,
-            views_count=a.views_count, created_at=a.created_at.isoformat(),
+            title=a.title,
+            description=a.description,
+            price=a.price,
+            price_unit=a.price_unit,
+            phone=a.phone,
+            author_name=a.author_name,
+            address=a.address,
+            contact_telegram=a.contact_telegram,
+            views_count=a.views_count,
+            created_at=a.created_at.isoformat(),
         )
         for a in result.scalars().all()
     ]
@@ -269,13 +276,19 @@ async def list_pending(
     )
     return [
         ClassifiedPendingResponse(
-            id=a.id, category=a.category,
+            id=a.id,
+            category=a.category,
             category_label=CLASSIFIED_LABELS.get(a.category, a.category),
-            title=a.title, description=a.description,
-            price=a.price, price_unit=a.price_unit,
-            phone=a.phone, author_name=a.author_name,
-            address=a.address, contact_telegram=a.contact_telegram,
-            views_count=a.views_count, created_at=a.created_at.isoformat(),
+            title=a.title,
+            description=a.description,
+            price=a.price,
+            price_unit=a.price_unit,
+            phone=a.phone,
+            author_name=a.author_name,
+            address=a.address,
+            contact_telegram=a.contact_telegram,
+            views_count=a.views_count,
+            created_at=a.created_at.isoformat(),
             payment_status=a.payment_status,
             payment_reference=a.payment_reference,
             placement_fee=a.placement_fee,
@@ -398,6 +411,7 @@ async def approve_ad(
     await notify_vk_user(ad.contact_vk or ad.vk_id, vk_msg)
 
     from app.services.vk_bot import notify_subscribers_new_ad
+
     notified = await notify_subscribers_new_ad(db, ad)
     return {"message": "Объявление опубликовано", "subscribers_notified": notified}
 
@@ -417,8 +431,7 @@ async def reject_ad(
 
     await notify_vk_user(
         ad.contact_vk or ad.vk_id,
-        f"❌ Объявление «{ad.title}» не прошло модерацию.\n"
-        "Проверьте оплату и текст. Можно подать заново.",
+        f"❌ Объявление «{ad.title}» не прошло модерацию.\n" "Проверьте оплату и текст. Можно подать заново.",
     )
 
     return {"message": "Объявление отклонено"}
@@ -439,11 +452,17 @@ async def get_ad(ad_id: int, request: Request, db: Annotated[AsyncSession, Depen
         raise HTTPException(404, "Объявление не найдено")
     ad.views_count += 1
     return ClassifiedResponse(
-        id=ad.id, category=ad.category,
+        id=ad.id,
+        category=ad.category,
         category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
-        title=ad.title, description=ad.description,
-        price=ad.price, price_unit=ad.price_unit,
-        phone=ad.phone, author_name=ad.author_name,
-        address=ad.address, contact_telegram=ad.contact_telegram,
-        views_count=ad.views_count, created_at=ad.created_at.isoformat(),
+        title=ad.title,
+        description=ad.description,
+        price=ad.price,
+        price_unit=ad.price_unit,
+        phone=ad.phone,
+        author_name=ad.author_name,
+        address=ad.address,
+        contact_telegram=ad.contact_telegram,
+        views_count=ad.views_count,
+        created_at=ad.created_at.isoformat(),
     )

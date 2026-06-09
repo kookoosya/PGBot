@@ -57,6 +57,7 @@ CATALOG_CATEGORY_LABELS = {
     CatalogCategory.OTHER: "Другое",
 }
 
+
 class ClassifiedCategory(str, enum.Enum):
     GARDEN = "garden"
     FIREWOOD = "firewood"

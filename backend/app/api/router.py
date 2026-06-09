@@ -1,6 +1,24 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, ai_chat, auth, catalog, categories, classifieds, departments, feedback, issues, places, public_info, services, statistics, users, verification, visits, vk_webhook
+from app.api.v1 import (
+    admin,
+    ai_chat,
+    auth,
+    catalog,
+    categories,
+    classifieds,
+    departments,
+    feedback,
+    issues,
+    places,
+    public_info,
+    services,
+    statistics,
+    users,
+    verification,
+    visits,
+    vk_webhook,
+)
 
 api_router = APIRouter()
 

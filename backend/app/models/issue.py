@@ -43,16 +43,10 @@ class Issue(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    resident: Mapped["User | None"] = relationship(
-        back_populates="issues", foreign_keys=[resident_id]
-    )
-    assignee: Mapped["User | None"] = relationship(
-        back_populates="assigned_issues", foreign_keys=[assignee_id]
-    )
+    resident: Mapped["User | None"] = relationship(back_populates="issues", foreign_keys=[resident_id])
+    assignee: Mapped["User | None"] = relationship(back_populates="assigned_issues", foreign_keys=[assignee_id])
     department: Mapped["Department | None"] = relationship(back_populates="issues")
-    parent_issue: Mapped["Issue | None"] = relationship(
-        remote_side="Issue.id", back_populates="duplicates"
-    )
+    parent_issue: Mapped["Issue | None"] = relationship(remote_side="Issue.id", back_populates="duplicates")
     duplicates: Mapped[list["Issue"]] = relationship(back_populates="parent_issue")
     photos: Mapped[list["IssuePhoto"]] = relationship(back_populates="issue", cascade="all, delete-orphan")
     comments: Mapped[list["IssueComment"]] = relationship(back_populates="issue", cascade="all, delete-orphan")
@@ -100,6 +94,6 @@ class IssueDuplicate(Base):
     issue: Mapped["Issue"] = relationship(back_populates="duplicate_links", foreign_keys=[issue_id])
 
 
-from app.models.user import User  # noqa: E402
-from app.models.department import Department  # noqa: E402
 from app.models.ai_analysis import AIAnalysis  # noqa: E402
+from app.models.department import Department  # noqa: E402
+from app.models.user import User  # noqa: E402

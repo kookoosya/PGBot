@@ -92,7 +92,9 @@ def _fallback_analysis(text: str) -> dict:
         "priority": priority,
         "summary": text[:200],
         "duplicate_probability": 0.0,
-        "suggested_department": "ЖКХ" if category in [IssueCategory.UTILITIES.value, IssueCategory.WATER.value] else "Администрация",
+        "suggested_department": "ЖКХ"
+        if category in [IssueCategory.UTILITIES.value, IssueCategory.WATER.value]
+        else "Администрация",
     }
 
 

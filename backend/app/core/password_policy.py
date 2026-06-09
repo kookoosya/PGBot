@@ -1,8 +1,17 @@
 import re
 
 WEAK_PASSWORDS = {
-    "password", "123456", "12345678", "admin123", "qwerty", "пароль",
-    "password123", "111111", "1234567890", "admin", "letmein",
+    "password",
+    "123456",
+    "12345678",
+    "admin123",
+    "qwerty",
+    "пароль",
+    "password123",
+    "111111",
+    "1234567890",
+    "admin",
+    "letmein",
 }
 
 

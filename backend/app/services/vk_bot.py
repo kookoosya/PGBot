@@ -9,9 +9,9 @@ from app.config import get_settings
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
-    ClassifiedPaymentStatus,
     JOB_CLASSIFIED_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
+    ClassifiedPaymentStatus,
 )
 from app.models.vk_subscriber import VkSubscriber
 from app.services.vk import send_message
@@ -87,10 +87,7 @@ async def subscribe_peer(db: AsyncSession, peer_id: int, categories: str = "all"
         return f"✅ Подписка обновлена: {label}."
     db.add(VkSubscriber(peer_id=peer_id, categories=preset))
     await db.flush()
-    return (
-        f"🔔 Подписка оформлена: {label}.\n\n"
-        "Сменить: «подписка работа», «подписка дрова», «подписка все»"
-    )
+    return f"🔔 Подписка оформлена: {label}.\n\n" "Сменить: «подписка работа», «подписка дрова», «подписка все»"
 
 
 async def unsubscribe_peer(db: AsyncSession, peer_id: int) -> str:

@@ -34,10 +34,12 @@ def get_inline_links_keyboard(links: list[tuple[str, str]]) -> dict:
     row: list[dict] = []
     buttons: list[list[dict]] = []
     for label, url in links[:3]:
-        row.append({
-            "action": {"type": "open_link", "link": url, "label": label[:40]},
-            "color": "primary",
-        })
+        row.append(
+            {
+                "action": {"type": "open_link", "link": url, "label": label[:40]},
+                "color": "primary",
+            }
+        )
         if len(row) == 2:
             buttons.append(row)
             row = []

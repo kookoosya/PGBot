@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,7 +16,7 @@ class ServiceItemInput(BaseModel):
 class ScheduleItemInput(BaseModel):
     day_of_week: int = Field(ge=0, le=6)
     start_time: str  # "09:00"
-    end_time: str    # "18:00"
+    end_time: str  # "18:00"
     is_working: bool = True
 
 

@@ -14,8 +14,16 @@ from app.models.place import Place
 logger = logging.getLogger(__name__)
 
 SKIP_OSM_NAMES = {
-    "ozon", "wildberries", "сдэк", "cdek", "pickpoint", "boxberry",
-    "exclusive palace", "пункт выдачи", "постамат", "пропан",
+    "ozon",
+    "wildberries",
+    "сдэк",
+    "cdek",
+    "pickpoint",
+    "boxberry",
+    "exclusive palace",
+    "пункт выдачи",
+    "постамат",
+    "пропан",
 }
 DEPRECATED_ADDRESS_PARTS = (
     "строителей, 1-б",
@@ -46,10 +54,7 @@ def _distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     r = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlng = math.radians(lng2 - lng1)
-    a = (
-        math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
-    )
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
     return 2 * r * math.asin(math.sqrt(a))
 
 
@@ -83,19 +88,28 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             has_magnit = any("магнит" in b for b in ref_brands)
             has_apteka = any("аптека" in b for b in ref_brands)
             has_gas = any(r.category == PlaceCategory.GAS for r in reference)
-            if has_pyaterochka and ("пятёрочка" in brand or "пятерочка" in brand):
+            if (
+                has_pyaterochka
+                and ("пятёрочка" in brand or "пятерочка" in brand)
+                or has_magnit
+                and "магнит" in brand
+                and place.category == PlaceCategory.SUPERMARKET
+                or has_apteka
+                and "аптека" in brand
+                and place.category == PlaceCategory.PHARMACY
+                or has_gas
+                and place.category == PlaceCategory.GAS
+            ):
                 reason = "brand_duplicate_ref"
-            elif has_magnit and "магнит" in brand and place.category == PlaceCategory.SUPERMARKET:
-                reason = "brand_duplicate_ref"
-            elif has_apteka and "аптека" in brand and place.category == PlaceCategory.PHARMACY:
-                reason = "brand_duplicate_ref"
-            elif has_gas and place.category == PlaceCategory.GAS:
-                reason = "brand_duplicate_ref"
-            elif place.category in (
-                PlaceCategory.SUPERMARKET,
-                PlaceCategory.PHARMACY,
-                PlaceCategory.GAS,
-            ) and not place.address:
+            elif (
+                place.category
+                in (
+                    PlaceCategory.SUPERMARKET,
+                    PlaceCategory.PHARMACY,
+                    PlaceCategory.GAS,
+                )
+                and not place.address
+            ):
                 reason = "unverified_no_address"
         elif place.external_source == "osm":
             name_l = _norm_name(place.name)
@@ -105,9 +119,8 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
                 reason = "osm_no_contact"
             else:
                 for ref in reference:
-                    if (
-                        _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) < 0.2
-                        and (_names_overlap(place.name, ref.name) or place.category == ref.category)
+                    if _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) < 0.2 and (
+                        _names_overlap(place.name, ref.name) or place.category == ref.category
                     ):
                         reason = "osm_duplicate_ref"
                         break
@@ -124,9 +137,10 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
         for b in osm_active[i + 1 :]:
             if not b.is_active:
                 continue
-            if _norm_name(a.name) == _norm_name(b.name) and _distance_km(
-                a.latitude, a.longitude, b.latitude, b.longitude
-            ) < 0.08:
+            if (
+                _norm_name(a.name) == _norm_name(b.name)
+                and _distance_km(a.latitude, a.longitude, b.latitude, b.longitude) < 0.08
+            ):
                 loser = a if not a.address and b.address else b if not b.address and a.address else b
                 loser.is_active = False
                 deactivated += 1

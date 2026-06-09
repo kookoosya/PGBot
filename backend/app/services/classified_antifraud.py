@@ -1,7 +1,7 @@
 """Проверки объявлений: лимиты, телефон, типовые схемы обмана."""
 
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,13 +65,15 @@ async def check_phone_rate_limit(
     max_per_day: int = 3,
 ) -> str | None:
     digits = normalize_phone(phone)
-    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    since = datetime.now(UTC) - timedelta(hours=24)
     q = select(func.count(ClassifiedAd.id)).where(
         ClassifiedAd.created_at >= since,
-        ClassifiedAd.payment_status.in_([
-            ClassifiedPaymentStatus.PENDING,
-            ClassifiedPaymentStatus.APPROVED,
-        ]),
+        ClassifiedAd.payment_status.in_(
+            [
+                ClassifiedPaymentStatus.PENDING,
+                ClassifiedPaymentStatus.APPROVED,
+            ]
+        ),
         or_(
             ClassifiedAd.phone == phone,
             ClassifiedAd.phone.like(f"%{digits[-10:]}%"),
@@ -89,7 +91,7 @@ async def check_recent_duplicate(
     title: str,
 ) -> str | None:
     digits = normalize_phone(phone)
-    since = datetime.now(timezone.utc) - timedelta(days=7)
+    since = datetime.now(UTC) - timedelta(days=7)
     title_key = re.sub(r"\s+", " ", (title or "").strip().lower())
     if len(title_key) < 5:
         return None
@@ -97,10 +99,12 @@ async def check_recent_duplicate(
         select(ClassifiedAd.title)
         .where(
             ClassifiedAd.created_at >= since,
-            ClassifiedAd.payment_status.in_([
-                ClassifiedPaymentStatus.PENDING,
-                ClassifiedPaymentStatus.APPROVED,
-            ]),
+            ClassifiedAd.payment_status.in_(
+                [
+                    ClassifiedPaymentStatus.PENDING,
+                    ClassifiedPaymentStatus.APPROVED,
+                ]
+            ),
             or_(
                 ClassifiedAd.phone == phone,
                 ClassifiedAd.phone.like(f"%{digits[-10:]}%"),

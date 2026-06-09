@@ -14,9 +14,7 @@ def _looks_like_placeholder(key: str) -> bool:
 
 def is_valid_gemini_key(key: str) -> bool:
     k = key.strip()
-    return bool(k) and not _looks_like_placeholder(k) and (
-        k.startswith("AIza") or k.startswith("AQ.") or len(k) >= 32
-    )
+    return bool(k) and not _looks_like_placeholder(k) and (k.startswith("AIza") or k.startswith("AQ.") or len(k) >= 32)
 
 
 def is_valid_pollinations_key(key: str) -> bool:

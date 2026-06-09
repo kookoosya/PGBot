@@ -3,10 +3,9 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy.orm import selectinload
 
 from app.models.provider_busy import ProviderBusyBlock
-from app.models.service import ProviderSchedule, ProviderService, ServiceAppointment, ServiceProvider
+from app.models.service import ServiceProvider
 
 DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 
@@ -25,8 +24,16 @@ def format_opening_hours(raw: str | None) -> str | None:
     if not raw:
         return None
     replacements = {
-        "Mo": "Пн", "Tu": "Вт", "We": "Ср", "Th": "Чт", "Fr": "Пт", "Sa": "Сб", "Su": "Вс",
-        "PH": "праздник", "off": "выходной", "24/7": "круглосуточно",
+        "Mo": "Пн",
+        "Tu": "Вт",
+        "We": "Ср",
+        "Th": "Чт",
+        "Fr": "Пт",
+        "Sa": "Сб",
+        "Su": "Вс",
+        "PH": "праздник",
+        "off": "выходной",
+        "24/7": "круглосуточно",
     }
     result = raw
     for eng, rus in replacements.items():
@@ -83,16 +90,15 @@ async def get_provider_slots(
     while current + timedelta(minutes=service_duration) <= end:
         slot_start = current.time()
         slot_end = (current + timedelta(minutes=service_duration)).time()
-        overlap = any(
-            not (slot_end <= b_start or slot_start >= b_end)
-            for b_start, b_end in booked
-        )
+        overlap = any(not (slot_end <= b_start or slot_start >= b_end) for b_start, b_end in booked)
         now_busy = target_date == date.today() and slot_start <= datetime.now().time()
-        slots.append({
-            "time": format_time(slot_start),
-            "available": not overlap and not now_busy,
-            "label": "Занято" if overlap else ("Прошло" if now_busy else "Свободно"),
-        })
+        slots.append(
+            {
+                "time": format_time(slot_start),
+                "available": not overlap and not now_busy,
+                "label": "Занято" if overlap else ("Прошло" if now_busy else "Свободно"),
+            }
+        )
         current += slot_delta
 
     return slots, working_hours

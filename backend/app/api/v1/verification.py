@@ -1,15 +1,15 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-
-from app.core.rate_limit import limiter
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.core.deps import get_client_ip, require_owner
 from app.core.password_policy import validate_password
+from app.core.rate_limit import limiter
 from app.core.security import get_password_hash
 from app.database import get_db
 from app.models.enums import OFFICIAL_ROLES, UserRole, VerificationStatus
@@ -23,7 +23,6 @@ from app.schemas.verification import (
 from app.services.audit import log_action
 from app.services.notifications import notify_owner
 from app.services.telegram import send_telegram_message
-from app.config import get_settings
 
 router = APIRouter()
 settings = get_settings()
@@ -194,10 +193,17 @@ async def list_pending(
     users = result.scalars().all()
     return [
         VerificationRequestResponse(
-            id=u.id, username=u.username, email=u.email, full_name=u.full_name,
-            phone=u.phone, organization=u.organization, position=u.position,
-            role=u.role.name, verification_status=u.verification_status,
-            verification_note=u.verification_note, created_at=u.created_at,
+            id=u.id,
+            username=u.username,
+            email=u.email,
+            full_name=u.full_name,
+            phone=u.phone,
+            organization=u.organization,
+            position=u.position,
+            role=u.role.name,
+            verification_status=u.verification_status,
+            verification_note=u.verification_note,
+            created_at=u.created_at,
         )
         for u in users
     ]
@@ -211,9 +217,7 @@ async def approve_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(
-        select(User).options(selectinload(User.role)).where(User.id == user_id)
-    )
+    result = await db.execute(select(User).options(selectinload(User.role)).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -222,22 +226,33 @@ async def approve_user(
 
     user.verification_status = VerificationStatus.APPROVED
     user.is_active = True
-    user.verified_at = datetime.now(timezone.utc)
+    user.verified_at = datetime.now(UTC)
     user.verified_by_id = current_user.id
     if data.note:
         user.verification_note = data.note
 
     await log_action(
-        db, "approve_verification", "user", user.id,
-        user_id=current_user.id, details={"note": data.note},
+        db,
+        "approve_verification",
+        "user",
+        user.id,
+        user_id=current_user.id,
+        details={"note": data.note},
         ip_address=get_client_ip(request),
     )
 
     return VerificationRequestResponse(
-        id=user.id, username=user.username, email=user.email, full_name=user.full_name,
-        phone=user.phone, organization=user.organization, position=user.position,
-        role=user.role.name, verification_status=user.verification_status,
-        verification_note=user.verification_note, created_at=user.created_at,
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        organization=user.organization,
+        position=user.position,
+        role=user.role.name,
+        verification_status=user.verification_status,
+        verification_note=user.verification_note,
+        created_at=user.created_at,
     )
 
 
@@ -249,9 +264,7 @@ async def reject_user(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner())],
 ):
-    result = await db.execute(
-        select(User).options(selectinload(User.role)).where(User.id == user_id)
-    )
+    result = await db.execute(select(User).options(selectinload(User.role)).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
@@ -264,14 +277,25 @@ async def reject_user(
         user.verification_note = data.note
 
     await log_action(
-        db, "reject_verification", "user", user.id,
-        user_id=current_user.id, details={"note": data.note},
+        db,
+        "reject_verification",
+        "user",
+        user.id,
+        user_id=current_user.id,
+        details={"note": data.note},
         ip_address=get_client_ip(request),
     )
 
     return VerificationRequestResponse(
-        id=user.id, username=user.username, email=user.email, full_name=user.full_name,
-        phone=user.phone, organization=user.organization, position=user.position,
-        role=user.role.name, verification_status=user.verification_status,
-        verification_note=user.verification_note, created_at=user.created_at,
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        phone=user.phone,
+        organization=user.organization,
+        position=user.position,
+        role=user.role.name,
+        verification_status=user.verification_status,
+        verification_note=user.verification_note,
+        created_at=user.created_at,
     )
