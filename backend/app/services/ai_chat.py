@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.ai_usage import AIUsage
+from app.models.user import User
+from app.services.ai_entitlement_service import resolve_ai_access
 from app.services.ai_local import local_chat_reply, should_use_local_fallback
-from app.services.ai_providers import openrouter_chat, openai_chat, perplexity_chat, pollinations_chat, pollinations_text
+from app.services.ai_plans import CHAT_MODE_PROMPTS, plan_by_id
+from app.services.ai_providers import openrouter_chat, openai_chat, pollinations_chat, pollinations_text
 from app.services.ai_status import (
     is_valid_gemini_key,
     is_valid_openai_key,
-    is_valid_perplexity_key,
     is_valid_openrouter_key,
     is_valid_pollinations_key,
 )
@@ -50,7 +52,14 @@ CHAT_SYSTEM_PROMPT = """Ты — умный и дружелюбный ИИ-по�
 """
 
 
-def make_identifier(ip: str | None, user_agent: str | None, vk_id: int | None = None) -> str:
+def make_identifier(
+    ip: str | None,
+    user_agent: str | None,
+    vk_id: int | None = None,
+    user_id: int | None = None,
+) -> str:
+    if user_id:
+        return f"user:{user_id}"
     if vk_id:
         return f"vk:{vk_id}"
     raw = f"{ip or 'unknown'}:{user_agent or 'unknown'}"
@@ -72,23 +81,39 @@ def get_daily_limit(source: str = "web") -> int:
     return settings.AI_VK_DAILY_LIMIT if source == "vk" else settings.AI_FREE_DAILY_LIMIT
 
 
-def build_limit_reached_reply(limit: int) -> str:
+def build_limit_reached_reply(limit: int, *, is_paid: bool = False, plan_name: str = "Бесплатно") -> str:
     """Compose a friendly message when the daily AI limit is reached."""
     payment = get_payment_info()
+    if is_paid:
+        return (
+            f"🪶 Лимит тарифа «{plan_name}» на сегодня исчерпан ({limit} сообщений).\n\n"
+            "Завтра счётчик обновится. Если нужен больший объём — напишите администратору."
+        )
+    pro = plan_by_id("pro")
+    pro_price = pro.price_rub if pro else settings.AI_PRO_PRICE
     if payment["card_number"]:
         return (
-            f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
-            f"ИИ-помощник работает за счёт добровольных пожертвований.\n\n"
-            f"💳 Перевод: {payment['card_number']}\n"
-            f"Получатель: {payment['card_holder']}\n"
-            f"Сумма: от {payment['amount_suggested']} ₽\n\n"
-            f"Завтра лимит обновится!"
+            f"🪶 Бесплатный лимит исчерпан — {limit} сообщений на сегодня.\n\n"
+            f"Для постоянной работы с GPT Pro (учёба, код, тексты) — оплата {pro_price} ₽/мес "
+            "переводом на карту. После перевода напишите администратору — доступ включится вручную.\n\n"
+            f"💳 {payment['card_number']}\n"
+            f"👤 {payment['card_holder']}\n"
+            f"💰 {pro_price} ₽ · GPT Pro\n\n"
+            f"Завтра бесплатные {limit} сообщений снова доступны."
         )
     return (
-        f"🪶 Вы использовали {limit} бесплатных сообщений на сегодня.\n\n"
+        f"🪶 Бесплатный лимит исчерпан — {limit} сообщений на сегодня.\n\n"
         f"{payment['message']}\n\n"
-        f"Завтра лимит обновится!"
+        f"Завтра бесплатные {limit} сообщений снова доступны."
     )
+
+
+def build_system_prompt(chat_mode: str = "chat") -> str:
+    prompt = CHAT_SYSTEM_PROMPT
+    extra = CHAT_MODE_PROMPTS.get(chat_mode)
+    if extra:
+        prompt += extra
+    return prompt
 
 
 async def process_public_chat(
@@ -98,27 +123,41 @@ async def process_public_chat(
     history: list[dict],
     model_id: str | None,
     identifier: str,
+    user: User | None = None,
+    chat_mode: str = "chat",
 ) -> dict:
     """Run a public AI chat turn with usage tracking and limit handling."""
     if len(message) > settings.AI_MAX_MESSAGE_LENGTH:
         raise AIValidationError("Сообщение слишком длинное")
 
+    access = await resolve_ai_access(db, user=user, web_identifier=identifier)
+    if chat_mode not in access["chat_modes"]:
+        raise AIValidationError("Этот режим доступен только в тарифе GPT Pro")
+
     used = await get_usage_today(db, identifier)
-    limit = get_daily_limit()
-    model = model_id or settings.GEMINI_MODEL
+    limit = access["daily_limit"]
+    model = model_id or access["model_id"]
 
     if used >= limit:
         payment = get_payment_info()
         return {
-            "reply": build_limit_reached_reply(limit),
+            "reply": build_limit_reached_reply(
+                limit,
+                is_paid=access["is_paid"],
+                plan_name=access["plan_name"],
+            ),
             "remaining": 0,
             "daily_limit": limit,
             "limit_reached": True,
             "payment_info": payment,
             "model": model,
+            "plan_id": access["plan_id"],
+            "plan_name": access["plan_name"],
+            "is_paid": access["is_paid"],
         }
 
-    reply = await chat_with_ai(message, history, model_id=model)
+    system_prompt = build_system_prompt(chat_mode)
+    reply = await chat_with_ai(message, history, model_id=model, system_prompt=system_prompt)
     new_count = await increment_usage(db, identifier, "web")
     return {
         "reply": reply,
@@ -126,6 +165,9 @@ async def process_public_chat(
         "daily_limit": limit,
         "limit_reached": False,
         "model": model,
+        "plan_id": access["plan_id"],
+        "plan_name": access["plan_name"],
+        "is_paid": access["is_paid"],
     }
 
 
@@ -137,14 +179,18 @@ async def process_image_generation(
     width: int,
     height: int,
     identifier: str,
+    user: User | None = None,
 ) -> dict:
     """Generate an image if within daily usage limits."""
     from app.services.ai_media import generate_image
 
+    access = await resolve_ai_access(db, user=user, web_identifier=identifier)
     used = await get_usage_today(db, identifier)
-    limit = get_daily_limit()
+    limit = access["daily_limit"]
     if used >= limit:
-        raise AILimitError()
+        raise AILimitError(
+            build_limit_reached_reply(limit, is_paid=access["is_paid"], plan_name=access["plan_name"]),
+        )
 
     result = await generate_image(prompt, model, width, height)
     if result.get("error"):
@@ -195,13 +241,18 @@ def _ai_unavailable_message() -> str:
     return "⚠️ ИИ временно недоступен. Попробуйте позже."
 
 
-async def _chat_gemini(message: str, history: list[dict] | None, model_id: str | None) -> str | None:
+async def _chat_gemini(
+    message: str,
+    history: list[dict] | None,
+    model_id: str | None,
+    system_prompt: str,
+) -> str | None:
     if not is_valid_gemini_key(settings.GEMINI_API_KEY):
         return None
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
         model_name = model_id if model_id and model_id.startswith("gemini") else settings.GEMINI_MODEL
-        model = genai.GenerativeModel(model_name, system_instruction=CHAT_SYSTEM_PROMPT)
+        model = genai.GenerativeModel(model_name, system_instruction=system_prompt)
 
         chat_history = []
         if history:
@@ -217,62 +268,46 @@ async def _chat_gemini(message: str, history: list[dict] | None, model_id: str |
         return None
 
 
-async def chat_with_ai(message: str, history: list[dict] | None = None, model_id: str | None = None) -> str:
+async def chat_with_ai(
+    message: str,
+    history: list[dict] | None = None,
+    model_id: str | None = None,
+    system_prompt: str | None = None,
+) -> str:
     model_id = model_id or "openai-fast"
-
-    if model_id.startswith("perplexity") and is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
-        perplexity_text = await perplexity_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
-        if perplexity_text:
-            return _maybe_quote(perplexity_text)
+    prompt = system_prompt or CHAT_SYSTEM_PROMPT
 
     if model_id in ("openai", "openai-fast", "gemini-flash") and is_valid_openai_key(settings.OPENAI_API_KEY):
-        openai_text = await openai_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        openai_text = await openai_chat(message, history, prompt, model_id)
         if openai_text:
             return _maybe_quote(openai_text)
 
-    if model_id.startswith("perplexity") and is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
-        or_text = await openrouter_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
-        if or_text:
-            return _maybe_quote(or_text)
-
-    # 1. Pollinations
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
-        poll_text = await pollinations_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        poll_text = await pollinations_chat(message, history, prompt, model_id)
         if poll_text:
             return _maybe_quote(poll_text)
 
-    # 2. OpenRouter (GPT / Gemini)
     if is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
-        or_text = await openrouter_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        or_text = await openrouter_chat(message, history, prompt, model_id)
         if or_text:
             return _maybe_quote(or_text)
 
-    # 3. Прямой OpenAI — резерв для любой модели
     if is_valid_openai_key(settings.OPENAI_API_KEY):
-        openai_text = await openai_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
+        openai_text = await openai_chat(message, history, prompt, model_id)
         if openai_text:
             return _maybe_quote(openai_text)
 
-    # 4. Perplexity — резерв
-    if is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
-        perplexity_text = await perplexity_chat(message, history, CHAT_SYSTEM_PROMPT, model_id)
-        if perplexity_text:
-            return _maybe_quote(perplexity_text)
-
-    # 5. Прямой Gemini
-    if model_id not in ("pollinations", "openai-fast", "openai", "perplexity"):
-        gemini_text = await _chat_gemini(message, history, model_id)
+    if model_id not in ("pollinations", "openai-fast", "openai"):
+        gemini_text = await _chat_gemini(message, history, model_id, prompt)
         if gemini_text:
             return _maybe_quote(gemini_text)
 
-    # 6. Старый GET-текст Pollinations
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
-        lines = [CHAT_SYSTEM_PROMPT, f"Пользователь: {message}", "Ассистент:"]
+        lines = [prompt, f"Пользователь: {message}", "Ассистент:"]
         poll_text = await pollinations_text("\n".join(lines))
         if poll_text:
             return _maybe_quote(poll_text)
 
-    # 7. Локальный справочник — только для вопросов о посёлке
     if should_use_local_fallback(message):
         return local_chat_reply(message)
 

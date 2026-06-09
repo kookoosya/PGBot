@@ -12,6 +12,13 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+
+def ai_http_client(**kwargs) -> httpx.AsyncClient:
+    proxy = (settings.AI_HTTPS_PROXY or settings.AI_HTTP_PROXY or "").strip()
+    if proxy:
+        kwargs["proxy"] = proxy
+    return httpx.AsyncClient(**kwargs)
+
 POLLINATIONS_BASE = "https://gen.pollinations.ai"
 POLLINATIONS_TEXT_URL = f"{POLLINATIONS_BASE}/text"
 POLLINATIONS_IMAGE_URL = f"{POLLINATIONS_BASE}/image"
@@ -114,7 +121,7 @@ async def pollinations_chat(
     chat_url = f"{POLLINATIONS_CHAT_URL}{_pollinations_key_query()}"
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with ai_http_client(timeout=timeout) as client:
             resp = await client.post(
                 chat_url,
                 headers={**_pollinations_headers(), "Content-Type": "application/json"},
@@ -152,7 +159,7 @@ async def pollinations_text(prompt: str, timeout: float = 90.0) -> str | None:
             continue
         url = f"{POLLINATIONS_TEXT_URL}/{quote(candidate)}?{key_q.lstrip('&')}"
         try:
-            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            async with ai_http_client(timeout=timeout, follow_redirects=True) as client:
                 resp = await client.get(url, headers=headers)
                 body = resp.text.strip()
                 if resp.status_code == 200 and body and not body.startswith("{"):
@@ -189,7 +196,7 @@ async def pollinations_image_bytes(
 
     for url in urls:
         try:
-            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            async with ai_http_client(timeout=timeout, follow_redirects=True) as client:
                 resp = await client.get(url, headers=headers)
                 ctype = resp.headers.get("content-type", "")
                 if resp.status_code == 200 and ctype.startswith("image/"):
@@ -260,7 +267,7 @@ async def openai_chat(
     messages = _build_chat_messages(message, history, system_prompt)
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with ai_http_client(timeout=timeout) as client:
             resp = await client.post(
                 OPENAI_URL,
                 headers=_openai_headers(),
@@ -290,7 +297,7 @@ async def perplexity_chat(
     messages = _build_chat_messages(message, history, system_prompt)
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with ai_http_client(timeout=timeout) as client:
             resp = await client.post(
                 PERPLEXITY_URL,
                 headers=_perplexity_headers(),
@@ -332,7 +339,7 @@ async def openrouter_chat(
     or_model = OPENROUTER_CHAT_MODELS.get(model_id, "openai/gpt-4o-mini")
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with ai_http_client(timeout=timeout) as client:
             resp = await client.post(
                 OPENROUTER_URL,
                 headers=_openrouter_headers(),
@@ -370,7 +377,7 @@ async def openrouter_image_bytes(
     user_prompt = f"Generate a detailed image: {prompt.strip()[:500]}"
 
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with ai_http_client(timeout=timeout) as client:
             resp = await client.post(
                 OPENROUTER_URL,
                 headers=_openrouter_headers(),

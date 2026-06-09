@@ -10,7 +10,6 @@ from app.services.ai_providers import openrouter_image_bytes, pollinations_image
 from app.services.ai_status import (
     is_valid_gemini_key,
     is_valid_openai_key,
-    is_valid_perplexity_key,
     is_valid_openrouter_key,
     is_valid_pollinations_key,
     is_valid_pollinations_image_key,
@@ -32,15 +31,7 @@ def get_chat_models() -> list[dict]:
             {"id": "openai-fast", "label": "ChatGPT — быстрый", "provider": "openai", "fast": True},
         )
         models.append(
-            {"id": "openai", "label": "ChatGPT — умный", "provider": "openai", "smart": True},
-        )
-    if is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
-        models.append(
-            {
-                "id": "perplexity",
-                "label": "Perplexity — с поиском в интернете",
-                "provider": "perplexity",
-            },
+            {"id": "openai", "label": "ChatGPT — умный (Pro)", "provider": "openai", "smart": True},
         )
     if models:
         return models

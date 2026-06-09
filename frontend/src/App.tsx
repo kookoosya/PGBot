@@ -42,6 +42,7 @@ const AdminProposals = lazy(() => import("./pages/AdminProposals").then((m) => (
 const Wishes = lazy(() => import("./pages/Wishes").then((m) => ({ default: m.Wishes })));
 const AdminFeedback = lazy(() => import("./pages/AdminFeedback").then((m) => ({ default: m.AdminFeedback })));
 const AuditLogs = lazy(() => import("./pages/AuditLogs").then((m) => ({ default: m.AuditLogs })));
+const AdminAI = lazy(() => import("./pages/AdminAI").then((m) => ({ default: m.AdminAI })));
 const Settings = lazy(() => import("./pages/Settings").then((m) => ({ default: m.Settings })));
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -135,6 +136,7 @@ export default function App() {
         <Route path="proposals" element={<Lazy><AdminProposals /></Lazy>} />
         <Route path="feedback" element={<Lazy><AdminFeedback /></Lazy>} />
         <Route path="audit" element={<Lazy><AuditLogs /></Lazy>} />
+        <Route path="ai" element={<Lazy><AdminAI /></Lazy>} />
         <Route path="settings" element={<Lazy><Settings /></Lazy>} />
       </Route>
 

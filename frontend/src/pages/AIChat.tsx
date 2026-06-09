@@ -1,17 +1,34 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
+import {
+  api,
+  AIAccessInfo,
+  AIModelOption,
+  AIPlan,
+  AIStatus,
+  ChatMessage,
+  UsageInfo,
+} from "@/lib/api";
+import { useUserAuth } from "@/lib/userAuth";
 
-type Tab = "chat" | "image";
+type Tab = "chat" | "image" | "plans";
+
+const CHAT_MODE_LABELS: Record<string, string> = {
+  chat: "💬 Обычный чат",
+  study: "📚 Учёба и тексты",
+  code: "💻 Код",
+};
 
 export function AIChat() {
+  const { user } = useUserAuth();
   const [tab, setTab] = useState<Tab>("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
       content:
-        "🪶 Привет! Спросите что угодно — или нарисуйте картинку во вкладке «Картинки».",
+        "🪶 Привет! Бесплатно — 10 сообщений или картинок в день. Для постоянной работы с GPT Pro — тарифы во вкладке «Тарифы».",
     },
   ]);
   const [input, setInput] = useState("");
@@ -19,18 +36,33 @@ export function AIChat() {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [access, setAccess] = useState<AIAccessInfo | null>(null);
+  const [plans, setPlans] = useState<AIPlan[]>([]);
+  const [plansNotice, setPlansNotice] = useState("");
   const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
   const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
   const [chatModel, setChatModel] = useState("openai-fast");
+  const [chatMode, setChatMode] = useState("chat");
   const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [imageProvider, setImageProvider] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
+  const [paymentInfo, setPaymentInfo] = useState<Awaited<ReturnType<typeof api.getPaymentInfo>> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const refreshAccess = () => {
+    api.getAIAccess().then(setAccess).catch(console.error);
     api.getAIUsage().then(setUsage).catch(console.error);
+  };
+
+  useEffect(() => {
+    refreshAccess();
+    api.getAIPlans().then((p) => {
+      setPlans(p.plans);
+      setPlansNotice(p.notice);
+    }).catch(console.error);
+    api.getPaymentInfo().then(setPaymentInfo).catch(console.error);
     api.getAIModels().then((m) => {
       setChatModels(m.chat_models);
       setImageModels(m.image_models);
@@ -41,13 +73,23 @@ export function AIChat() {
       if (preferred) setChatModel(preferred.id);
       if (m.image_models[0]) setImageModel(m.image_models[0].id);
     }).catch(console.error);
-  }, []);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (access?.model_id) setChatModel(access.model_id);
+    if (access?.chat_modes?.length && !access.chat_modes.includes(chatMode)) {
+      setChatMode(access.chat_modes[0]);
+    }
+  }, [access, chatMode]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const limitReached = usage !== null && usage.remaining <= 0;
+  const dailyLimit = access?.daily_limit ?? usage?.daily_limit ?? 10;
+  const remaining = access?.remaining ?? usage?.remaining ?? dailyLimit;
+  const limitReached = remaining <= 0;
+  const isPaid = access?.is_paid ?? false;
 
   const send = async () => {
     if (!input.trim() || loading || limitReached) return;
@@ -59,9 +101,10 @@ export function AIChat() {
       const history = messages
         .filter((m) => m.role !== "system")
         .map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
-      const res = await api.sendAIChat(userMsg, history, chatModel);
+      const res = await api.sendAIChat(userMsg, history, chatModel, chatMode);
       setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
       setUsage({ used: res.daily_limit - res.remaining, remaining: res.remaining, daily_limit: res.daily_limit });
+      refreshAccess();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Ошибка. Попробуйте позже.";
       setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${msg}` }]);
@@ -71,7 +114,7 @@ export function AIChat() {
   };
 
   const generateImage = async () => {
-    if (!imagePrompt.trim() || imageLoading) return;
+    if (!imagePrompt.trim() || imageLoading || limitReached) return;
     setImageLoading(true);
     setImageError("");
     setGeneratedImage(null);
@@ -84,7 +127,7 @@ export function AIChat() {
         setGeneratedImage(`${res.url}?t=${Date.now()}`);
         setImageProvider(res.provider || null);
       }
-      api.getAIUsage().then(setUsage).catch(console.error);
+      refreshAccess();
     } catch (e) {
       setImageError(e instanceof Error ? e.message : "Ошибка генерации");
     } finally {
@@ -95,7 +138,7 @@ export function AIChat() {
   const suggestions = [
     "Напиши объявление про дрова",
     "Что посмотреть в Пушкиногорье?",
-    "Напиши короткое стихотворение про зиму",
+    "Проверь структуру реферата",
   ];
 
   const imageSuggestions = [
@@ -106,12 +149,14 @@ export function AIChat() {
 
   return (
     <div className="page-section max-w-3xl ai-page">
-      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Текст и картинки">
-        {usage && (
-          <span className="ai-usage-pill">
-            {usage.remaining} из {usage.daily_limit} сегодня
-          </span>
-        )}
+      <PageHeader
+        icon="🤖"
+        title="ИИ-помощник"
+        subtitle={access ? `Тариф: ${access.plan_name}` : "Текст и картинки"}
+      >
+        <span className="ai-usage-pill">
+          {remaining} из {dailyLimit} сегодня
+        </span>
       </PageHeader>
 
       {aiStatus && !aiStatus.ready && (
@@ -121,61 +166,115 @@ export function AIChat() {
         </div>
       )}
 
-      {aiStatus?.limits && (
-        <div className="ai-limits-info" role="note">
-          <strong>Лимиты и провайдеры</strong>
-          <p>{aiStatus.limits.site_note}</p>
-          {aiStatus.limits.providers_note && <p>{aiStatus.limits.providers_note}</p>}
-          {aiStatus.providers && aiStatus.providers.length > 0 && (
-            <p className="ai-limits-providers">
-              Подключено: {aiStatus.providers.join(" · ")}
-            </p>
-          )}
-          {!aiStatus.perplexity_configured && (
-            <p className="ai-limits-hint">
-              Perplexity можно добавить бесплатно — ключ на{" "}
-              <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noreferrer">
-                perplexity.ai/settings/api
-              </a>
-              . У него тоже будут свои лимиты.
-            </p>
-          )}
-        </div>
-      )}
+      <div className="ai-limits-info" role="note">
+        <strong>Как это работает</strong>
+        <p>
+          Бесплатно — <strong>10 сообщений или генераций картинок в день</strong>. Лимиты у провайдера
+          (OpenAI) тоже ограничены — при их исчерпании ответ может быть недоступен.
+        </p>
+        <p>
+          Для постоянной работы — <strong>GPT Pro</strong> (учёба, код, тексты) или <strong>Pro+</strong>.
+          Оплата переводом → администратор включает доступ к вашему аккаунту.
+        </p>
+        {isPaid && access?.expires_at && (
+          <p className="ai-limits-providers">Pro активен до {new Date(access.expires_at).toLocaleDateString("ru-RU")}</p>
+        )}
+      </div>
 
       {limitReached && (
         <div className="ai-limits-note" role="status">
           <strong>Лимит на сегодня исчерпан</strong>
-          <p>Бесплатные сообщения обновятся завтра. Картинки — во вкладке «Картинки».</p>
-          {usage?.payment_info && (
-            <div className="mt-3 text-sm space-y-1">
-              <p className="m-0">{usage.payment_info.message}</p>
-              {usage.payment_info.card_number ? (
-                <p className="m-0">
-                  💳 {usage.payment_info.card_number}
-                  {usage.payment_info.card_holder && ` · ${usage.payment_info.card_holder}`}
-                  {" "}· от {usage.payment_info.amount_suggested} ₽
-                </p>
-              ) : null}
-            </div>
-          )}
+          <p>
+            {isPaid
+              ? "Завтра счётчик обновится. Нужен больший объём — напишите администратору."
+              : "Завтра снова будет 10 бесплатных сообщений. Для GPT Pro — вкладка «Тарифы»."}
+          </p>
         </div>
       )}
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         <button type="button" className={`filter-chip ${tab === "chat" ? "filter-chip-active" : ""}`} onClick={() => setTab("chat")}>
           💬 Чат
         </button>
         <button type="button" className={`filter-chip ${tab === "image" ? "filter-chip-active" : ""}`} onClick={() => setTab("image")}>
           🎨 Картинки
         </button>
+        <button type="button" className={`filter-chip ${tab === "plans" ? "filter-chip-active" : ""}`} onClick={() => setTab("plans")}>
+          💳 Тарифы
+        </button>
       </div>
+
+      {tab === "plans" && (
+        <div className="ai-plans-section space-y-4">
+          <p className="text-sm text-muted-foreground m-0">{plansNotice}</p>
+          <div className="ai-plans-grid">
+            {plans.map((plan) => (
+              <article
+                key={plan.id}
+                className={`ai-plan-card pushkin-card${access?.plan_id === plan.id ? " ai-plan-card--active" : ""}`}
+              >
+                <div className="ai-plan-head">
+                  <h3>{plan.name}</h3>
+                  {plan.price_rub > 0 ? (
+                    <p className="ai-plan-price">{plan.price_rub} ₽ / {plan.period_days} дн.</p>
+                  ) : (
+                    <p className="ai-plan-price">0 ₽</p>
+                  )}
+                </div>
+                <p className="ai-plan-tagline">{plan.tagline}</p>
+                <ul className="ai-plan-features">
+                  {plan.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                {plan.requires_payment && (
+                  <div className="ai-plan-pay">
+                    {!user ? (
+                      <p className="text-sm m-0">
+                        <Link to="/cabinet/login">Войдите</Link>, чтобы оплатить и получить доступ.
+                      </p>
+                    ) : paymentInfo?.card_number ? (
+                      <>
+                        <p className="text-sm m-0 mb-2">
+                          Перевод {plan.price_rub} ₽ с пометкой «GPT {plan.name} · {user.username}»
+                        </p>
+                        <p className="text-sm m-0 font-mono">💳 {paymentInfo.card_number}</p>
+                        <p className="text-sm m-0">{paymentInfo.card_holder}</p>
+                        <p className="text-xs text-muted-foreground mt-2 m-0">
+                          После перевода напишите администратору — доступ включится вручную в течение суток.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm m-0">Реквизиты уточняйте у администратора портала.</p>
+                    )}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tab === "chat" && (
         <>
-          {chatModels.length > 1 && (
+          {(access?.chat_modes?.length ?? 0) > 1 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {access?.chat_modes.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`filter-chip ${chatMode === mode ? "filter-chip-active" : ""}`}
+                  onClick={() => setChatMode(mode)}
+                >
+                  {CHAT_MODE_LABELS[mode] || mode}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {chatModels.length > 1 && isPaid && (
             <div className="mb-3">
-              <select className="w-full border rounded px-3 py-2 text-sm" value={chatModel} onChange={(e) => setChatModel(e.target.value)} aria-label="Режим чата">
+              <select className="w-full border rounded px-3 py-2 text-sm" value={chatModel} onChange={(e) => setChatModel(e.target.value)} aria-label="Модель">
                 {chatModels.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
@@ -222,6 +321,9 @@ export function AIChat() {
 
       {tab === "image" && (
         <div className="pushkin-card p-6 space-y-4">
+          <p className="text-sm text-muted-foreground m-0">
+            Картинки считаются в общий дневной лимит ({dailyLimit}/день).
+          </p>
           {imageModels.length > 1 && (
             <select className="w-full border rounded px-3 py-2 text-sm" value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Стиль картинки">
               {imageModels.map((m) => (
@@ -242,8 +344,9 @@ export function AIChat() {
             value={imagePrompt}
             onChange={(e) => setImagePrompt(e.target.value)}
             maxLength={500}
+            disabled={limitReached}
           />
-          <Button className="w-full" onClick={generateImage} disabled={imageLoading || !imagePrompt.trim()}>
+          <Button className="w-full" onClick={generateImage} disabled={imageLoading || limitReached || !imagePrompt.trim()}>
             {imageLoading ? "Рисую…" : "🎨 Сгенерировать"}
           </Button>
           {imageLoading && (

@@ -879,6 +879,62 @@
     color: hsl(var(--forest));
     text-decoration: underline;
   }
+  .ai-plans-section {
+    margin-bottom: 1rem;
+  }
+  .ai-plans-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 768px) {
+    .ai-plans-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .ai-plan-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    height: 100%;
+  }
+  .ai-plan-card--active {
+    border: 2px solid hsl(var(--forest));
+    box-shadow: 0 8px 24px hsl(152 40% 20% / 0.12);
+  }
+  .ai-plan-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .ai-plan-head h3 {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
+  .ai-plan-price {
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.9375rem;
+  }
+  .ai-plan-tagline {
+    margin: 0;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .ai-plan-features {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .ai-plan-pay {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid hsl(var(--border));
+  }
 
   .ai-chat-panel {
     height: calc(100vh - 380px);

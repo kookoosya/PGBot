@@ -10,6 +10,50 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
     history: list[ChatMessage] = Field(default_factory=list, max_length=12)
     model: str | None = None
+    chat_mode: str = Field(default="chat", max_length=20)
+
+
+class AIPlanResponse(BaseModel):
+    id: str
+    name: str
+    daily_limit: int
+    price_rub: int
+    period_days: int
+    tagline: str
+    features: list[str]
+    chat_modes: list[str]
+    model_id: str
+    requires_login: bool
+    requires_payment: bool
+
+
+class AIPlansResponse(BaseModel):
+    plans: list[AIPlanResponse]
+    notice: str
+
+
+class AIAccessResponse(BaseModel):
+    plan_id: str
+    plan_name: str
+    daily_limit: int
+    chat_modes: list[str]
+    model_id: str
+    is_paid: bool
+    expires_at: str | None = None
+    payment_reference: str | None = None
+    used: int
+    remaining: int
+
+
+class AIEntitlementGrantRequest(BaseModel):
+    plan_id: str = Field(default="pro", max_length=32)
+    user_id: int | None = None
+    vk_id: int | None = None
+    web_identifier: str | None = Field(default=None, max_length=255)
+    period_days: int | None = Field(default=None, ge=1, le=365)
+    payment_reference: str | None = Field(default=None, max_length=120)
+    payment_amount: int | None = Field(default=None, ge=0)
+    notes: str | None = Field(default=None, max_length=500)
 
 
 class ImageRequest(BaseModel):
@@ -26,6 +70,9 @@ class ChatResponse(BaseModel):
     limit_reached: bool = False
     payment_info: dict | None = None
     model: str | None = None
+    plan_id: str | None = None
+    plan_name: str | None = None
+    is_paid: bool = False
 
 
 class ImageResponse(BaseModel):

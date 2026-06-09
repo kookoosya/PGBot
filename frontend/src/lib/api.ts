@@ -153,6 +153,23 @@ class ApiClient {
     return this.request<Notification[]>("/admin/notifications");
   }
 
+  getAIEntitlements() {
+    return this.request<{ items: AIEntitlementRow[] }>("/admin/ai/entitlements");
+  }
+
+  grantAIEntitlement(data: AIEntitlementGrantPayload) {
+    return this.request<{ id: number; message: string }>("/admin/ai/entitlements", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  revokeAIEntitlement(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/entitlements/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Public AI
   getAIUsage() {
     return this.request<UsageInfo>("/ai/usage");
@@ -166,10 +183,23 @@ class ApiClient {
     return this.request<AIModelsInfo>("/ai/models");
   }
 
-  sendAIChat(message: string, history: { role: string; content: string }[], model?: string) {
+  getAIPlans() {
+    return this.request<AIPlansInfo>("/ai/plans");
+  }
+
+  getAIAccess() {
+    return this.request<AIAccessInfo>("/ai/access");
+  }
+
+  sendAIChat(
+    message: string,
+    history: { role: string; content: string }[],
+    model?: string,
+    chatMode?: string,
+  ) {
     return this.request<ChatResponse>("/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ message, history, model }),
+      body: JSON.stringify({ message, history, model, chat_mode: chatMode || "chat" }),
     });
   }
 
@@ -641,6 +671,9 @@ export interface ChatResponse {
   daily_limit: number;
   limit_reached: boolean;
   model?: string;
+  plan_id?: string;
+  plan_name?: string;
+  is_paid?: boolean;
 }
 
 export interface AIModelOption {
@@ -668,6 +701,63 @@ export interface AIStatus {
     site_note: string;
     providers_note: string;
   };
+}
+
+export interface AIPlan {
+  id: string;
+  name: string;
+  daily_limit: number;
+  price_rub: number;
+  period_days: number;
+  tagline: string;
+  features: string[];
+  chat_modes: string[];
+  model_id: string;
+  requires_login: boolean;
+  requires_payment: boolean;
+}
+
+export interface AIPlansInfo {
+  plans: AIPlan[];
+  notice: string;
+}
+
+export interface AIAccessInfo {
+  plan_id: string;
+  plan_name: string;
+  daily_limit: number;
+  chat_modes: string[];
+  model_id: string;
+  is_paid: boolean;
+  expires_at: string | null;
+  payment_reference: string | null;
+  used: number;
+  remaining: number;
+}
+
+export interface AIEntitlementGrantPayload {
+  plan_id: string;
+  user_id?: number;
+  vk_id?: number;
+  web_identifier?: string;
+  period_days?: number;
+  payment_reference?: string;
+  payment_amount?: number;
+  notes?: string;
+}
+
+export interface AIEntitlementRow {
+  id: number;
+  user_id: number | null;
+  vk_id: number | null;
+  web_identifier: string | null;
+  plan_id: string;
+  expires_at: string | null;
+  payment_reference: string | null;
+  payment_amount: number | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string | null;
 }
 
 export interface AIModelsInfo {

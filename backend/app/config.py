@@ -81,9 +81,18 @@ class Settings(BaseSettings):
     DUPLICATE_THRESHOLD: float = 0.80
 
     # Public AI chat limits
-    AI_FREE_DAILY_LIMIT: int = 30
+    AI_FREE_DAILY_LIMIT: int = 10
     AI_VK_DAILY_LIMIT: int = 20
+    AI_PRO_DAILY_LIMIT: int = 200
+    AI_PRO_PLUS_DAILY_LIMIT: int = 500
+    AI_PRO_PRICE: int = 299
+    AI_PRO_PLUS_PRICE: int = 599
+    AI_PRO_PERIOD_DAYS: int = 30
     AI_MAX_MESSAGE_LENGTH: int = 1000
+
+    # Outbound proxy for OpenAI/OpenRouter (optional — e.g. EU proxy if API blocked from RU VPS)
+    AI_HTTP_PROXY: str = ""
+    AI_HTTPS_PROXY: str = ""
 
     # Payment / support (card transfer)
     PAYMENT_CARD_NUMBER: str = ""

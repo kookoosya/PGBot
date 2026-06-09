@@ -60,7 +60,6 @@ def get_ai_status() -> dict:
     poll_img_ok = is_valid_pollinations_image_key(s.POLLINATIONS_API_KEY)
     or_ok = is_valid_openrouter_key(s.OPENROUTER_API_KEY)
     openai_ok = is_valid_openai_key(s.OPENAI_API_KEY)
-    perplexity_ok = is_valid_perplexity_key(s.PERPLEXITY_API_KEY)
     gemini_ok = is_valid_gemini_key(s.GEMINI_API_KEY)
 
     if openai_ok:
@@ -69,8 +68,6 @@ def get_ai_status() -> dict:
         chat_provider = "pollinations"
     elif or_ok:
         chat_provider = "openrouter"
-    elif perplexity_ok:
-        chat_provider = "perplexity"
     elif gemini_ok:
         chat_provider = "google"
     else:
@@ -94,8 +91,6 @@ def get_ai_status() -> dict:
             message = "Чат работает. Картинки временно недоступны."
     elif or_ok:
         message = "ИИ работает."
-    elif perplexity_ok:
-        message = "ИИ работает (Perplexity)."
     elif gemini_ok:
         message = "ИИ работает (только чат)."
     else:
@@ -108,8 +103,6 @@ def get_ai_status() -> dict:
     providers = []
     if openai_ok:
         providers.append("ChatGPT (OpenAI)")
-    if perplexity_ok:
-        providers.append("Perplexity")
     if poll_ok:
         providers.append("Pollinations")
     if or_ok:
@@ -120,8 +113,6 @@ def get_ai_status() -> dict:
     provider_notes = []
     if openai_ok:
         provider_notes.append("ChatGPT — ваш ключ OpenAI, у него свои лимиты на account.openai.com")
-    if perplexity_ok:
-        provider_notes.append("Perplexity — бесплатный тариф с ограничениями на perplexity.ai/settings/api")
     if poll_ok or or_ok or gemini_ok:
         provider_notes.append("резервные провайдеры тоже с лимитами")
 
@@ -132,15 +123,14 @@ def get_ai_status() -> dict:
         "pollinations_configured": poll_ok,
         "openrouter_configured": or_ok,
         "openai_configured": openai_ok,
-        "perplexity_configured": perplexity_ok,
         "gemini_configured": gemini_ok,
         "providers": providers,
         "message": message,
         "limits": {
             "site_daily": s.AI_FREE_DAILY_LIMIT,
             "site_note": (
-                f"На портале — {s.AI_FREE_DAILY_LIMIT} бесплатных сообщений в день на человека. "
-                "Лимит обновляется в полночь."
+                f"Бесплатно — {s.AI_FREE_DAILY_LIMIT} сообщений или генераций картинок в день. "
+                "GPT Pro — оплата и активация администратором."
             ),
             "providers_note": (
                 "У каждого AI-провайдера свои лимиты и кредиты. "
