@@ -7,9 +7,12 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models.ai_entitlement import AIEntitlement
 from app.models.user import User
-from app.services.ai_plans import build_ai_plans, plan_by_id, plan_to_dict
+from app.services.ai_plans import build_ai_plans, effective_daily_limit, plan_by_id, plan_to_dict
+
+settings = get_settings()
 
 
 def _now() -> datetime:
@@ -113,7 +116,7 @@ async def resolve_ai_access(
         return {
             "plan_id": paid_plan.id,
             "plan_name": paid_plan.name,
-            "daily_limit": paid_plan.daily_limit,
+            "daily_limit": effective_daily_limit(paid_plan),
             "chat_modes": list(paid_plan.chat_modes),
             "model_id": paid_plan.model_id,
             "is_paid": True,
@@ -124,7 +127,7 @@ async def resolve_ai_access(
     return {
         "plan_id": free_plan.id,
         "plan_name": free_plan.name,
-        "daily_limit": free_plan.daily_limit,
+        "daily_limit": effective_daily_limit(free_plan),
         "chat_modes": list(free_plan.chat_modes),
         "model_id": free_plan.model_id,
         "is_paid": False,
@@ -204,7 +207,10 @@ def public_plans_payload() -> dict:
     return {
         "plans": plans,
         "notice": (
-            "Бесплатно — 10 запросов в день. После входа — 7 дней пробного Pro через наш сервер "
-            "(Gemini/Pollinations, прокси из РФ). Платная подписка — переводом, без зарубежных карт."
+            f"Бесплатно — {settings.AI_FREE_DAILY_LIMIT} запросов в день. "
+            f"После входа — {settings.AI_TRIAL_PERIOD_DAYS} дней пробного доступа "
+            f"({settings.AI_TRIAL_DAILY_LIMIT}/день). "
+            f"ИИ Pro — до {settings.AI_PRO_DAILY_LIMIT}, Pro+ — до {settings.AI_PRO_PLUS_DAILY_LIMIT} "
+            "сообщений в сутки. Оплата переводом."
         ),
     }

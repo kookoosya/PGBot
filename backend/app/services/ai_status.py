@@ -130,7 +130,8 @@ def get_ai_status() -> dict:
             "site_daily": s.AI_FREE_DAILY_LIMIT,
             "site_note": (
                 f"Бесплатно — {s.AI_FREE_DAILY_LIMIT} сообщений или генераций картинок в день. "
-                "После входа — пробный период. ИИ Pro — через наш сервер и прокси, оплата переводом."
+                f"ИИ Pro — до {s.AI_PRO_DAILY_LIMIT}, Pro+ — до {s.AI_PRO_PLUS_DAILY_LIMIT} в сутки. "
+                "Оплата переводом."
             ),
             "providers_note": (
                 "У каждого AI-провайдера свои лимиты и кредиты. "

@@ -94,8 +94,7 @@ def build_limit_reached_reply(limit: int, *, is_paid: bool = False, plan_name: s
     if payment["card_number"]:
         return (
             f"🪶 Бесплатный лимит исчерпан — {limit} сообщений на сегодня.\n\n"
-            f"Постоянный доступ — тариф «ИИ Pro» {pro_price} ₽/мес переводом на карту. "
-            "Работает через наш сервер и прокси из России, без зарубежных подписок.\n\n"
+            f"Постоянный доступ — тариф «ИИ Pro» {pro_price} ₽/мес переводом на карту.\n\n"
             f"💳 {payment['card_number']}\n"
             f"👤 {payment['card_holder']}\n"
             f"💰 {pro_price} ₽ · ИИ Pro\n\n"
@@ -157,14 +156,22 @@ async def process_public_chat(
         }
 
     system_prompt = build_system_prompt(chat_mode)
-    reply = await chat_with_ai(
+    gemini_used = await get_gemini_usage_today(db, identifier)
+    allow_gemini = gemini_used < settings.AI_GEMINI_DAILY_LIMIT
+    reply, provider = await chat_with_ai(
         message,
         history,
         model_id=model,
         system_prompt=system_prompt,
-        prefer_proxy_providers=access["is_paid"],
+        prefer_paid_providers=access["is_paid"],
+        allow_gemini=allow_gemini,
     )
-    new_count = await increment_usage(db, identifier, "web")
+    new_count = await increment_usage(
+        db,
+        identifier,
+        "web",
+        via_gemini=provider == "gemini",
+    )
     return {
         "reply": reply,
         "remaining": max(0, limit - new_count),
@@ -220,7 +227,22 @@ async def get_usage_today(db: AsyncSession, identifier: str) -> int:
     return usage.message_count if usage else 0
 
 
-async def increment_usage(db: AsyncSession, identifier: str, source: str = "web") -> int:
+async def get_gemini_usage_today(db: AsyncSession, identifier: str) -> int:
+    today = date.today()
+    result = await db.execute(
+        select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today)
+    )
+    usage = result.scalar_one_or_none()
+    return usage.gemini_count if usage else 0
+
+
+async def increment_usage(
+    db: AsyncSession,
+    identifier: str,
+    source: str = "web",
+    *,
+    via_gemini: bool = False,
+) -> int:
     today = date.today()
     result = await db.execute(
         select(AIUsage).where(AIUsage.identifier == identifier, AIUsage.usage_date == today)
@@ -228,9 +250,17 @@ async def increment_usage(db: AsyncSession, identifier: str, source: str = "web"
     usage = result.scalar_one_or_none()
     if usage:
         usage.message_count += 1
+        if via_gemini:
+            usage.gemini_count += 1
         count = usage.message_count
     else:
-        usage = AIUsage(identifier=identifier, source=source, usage_date=today, message_count=1)
+        usage = AIUsage(
+            identifier=identifier,
+            source=source,
+            usage_date=today,
+            message_count=1,
+            gemini_count=1 if via_gemini else 0,
+        )
         db.add(usage)
         count = 1
     await db.flush()
@@ -280,51 +310,52 @@ async def chat_with_ai(
     model_id: str | None = None,
     system_prompt: str | None = None,
     *,
-    prefer_proxy_providers: bool = False,
-) -> str:
+    prefer_paid_providers: bool = False,
+    allow_gemini: bool = True,
+) -> tuple[str, str | None]:
     model_id = model_id or "gemini-flash"
     prompt = system_prompt or CHAT_SYSTEM_PROMPT
 
-    if prefer_proxy_providers and is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
+    if prefer_paid_providers and is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
         poll_text = await pollinations_chat(message, history, prompt, model_id)
         if poll_text:
-            return _maybe_quote(poll_text)
+            return _maybe_quote(poll_text), "pollinations"
 
     if model_id in ("openai", "openai-fast") and is_valid_openai_key(settings.OPENAI_API_KEY):
         openai_text = await openai_chat(message, history, prompt, model_id)
         if openai_text:
-            return _maybe_quote(openai_text)
+            return _maybe_quote(openai_text), "openai"
 
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
         poll_text = await pollinations_chat(message, history, prompt, model_id)
         if poll_text:
-            return _maybe_quote(poll_text)
+            return _maybe_quote(poll_text), "pollinations"
 
     if is_valid_openrouter_key(settings.OPENROUTER_API_KEY):
         or_text = await openrouter_chat(message, history, prompt, model_id)
         if or_text:
-            return _maybe_quote(or_text)
+            return _maybe_quote(or_text), "openrouter"
 
     if is_valid_openai_key(settings.OPENAI_API_KEY):
         openai_text = await openai_chat(message, history, prompt, model_id)
         if openai_text:
-            return _maybe_quote(openai_text)
+            return _maybe_quote(openai_text), "openai"
 
-    if model_id not in ("pollinations", "openai-fast", "openai"):
+    if allow_gemini and model_id not in ("pollinations", "openai-fast", "openai"):
         gemini_text = await _chat_gemini(message, history, model_id, prompt)
         if gemini_text:
-            return _maybe_quote(gemini_text)
+            return _maybe_quote(gemini_text), "gemini"
 
     if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY):
         lines = [prompt, f"Пользователь: {message}", "Ассистент:"]
         poll_text = await pollinations_text("\n".join(lines))
         if poll_text:
-            return _maybe_quote(poll_text)
+            return _maybe_quote(poll_text), "pollinations"
 
     if should_use_local_fallback(message):
-        return local_chat_reply(message)
+        return local_chat_reply(message), "local"
 
-    return _ai_unavailable_message()
+    return _ai_unavailable_message(), None
 
 
 def get_payment_info() -> dict:

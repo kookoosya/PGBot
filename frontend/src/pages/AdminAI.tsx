@@ -69,10 +69,10 @@ export function AdminAI() {
       <div className="rounded-lg border bg-card p-4 text-sm space-y-2">
         <p className="m-0"><strong>Бесплатно:</strong> 10 сообщений/день.</p>
         <p className="m-0"><strong>Пробный:</strong> 7 дней после первого входа, 25 сообщений/день (авто).</p>
-        <p className="m-0"><strong>ИИ Pro:</strong> Gemini/Pollinations через прокси, режимы учёба/код, 200/день.</p>
-        <p className="m-0"><strong>ИИ Pro+:</strong> 500 сообщений/день, приоритет на шлюзе.</p>
+        <p className="m-0"><strong>ИИ Pro:</strong> до 50 сообщений/день, режимы учёба/код.</p>
+        <p className="m-0"><strong>ИИ Pro+:</strong> до 100 сообщений/день.</p>
         <p className="m-0 text-muted-foreground">
-          Ключи Gemini/Pollinations и AI_HTTPS_PROXY — в .env на VPS. Прокси только для AI-запросов, сайт не затрагивает.
+          Ключ Gemini — в .env (GEMINI_API_KEY). Лимит умных ответов Gemini — 50/сутки на аккаунт.
         </p>
       </div>
 

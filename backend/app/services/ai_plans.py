@@ -35,7 +35,7 @@ def build_ai_plans() -> list[AIPlan]:
             tagline="Попробовать ИИ на сайте",
             features=(
                 f"{settings.AI_FREE_DAILY_LIMIT} сообщений или картинок в день",
-                "Базовый режим через наш сервер",
+                "Обычный режим чата",
                 "Без сохранения истории между днями",
             ),
             chat_modes=("chat",),
@@ -52,9 +52,8 @@ def build_ai_plans() -> list[AIPlan]:
             tagline="7 дней после входа в аккаунт",
             features=(
                 f"{settings.AI_TRIAL_DAILY_LIMIT} сообщений в день",
-                "Умные модели Gemini через наш прокси — работает из России",
                 "Режимы: чат, учёба, код",
-                "Без оплаты зарубежных API с вашей карты",
+                "Без оплаты — автоматически после входа",
             ),
             chat_modes=("chat", "study", "code"),
             model_id="gemini",
@@ -67,13 +66,12 @@ def build_ai_plans() -> list[AIPlan]:
             daily_limit=settings.AI_PRO_DAILY_LIMIT,
             price_rub=settings.AI_PRO_PRICE,
             period_days=settings.AI_PRO_PERIOD_DAYS,
-            tagline="Постоянный доступ через наш сервер",
+            tagline="Расширенный доступ к ИИ",
             features=(
-                f"До {settings.AI_PRO_DAILY_LIMIT} сообщений в день на аккаунт",
-                "Gemini / Pollinations через встроенный прокси — без блокировок из РФ",
+                f"До {settings.AI_PRO_DAILY_LIMIT} сообщений в день",
                 "Режимы «Учёба» и «Код»",
                 "Картинки в общем лимите",
-                "Оплата переводом в рублях — без зарубежных подписок",
+                "Оплата переводом на карту портала",
             ),
             chat_modes=("chat", "study", "code"),
             model_id="gemini",
@@ -89,12 +87,12 @@ def build_ai_plans() -> list[AIPlan]:
             tagline="Для активных пользователей",
             features=(
                 f"До {settings.AI_PRO_PLUS_DAILY_LIMIT} сообщений в день",
-                "Приоритет на нашем AI-шлюзе",
                 "Все режимы и картинки",
+                "Приоритетная обработка запросов",
                 "Подходит для ежедневной работы с текстами и кодом",
             ),
             chat_modes=("chat", "study", "code"),
-            model_id="openai",
+            model_id="gemini",
             requires_login=True,
             requires_payment=True,
         ),
@@ -105,11 +103,15 @@ def plan_by_id(plan_id: str) -> AIPlan | None:
     return next((plan for plan in build_ai_plans() if plan.id == plan_id), None)
 
 
+def effective_daily_limit(plan: AIPlan) -> int:
+    return min(plan.daily_limit, settings.AI_MAX_DAILY_LIMIT)
+
+
 def plan_to_dict(plan: AIPlan) -> dict:
     return {
         "id": plan.id,
         "name": plan.name,
-        "daily_limit": plan.daily_limit,
+        "daily_limit": effective_daily_limit(plan),
         "price_rub": plan.price_rub,
         "period_days": plan.period_days,
         "tagline": plan.tagline,
