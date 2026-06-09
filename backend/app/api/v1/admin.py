@@ -176,12 +176,33 @@ async def admin_sync_timepad_events(
     return _sync_responses(results)
 
 
+@router.post("/events/sync-orbilet", response_model=list[EventSyncResponse])
+async def admin_sync_orbilet_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+):
+    """Import Pskov events from orbilet.ru."""
+    results = await sync_event_source(db, "orbilet", actor_id=current_user.id)
+    return _sync_responses(results)
+
+
+@router.post("/events/sync-proculture", response_model=list[EventSyncResponse])
+async def admin_sync_proculture_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+    region: EventRegion | None = None,
+):
+    """Import from PRO.Культура.РФ (requires PROCULTURE_API_KEY)."""
+    results = await sync_event_source(db, "proculture", region=region, actor_id=current_user.id)
+    return _sync_responses(results)
+
+
 @router.post("/events/sync-all", response_model=list[EventSyncResponse])
 async def admin_sync_all_events(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(require_owner())],
 ):
-    """Sync from all configured sources: VK, TimePad, KudaGo."""
+    """Sync from all configured sources: VK, TimePad, Orbilet, PRO.Культура, KudaGo."""
     results = await sync_all_event_sources(db, actor_id=current_user.id)
     return _sync_responses(results)
 

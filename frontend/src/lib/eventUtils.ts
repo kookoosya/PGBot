@@ -6,6 +6,8 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   vk: "ВКонтакте",
   kudago: "KudaGo",
   timepad: "TimePad",
+  orbilet: "Orbilet",
+  proculture: "PRO.Культура",
   manual: "Организатор",
 };
 

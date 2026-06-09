@@ -58,6 +58,42 @@ VK_EVENT_GROUPS: tuple[VkGroupPreset, ...] = (
         region=EventRegion.PSKOV,
         default_location="Псков, Кремль",
     ),
+    VkGroupPreset(
+        screen_name="afipskov",
+        label="Афиша Псков (кино, концерты)",
+        region=EventRegion.PSKOV,
+        default_location="Псков",
+    ),
+    VkGroupPreset(
+        screen_name="club39969164",
+        label="Афиша Псков (резерв)",
+        region=EventRegion.PSKOV,
+        default_location="Псков",
+    ),
+    VkGroupPreset(
+        screen_name="220203925",
+        label="Пушкиногорский журнал",
+        region=EventRegion.PUSHKIN_GORY,
+        default_location="Пушкинские Горы",
+    ),
+    VkGroupPreset(
+        screen_name="informpskov",
+        label="ИнформПсков",
+        region=EventRegion.PSKOV,
+        default_location="Псков",
+    ),
+    VkGroupPreset(
+        screen_name="teatrpskov",
+        label="Псковский академический театр",
+        region=EventRegion.PSKOV,
+        default_location="Псков, театр",
+    ),
+    VkGroupPreset(
+        screen_name="dkpskov",
+        label="Дворец культуры Пскова",
+        region=EventRegion.PSKOV,
+        default_location="Псков",
+    ),
 )
 
 # Legacy single-group map (kept for backward-compatible imports).

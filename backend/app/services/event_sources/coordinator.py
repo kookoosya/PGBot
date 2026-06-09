@@ -10,6 +10,8 @@ from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
 from app.services.event_sources.kudago_source import KudaGoEventSource
+from app.services.event_sources.orbilet_source import OrbiletEventSource
+from app.services.event_sources.proculture_source import ProCultureEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
 from app.services.event_enrichment_batch import enrich_stale_events
 from app.services.event_sources.vk_source import VkEventSource
@@ -19,6 +21,8 @@ logger = logging.getLogger(__name__)
 _SOURCES: dict[str, EventSource] = {
     "vk": VkEventSource(),
     "timepad": TimePadEventSource(),
+    "orbilet": OrbiletEventSource(),
+    "proculture": ProCultureEventSource(),
     "kudago": KudaGoEventSource(),
 }
 
@@ -62,7 +66,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "timepad", "kudago"):
+    for name in ("vk", "timepad", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue

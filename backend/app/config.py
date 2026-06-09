@@ -105,6 +105,10 @@ class Settings(BaseSettings):
     # TimePad events (https://dev.timepad.ru/)
     TIMEPAD_API_TOKEN: str = ""
 
+    # PRO.Культура.РФ (https://pro.culture.ru/documentation/export_API_PRO.pdf)
+    PROCULTURE_API_KEY: str = ""
+    PROCULTURE_PSKOV_LOCALE_ID: int = 0
+
     # Auto-sync village events from external sources (hours; 0 = disabled)
     EVENT_SYNC_INTERVAL_HOURS: int = 12
 

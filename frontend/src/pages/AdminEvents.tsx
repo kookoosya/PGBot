@@ -49,6 +49,8 @@ const emptyForm: EventCreate = {
 const SOURCE_LABELS: Record<string, string> = {
   vk: "VK",
   timepad: "TimePad",
+  orbilet: "Orbilet",
+  proculture: "PRO.Культура",
   kudago: "KudaGo",
 };
 
@@ -142,7 +144,10 @@ export function AdminEvents() {
     }
   };
 
-  const runSync = async (source: "vk" | "kudago" | "timepad" | "all", region?: EventRegion) => {
+  const runSync = async (
+    source: "vk" | "kudago" | "timepad" | "orbilet" | "proculture" | "all",
+    region?: EventRegion,
+  ) => {
     setSyncing(true);
     setMsg("");
     setError("");
@@ -154,7 +159,11 @@ export function AdminEvents() {
             ? await api.syncVkEvents(region)
             : source === "timepad"
               ? await api.syncTimepadEvents(region)
-              : await api.syncKudagoEvents(region);
+              : source === "orbilet"
+                ? await api.syncOrbiletEvents()
+                : source === "proculture"
+                  ? await api.syncProCultureEvents(region)
+                  : await api.syncKudagoEvents(region);
       setMsg(formatSyncSummary(results));
       load();
     } catch (err) {
@@ -183,6 +192,12 @@ export function AdminEvents() {
           <Button variant="outline" disabled={syncing} onClick={() => runSync("timepad")}>
             {syncing ? "…" : "TimePad"}
           </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("orbilet")}>
+            {syncing ? "…" : "Orbilet"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("proculture")}>
+            {syncing ? "…" : "PRO.Культура"}
+          </Button>
           <Button variant="outline" disabled={syncing} onClick={() => runSync("kudago", "pskov")}>
             {syncing ? "…" : "KudaGo"}
           </Button>
@@ -193,8 +208,9 @@ export function AdminEvents() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        VK — 6 групп (музей, район, Псков). TimePad — <code>TIMEPAD_API_TOKEN</code>.
-        Автосинхронизация каждые 12 ч. Дедупликация по ссылке и названию+дате.
+        VK — 12 пабликов (ПГ + Псков, афиша, театр). Orbilet — концерты и экскурсии Пскова без ключа.
+        TimePad — <code>TIMEPAD_API_TOKEN</code>. PRO.Культура — <code>PROCULTURE_API_KEY</code>.
+        Автосинхронизация каждые 12 ч.
       </p>
 
       {msg && <p className="text-green-700">{msg}</p>}
@@ -327,6 +343,8 @@ export function AdminEvents() {
                   {event.region_label} · {event.category_label} · {event.starts_at_label}
                   {event.source === "vk" && " · VK"}
                   {event.source === "timepad" && " · TimePad"}
+                  {event.source === "orbilet" && " · Orbilet"}
+                  {event.source === "proculture" && " · PRO.Культура"}
                   {event.source === "kudago" && " · KudaGo"}
                   {!event.is_published && " · черновик"}
                 </p>

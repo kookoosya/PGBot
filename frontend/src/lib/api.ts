@@ -304,6 +304,19 @@ class ApiClient {
     });
   }
 
+  syncOrbiletEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-orbilet`, {
+      method: "POST",
+    });
+  }
+
+  syncProCultureEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-proculture${q}`, {
+      method: "POST",
+    });
+  }
+
   syncAllEvents() {
     return this.request<EventSyncResult[]>(`/admin/events/sync-all`, {
       method: "POST",
