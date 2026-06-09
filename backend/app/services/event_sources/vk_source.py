@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventRegion
-from app.services.event_enrichment_service import enrich_event_fields
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.text_utils import parse_event_datetime
@@ -71,17 +70,9 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
                 break
 
     parsed = parse_vk_post(text)
-    title, genre, description = enrich_event_fields(
+    return FetchedEvent(
         title=parsed.title,
         description=parsed.body or text[:2000],
-        category=parsed.category,
-        genre=parsed.genre,
-        location=location,
-        region=preset.region,
-    )
-    return FetchedEvent(
-        title=title,
-        description=description,
         starts_at=starts_at,
         ends_at=None,
         location=location,
@@ -89,7 +80,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
         category=parsed.category,
         source="vk",
         source_url=f"https://vk.com/wall-{group_id}_{post_id}",
-        genre=genre,
+        genre=parsed.genre,
     )
 
 

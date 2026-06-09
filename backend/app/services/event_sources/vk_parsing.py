@@ -21,6 +21,15 @@ _CINEMA_LINE_RE = re.compile(
     r"(?:фильм|кино|сеанс|премьера|показ)\s*[:\-—]?\s*[«\"']?([^»\"'\n.!]{3,100})",
     re.IGNORECASE,
 )
+_EVENT_LINE_RE = re.compile(
+    r"(?:концерт|спектакль|выставк|экскурс|фестиваль|праздник|лекци|мастер[- ]класс|ярмарк|турнир)"
+    r"\s*[:\-—]?\s*[«\"']?([^»\"'\n.!]{3,120})",
+    re.IGNORECASE,
+)
+_GENERIC_OPENERS = (
+    "друзья", "привет", "приглашаем", "приглаша", "анонс", "внимание",
+    "уведомля", "дорогие", "коллеги", "жители", "гости", "подписчики",
+)
 _HASHTAG_RE = re.compile(r"#\w+")
 _URL_RE = re.compile(r"https?://\S+|vk\.com/\S+")
 _MENTION_RE = re.compile(r"@\w+|\[id\d+\|[^\]]+\]")
@@ -106,6 +115,34 @@ def extract_quoted_titles(text: str) -> list[str]:
     return [m.group(1).strip() for m in _QUOTED_TITLE_RE.finditer(text) if len(m.group(1).strip()) >= 3]
 
 
+def extract_event_title(text: str, *, category: EventCategory) -> str | None:
+    """Extract human-readable event title for non-cinema posts."""
+    for quoted in extract_quoted_titles(text):
+        if _looks_like_event_title(quoted, category=category):
+            return _normalize_title(quoted)
+
+    match = _EVENT_LINE_RE.search(text)
+    if match:
+        candidate = match.group(1).strip(" «»\"'.,!")
+        if _looks_like_event_title(candidate, category=category):
+            return _normalize_title(candidate)
+
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if not stripped or len(stripped) < 8:
+            continue
+        lower = stripped.lower()
+        if lower.startswith(_GENERIC_OPENERS):
+            continue
+        if lower.startswith(("📅", "📍", "🕐", "http", "#")):
+            continue
+        if any(word in lower for word in ("когда:", "где:", "дата:", "время:", "билет")):
+            continue
+        if len(stripped) <= 120:
+            return _normalize_title(stripped)
+    return None
+
+
 def extract_cinema_title(text: str) -> str | None:
     """Best-effort film title from VK post."""
     catalog = lookup_film(text)
@@ -132,14 +169,23 @@ def extract_cinema_title(text: str) -> str | None:
 
 
 def _looks_like_film_title(value: str) -> bool:
+    return _looks_like_event_title(value, category=EventCategory.CINEMA)
+
+
+def _looks_like_event_title(value: str, *, category: EventCategory) -> bool:
     lower = value.lower().strip()
-    if len(lower) < 3 or len(lower) > 100:
+    if len(lower) < 3 or len(lower) > 120:
         return False
     blocked = (
         "псков", "кинотеатр", "сеанс", "билет", "премьера недели",
-        "афиша", "расписание", "пушкин", "музей",
+        "афиша", "расписание", "пушкин", "музей", "подписывайт",
+        "розыгрыш", "реклам", "http", "vk.com",
     )
-    return not any(word in lower for word in blocked)
+    if any(word in lower for word in blocked):
+        return False
+    if category == EventCategory.CINEMA:
+        return True
+    return not lower.startswith(_GENERIC_OPENERS)
 
 
 def _normalize_title(value: str) -> str:
@@ -161,6 +207,8 @@ def extract_teaser_body(text: str, *, title: str, max_len: int = 220) -> str:
             continue
         lower = line.lower()
         if lower == title_lower or title_lower in lower and len(line) < len(title) + 10:
+            continue
+        if lower.startswith(_GENERIC_OPENERS):
             continue
         if lower.startswith(("📅", "📍", "🕐", "🎬", "когда:", "где:", "дата:", "время:")):
             continue
@@ -196,7 +244,9 @@ def parse_vk_post(text: str) -> VkParsedPost:
             body = catalog.teaser
         return VkParsedPost(title=title[:300], body=body, category=category, genre=genre)
 
-    first_line = next((ln.strip() for ln in cleaned.split("\n") if ln.strip()), "Событие")
-    title = _normalize_title(first_line[:300])
+    title = extract_event_title(cleaned, category=category)
+    if not title:
+        first_line = next((ln.strip() for ln in cleaned.split("\n") if ln.strip()), "Событие")
+        title = _normalize_title(first_line[:300])
     body = extract_teaser_body(cleaned, title=title) or cleaned[:500]
     return VkParsedPost(title=title, body=body, category=category, genre=None)

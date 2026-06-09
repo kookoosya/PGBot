@@ -55,8 +55,9 @@ async def _event_sync_work() -> None:
         results = await sync_all_event_sources(db)
         await db.commit()
         created = sum(r.created for r in results)
-        if created:
-            logger.info("Event auto-sync: +%s new events", created)
+        updated = sum(r.updated for r in results)
+        if created or updated:
+            logger.info("Event auto-sync: +%s created, %s updated", created, updated)
 
 
 def _create_periodic_task(

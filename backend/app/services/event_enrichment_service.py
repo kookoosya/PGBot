@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from app.models.enums import EventCategory, EventRegion
+from app.services.text_cleaning import first_sentences, normalize_event_text
 from app.services.cinema_enrichment import (
     build_cinema_description,
     enrich_cinema_title,
@@ -39,7 +40,7 @@ def enrich_event_fields(
 ) -> tuple[str, str | None, str | None]:
     """Return enriched (title, genre, description)."""
     clean_title = (title or "").strip()
-    clean_desc = (description or "").strip() or None
+    clean_desc = normalize_event_text(description)
 
     if category == EventCategory.CINEMA:
         return _enrich_cinema(
@@ -95,14 +96,20 @@ def _enrich_non_cinema_description(
     location: str | None,
     region: EventRegion | None,
 ) -> str | None:
-    if description and len(description) >= MIN_DESCRIPTION_LEN:
-        return _trim_teaser(description)
+    body = description
+    if body and len(body) > _MAX_TEASER_LEN:
+        body = first_sentences(body, max_sentences=3)
+
+    if body and len(body) >= MIN_DESCRIPTION_LEN:
+        if body.lower().startswith(title.lower().rstrip(".")):
+            return _trim_teaser(body)
+        return _trim_teaser(f"{title.rstrip('.')}. {body}")
 
     parts: list[str] = []
     if title:
         parts.append(title.rstrip(".") + ".")
-    if description:
-        parts.append(description.strip())
+    if body:
+        parts.append(body.strip())
 
     fallback = _category_fallback(category, location=location, region=region)
     combined = " ".join(parts).strip()

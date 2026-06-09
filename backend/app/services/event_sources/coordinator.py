@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventRegion
@@ -9,7 +11,10 @@ from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
 from app.services.event_sources.kudago_source import KudaGoEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
+from app.services.event_enrichment_batch import enrich_stale_events
 from app.services.event_sources.vk_source import VkEventSource
+
+logger = logging.getLogger(__name__)
 
 _SOURCES: dict[str, EventSource] = {
     "vk": VkEventSource(),
@@ -44,7 +49,11 @@ async def sync_event_source(
             skipped=0,
             errors=[f"Неизвестный источник: {source_name}"],
         )]
-    return await source.sync_events(db, region=region, actor_id=actor_id)
+    results = await source.sync_events(db, region=region, actor_id=actor_id)
+    enriched = await enrich_stale_events(db)
+    if enriched:
+        logger.info("Post-sync event enrichment (%s): %s events updated", source_name, enriched)
+    return results
 
 
 async def sync_all_event_sources(
@@ -54,8 +63,11 @@ async def sync_all_event_sources(
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
     for name in ("vk", "timepad", "kudago"):
+        source = get_event_source(name)
+        if not source:
+            continue
         try:
-            results.extend(await sync_event_source(db, name, actor_id=actor_id))
+            results.extend(await source.sync_events(db, actor_id=actor_id))
         except EventValidationError as exc:
             results.append(EventSyncResult(
                 source=name,
@@ -76,4 +88,7 @@ async def sync_all_event_sources(
                 skipped=0,
                 errors=[str(exc)],
             ))
+    enriched = await enrich_stale_events(db)
+    if enriched:
+        logger.info("Post-sync event enrichment: %s events updated", enriched)
     return results
