@@ -63,7 +63,7 @@ def mock_external_notifications(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr("app.services.notifications.notify_owner", noop)
     monkeypatch.setattr("app.services.notifications.notify_issue_status", noop)
-    monkeypatch.setattr("app.api.v1.classifieds.notify_owner", noop)
+    monkeypatch.setattr("app.services.classified_service.notify_owner", noop)
 
 
 @pytest.fixture(autouse=True)
