@@ -125,17 +125,19 @@ export function Jobs() {
         </div>
       </section>
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <Input
-          placeholder="Поиск: продавец, водитель, лето…"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-          className="flex-1"
-        />
-        <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
-          Найти
-        </Button>
+      <div className="page-panel page-panel--gold mb-4">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input
+            placeholder="Поиск: продавец, водитель, лето…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
+            className="flex-1"
+          />
+          <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
+            Найти
+          </Button>
+        </div>
       </div>
 
       <div className="jobs-sector-filters mb-6">
@@ -176,7 +178,7 @@ export function Jobs() {
             ))}
           </ul>
           <select
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            className="pushkin-select w-full"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >

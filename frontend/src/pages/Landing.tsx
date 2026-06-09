@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PushkinVersesSection } from "@/components/PushkinVersesSection";
+import { SeasonalTip } from "@/components/SeasonalTip";
 import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { VkBotBanner } from "@/components/VkBotLink";
@@ -47,6 +48,7 @@ export function Landing() {
       </section>
 
       <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
+        <SeasonalTip />
         <TodayInVillage />
         <UpcomingEvents />
       </section>

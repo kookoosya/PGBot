@@ -2457,6 +2457,147 @@
     background: hsl(var(--forest) / 0.1);
     color: hsl(var(--forest));
   }
+  .events-region-filters--inline {
+    margin-bottom: 0;
+  }
+  .events-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .events-search-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex: 1;
+    min-width: 10rem;
+    max-width: 16rem;
+  }
+  .events-search-input {
+    height: 2.25rem;
+    font-size: 0.875rem;
+  }
+  .events-all-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .events-all-link:hover {
+    text-decoration: underline;
+  }
+  .events-panel-head {
+    align-items: flex-start;
+  }
+
+  /* Event detail page */
+  .event-detail-card {
+    padding: 1.5rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .event-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+  .event-detail-source {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .event-detail-label {
+    margin: 0 0 0.25rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .event-detail-value {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
+  .event-detail-end {
+    font-size: 0.9375rem;
+    color: hsl(var(--muted-foreground));
+    font-family: "Source Serif 4", Georgia, serif;
+  }
+  .event-detail-text {
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .event-detail-actions {
+    padding-top: 0.5rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Seasonal tip */
+  .seasonal-tip {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--gold) / 0.35);
+    background: linear-gradient(135deg, hsl(42 55% 97% / 0.95), hsl(152 30% 94% / 0.6));
+    margin-bottom: 0.25rem;
+  }
+  .seasonal-tip-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+  .seasonal-tip-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1rem;
+    color: hsl(var(--forest));
+  }
+  .seasonal-tip-text {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+  .seasonal-tip-link {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+  }
+  .seasonal-tip-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Official portal issue list */
+  .issue-list-card {
+    padding: 1rem 1.15rem;
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background) / 0.92);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .issue-list-card:hover {
+    border-color: hsl(var(--gold) / 0.45);
+    box-shadow: 0 6px 20px hsl(152 48% 12% / 0.06);
+  }
+  .issue-list-card--selected {
+    border-color: hsl(var(--gold));
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.2);
+  }
+  .official-detail-title {
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+  }
 
   /* Shared literary album panel */
   .page-panel {

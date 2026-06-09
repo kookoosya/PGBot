@@ -31,6 +31,8 @@ const Residents = lazy(() => import("./pages/Residents").then((m) => ({ default:
 const Departments = lazy(() => import("./pages/Departments").then((m) => ({ default: m.Departments })));
 const Analytics = lazy(() => import("./pages/Analytics").then((m) => ({ default: m.Analytics })));
 const AdminEvents = lazy(() => import("./pages/AdminEvents").then((m) => ({ default: m.AdminEvents })));
+const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ default: m.EventsPage })));
+const EventDetail = lazy(() => import("./pages/EventDetail").then((m) => ({ default: m.EventDetail })));
 const AdminMarketing = lazy(() => import("./pages/AdminMarketing").then((m) => ({ default: m.AdminMarketing })));
 const AdminVisits = lazy(() => import("./pages/AdminVisits").then((m) => ({ default: m.AdminVisits })));
 const Verification = lazy(() => import("./pages/Verification").then((m) => ({ default: m.Verification })));
@@ -81,6 +83,8 @@ export default function App() {
         <Route path="classifieds/:id" element={<Lazy><ClassifiedDetail /></Lazy>} />
         <Route path="jobs" element={<Lazy><Jobs /></Lazy>} />
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
+        <Route path="events" element={<Lazy><EventsPage /></Lazy>} />
+        <Route path="events/:id" element={<Lazy><EventDetail /></Lazy>} />
         <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
         <Route path="signup" element={<Lazy><Signup /></Lazy>} />

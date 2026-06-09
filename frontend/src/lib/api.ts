@@ -238,6 +238,17 @@ class ApiClient {
     return this.request<TodayResponse>(`/public/today${q}`);
   }
 
+  getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+    const query = params ? "?" + new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")) as Record<string, string>,
+    ).toString() : "";
+    return this.request<PublicEventListResponse>(`/public/events${query}`);
+  }
+
+  getPublicEvent(id: number) {
+    return this.request<PublicEvent>(`/public/events/${id}`);
+  }
+
   getAdminEvents(includeUnpublished = true) {
     const q = includeUnpublished ? "" : "?include_unpublished=false";
     return this.request<EventListResponse>(`/admin/events${q}`);
@@ -963,6 +974,28 @@ export interface TodayResponse {
 }
 
 export type EventRegion = "pushkin_gory" | "pskov";
+
+export interface PublicEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  starts_at_label: string;
+  ends_at_label: string | null;
+  location: string | null;
+  region: EventRegion;
+  region_label: string;
+  category: string;
+  category_label: string;
+  source: string | null;
+  source_url: string | null;
+}
+
+export interface PublicEventListResponse {
+  items: PublicEvent[];
+  total: number;
+}
 
 export interface EventItem {
   id: number;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api, Issue } from "@/lib/api";
@@ -50,82 +50,70 @@ export function OfficialIssues() {
   };
 
   return (
-    <div className="page-section space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Портал служб</h1>
-          <p className="text-muted-foreground mt-1">
-            {user?.organization || user?.full_name}
-            {user?.role && (
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
-                {ROLE_LABELS[user.role] || user.role}
-              </span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/">
-            <Button variant="outline" size="sm">На главную</Button>
-          </Link>
-          <Link to="/complaints">
-            <Button variant="outline" size="sm">Форма жалобы</Button>
-          </Link>
-          <Button variant="outline" size="sm" onClick={logout}>Выйти</Button>
-        </div>
-      </div>
+    <div className="page-section max-w-6xl space-y-6">
+      <PageHeader
+        icon="🏛"
+        title="Портал служб"
+        subtitle={`${user?.organization || user?.full_name || ""}${user?.role ? ` · ${ROLE_LABELS[user.role] || user.role}` : ""}`}
+      >
+        <Link to="/" className="btn-hero-secondary text-sm no-underline">На главную</Link>
+        <Link to="/complaints" className="btn-hero-secondary text-sm no-underline">Форма жалобы</Link>
+        <button type="button" className="btn-hero-secondary text-sm" onClick={logout}>Выйти</button>
+      </PageHeader>
 
-      <div className="flex flex-wrap gap-3">
-        <select
-          className="h-10 rounded-md border px-3 text-sm bg-background"
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-        >
-          <option value="">Все статусы</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-          ))}
-        </select>
-        <input
-          className="h-10 rounded-md border px-3 text-sm bg-background"
-          placeholder="Поиск..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && loadIssues()}
-        />
-        <Button onClick={loadIssues} size="sm">Найти</Button>
+      <div className="page-panel page-panel--gold">
+        <div className="flex flex-wrap gap-3">
+          <select
+            className="pushkin-select"
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">Все статусы</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            ))}
+          </select>
+          <input
+            className="pushkin-select flex-1 min-w-[12rem]"
+            placeholder="Поиск по тексту…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && loadIssues()}
+          />
+          <Button onClick={loadIssues} size="sm">Найти</Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-3">
           {issues.map((issue) => (
-            <Card
+            <button
               key={issue.id}
-              className={`cursor-pointer transition-shadow hover:shadow-md ${selected?.id === issue.id ? "ring-2 ring-primary" : ""}`}
+              type="button"
+              className={`issue-list-card w-full text-left${selected?.id === issue.id ? " issue-list-card--selected" : ""}`}
               onClick={() => { setSelected(issue); setResolution(issue.resolution_text || ""); }}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold">#{issue.id}</span>
-                      <Badge className={STATUS_COLORS[issue.status]}>
-                        {STATUS_LABELS[issue.status]}
-                      </Badge>
-                      {issue.category && (
-                        <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
-                      )}
-                    </div>
-                    <p className="mt-2 text-sm">{issue.ai_analysis?.summary || issue.description}</p>
-                    {issue.address && (
-                      <p className="mt-1 text-xs text-muted-foreground">📍 {issue.address}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold">#{issue.id}</span>
+                    <Badge className={STATUS_COLORS[issue.status]}>
+                      {STATUS_LABELS[issue.status]}
+                    </Badge>
+                    {issue.category && (
+                      <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDate(issue.created_at)}
-                  </span>
+                  <p className="mt-2 text-sm">{issue.ai_analysis?.summary || issue.description}</p>
+                  {issue.address && (
+                    <p className="mt-1 text-xs text-muted-foreground">📍 {issue.address}</p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {formatDate(issue.created_at)}
+                </span>
+              </div>
+            </button>
           ))}
           {issues.length === 0 && (
             <p className="text-center text-muted-foreground py-8">Обращения не найдены</p>
@@ -144,48 +132,44 @@ export function OfficialIssues() {
         </div>
 
         {selected && (
-          <Card className="h-fit sticky top-8">
-            <CardHeader>
-              <CardTitle>Обращение #{selected.id}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium">Описание</p>
-                <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>
+          <div className="pushkin-card p-5 h-fit sticky top-8 space-y-4">
+            <h2 className="text-lg font-bold m-0 official-detail-title">Обращение #{selected.id}</h2>
+            <div>
+              <p className="text-sm font-medium">Описание</p>
+              <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>
+            </div>
+            {selected.ai_analysis && (
+              <div className="rounded-md bg-muted/60 p-3 text-sm space-y-1">
+                <p><strong>AI:</strong> {selected.ai_analysis.summary}</p>
+                <p>Категория: {selected.ai_analysis.category}</p>
+                <p>Приоритет: {selected.ai_analysis.priority}</p>
               </div>
-              {selected.ai_analysis && (
-                <div className="rounded-md bg-muted p-3 text-sm space-y-1">
-                  <p><strong>AI:</strong> {selected.ai_analysis.summary}</p>
-                  <p>Категория: {selected.ai_analysis.category}</p>
-                  <p>Приоритет: {selected.ai_analysis.priority}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-sm font-medium mb-2">Комментарий при закрытии</p>
-                <textarea
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-background min-h-[60px]"
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  placeholder="Что сделано..."
-                />
+            )}
+            <div>
+              <p className="text-sm font-medium mb-2">Комментарий при закрытии</p>
+              <textarea
+                className="pushkin-select w-full min-h-[60px] py-2"
+                value={resolution}
+                onChange={(e) => setResolution(e.target.value)}
+                placeholder="Что сделано…"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Статус</p>
+              <div className="flex flex-wrap gap-2">
+                {STATUSES.map((s) => (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={selected.status === s ? "default" : "outline"}
+                    onClick={() => handleStatusChange(selected, s)}
+                  >
+                    {STATUS_LABELS[s]}
+                  </Button>
+                ))}
               </div>
-              <div>
-                <p className="text-sm font-medium mb-2">Статус</p>
-                <div className="flex flex-wrap gap-2">
-                  {STATUSES.map((s) => (
-                    <Button
-                      key={s}
-                      size="sm"
-                      variant={selected.status === s ? "default" : "outline"}
-                      onClick={() => handleStatusChange(selected, s)}
-                    >
-                      {STATUS_LABELS[s]}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>

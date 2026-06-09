@@ -55,8 +55,32 @@ class EventResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PublicEventResponse(BaseModel):
+    """Public-facing event payload (no admin fields)."""
+
+    id: int
+    title: str
+    description: str | None
+    starts_at: datetime
+    ends_at: datetime | None
+    starts_at_label: str
+    ends_at_label: str | None = None
+    location: str | None
+    region: str
+    region_label: str
+    category: str
+    category_label: str
+    source: str | None
+    source_url: str | None
+
+
 class EventListResponse(BaseModel):
     items: list[EventResponse]
+    total: int
+
+
+class PublicEventListResponse(BaseModel):
+    items: list[PublicEventResponse]
     total: int
 
 

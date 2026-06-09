@@ -131,6 +131,44 @@ async def get_event_by_id(db: AsyncSession, event_id: int) -> Event | None:
     return result.scalar_one_or_none()
 
 
+async def get_public_event_by_id(db: AsyncSession, event_id: int) -> Event | None:
+    """Load a published event for the public detail page."""
+    result = await db.execute(
+        select(Event).where(Event.id == event_id, Event.is_published.is_(True))
+    )
+    return result.scalar_one_or_none()
+
+
+async def search_public_events(
+    db: AsyncSession,
+    *,
+    region: EventRegion | None = None,
+    search: str | None = None,
+    limit: int = 30,
+) -> list[Event]:
+    """Return upcoming published events for the public events page."""
+    now = datetime.now(timezone.utc)
+    safe_limit = max(1, min(limit, 50))
+    conditions = [
+        Event.is_published.is_(True),
+        or_(Event.ends_at.is_(None), Event.ends_at >= now),
+        Event.starts_at >= now - timedelta(days=1),
+    ]
+    if region is not None:
+        conditions.append(Event.region == region.value)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        conditions.append(or_(Event.title.ilike(term), Event.description.ilike(term)))
+
+    result = await db.execute(
+        select(Event)
+        .where(*conditions)
+        .order_by(Event.starts_at.asc())
+        .limit(safe_limit)
+    )
+    return list(result.scalars().all())
+
+
 async def create_event(
     db: AsyncSession,
     data: EventCreateInput,
@@ -236,6 +274,14 @@ def event_to_response(event: Event) -> dict:
         "created_at": event.created_at,
         "updated_at": event.updated_at,
     }
+
+
+def event_to_public_response(event: Event) -> dict:
+    """Build public API payload without admin-only fields."""
+    payload = event_to_response(event)
+    for key in ("is_published", "created_at", "updated_at"):
+        payload.pop(key, None)
+    return payload
 
 
 def build_event_list_response(events: list[Event]) -> dict:
