@@ -22,6 +22,7 @@ VK_EVENT_SOURCE_PRESETS: dict[EventRegion, dict[str, str]] = {
 }
 
 # KudaGo location slugs (https://kudago.com/public-api/v1.4/locations/).
+# Note: as of 2026 KudaGo public API no longer lists Pskov — sync returns empty gracefully.
 KUDAGO_LOCATION_PRESETS: dict[EventRegion, dict[str, str]] = {
     EventRegion.PSKOV: {
         "location_slug": "pskov",
