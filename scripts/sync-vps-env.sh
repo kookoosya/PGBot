@@ -53,5 +53,6 @@ print('set', name)
 _set_env_var POLLINATIONS_API_KEY "${POLLINATIONS_API_KEY:-}"
 _set_env_var OPENROUTER_API_KEY "${OPENROUTER_API_KEY:-}"
 _set_env_var GEMINI_API_KEY "${GEMINI_API_KEY:-}"
+_set_env_var KINOPOISK_API_TOKEN "${KINOPOISK_API_TOKEN:-}"
 
 echo "Env sync OK on $HOST"
