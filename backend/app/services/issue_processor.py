@@ -19,6 +19,7 @@ from app.models.issue import Issue, IssueDuplicate, IssuePhoto
 from app.models.notification import Notification
 from app.models.user import User
 from app.services.gemini import analyze_issue
+from app.services.issue.validation import find_similar_issues
 from app.services.notifications import notify_owner
 from app.services.telegram import notify_about_issue
 from app.services.vk import send_message
@@ -80,23 +81,6 @@ async def get_or_create_resident(db: AsyncSession, vk_id: int) -> User:
     return user
 
 
-async def find_similar_issues(db: AsyncSession, text: str, category: str | None) -> list[Issue]:
-    query = (
-        select(Issue)
-        .options(selectinload(Issue.ai_analysis))
-        .where(
-            Issue.is_spam.is_(False),
-            Issue.status.notin_([IssueStatus.RESOLVED, IssueStatus.REJECTED, IssueStatus.ARCHIVED]),
-            Issue.parent_issue_id.is_(None),
-        )
-        .order_by(Issue.created_at.desc())
-        .limit(20)
-    )
-    if category:
-        query = query.where(Issue.category == category)
-
-    result = await db.execute(query)
-    return list(result.scalars().all())
 
 
 async def find_department_by_name(db: AsyncSession, name: str) -> Department | None:
