@@ -30,11 +30,17 @@ async def _resolve_group_id(screen_name: str) -> int | None:
     if not token or token.startswith("your-"):
         return None
     try:
-        response = await vk_api_call("groups.getById", {"group_id": screen_name})
-        if isinstance(response, list) and response:
-            return int(response[0]["id"])
-        if isinstance(response, dict) and "id" in response:
-            return int(response["id"])
+        response = await vk_api_call("groups.getById", {"group_ids": screen_name})
+        groups: list[dict] = []
+        if isinstance(response, list):
+            groups = response
+        elif isinstance(response, dict):
+            if "groups" in response:
+                groups = list(response.get("groups") or [])
+            elif "id" in response:
+                return int(response["id"])
+        if groups:
+            return int(groups[0]["id"])
     except Exception:
         logger.warning("Failed to resolve VK group %s", screen_name, exc_info=True)
     return None
