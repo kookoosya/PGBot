@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.config import get_settings
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
+from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.services.event_enrichment_service import enrich_event_fields
 
 
