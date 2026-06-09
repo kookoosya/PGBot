@@ -60,5 +60,6 @@ _set_env_var VK_SECRET_KEY "${VK_SECRET_KEY:-}"
 _set_env_var VK_GROUP_ID "${VK_GROUP_ID:-}"
 _set_env_var VK_GROUP_URL "${VK_GROUP_URL:-}"
 _set_env_var VK_WALL_POST_ENABLED "${VK_WALL_POST_ENABLED:-}"
+_set_env_var VK_USER_TOKEN "${VK_USER_TOKEN:-}"
 
 echo "Env sync OK on $HOST"

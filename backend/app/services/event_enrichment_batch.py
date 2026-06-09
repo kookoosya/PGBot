@@ -12,7 +12,7 @@ from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
 from app.services.poster_service import (
-    fetch_kinopoisk_poster,
+    fetch_kinopoisk_poster_for_event,
     is_real_poster_url,
     is_stock_gallery_poster,
     resolve_event_poster,
@@ -168,8 +168,49 @@ async def strip_bad_cinema_posters(db: AsyncSession) -> int:
     return cleared
 
 
-async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 80) -> int:
-    """Re-fetch official Kinopoisk posters for cinema (fixes wrong matches)."""
+async def refresh_orbilet_posters(db: AsyncSession) -> int:
+    """Attach official Orbilet promo images to imported sessions."""
+    from app.services.orbilet_service import fetch_orbilet_events
+
+    orbilet_items = await fetch_orbilet_events()
+    if not orbilet_items:
+        return 0
+
+    by_session: dict[str, str] = {}
+    by_title: dict[str, str] = {}
+    for item in orbilet_items:
+        if not item.poster_url:
+            continue
+        by_session[item.source_url.rstrip("/")] = item.poster_url
+        key = " ".join(item.title.lower().split())
+        by_title[key] = item.poster_url
+
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.source == "orbilet",
+        )
+    )
+    updated = 0
+    for event in result.scalars().all():
+        poster = None
+        if event.source_url:
+            poster = by_session.get(event.source_url.rstrip("/"))
+        if not poster:
+            poster = by_title.get(" ".join(event.title.lower().split()))
+        if poster and poster != event.poster_url:
+            event.poster_url = poster
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Orbilet poster refresh: updated %s events", updated)
+    return updated
+
+
+async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 120) -> int:
+    """Refresh cinema posters — Orbilet art first, Kinopoisk for commercial cinemas."""
+    await refresh_orbilet_posters(db)
+
     result = await db.execute(
         select(Event).where(
             Event.is_published.is_(True),
@@ -178,12 +219,17 @@ async def refresh_cinema_posters(db: AsyncSession, *, limit: int = 80) -> int:
     )
     updated = 0
     for event in result.scalars().all():
-        if is_stock_gallery_poster(event.poster_url):
+        if not is_real_poster_url(event.poster_url, category=event.category):
             event.poster_url = None
             updated += 1
         if is_real_poster_url(event.poster_url, category=event.category):
             continue
-        poster = await fetch_kinopoisk_poster(event.title)
+        if event.source == "orbilet":
+            continue
+        poster = await fetch_kinopoisk_poster_for_event(
+            event.title,
+            location=event.location,
+        )
         if poster and poster != event.poster_url:
             event.poster_url = poster
             updated += 1

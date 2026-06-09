@@ -2725,19 +2725,15 @@
   }
   .afisha-card-poster--cinema {
     aspect-ratio: 2 / 3;
-    min-height: 220px;
-    max-height: 320px;
   }
   .afisha-card-poster--wide {
     aspect-ratio: 16 / 9;
-    min-height: 140px;
-    max-height: 200px;
   }
   .afisha-card-poster img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center top;
+    object-position: center center;
     display: block;
   }
   .afisha-card-poster--placeholder {

@@ -33,6 +33,7 @@ def _to_fetched(item: OrbiletEvent) -> FetchedEvent:
         source="orbilet",
         source_url=item.source_url,
         genre=item.genre,
+        poster_url=item.poster_url,
     )
 
 

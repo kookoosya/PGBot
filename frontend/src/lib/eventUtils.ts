@@ -83,7 +83,9 @@ export function isDisplayablePoster(
   category?: string,
 ): boolean {
   if (!posterUrl?.trim()) return false;
+  const lower = posterUrl.toLowerCase();
   if (posterUrl.startsWith(STOCK_GALLERY_PREFIX)) return false;
+  if (lower.includes("no-poster") || lower.includes("no_poster")) return false;
   if (category === "cinema" && posterUrl.startsWith("/images/")) return false;
   return true;
 }

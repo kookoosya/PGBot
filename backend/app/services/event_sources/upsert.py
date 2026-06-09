@@ -51,7 +51,7 @@ async def upsert_fetched_event(
                 region=item.region,
                 category=payload.category,
                 genre=item.genre,
-                poster_url=item.poster_url or existing.poster_url,
+                poster_url=item.poster_url if item.poster_url else existing.poster_url,
                 source=item.source,
                 source_url=item.source_url,
                 is_published=True,

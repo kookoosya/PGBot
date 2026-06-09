@@ -31,6 +31,7 @@ _PREFIXES = (
 )
 
 _STOCK_GALLERY_PREFIX = "/images/gallery/"
+_INVALID_POSTER_MARKERS = ("no-poster", "no_poster", "placeholder", "noimage")
 
 _CATEGORY_IMAGES: dict[str, str] = {
     EventCategory.CULTURE.value: "/images/gallery/monastery.jpg",
@@ -48,15 +49,27 @@ def is_stock_gallery_poster(url: str | None) -> bool:
     return bool(url and url.strip().startswith(_STOCK_GALLERY_PREFIX))
 
 
+def _is_invalid_poster_marker(url: str) -> bool:
+    lower = url.lower()
+    return any(marker in lower for marker in _INVALID_POSTER_MARKERS)
+
+
 def is_real_poster_url(url: str | None, *, category: str | None = None) -> bool:
-    """True when URL is a real poster (Kinopoisk, VK, external), not a stock placeholder."""
+    """True when URL is a real poster (Kinopoisk, VK, Orbilet), not a stock placeholder."""
     if not (url or "").strip():
         return False
     if is_stock_gallery_poster(url):
         return False
+    if _is_invalid_poster_marker(url):
+        return False
     if category == EventCategory.CINEMA.value and url.strip().startswith("/images/"):
         return False
     return True
+
+
+def _is_planetarium_event(title: str, location: str | None = None) -> bool:
+    text = f"{title} {location or ''}".lower()
+    return "планетар" in text or "полнокупольн" in text
 
 
 def _clean_film_title(title: str) -> str:
@@ -178,6 +191,10 @@ async def fetch_kinopoisk_poster(film_title: str) -> str | None:
                     if poster_url and "preview" not in poster_url.lower():
                         break
 
+            if not is_real_poster_url(poster_url, category=EventCategory.CINEMA.value):
+                _POSTER_CACHE[query] = None
+                return None
+
             _POSTER_CACHE[query] = poster_url
             return poster_url
     except Exception as exc:
@@ -186,14 +203,31 @@ async def fetch_kinopoisk_poster(film_title: str) -> str | None:
         return None
 
 
+async def fetch_kinopoisk_poster_for_event(
+    title: str,
+    *,
+    location: str | None = None,
+) -> str | None:
+    """Kinopoisk for commercial cinema; planetarium uses Orbilet art instead."""
+    if _is_planetarium_event(title, location):
+        return None
+    return await fetch_kinopoisk_poster(title)
+
+
 async def resolve_cinema_poster(
     title: str,
     *,
     vk_poster_url: str | None = None,
+    orbilet_poster_url: str | None = None,
+    location: str | None = None,
 ) -> str | None:
-    """Prefer VK afisha photo; fall back to Kinopoisk official poster."""
-    if vk_poster_url:
+    """Prefer Orbilet/VK afisha art; Kinopoisk for commercial cinema."""
+    if orbilet_poster_url and is_real_poster_url(orbilet_poster_url):
+        return orbilet_poster_url
+    if vk_poster_url and is_real_poster_url(vk_poster_url):
         return vk_poster_url
+    if _is_planetarium_event(title, location):
+        return None
     return await fetch_kinopoisk_poster(title)
 
 
@@ -213,7 +247,7 @@ async def resolve_event_poster(
     if vk_poster_url:
         return vk_poster_url
     if category == EventCategory.CINEMA.value:
-        return await fetch_kinopoisk_poster(title)
+        return await fetch_kinopoisk_poster_for_event(title)
     return category_fallback_image(category)
 
 

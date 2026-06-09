@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 ORBILET_URL = "https://www.orbilet.ru/"
 
+_POSTER_RE = re.compile(r"https://common\.orbilet\.ru/img/promo/[^\"'\s>]+", re.IGNORECASE)
+
 _SESSION_BLOCK_RE = re.compile(
     r'data-timestamp="(?P<ts>\d+)(?:\.\d+)?"[^>]*>.*?'
     r'class="eventName">\s*<a href="/event/(?P<event_id>\d+)">(?P<title>.*?)</a>.*?'
@@ -36,10 +38,25 @@ class OrbiletEvent:
     category: EventCategory
     source_url: str
     genre: str | None = None
+    poster_url: str | None = None
+    orbilet_event_id: str | None = None
 
 
 def _map_category(title: str, venue: str | None = None) -> EventCategory:
     return infer_category_from_text(f"{title} {venue or ''}")
+
+
+def _build_orbilet_poster_map(page: str) -> dict[str, str]:
+    """Map Orbilet event id → promo image (official afisha art, 2:3)."""
+    posters: dict[str, str] = {}
+    for match in re.finditer(r"/event/(\d+)", page):
+        event_id = match.group(1)
+        start = max(0, match.start() - 900)
+        chunk = page[start : match.end() + 240]
+        images = _POSTER_RE.findall(chunk)
+        if images:
+            posters[event_id] = images[-1]
+    return posters
 
 
 def _build_description(title: str, venue: str | None, date_label: str) -> str:
@@ -63,6 +80,7 @@ async def fetch_orbilet_events() -> list[OrbiletEvent]:
         return []
 
     now = datetime.now(MOSCOW_TZ)
+    poster_map = _build_orbilet_poster_map(page)
     events: list[OrbiletEvent] = []
     seen_sessions: set[str] = set()
 
@@ -86,6 +104,7 @@ async def fetch_orbilet_events() -> list[OrbiletEvent]:
             continue
 
         category = _map_category(title, venue)
+        event_id = match.group("event_id")
         events.append(
             OrbiletEvent(
                 title=title[:300],
@@ -94,8 +113,11 @@ async def fetch_orbilet_events() -> list[OrbiletEvent]:
                 location=venue[:500] or "Псков",
                 category=category,
                 source_url=f"https://www.orbilet.ru/session/{session_id}",
+                poster_url=poster_map.get(event_id),
+                orbilet_event_id=event_id,
             )
         )
 
-    logger.info("Orbilet: parsed %s upcoming sessions", len(events))
+    with_posters = sum(1 for e in events if e.poster_url)
+    logger.info("Orbilet: parsed %s sessions (%s with posters)", len(events), with_posters)
     return events

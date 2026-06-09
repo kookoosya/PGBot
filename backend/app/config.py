@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     # VK
     VK_GROUP_TOKEN: str = ""
+    # User token with groups scope — required to read afipskov/other walls for posters
+    VK_USER_TOKEN: str = ""
     VK_CONFIRMATION_CODE: str = ""
     VK_SECRET_KEY: str = ""
     VK_API_VERSION: str = "5.199"

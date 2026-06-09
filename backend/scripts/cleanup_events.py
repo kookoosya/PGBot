@@ -18,6 +18,7 @@ from app.services.event_enrichment_batch import (
     enrich_stale_events,
     recategorize_other_events,
     refresh_cinema_posters,
+    refresh_orbilet_posters,
     strip_bad_cinema_posters,
 )
 
@@ -32,12 +33,14 @@ async def main() -> None:
         removed = await cleanup_duplicate_events(db)
         recategorized = await recategorize_other_events(db, limit=200)
         stripped = await strip_bad_cinema_posters(db)
+        orbilet_posters = await refresh_orbilet_posters(db)
         enriched = await enrich_stale_events(db)
-        refreshed = await refresh_cinema_posters(db, limit=80)
+        refreshed = await refresh_cinema_posters(db, limit=120)
         posters = await enrich_missing_posters(db, limit=100)
         await db.commit()
     print(
-        f"demo_cinema={demos} dupes={removed} recategorized={recategorized} stripped={stripped} enriched={enriched} "
+        f"demo_cinema={demos} dupes={removed} recategorized={recategorized} stripped={stripped} "
+        f"orbilet_posters={orbilet_posters} enriched={enriched} "
         f"refreshed={refreshed} posters={posters}"
     )
 

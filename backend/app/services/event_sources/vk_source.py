@@ -30,7 +30,11 @@ async def _resolve_group_id(screen_name: str) -> int | None:
     if not token or token.startswith("your-"):
         return None
     try:
-        response = await vk_api_call("groups.getById", {"group_ids": screen_name})
+        response = await vk_api_call(
+            "groups.getById",
+            {"group_ids": screen_name},
+            for_reading_public=True,
+        )
         groups: list[dict] = []
         if isinstance(response, list):
             groups = response
@@ -47,11 +51,15 @@ async def _resolve_group_id(screen_name: str) -> int | None:
 
 
 async def _fetch_wall_posts(group_id: int, *, count: int = 20) -> list[dict]:
-    response = await vk_api_call("wall.get", {
-        "owner_id": -group_id,
-        "count": count,
-        "filter": "owner",
-    })
+    response = await vk_api_call(
+        "wall.get",
+        {
+            "owner_id": -group_id,
+            "count": count,
+            "filter": "owner",
+        },
+        for_reading_public=True,
+    )
     return list(response.get("items", []))
 
 
