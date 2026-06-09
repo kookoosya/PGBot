@@ -2388,11 +2388,14 @@
   }
   .events-item {
     position: relative;
-    padding: 1rem 1rem 1rem 1.15rem;
-    border-radius: var(--radius);
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--background));
+    padding: 1rem 1.15rem;
     border-left: 3px solid hsl(var(--gold));
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .events-item:hover {
+    border-color: hsl(var(--gold) / 0.55);
+    box-shadow: 0 14px 40px hsl(152 48% 12% / 0.1);
+    transform: translateY(-2px);
   }
   .events-item-meta {
     display: flex;

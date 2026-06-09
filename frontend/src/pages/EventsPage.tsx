@@ -111,7 +111,7 @@ export function EventsPage() {
       ) : (
         <ol className="events-list">
           {visibleEvents.map((event) => (
-            <li key={event.id} className="events-item">
+            <li key={event.id} className="events-item literary-card literary-card--gold">
               <div className="events-item-meta">
                 <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
                 <span className="events-category">{event.category_label}</span>
