@@ -2,8 +2,15 @@ name: Deploy VPS
 
 on:
   push:
-    branches: [cursor/narodny-kontrol-mvp-e7fb]
+    branches:
+      - cursor/narodny-kontrol-mvp-e7fb
+      - cursor/events-vk-moderation-771b
   workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: cursor/events-vk-moderation-771b
 
 concurrency:
   group: deploy-vps
@@ -33,9 +40,10 @@ jobs:
           script: |
             set -e
             cd /opt/pgbot
-            git fetch origin cursor/narodny-kontrol-mvp-e7fb
-            git checkout cursor/narodny-kontrol-mvp-e7fb
-            git pull origin cursor/narodny-kontrol-mvp-e7fb
+            BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
+            git fetch origin "$BRANCH"
+            git checkout "$BRANCH"
+            git pull origin "$BRANCH"
             bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
             bash scripts/setup-russia-mirror.sh
             docker compose -f docker-compose.prod.yml up -d --build
