@@ -30,8 +30,13 @@ async def find_existing_event(
 ) -> Event | None:
     """Find duplicate by ``source_url`` or similar title on the same calendar day."""
     if source_url:
-        by_url = await db.execute(select(Event).where(Event.source_url == source_url))
-        existing = by_url.scalar_one_or_none()
+        by_url = await db.execute(
+            select(Event)
+            .where(Event.source_url == source_url)
+            .order_by(Event.id.asc())
+            .limit(1)
+        )
+        existing = by_url.scalars().first()
         if existing:
             return existing
 
