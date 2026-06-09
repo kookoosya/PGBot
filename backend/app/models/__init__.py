@@ -19,6 +19,7 @@ from app.models.service import (
 from app.models.site_feedback import SiteFeedback
 from app.models.taxi import TaxiService
 from app.models.user import Role, User
+from app.models.vk_ai_mode import VkAiMode
 from app.models.vk_ai_session import VkAiSession
 from app.models.vk_flow_state import VkFlowState
 from app.models.vk_subscriber import VkSubscriber
@@ -50,6 +51,7 @@ __all__ = [
     "SiteFeedback",
     "VkSubscriber",
     "VkAiSession",
+    "VkAiMode",
     "VkFlowState",
     "RefreshToken",
 ]

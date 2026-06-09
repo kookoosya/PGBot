@@ -9,6 +9,7 @@ from app.models.enums import IssueStatus
 from app.models.issue import Issue
 from app.models.taxi import TaxiService
 from app.services.vk import get_welcome_keyboard, send_message
+from app.services.vk_ai_mode_store import discard_ai_mode
 from app.services.vk_bot import format_ads_message, subscribe_peer, unsubscribe_peer
 from app.services.vk_flows import (
     format_jobs_message,
@@ -18,7 +19,6 @@ from app.services.vk_flows import (
     start_wish_flow,
 )
 from app.services.vk_messages import box, help_text
-from app.services.vk_webhook.ai_mode import discard_ai_mode
 from app.services.vk_webhook.sender import send_with_site_links
 
 settings = get_settings()
@@ -66,13 +66,13 @@ async def try_route_command(
 ) -> bool:
     """Попытаться обработать известную команду. True — команда распознана."""
     if text_lower in ("📋 объявления", "объявления", "объявление", "доска"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         msg = await format_ads_message(db)
         await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
         return True
 
     if text_lower in ("🛠 услуги", "услуги", "мастера", "огород", "дрова"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(
             peer_id,
             box(
@@ -107,7 +107,7 @@ async def try_route_command(
         return True
 
     if text_lower in ("💼 работа", "работа", "вакансии", "вакансия", "подработка"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         msg = await format_jobs_message(db)
         await send_with_site_links(peer_id, msg, ("💼 Вакансии", "/jobs"))
         return True
@@ -118,28 +118,28 @@ async def try_route_command(
         return True
 
     if text_lower in ("🛤 маршруты", "маршруты", "маршрут", "куда сходить", "экскурсия"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_with_site_links(peer_id, format_routes_message(0), ("🗺 На карте", "/map"))
         return True
 
     if text_lower in ("🗺 ошибка карты", "ошибка карты", "ошибка на карте", "карта ошибка"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(peer_id, await start_map_report_flow(db, peer_id), keyboard=get_welcome_keyboard())
         return True
 
     if text_lower in ("➕ объявление", "подать объявление", "добавить объявление", "разместить объявление"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(peer_id, await start_classified_flow(db, peer_id), keyboard=get_welcome_keyboard())
         return True
 
     if text_lower in ("вакансия работа",) or text_lower == "вакансию":
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         msg = await start_classified_flow(db, peer_id, jobs=True)
         await send_message(peer_id, msg, keyboard=get_welcome_keyboard())
         return True
 
     if text_lower in ("💡 пожелания", "пожелания", "предложения", "идея для сайта"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(peer_id, await start_wish_flow(db, peer_id), keyboard=get_welcome_keyboard())
         return True
 
@@ -159,7 +159,7 @@ async def try_route_command(
         return True
 
     if text_lower in ("⚠️ жалобы", "жалобы", "обращения", "жалоба"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(
             peer_id,
             box(
@@ -173,7 +173,7 @@ async def try_route_command(
         return True
 
     if text_lower in ("📝 регистрация", "регистрация", "зарегистрироваться"):
-        discard_ai_mode(peer_id)
+        await discard_ai_mode(db, peer_id)
         await send_message(
             peer_id,
             box(

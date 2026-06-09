@@ -10,11 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.issue_processor import process_incoming_message
 from app.services.vk import get_welcome_keyboard, get_welcome_message, send_message
 from app.services.vk_ai_history import clear_ai_history
+from app.services.vk_ai_mode_store import discard_ai_mode
 from app.services.vk_flow_store import clear_flow
 from app.services.vk_flows import handle_flow_message
 from app.services.vk_messages import box, looks_like_complaint
 from app.services.vk_voice import extract_audio_url, transcribe_audio_url
-from app.services.vk_webhook.ai_mode import discard_ai_mode, handle_ai_commands, try_ai_message
+from app.services.vk_webhook.ai_mode import handle_ai_commands, try_ai_message
 from app.services.vk_webhook.command_router import try_route_command
 from app.services.vk_webhook.map_replies import try_map_keywords
 
@@ -37,7 +38,7 @@ MENU_TRIGGERS = frozenset(
 
 async def handle_menu_reset(db: AsyncSession, peer_id: int) -> None:
     """Сброс flows, ИИ-истории и возврат в главное меню."""
-    discard_ai_mode(peer_id)
+    await discard_ai_mode(db, peer_id)
     await clear_flow(db, peer_id)
     await clear_ai_history(db, peer_id)
     await send_message(peer_id, get_welcome_message(), keyboard=get_welcome_keyboard())
@@ -75,7 +76,7 @@ async def handle_flow(db: AsyncSession, peer_id: int, from_id: int, text: str) -
     flow_reply = await handle_flow_message(db, peer_id, from_id, text)
     if not flow_reply:
         return False
-    discard_ai_mode(peer_id)
+    await discard_ai_mode(db, peer_id)
     await send_message(peer_id, flow_reply, keyboard=get_welcome_keyboard())
     return True
 
