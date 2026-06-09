@@ -65,13 +65,63 @@ export function regionLabelFromFilter(region: EventRegion): string {
   return region === "pskov" ? "Псков" : "Пушкинские Горы";
 }
 
-export function eventTeaser(event: EventCardEvent, maxLen = 140): string {
-  if (event.description) {
-    const text = event.description.replace(/^Жанр:\s*[^.]+\.\s*/i, "").trim();
-    if (text.length <= maxLen) return text;
-    return `${text.slice(0, maxLen - 1).trim()}…`;
+function collapseRepeatedPhrases(text: string): string {
+  const parts = text
+    .split(/(?<=[.!?…])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length <= 1) return text.trim();
+
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/\s+/g, " ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(part);
   }
-  return "";
+  return unique.join(" ").trim();
+}
+
+export function eventTeaser(event: EventCardEvent, maxLen = 120): string {
+  if (!event.description) return "";
+
+  let text = event.description
+    .replace(/^Жанр:\s*[^.]+\.\s*/i, "")
+    .replace(/\s*Билеты на orbilet\.ru\.?\s*/gi, "")
+    .replace(/\s*Билеты на mirage\.ru\.?\s*/gi, "")
+    .replace(/\s*Билеты на silvercinema\.ru\.?\s*/gi, "")
+    .trim();
+
+  const title = event.title.replace(/"/g, "").trim();
+  const quotedTitle = `"${title}"`;
+  for (const prefix of [quotedTitle, title, `«${title}»`]) {
+    while (text.startsWith(prefix)) {
+      text = text.slice(prefix.length).replace(/^[.\s"«»]+/, "").trim();
+    }
+  }
+
+  text = text
+    .replace(/^Место:\s*[^.]+\.\s*/gi, "")
+    .replace(/^Сеанс:\s*[^.]+\.\s*/gi, "")
+    .replace(/^Зал №\d+\.\s*/gi, "")
+    .trim();
+
+  if (event.location) {
+    const location = event.location.trim();
+    text = text.replace(new RegExp(`^${escapeRegExp(location)}[.\\s]+`, "i"), "").trim();
+    text = text.replace(new RegExp(`(?:${escapeRegExp(location)}[.\\s]+){2,}`, "gi"), `${location}. `);
+  }
+
+  text = collapseRepeatedPhrases(text);
+
+  if (!text || text === event.location) return "";
+  if (text.length <= maxLen) return text;
+  return `${text.slice(0, maxLen - 1).trim()}…`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function isCinemaEvent(event: { category?: string }): boolean {

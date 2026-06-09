@@ -5,7 +5,7 @@ import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
-import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
+import { WeatherWidgetDetailed } from "@/components/weather/WeatherWidgetDetailed";
 import { BRAND } from "@/lib/branding";
 import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
@@ -34,10 +34,6 @@ export function Landing() {
             </h1>
             <p className="epic-lead">{BRAND.description}</p>
 
-            <div className="epic-weather-row">
-              <WeatherWidgetCompact variant="inline" />
-            </div>
-
             <div className="epic-cta-row">
               <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
                 🗺 Открыть карту
@@ -51,6 +47,7 @@ export function Landing() {
       </section>
 
       <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
+        <WeatherWidgetDetailed />
         <SeasonalTip />
         <TodayInVillage />
         <UpcomingEvents />

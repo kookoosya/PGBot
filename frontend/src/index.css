@@ -2142,6 +2142,40 @@
     font-size: 0.6875rem;
     color: hsl(var(--muted-foreground));
   }
+  .weather-daily { margin-top: 1.5rem; }
+  .weather-daily-scroll {
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x mandatory;
+  }
+  .weather-day-card {
+    flex: 0 0 5.75rem;
+    scroll-snap-align: start;
+    padding: 0.75rem 0.55rem;
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    text-align: center;
+  }
+  .weather-day-label {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+  }
+  .weather-day-icon { font-size: 1.35rem; }
+  .weather-day-temps {
+    margin: 0.35rem 0 0;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  .weather-day-temps span {
+    margin-left: 0.25rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+  }
 
   /* Today in village */
   .village-dashboard {
@@ -2787,6 +2821,10 @@
   .afisha-card-poster--wide {
     aspect-ratio: 16 / 9;
   }
+  .afisha-card-poster--event {
+    aspect-ratio: 3 / 4;
+    background: hsl(var(--muted));
+  }
   .afisha-card-poster img {
     width: 100%;
     height: 100%;
@@ -2795,6 +2833,10 @@
   .afisha-card-poster--wide img {
     object-fit: cover;
     object-position: center center;
+  }
+  .afisha-card-poster--event img {
+    object-fit: cover;
+    object-position: center top;
   }
   .afisha-card-poster--cinema img {
     object-fit: contain;

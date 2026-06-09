@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { EventsGrid } from "@/components/events/EventsGrid";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,22 @@ const CATEGORY_TABS: { id: CategoryFilter; label: string; icon: string }[] = [
   { id: "tourism", label: "Туризм", icon: "🧭" },
 ];
 
+function readRegionFilter(params: URLSearchParams): RegionFilter {
+  const region = params.get("region");
+  if (region && REGION_FILTERS.some((item) => item.id === region)) {
+    return region as RegionFilter;
+  }
+  return "all";
+}
+
+function readCategoryFilter(params: URLSearchParams): CategoryFilter {
+  const category = params.get("category");
+  if (category && CATEGORY_TABS.some((tab) => tab.id === category)) {
+    return category;
+  }
+  return "all";
+}
+
 function filterByRegion<T extends { region: EventRegion }>(
   events: T[],
   region: RegionFilter,
@@ -31,29 +47,62 @@ function filterByRegion<T extends { region: EventRegion }>(
   return events.filter((event) => event.region === region);
 }
 
+function filterByCategory<T extends { category?: string }>(
+  events: T[],
+  category: CategoryFilter,
+): T[] {
+  if (category === "all") return events;
+  return events.filter((event) => event.category === category);
+}
+
 export function EventsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => readRegionFilter(searchParams));
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(() =>
+    readCategoryFilter(searchParams),
+  );
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const fetchSeq = useRef(0);
 
   useEffect(() => {
-    const category = searchParams.get("category");
-    if (category && CATEGORY_TABS.some((tab) => tab.id === category)) {
-      setCategoryFilter(category);
-    }
-    const region = searchParams.get("region");
-    if (region && REGION_FILTERS.some((item) => item.id === region)) {
-      setRegionFilter(region as RegionFilter);
-    }
+    setRegionFilter(readRegionFilter(searchParams));
+    setCategoryFilter(readCategoryFilter(searchParams));
   }, [searchParams]);
 
+  const syncFiltersToUrl = useCallback(
+    (region: RegionFilter, category: CategoryFilter) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (region === "all") next.delete("region");
+          else next.set("region", region);
+          if (category === "all") next.delete("category");
+          else next.set("category", category);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const handleRegionFilter = (region: RegionFilter) => {
+    setRegionFilter(region);
+    syncFiltersToUrl(region, categoryFilter);
+  };
+
+  const handleCategoryFilter = (category: CategoryFilter) => {
+    setCategoryFilter(category);
+    syncFiltersToUrl(regionFilter, category);
+  };
+
   useEffect(() => {
+    const seq = ++fetchSeq.current;
     setLoading(true);
-    const limit = categoryFilter === "cinema" ? "80" : "60";
+    const limit = categoryFilter === "cinema" ? "100" : "60";
     api
       .getPublicEvents({
         region: regionFilter === "all" ? undefined : regionFilter,
@@ -61,43 +110,46 @@ export function EventsPage() {
         search: search || undefined,
         limit,
       })
-      .then((r) => setEvents(r.items))
+      .then((r) => {
+        if (seq !== fetchSeq.current) return;
+        setEvents(r.items);
+      })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (seq === fetchSeq.current) setLoading(false);
+      });
   }, [regionFilter, categoryFilter, search]);
 
-  const groupedEvents = useMemo(() => groupEventsByShow(events), [events]);
+  const filteredEvents = useMemo(
+    () => filterByCategory(filterByRegion(events, regionFilter), categoryFilter),
+    [events, regionFilter, categoryFilter],
+  );
+
+  const groupedEvents = useMemo(() => groupEventsByShow(filteredEvents), [filteredEvents]);
 
   const showSections = categoryFilter === "all" && !search;
 
   const cinemaPskov = useMemo(
-    () =>
-      filterByRegion(
-        groupedEvents.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
-        regionFilter,
-      ),
-    [groupedEvents, regionFilter],
+    () => groupedEvents.filter((e) => isCinemaEvent(e) && e.region === "pskov"),
+    [groupedEvents],
   );
 
   const pushkinEvents = useMemo(
-    () =>
-      filterByRegion(
-        groupedEvents.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
-        regionFilter,
-      ),
-    [groupedEvents, regionFilter],
+    () => groupedEvents.filter((e) => e.region === "pushkin_gory" && !isCinemaEvent(e)),
+    [groupedEvents],
   );
 
   const pskovOther = useMemo(
-    () =>
-      filterByRegion(
-        groupedEvents.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
-        regionFilter,
-      ),
-    [groupedEvents, regionFilter],
+    () => groupedEvents.filter((e) => e.region === "pskov" && !isCinemaEvent(e)),
+    [groupedEvents],
   );
 
   const flatLayout = categoryFilter === "cinema" ? "cinema" : "auto";
+
+  const sectionCount =
+    (cinemaPskov.length > 0 ? 1 : 0) +
+    (pushkinEvents.length > 0 ? 1 : 0) +
+    (pskovOther.length > 0 ? 1 : 0);
 
   return (
     <div className="afisha-page page-section max-w-6xl">
@@ -142,7 +194,7 @@ export function EventsPage() {
                 key={item.id}
                 type="button"
                 className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
-                onClick={() => setRegionFilter(item.id)}
+                onClick={() => handleRegionFilter(item.id)}
               >
                 {item.label}
               </button>
@@ -157,7 +209,7 @@ export function EventsPage() {
                 role="tab"
                 aria-selected={categoryFilter === tab.id}
                 className={`afisha-category-tab${categoryFilter === tab.id ? " afisha-category-tab--active" : ""}`}
-                onClick={() => setCategoryFilter(tab.id)}
+                onClick={() => handleCategoryFilter(tab.id)}
               >
                 <span aria-hidden>{tab.icon}</span> {tab.label}
               </button>
@@ -168,7 +220,7 @@ export function EventsPage() {
 
       {loading ? (
         <p className="events-muted afisha-loading">Загружаем афишу…</p>
-      ) : events.length === 0 ? (
+      ) : filteredEvents.length === 0 ? (
         <p className="events-muted">Событий не найдено — попробуйте другой фильтр.</p>
       ) : showSections ? (
         <div className="afisha-sections">
@@ -177,7 +229,7 @@ export function EventsPage() {
               <div className="afisha-section-head">
                 <h2 id="cinema-heading">🎬 Кино в Пскове</h2>
                 <p className="afisha-section-lead">
-                  Победа, Смена, Мираж Синема, Silver Cinema — сеансы с постерами и жанрами.
+                  Победа, Смена, Мираж Синема, Silver Cinema — только кинотеатры, с постерами и сеансами.
                 </p>
               </div>
               <EventsGrid events={cinemaPskov} layout="cinema" />
@@ -198,10 +250,14 @@ export function EventsPage() {
             <section className="afisha-section" aria-labelledby="pskov-heading">
               <div className="afisha-section-head">
                 <h2 id="pskov-heading">🏰 Псков</h2>
-                <p className="afisha-section-lead">Концерты, выставки и городские мероприятия.</p>
+                <p className="afisha-section-lead">Концерты, выставки, театр и городские мероприятия.</p>
               </div>
               <EventsGrid events={pskovOther} layout="default" />
             </section>
+          )}
+
+          {sectionCount === 0 && (
+            <p className="events-muted">Нет событий для выбранного региона.</p>
           )}
         </div>
       ) : (

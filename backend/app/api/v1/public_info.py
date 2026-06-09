@@ -40,7 +40,7 @@ async def public_list_events(
     region: EventRegion | None = Query(None),
     category: EventCategory | None = Query(None),
     search: str | None = Query(None, max_length=100),
-    limit: int = Query(40, ge=1, le=60),
+    limit: int = Query(40, ge=1, le=100),
 ):
     """Upcoming published events with optional region, category and text search."""
     events = await search_public_events(

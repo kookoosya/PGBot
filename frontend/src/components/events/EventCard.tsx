@@ -35,6 +35,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
   const posterUrl = isDisplayablePoster(rawPoster, event.category) ? rawPoster : null;
   const extraSessions =
     "extraSessions" in event && event.extraSessions?.length ? event.extraSessions : null;
+  const teaser = eventTeaser(event);
 
   return (
     <article className={cardClass}>
@@ -42,7 +43,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
         <div
           className={[
             "afisha-card-poster",
-            cinema ? "afisha-card-poster--cinema" : "afisha-card-poster--wide",
+            cinema ? "afisha-card-poster--cinema" : "afisha-card-poster--event",
           ].join(" ")}
         >
           <img src={posterUrl} alt="" loading="lazy" decoding="async" />
@@ -90,9 +91,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
           <p className="afisha-card-location">📍 {event.location}</p>
         )}
 
-        {event.description && (
-          <p className="afisha-card-desc">{eventTeaser(event)}</p>
-        )}
+        {teaser && <p className="afisha-card-desc">{teaser}</p>}
 
         {extraSessions && (
           <p className="afisha-card-sessions">{formatExtraSessions(extraSessions)}</p>

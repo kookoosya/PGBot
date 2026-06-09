@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     WEATHER_TIMEZONE: str = "Europe/Moscow"
     WEATHER_CACHE_TTL_SECONDS: int = 1800
     WEATHER_HOURLY_HOURS: int = 24
-    WEATHER_FORECAST_DAYS: int = 2
+    WEATHER_FORECAST_DAYS: int = 5
 
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""

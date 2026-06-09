@@ -4,16 +4,22 @@ import { EventsGrid } from "@/components/events/EventsGrid";
 import { useToday } from "@/hooks/useToday";
 import { groupEventsByShow, isCinemaEvent } from "@/lib/eventUtils";
 
+function showKey(event: { title: string; location?: string | null; region: string }): string {
+  return `${event.title}|${event.location || ""}|${event.region}`;
+}
+
 export function UpcomingEvents() {
   const { data, loading } = useToday();
   const events = data?.upcoming_events ?? [];
 
   const { cinemaPreview, otherPreview } = useMemo(() => {
     const grouped = groupEventsByShow(events);
-    return {
-      cinemaPreview: grouped.filter(isCinemaEvent).slice(0, 4),
-      otherPreview: grouped.filter((e) => !isCinemaEvent(e)).slice(0, 4),
-    };
+    const cinema = grouped.filter(isCinemaEvent).slice(0, 4);
+    const usedKeys = new Set(cinema.map(showKey));
+    const other = grouped
+      .filter((e) => !isCinemaEvent(e) && !usedKeys.has(showKey(e)))
+      .slice(0, 4);
+    return { cinemaPreview: cinema, otherPreview: other };
   }, [events]);
 
   const hasEvents = cinemaPreview.length > 0 || otherPreview.length > 0;
@@ -25,7 +31,7 @@ export function UpcomingEvents() {
           <p className="events-kicker">📅 Афиша региона</p>
           <h2>Ближайшие события</h2>
           <p className="events-lead">
-            Кино в Пскове и события в Пушкинских Горах — краткая подборка. Полное расписание на странице афиши.
+            Кино в Пскове и события в Пушкинских Горах — краткая подборка без дублей.
           </p>
         </div>
         <Link to="/events" className="events-all-link">Вся афиша →</Link>
@@ -41,7 +47,7 @@ export function UpcomingEvents() {
             <div className="landing-events-block">
               <div className="landing-events-block-head">
                 <h3>🎬 Кино в Пскове</h3>
-                <Link to="/events?category=cinema" className="landing-events-block-link">
+                <Link to="/events?category=cinema&region=pskov" className="landing-events-block-link">
                   Все сеансы →
                 </Link>
               </div>
