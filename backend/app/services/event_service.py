@@ -51,10 +51,10 @@ class EventCreateInput:
     starts_at: datetime
     ends_at: Optional[datetime]
     location: Optional[str]
-    region: EventRegion = EventRegion.PUSHKIN_GORY
     category: EventCategory
     source: Optional[str]
     source_url: Optional[str]
+    region: EventRegion = EventRegion.PUSHKIN_GORY
     is_published: bool = True
 
 
