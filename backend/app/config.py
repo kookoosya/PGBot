@@ -107,6 +107,11 @@ class Settings(BaseSettings):
     PAYMENT_AMOUNT_SUGGESTED: int = 150
     PAYMENT_CONTACT_EMAIL: str = "support@pushkinskie-gory.local"
 
+    # YooKassa — auto AI subscription after card payment
+    YOOKASSA_SHOP_ID: str = ""
+    YOOKASSA_SECRET_KEY: str = ""
+    YOOKASSA_RETURN_URL: str = ""
+
     # Classified ads: 3 free, then 150 ₽ per ad per 30 days
     CLASSIFIED_FREE_LIMIT: int = 3
     CLASSIFIED_PLACEMENT_FEE: int = 150

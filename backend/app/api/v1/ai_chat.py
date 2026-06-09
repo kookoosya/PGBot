@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.core.deps import get_client_ip, get_optional_user
+from app.core.deps import get_client_ip, get_current_user, get_optional_user
 from app.core.rate_limit import limiter
 from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
@@ -13,7 +13,10 @@ from app.models.user import User
 from app.schemas.ai import (
     AIAccessResponse,
     AIPlansResponse,
+    AIPaymentStatusResponse,
     AIStatusResponse,
+    AISubscribeRequest,
+    AISubscribeResponse,
     ChatRequest,
     ChatResponse,
     ImageRequest,
@@ -36,6 +39,15 @@ from app.services.ai_chat import (
     process_image_generation,
     process_public_chat,
 )
+from app.services.ai_payment_service import (
+    AIPaymentError,
+    create_subscription_payment,
+    get_latest_user_order,
+    process_yookassa_webhook,
+    sync_order_by_id,
+    yookassa_enabled,
+)
+from app.services.ai_plans import plan_by_id
 import re
 
 router = APIRouter()
@@ -91,7 +103,84 @@ async def list_models():
 
 @router.get("/payment-info", response_model=PaymentInfoResponse)
 async def payment_info():
-    return PaymentInfoResponse(**get_payment_info())
+    info = get_payment_info()
+    info["auto_payment_available"] = yookassa_enabled()
+    return PaymentInfoResponse(**info)
+
+
+@router.post("/subscribe", response_model=AISubscribeResponse)
+async def ai_subscribe(
+    data: AISubscribeRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        order = await create_subscription_payment(db, user=user, plan_id=data.plan_id)
+        await db.commit()
+    except AIPaymentError as exc:
+        raise_http_for_service_error(exc)
+
+    plan = plan_by_id(order.plan_id)
+    if not order.confirmation_url:
+        raise HTTPException(status_code=502, detail="Платёж создан без ссылки на оплату")
+
+    return AISubscribeResponse(
+        order_id=order.id,
+        payment_url=order.confirmation_url,
+        amount_rub=order.amount_rub,
+        plan_id=order.plan_id,
+        plan_name=plan.name if plan else order.plan_id,
+    )
+
+
+@router.post("/payment/webhook")
+async def ai_payment_webhook(
+    payload: dict,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    ok = await process_yookassa_webhook(db, payload)
+    if ok:
+        await db.commit()
+    return {"ok": ok}
+
+
+@router.get("/payment/status/{order_id}", response_model=AIPaymentStatusResponse)
+async def ai_payment_status(
+    order_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    order = await sync_order_by_id(db, order_id, user_id=user.id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Заказ не найден")
+    await db.commit()
+    return AIPaymentStatusResponse(
+        order_id=order.id,
+        status=order.status,
+        plan_id=order.plan_id,
+        entitlement_id=order.entitlement_id,
+        activated=order.status == "succeeded",
+    )
+
+
+@router.get("/payment/latest", response_model=AIPaymentStatusResponse | None)
+async def ai_payment_latest(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    order = await get_latest_user_order(db, user.id)
+    if not order:
+        return None
+    order = await sync_order_by_id(db, order.id, user_id=user.id)
+    await db.commit()
+    assert order is not None
+    return AIPaymentStatusResponse(
+        order_id=order.id,
+        status=order.status,
+        plan_id=order.plan_id,
+        entitlement_id=order.entitlement_id,
+        activated=order.status == "succeeded",
+    )
 
 
 @router.get("/usage", response_model=UsageResponse)

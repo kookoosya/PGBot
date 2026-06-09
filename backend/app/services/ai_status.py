@@ -54,13 +54,26 @@ def is_valid_perplexity_key(key: str) -> bool:
     return k.startswith("pplx-")
 
 
+def env_gemini_keys() -> list[str]:
+    s = get_settings()
+    keys: list[str] = []
+    seen: set[str] = set()
+    for raw in (s.GEMINI_API_KEY, s.GEMINI_API_KEYS):
+        for part in (raw or "").replace("\n", ",").split(","):
+            key = part.strip()
+            if key and key not in seen and is_valid_gemini_key(key):
+                keys.append(key)
+                seen.add(key)
+    return keys
+
+
 def get_ai_status() -> dict:
     s = get_settings()
     poll_ok = is_valid_pollinations_key(s.POLLINATIONS_API_KEY)
     poll_img_ok = is_valid_pollinations_image_key(s.POLLINATIONS_API_KEY)
     or_ok = is_valid_openrouter_key(s.OPENROUTER_API_KEY)
     openai_ok = is_valid_openai_key(s.OPENAI_API_KEY)
-    gemini_ok = bool(_parse_env_gemini_keys())
+    gemini_ok = bool(env_gemini_keys())
 
     if openai_ok:
         chat_provider = "openai"

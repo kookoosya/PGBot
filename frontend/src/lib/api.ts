@@ -202,6 +202,21 @@ class ApiClient {
     return this.request<PaymentInfo>("/ai/payment-info");
   }
 
+  subscribeAI(planId: string) {
+    return this.request<AISubscribeResult>("/ai/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ plan_id: planId }),
+    });
+  }
+
+  getAIPaymentStatus(orderId: number) {
+    return this.request<AIPaymentStatus>(`/ai/payment/status/${orderId}`);
+  }
+
+  getLatestAIPayment() {
+    return this.request<AIPaymentStatus | null>("/ai/payment/latest");
+  }
+
   getAIModels() {
     return this.request<AIModelsInfo>("/ai/models");
   }
@@ -845,6 +860,23 @@ export interface PaymentInfo {
   bank_name?: string;
   amount_suggested: number;
   message: string;
+  auto_payment_available?: boolean;
+}
+
+export interface AISubscribeResult {
+  order_id: number;
+  payment_url: string;
+  amount_rub: number;
+  plan_id: string;
+  plan_name: string;
+}
+
+export interface AIPaymentStatus {
+  order_id: number;
+  status: string;
+  plan_id: string;
+  entitlement_id: number | null;
+  activated: boolean;
 }
 
 export interface Place {

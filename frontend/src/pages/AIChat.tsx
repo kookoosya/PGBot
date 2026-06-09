@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ const CHAT_MODE_LABELS: Record<string, string> = {
 
 export function AIChat() {
   const { user } = useUserAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -49,6 +50,8 @@ export function AIChat() {
   const [imageProvider, setImageProvider] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const [paymentInfo, setPaymentInfo] = useState<Awaited<ReturnType<typeof api.getPaymentInfo>> | null>(null);
+  const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const refreshAccess = () => {
@@ -86,6 +89,54 @@ export function AIChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (searchParams.get("paid") !== "1" || !user) return;
+
+    setTab("plans");
+    setPaymentNotice("Проверяем оплату…");
+    let cancelled = false;
+
+    const poll = async () => {
+      for (let attempt = 0; attempt < 15 && !cancelled; attempt += 1) {
+        try {
+          const status = await api.getLatestAIPayment();
+          if (status?.activated) {
+            setPaymentNotice("Оплата прошла — доступ активирован автоматически.");
+            refreshAccess();
+            searchParams.delete("paid");
+            setSearchParams(searchParams, { replace: true });
+            return;
+          }
+        } catch {
+          /* retry */
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+      if (!cancelled) {
+        setPaymentNotice(
+          "Если деньги списались, доступ включится в течение минуты. Обновите страницу или напишите администратору.",
+        );
+      }
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, setSearchParams, user?.id]);
+
+  const payOnline = async (planId: string) => {
+    setPayingPlanId(planId);
+    setPaymentNotice("");
+    try {
+      const res = await api.subscribeAI(planId);
+      window.location.href = res.payment_url;
+    } catch (e) {
+      setPaymentNotice(e instanceof Error ? e.message : "Не удалось создать платёж");
+      setPayingPlanId(null);
+    }
+  };
 
   const dailyLimit = access?.daily_limit ?? usage?.daily_limit ?? 10;
   const remaining = access?.remaining ?? usage?.remaining ?? dailyLimit;
@@ -181,8 +232,8 @@ export function AIChat() {
           .
         </p>
         <p>
-          Платные <strong>ИИ Pro</strong> (50/день) и <strong>Pro+</strong> (100/день) — после перевода,
-          доступ включает администратор.
+          Платные <strong>ИИ Pro</strong> (50/день) и <strong>Pro+</strong> (100/день) — оплата картой онлайн,
+          доступ включается автоматически. Перевод на карту — резервный способ, если онлайн-оплата недоступна.
         </p>
         {access?.plan_id === "trial" && access.expires_at && (
           <p className="ai-limits-providers">
@@ -221,6 +272,11 @@ export function AIChat() {
 
       {tab === "plans" && (
         <div className="ai-plans-section space-y-4">
+          {paymentNotice && (
+            <p className="text-sm m-0 ai-limits-note" role="status">
+              {paymentNotice}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground m-0">{plansNotice}</p>
           <div className="ai-plans-grid">
             {plans.map((plan) => (
@@ -248,6 +304,22 @@ export function AIChat() {
                       <p className="text-sm m-0">
                         <Link to="/cabinet/login">Войдите</Link>, чтобы оплатить и получить доступ.
                       </p>
+                    ) : paymentInfo?.auto_payment_available ? (
+                      <>
+                        <Button
+                          type="button"
+                          className="w-full"
+                          disabled={payingPlanId !== null}
+                          onClick={() => payOnline(plan.id)}
+                        >
+                          {payingPlanId === plan.id
+                            ? "Переход к оплате…"
+                            : `Оплатить ${plan.price_rub} ₽ картой`}
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2 m-0">
+                          После оплаты доступ включится автоматически — вам не нужно быть у компьютера.
+                        </p>
+                      </>
                     ) : paymentInfo?.card_number ? (
                       <>
                         <p className="text-sm m-0 mb-2">
@@ -256,7 +328,7 @@ export function AIChat() {
                         <p className="text-sm m-0 font-mono">💳 {paymentInfo.card_number}</p>
                         <p className="text-sm m-0">{paymentInfo.card_holder}</p>
                         <p className="text-xs text-muted-foreground mt-2 m-0">
-                          После перевода напишите администратору — доступ включится вручную в течение суток.
+                          После перевода напишите администратору — доступ включится вручную.
                         </p>
                       </>
                     ) : (

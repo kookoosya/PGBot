@@ -104,6 +104,7 @@ class PaymentInfoResponse(BaseModel):
     amount_suggested: int
     contact_email: str
     message: str
+    auto_payment_available: bool = False
 
 
 class ModelsResponse(BaseModel):
@@ -125,3 +126,23 @@ class AIStatusResponse(BaseModel):
     providers: list[str] = []
     message: str
     limits: dict | None = None
+
+
+class AISubscribeRequest(BaseModel):
+    plan_id: str = Field(max_length=32)
+
+
+class AISubscribeResponse(BaseModel):
+    order_id: int
+    payment_url: str
+    amount_rub: int
+    plan_id: str
+    plan_name: str
+
+
+class AIPaymentStatusResponse(BaseModel):
+    order_id: int
+    status: str
+    plan_id: str
+    entitlement_id: int | None = None
+    activated: bool = False
