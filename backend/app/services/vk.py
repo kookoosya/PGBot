@@ -14,8 +14,17 @@ settings = get_settings()
 VK_API_URL = "https://api.vk.com/method"
 
 
-async def vk_api_call(method: str, params: dict[str, Any]) -> dict:
-    params["access_token"] = settings.VK_GROUP_TOKEN
+def vk_access_token(*, for_reading_public: bool = False) -> str:
+    """Community token for bot/wall post; user token for reading other groups."""
+    if for_reading_public:
+        user = (settings.VK_USER_TOKEN or "").strip()
+        if user and not user.startswith("your-"):
+            return user
+    return settings.VK_GROUP_TOKEN
+
+
+async def vk_api_call(method: str, params: dict[str, Any], *, for_reading_public: bool = False) -> dict:
+    params["access_token"] = vk_access_token(for_reading_public=for_reading_public)
     params["v"] = settings.VK_API_VERSION
 
     async with httpx.AsyncClient(timeout=30) as client:
@@ -96,8 +105,12 @@ def get_welcome_keyboard() -> dict:
         "inline": False,
         "buttons": [
             [
-                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "🎬 Афиша"}, "color": "positive"},
                 {"action": {"type": "text", "label": "🗺 Карта"}, "color": "primary"},
+            ],
+            [
+                {"action": {"type": "text", "label": "🤖 ИИ-помощник"}, "color": "positive"},
+                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
             ],
             [
                 {"action": {"type": "text", "label": "📋 Объявления"}, "color": "primary"},
@@ -121,10 +134,9 @@ def get_welcome_keyboard() -> dict:
             ],
             [
                 {"action": {"type": "text", "label": "🔕 Отписаться"}, "color": "secondary"},
-                {"action": {"type": "text", "label": "🌐 Сайт"}, "color": "secondary"},
+                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
             ],
             [
-                {"action": {"type": "text", "label": "🔔 Подписаться"}, "color": "secondary"},
                 {"action": {"type": "text", "label": "📋 Мои обращения"}, "color": "default"},
             ],
             [

@@ -8,17 +8,49 @@ from app.services.ai_image_store import save_image
 from app.services.ai_prompt_translate import image_prompt_english
 from app.services.ai_providers import openrouter_image_bytes, pollinations_image_bytes
 from app.services.ai_status import (
+    is_valid_gemini_key,
+    is_valid_openai_key,
+    is_valid_perplexity_key,
     is_valid_openrouter_key,
+    is_valid_pollinations_key,
     is_valid_pollinations_image_key,
 )
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-CHAT_MODELS = [
+CHAT_MODELS_FALLBACK = [
     {"id": "gemini-flash", "label": "Быстрый", "provider": "pollinations", "fast": True},
     {"id": "openai", "label": "Умный", "provider": "pollinations", "smart": True},
 ]
+
+
+def get_chat_models() -> list[dict]:
+    models: list[dict] = []
+    if is_valid_openai_key(settings.OPENAI_API_KEY):
+        models.append(
+            {"id": "openai-fast", "label": "ChatGPT — быстрый", "provider": "openai", "fast": True},
+        )
+        models.append(
+            {"id": "openai", "label": "ChatGPT — умный", "provider": "openai", "smart": True},
+        )
+    if is_valid_perplexity_key(settings.PERPLEXITY_API_KEY):
+        models.append(
+            {
+                "id": "perplexity",
+                "label": "Perplexity — с поиском в интернете",
+                "provider": "perplexity",
+            },
+        )
+    if models:
+        return models
+    if is_valid_pollinations_key(settings.POLLINATIONS_API_KEY) or is_valid_openrouter_key(
+        settings.OPENROUTER_API_KEY,
+    ):
+        return CHAT_MODELS_FALLBACK
+    if is_valid_gemini_key(settings.GEMINI_API_KEY):
+        return [{"id": "gemini-flash", "label": "Gemini", "provider": "google", "fast": True}]
+    return CHAT_MODELS_FALLBACK
 
 IMAGE_MODELS = [
     {"id": "flux", "label": "Flux", "provider": "pollinations"},

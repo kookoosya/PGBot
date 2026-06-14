@@ -238,7 +238,12 @@ class ApiClient {
     return this.request<TodayResponse>(`/public/today${q}`);
   }
 
-  getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+  getPublicEvents(params?: {
+    region?: EventRegion;
+    category?: string;
+    search?: string;
+    limit?: string;
+  }) {
     const query = params ? "?" + new URLSearchParams(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")) as Record<string, string>,
     ).toString() : "";
@@ -246,7 +251,7 @@ class ApiClient {
   }
 
   getPublicEvent(id: number) {
-    return this.request<PublicEvent>(`/public/events/${id}`);
+    return this.request<PublicEventDetail>(`/public/events/${id}`);
   }
 
   getAdminEvents(includeUnpublished = true) {
@@ -288,6 +293,32 @@ class ApiClient {
   syncKudagoEvents(region?: EventRegion) {
     const q = region ? `?region=${region}` : "";
     return this.request<EventSyncResult[]>(`/admin/events/sync-kudago${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncTimepadEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-timepad${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncOrbiletEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-orbilet`, {
+      method: "POST",
+    });
+  }
+
+  syncProCultureEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-proculture${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncAllEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-all`, {
       method: "POST",
     });
   }
@@ -627,6 +658,8 @@ export interface AIStatus {
   image_provider: string;
   pollinations_configured: boolean;
   openrouter_configured?: boolean;
+  openai_configured?: boolean;
+  perplexity_configured?: boolean;
   gemini_configured: boolean;
   providers?: string[];
   message: string;
@@ -965,12 +998,18 @@ export interface TodayMapSnippet {
 export interface TodayEventSnippet {
   id: number;
   title: string;
+  starts_at: string;
   starts_at_label: string;
   ends_at_label?: string | null;
   location?: string | null;
+  region: EventRegion;
   region_label: string;
+  category: string;
   category_label: string;
+  genre?: string | null;
+  poster_url?: string | null;
   description?: string | null;
+  source?: string | null;
   source_url?: string | null;
 }
 
@@ -998,8 +1037,14 @@ export interface PublicEvent {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
+}
+
+export interface PublicEventDetail extends PublicEvent {
+  related_sessions: PublicEvent[];
 }
 
 export interface PublicEventListResponse {
@@ -1020,6 +1065,8 @@ export interface EventItem {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
   is_published: boolean;
@@ -1035,6 +1082,8 @@ export interface EventCreate {
   location?: string;
   region?: EventRegion;
   category: string;
+  genre?: string | null;
+  poster_url?: string | null;
   source?: string;
   source_url?: string;
   is_published?: boolean;
@@ -1071,6 +1120,7 @@ export interface VkModerationOverview {
 }
 
 export interface EventSyncResult {
+  source?: string;
   region: string;
   fetched: number;
   created: number;

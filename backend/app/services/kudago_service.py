@@ -11,12 +11,10 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 import httpx
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.event_config import KUDAGO_CATEGORY_MAP, KUDAGO_LOCATION_PRESETS
 from app.models.enums import EventCategory, EventRegion
-from app.models.event import Event
 from app.services.event_service import (
     EventCreateInput,
     EventUpdateInput,
@@ -24,7 +22,9 @@ from app.services.event_service import (
     create_event,
     update_event,
 )
-from app.services.event_sync_service import EventSyncResult, infer_category_from_text
+from app.services.event_sources.base import EventSyncResult
+from app.services.event_sources.dedup import find_existing_event
+from app.services.event_sources.text_utils import infer_category_from_text
 
 logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
@@ -110,8 +110,12 @@ async def _upsert_kudago_event(
         return "skipped"
 
     source_url = kudago_event_url(item)
-    result = await db.execute(select(Event).where(Event.source_url == source_url))
-    existing = result.scalar_one_or_none()
+    existing = await find_existing_event(
+        db,
+        source_url=source_url,
+        title=title,
+        starts_at=starts_at,
+    )
 
     place = item.get("place") or {}
     location = (place.get("title") or default_location).strip()
@@ -184,6 +188,7 @@ async def sync_events_from_kudago(
                 exc.response.text[:200],
             )
             return EventSyncResult(
+                source="kudago",
                 region=region.value,
                 fetched=0,
                 created=0,
@@ -217,6 +222,7 @@ async def sync_events_from_kudago(
             errors.append(str(exc))
 
     return EventSyncResult(
+        source="kudago",
         region=region.value,
         fetched=len(items),
         created=created,
@@ -238,6 +244,7 @@ async def sync_all_kudago_sources(
             results.append(await sync_events_from_kudago(db, region, actor_id=actor_id))
         except EventValidationError as exc:
             results.append(EventSyncResult(
+                source="kudago",
                 region=region.value,
                 fetched=0,
                 created=0,

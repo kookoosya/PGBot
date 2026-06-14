@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
-from app.models.enums import IssueStatus, PlaceCategory
+from app.models.enums import EventCategory, EventRegion, IssueStatus, PlaceCategory
 from app.models.issue import Issue
 from app.models.place import Place
 from app.models.taxi import TaxiService
@@ -22,6 +22,7 @@ from app.services.ai_chat import (
     increment_usage,
     make_identifier,
 )
+from app.services.event_service import search_public_events
 from app.services.issue_processor import process_incoming_message
 from app.services.issue_utils import issue_display_summary
 from app.services.site_urls import public_site_url
@@ -42,6 +43,7 @@ from app.services.vk_flows import (
     start_map_report_flow,
     start_wish_flow,
 )
+from app.utils.datetime import format_event_datetime
 from app.services.vk_messages import (
     ai_enter_text,
     ai_limit_text,
@@ -409,6 +411,57 @@ async def handle_register(ctx: VkRouteContext) -> None:
     )
 
 
+def _short_location(location: str | None) -> str:
+    if not location:
+        return ""
+    text = location.strip()
+    for prefix in ("Кинотеатр «", "кинотеатр «"):
+        if text.startswith(prefix):
+            end = text.find("»")
+            if end > 0:
+                return text[len(prefix) : end]
+    if len(text) > 42:
+        return f"{text[:41]}…"
+    return text
+
+
+async def handle_afisha(ctx: VkRouteContext) -> None:
+    """Upcoming cinema + regional events — link to site, no wall spam."""
+    cinema = await search_public_events(
+        ctx.db,
+        region=EventRegion.PSKOV,
+        category=EventCategory.CINEMA,
+        limit=6,
+    )
+    regional = await search_public_events(ctx.db, limit=6)
+
+    lines: list[str] = []
+    if cinema:
+        lines.append("🎬 Кино в Пскове (Победа, Смена, Мираж, Silver):")
+        for event in cinema[:5]:
+            when = format_event_datetime(event.starts_at)
+            where = _short_location(event.location)
+            tail = f" · {where}" if where else ""
+            lines.append(f"• {event.title}{tail}\n  {when}")
+    else:
+        lines.append("🎬 Кино: расписание обновляется — смотрите на сайте.")
+
+    pushkin = [e for e in regional if e.region == EventRegion.PUSHKIN_GORY.value and e.category != EventCategory.CINEMA.value]
+    if pushkin:
+        lines.append("")
+        lines.append("🏛 Пушкинские Горы:")
+        for event in pushkin[:3]:
+            when = format_event_datetime(event.starts_at)
+            lines.append(f"• {event.title}\n  {when}")
+
+    await _send_with_site_links(
+        ctx.peer_id,
+        box("Афиша региона", "\n".join(lines)),
+        ("📅 Вся афиша на сайте", "/events"),
+        ("🎬 Только кино", "/events?category=cinema"),
+    )
+
+
 async def handle_site(ctx: VkRouteContext) -> None:
     site = public_site_url()
     await _send_welcome(
@@ -495,6 +548,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "taxi": handle_taxi,
     "complaints_info": handle_complaints_info,
     "register": handle_register,
+    "afisha": handle_afisha,
     "site": handle_site,
     "map": handle_map,
     "my_issues": handle_my_issues,
@@ -512,6 +566,10 @@ COMMAND_ALIASES: dict[str, str] = {
     "🏠 меню": "welcome",
     "главная": "welcome",
     "🏠 главная": "welcome",
+    "🎬 афиша": "afisha",
+    "афиша": "afisha",
+    "кино": "afisha",
+    "события": "afisha",
     "📋 объявления": "classifieds",
     "объявления": "classifieds",
     "объявление": "classifieds",

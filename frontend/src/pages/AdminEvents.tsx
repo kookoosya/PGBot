@@ -40,17 +40,28 @@ const emptyForm: EventCreate = {
   location: "",
   region: "pushkin_gory",
   category: "culture",
+  genre: "",
   source: "manual",
   source_url: "",
   is_published: true,
 };
 
+const SOURCE_LABELS: Record<string, string> = {
+  vk: "VK",
+  timepad: "TimePad",
+  orbilet: "Orbilet",
+  proculture: "PRO.Культура",
+  kudago: "KudaGo",
+};
+
 function formatSyncSummary(results: Awaited<ReturnType<typeof api.syncVkEvents>>): string {
   return results
     .map((r) => {
-      const label = r.region === "pskov" ? "Псков" : "Пушкинские Горы";
-      if (r.errors.length) return `${label}: ${r.errors[0]}`;
-      return `${label}: +${r.created} новых, обновлено ${r.updated}`;
+      const src = SOURCE_LABELS[r.source || ""] || r.source || "Источник";
+      const region =
+        r.region === "pskov" ? "Псков" : r.region === "pushkin_gory" ? "ПГ" : r.region;
+      if (r.errors.length) return `${src} (${region}): ${r.errors[0]}`;
+      return `${src} (${region}): +${r.created}, обновлено ${r.updated}`;
     })
     .join(" · ");
 }
@@ -91,6 +102,7 @@ export function AdminEvents() {
       location: event.location || "",
       region: event.region,
       category: event.category,
+      genre: event.genre || "",
       source: event.source || "manual",
       source_url: event.source_url || "",
       is_published: event.is_published,
@@ -106,6 +118,7 @@ export function AdminEvents() {
       ...form,
       starts_at: fromLocalInputValue(toLocalInputValue(form.starts_at) || form.starts_at),
       ends_at: form.ends_at ? fromLocalInputValue(toLocalInputValue(form.ends_at) || form.ends_at) : null,
+      genre: form.category === "cinema" ? form.genre?.trim() || null : null,
     };
     try {
       if (editId) {
@@ -131,14 +144,26 @@ export function AdminEvents() {
     }
   };
 
-  const runSync = async (source: "vk" | "kudago", region?: EventRegion) => {
+  const runSync = async (
+    source: "vk" | "kudago" | "timepad" | "orbilet" | "proculture" | "all",
+    region?: EventRegion,
+  ) => {
     setSyncing(true);
     setMsg("");
     setError("");
     try {
-      const results = source === "vk"
-        ? await api.syncVkEvents(region)
-        : await api.syncKudagoEvents(region);
+      const results =
+        source === "all"
+          ? await api.syncAllEvents()
+          : source === "vk"
+            ? await api.syncVkEvents(region)
+            : source === "timepad"
+              ? await api.syncTimepadEvents(region)
+              : source === "orbilet"
+                ? await api.syncOrbiletEvents()
+                : source === "proculture"
+                  ? await api.syncProCultureEvents(region)
+                  : await api.syncKudagoEvents(region);
       setMsg(formatSyncSummary(results));
       load();
     } catch (err) {
@@ -158,11 +183,23 @@ export function AdminEvents() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("all")}>
+            {syncing ? "Синхронизация…" : "Синхронизировать всё"}
+          </Button>
           <Button variant="outline" disabled={syncing} onClick={() => runSync("vk")}>
-            {syncing ? "Синхронизация…" : "Синхронизировать из VK"}
+            {syncing ? "…" : "VK"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("timepad")}>
+            {syncing ? "…" : "TimePad"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("orbilet")}>
+            {syncing ? "…" : "Orbilet"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("proculture")}>
+            {syncing ? "…" : "PRO.Культура"}
           </Button>
           <Button variant="outline" disabled={syncing} onClick={() => runSync("kudago", "pskov")}>
-            {syncing ? "Синхронизация…" : "KudaGo (Псков)"}
+            {syncing ? "…" : "KudaGo"}
           </Button>
           <Button onClick={() => { resetForm(); setShowForm(true); }}>
             {showForm && !editId ? "Отмена" : "+ Добавить событие"}
@@ -171,8 +208,9 @@ export function AdminEvents() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        VK: музей-заповедник Пушкина и официальная группа Пскова (<code>VK_GROUP_TOKEN</code>).
-        KudaGo: кино и концерты Пскова — без токена, по открытому API.
+        VK — 12 пабликов (ПГ + Псков, афиша, театр). Orbilet — концерты и экскурсии Пскова без ключа.
+        TimePad — <code>TIMEPAD_API_TOKEN</code>. PRO.Культура — <code>PROCULTURE_API_KEY</code>.
+        Автосинхронизация каждые 12 ч.
       </p>
 
       {msg && <p className="text-green-700">{msg}</p>}
@@ -250,6 +288,17 @@ export function AdminEvents() {
                   ))}
                 </select>
               </label>
+              {form.category === "cinema" && (
+                <label className="grid gap-1">
+                  <span className="text-sm font-medium">Жанр</span>
+                  <input
+                    className="rounded-md border px-3 py-2"
+                    value={form.genre || ""}
+                    onChange={(e) => setForm({ ...form, genre: e.target.value })}
+                    placeholder="Драма, комедия, фантастика…"
+                  />
+                </label>
+              )}
               <label className="grid gap-1">
                 <span className="text-sm font-medium">Источник</span>
                 <input
@@ -293,9 +342,18 @@ export function AdminEvents() {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {event.region_label} · {event.category_label} · {event.starts_at_label}
                   {event.source === "vk" && " · VK"}
+                  {event.source === "timepad" && " · TimePad"}
+                  {event.source === "orbilet" && " · Orbilet"}
+                  {event.source === "proculture" && " · PRO.Культура"}
+                  {event.source === "kudago" && " · KudaGo"}
                   {!event.is_published && " · черновик"}
                 </p>
-                <p className="font-semibold text-lg">{event.title}</p>
+                <p className="font-semibold text-lg">
+                  {event.title}
+                  {event.genre && (
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">· {event.genre}</span>
+                  )}
+                </p>
                 {event.location && <p className="text-sm text-muted-foreground">{event.location}</p>}
                 {event.description && <p className="text-sm mt-1 line-clamp-3">{event.description}</p>}
               </div>

@@ -22,10 +22,13 @@ from app.services.event_service import (
     list_events_admin,
     update_event,
 )
-from app.services.event_sync_service import sync_all_vk_event_sources, sync_events_from_vk
-from app.services.kudago_service import sync_all_kudago_sources, sync_events_from_kudago
+from app.services.event_sources.coordinator import sync_all_event_sources, sync_event_source
 
 router = APIRouter()
+
+
+def _sync_responses(results) -> list[EventSyncResponse]:
+    return [EventSyncResponse(**result.__dict__) for result in results]
 
 
 @router.get("/audit-logs")
@@ -83,6 +86,8 @@ async def admin_create_event(
                 location=data.location,
                 region=data.region,
                 category=data.category,
+                genre=data.genre,
+                poster_url=data.poster_url,
                 source=data.source,
                 source_url=data.source_url,
                 is_published=data.is_published,
@@ -118,6 +123,8 @@ async def admin_update_event(
                 location=update_data.get("location"),
                 region=update_data.get("region"),
                 category=update_data.get("category"),
+                genre=update_data.get("genre"),
+                poster_url=update_data.get("poster_url"),
                 source=update_data.get("source"),
                 source_url=update_data.get("source_url"),
                 is_published=update_data.get("is_published"),
@@ -135,15 +142,12 @@ async def admin_sync_vk_events(
     current_user: Annotated[User, Depends(require_owner())],
     region: EventRegion | None = None,
 ):
-    """Import events from official VK communities (Pushkin Gory + Pskov)."""
+    """Import events from VK communities (Pushkin Gory + Pskov)."""
     try:
-        if region:
-            results = [await sync_events_from_vk(db, region, actor_id=current_user.id)]
-        else:
-            results = await sync_all_vk_event_sources(db, actor_id=current_user.id)
+        results = await sync_event_source(db, "vk", region=region, actor_id=current_user.id)
     except EventValidationError as exc:
         raise_http_for_service_error(exc)
-    return [EventSyncResponse(**result.__dict__) for result in results]
+    return _sync_responses(results)
 
 
 @router.post("/events/sync-kudago", response_model=list[EventSyncResponse])
@@ -154,13 +158,55 @@ async def admin_sync_kudago_events(
 ):
     """Import cinema and concerts from KudaGo (Pskov)."""
     try:
-        if region:
-            results = [await sync_events_from_kudago(db, region, actor_id=current_user.id)]
-        else:
-            results = await sync_all_kudago_sources(db, actor_id=current_user.id)
+        results = await sync_event_source(db, "kudago", region=region, actor_id=current_user.id)
     except EventValidationError as exc:
         raise_http_for_service_error(exc)
-    return [EventSyncResponse(**result.__dict__) for result in results]
+    return _sync_responses(results)
+
+
+@router.post("/events/sync-timepad", response_model=list[EventSyncResponse])
+async def admin_sync_timepad_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+    region: EventRegion | None = None,
+):
+    """Import events from TimePad (Pskov region)."""
+    try:
+        results = await sync_event_source(db, "timepad", region=region, actor_id=current_user.id)
+    except EventValidationError as exc:
+        raise_http_for_service_error(exc)
+    return _sync_responses(results)
+
+
+@router.post("/events/sync-orbilet", response_model=list[EventSyncResponse])
+async def admin_sync_orbilet_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+):
+    """Import Pskov events from orbilet.ru."""
+    results = await sync_event_source(db, "orbilet", actor_id=current_user.id)
+    return _sync_responses(results)
+
+
+@router.post("/events/sync-proculture", response_model=list[EventSyncResponse])
+async def admin_sync_proculture_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+    region: EventRegion | None = None,
+):
+    """Import from PRO.Культура.РФ (requires PROCULTURE_API_KEY)."""
+    results = await sync_event_source(db, "proculture", region=region, actor_id=current_user.id)
+    return _sync_responses(results)
+
+
+@router.post("/events/sync-all", response_model=list[EventSyncResponse])
+async def admin_sync_all_events(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+):
+    """Sync from all configured sources: VK, TimePad, Orbilet, PRO.Культура, KudaGo."""
+    results = await sync_all_event_sources(db, actor_id=current_user.id)
+    return _sync_responses(results)
 
 
 @router.get("/vk-moderation")

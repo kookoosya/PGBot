@@ -22,7 +22,7 @@ export function AIChat() {
   const [chatModels, setChatModels] = useState<AIModelOption[]>([]);
   const [imageModels, setImageModels] = useState<AIModelOption[]>([]);
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
-  const [chatModel, setChatModel] = useState("gemini-flash");
+  const [chatModel, setChatModel] = useState("openai-fast");
   const [imageModel, setImageModel] = useState("flux");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [imageProvider, setImageProvider] = useState<string | null>(null);
@@ -35,7 +35,9 @@ export function AIChat() {
       setChatModels(m.chat_models);
       setImageModels(m.image_models);
       if (m.status) setAiStatus(m.status);
-      const preferred = m.chat_models.find((x) => x.id === "gemini-flash") || m.chat_models[0];
+      const preferred = m.chat_models.find((x) => x.id === "openai-fast")
+        || m.chat_models.find((x) => x.fast)
+        || m.chat_models[0];
       if (preferred) setChatModel(preferred.id);
       if (m.image_models[0]) setImageModel(m.image_models[0].id);
     }).catch(console.error);
@@ -116,6 +118,28 @@ export function AIChat() {
         <div className="ai-status-warn" role="status">
           <strong>ИИ временно недоступен</strong>
           <p>{aiStatus.message}</p>
+        </div>
+      )}
+
+      {aiStatus?.limits && (
+        <div className="ai-limits-info" role="note">
+          <strong>Лимиты и провайдеры</strong>
+          <p>{aiStatus.limits.site_note}</p>
+          {aiStatus.limits.providers_note && <p>{aiStatus.limits.providers_note}</p>}
+          {aiStatus.providers && aiStatus.providers.length > 0 && (
+            <p className="ai-limits-providers">
+              Подключено: {aiStatus.providers.join(" · ")}
+            </p>
+          )}
+          {!aiStatus.perplexity_configured && (
+            <p className="ai-limits-hint">
+              Perplexity можно добавить бесплатно — ключ на{" "}
+              <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noreferrer">
+                perplexity.ai/settings/api
+              </a>
+              . У него тоже будут свои лимиты.
+            </p>
+          )}
         </div>
       )}
 

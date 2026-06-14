@@ -33,15 +33,27 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash"
     POLLINATIONS_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    OPENAI_CHAT_MODEL: str = "gpt-4o-mini"
+    OPENAI_CHAT_MODEL_SMART: str = "gpt-4o"
+    PERPLEXITY_API_KEY: str = ""
+    PERPLEXITY_CHAT_MODEL: str = "sonar"
     AI_IMAGE_DIR: str = "/tmp/pgbot-ai-images"
 
     # VK
     VK_GROUP_TOKEN: str = ""
+    # User token with groups scope — required to read afipskov/other walls for posters
+    VK_USER_TOKEN: str = ""
     VK_CONFIRMATION_CODE: str = ""
     VK_SECRET_KEY: str = ""
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
+    VK_GROUP_ID: str = ""
     VK_ADMIN_PEER_ID: str = ""
+    # Auto-post relevant events to community wall after sync
+    VK_WALL_POST_ENABLED: bool = False
+    VK_WALL_POST_MAX_PER_RUN: int = 1
+    VK_WALL_POST_MIN_SCORE: int = 65
     PUBLIC_SITE_URL: str = "https://pushkinskie-gory.ru"
 
     # Telegram
@@ -97,10 +109,23 @@ class Settings(BaseSettings):
     WEATHER_TIMEZONE: str = "Europe/Moscow"
     WEATHER_CACHE_TTL_SECONDS: int = 1800
     WEATHER_HOURLY_HOURS: int = 24
-    WEATHER_FORECAST_DAYS: int = 2
+    WEATHER_FORECAST_DAYS: int = 5
 
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""
+
+    # TimePad events (https://dev.timepad.ru/)
+    TIMEPAD_API_TOKEN: str = ""
+
+    # PRO.Культура.РФ (https://pro.culture.ru/documentation/export_API_PRO.pdf)
+    PROCULTURE_API_KEY: str = ""
+    PROCULTURE_PSKOV_LOCALE_ID: int = 0
+
+    # Kinopoisk Unofficial API — posters for cinema (https://kinopoiskapiunofficial.tech/signup)
+    KINOPOISK_API_TOKEN: str = ""
+
+    # Auto-sync village events from external sources (hours; 0 = disabled)
+    EVENT_SYNC_INTERVAL_HOURS: int = 12
 
     @property
     def cors_origins_list(self) -> list[str]:
