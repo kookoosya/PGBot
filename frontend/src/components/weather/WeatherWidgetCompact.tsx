@@ -17,7 +17,15 @@ export function WeatherWidgetCompact({ variant = "inline" }: Props) {
   }
 
   if (error || !data) {
-    return null;
+    return (
+      <div
+        className={`weather-compact weather-compact--${variant} weather-compact--fallback`}
+        aria-label="Погода в Пушкинских Горах"
+      >
+        <span className="weather-compact-icon" aria-hidden>🌤</span>
+        <span className="weather-compact-desc">Пушкинские Горы · прогноз обновляется</span>
+      </div>
+    );
   }
 
   const { current } = data;

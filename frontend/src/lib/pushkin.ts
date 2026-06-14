@@ -68,50 +68,51 @@ export const PHOTO_VERSES: Record<string, string> = {
 
 export { SITE_URL } from "./siteUrl";
 
-/** Фото Пушкиногорья — локальные копии с Wikimedia Commons */
-export const VILLAGE_PHOTOS = [
+export type VillagePhoto = {
+  title: string;
+  caption: string;
+  url: string;
+  webp: string;
+};
+
+/** Фото Пушкиногорья */
+export const VILLAGE_PHOTOS: VillagePhoto[] = [
   {
     title: "Михайловское",
     caption: "Усадьба музея-заповедника А.С. Пушкина",
     url: "/images/gallery/mikhailovskoe.jpg",
     webp: "/images/gallery/mikhailovskoe.webp",
-    credit: "Wikimedia / Alexey Komarov, 2018",
   },
   {
     title: "Святогорский монастырь",
     caption: "Пушкиногорская лавра над рекой Сороть",
     url: "/images/gallery/monastery.jpg",
     webp: "/images/gallery/monastery.webp",
-    credit: "Wikimedia / Alexey Komarov, 2018",
   },
   {
     title: "НКЦ «Пушкинские Горы»",
     caption:
-      "Научно-культурный центр музея-заповедника. Белое здание с колоннами на въезде в посёлок — сегодня здесь автовокзал.",
-    url: "/images/gallery/village.jpg",
-    webp: "/images/gallery/village.webp",
-    credit: "Wikimedia / Alexey Komarov, 2018",
+      "Научно-культурный центр музея-заповедника — белое здание с колоннами на въезде в посёлок",
+    url: "/images/gallery/nkc.jpg",
+    webp: "/images/gallery/nkc.webp",
   },
   {
     title: "Памятник Пушкину",
     caption: "У Святогорского монастыря",
     url: "/images/gallery/monument.jpg",
     webp: "/images/gallery/monument.webp",
-    credit: "Wikimedia Commons",
   },
   {
     title: "Тригорское",
     caption: "Дом Осиповых-Вульф, усадьба в заповеднике",
     url: "/images/gallery/trigorskoe.jpg",
     webp: "/images/gallery/trigorskoe.webp",
-    credit: "Wikimedia Commons",
   },
   {
     title: "Петровское",
     caption: "Усадьба Ганнибалов у озера",
     url: "/images/gallery/petrovskoe.jpg",
     webp: "/images/gallery/petrovskoe.webp",
-    credit: "Wikimedia Commons",
   },
 ];
 
@@ -136,7 +137,6 @@ export function yandexMapsPointUrl(lat: number, lng: number, name: string): stri
   return `https://yandex.ru/maps/?pt=${lng},${lat}&z=17&text=${encodeURIComponent(name + " Пушкинские Горы")}`;
 }
 
-/** Работает офлайн на телефоне — открывает навигатор по GPS */
 export function geoNavigateUrl(lat: number, lng: number): string {
   return `geo:${lat},${lng}?q=${lat},${lng}`;
 }

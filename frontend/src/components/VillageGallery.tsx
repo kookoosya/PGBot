@@ -42,9 +42,6 @@ export function VillageGallery() {
                 {PHOTO_VERSES[photo.title] && (
                   <p className="epic-photo-verse">{PHOTO_VERSES[photo.title]}</p>
                 )}
-                {"credit" in photo && photo.credit ? (
-                  <p className="text-[10px] text-muted-foreground/70 mt-1">{photo.credit}</p>
-                ) : null}
               </div>
             </div>
           ))}

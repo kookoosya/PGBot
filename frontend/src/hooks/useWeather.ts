@@ -14,6 +14,10 @@ async function fetchWeatherShared(): Promise<WeatherResponse | null> {
 
   sharedPromise = api
     .getWeather()
+    .catch(async () => {
+      const { fetchWeatherDirect } = await import("@/lib/weatherFallback");
+      return fetchWeatherDirect();
+    })
     .then((response) => {
       sharedData = response;
       sharedListeners.forEach((listener) => listener(response, null));
