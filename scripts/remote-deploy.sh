@@ -12,7 +12,7 @@ fi
 
 HOST="${VPS_HOST:-192.210.213.135}"
 USER="${VPS_USER:-root}"
-BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
+BRANCH="${BRANCH:-main}"
 # Синхронизируем API-ключи из .deploy.env до перезапуска контейнеров
 bash "$SCRIPT_DIR/sync-vps-env.sh" 2>/dev/null || true
 

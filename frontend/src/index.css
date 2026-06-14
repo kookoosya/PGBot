@@ -1807,7 +1807,7 @@
   }
 
   .epic-bento {
-    @apply grid gap-4 md:grid-cols-2;
+    @apply grid gap-4 md:grid-cols-2 lg:grid-cols-3;
   }
   .epic-bento-card {
     @apply relative overflow-hidden rounded-3xl p-6 md:p-7 no-underline text-inherit transition;
@@ -1840,6 +1840,10 @@
   .epic-bento-sky {
     background: linear-gradient(145deg, hsl(200 45% 94%), hsl(200 38% 90%));
     border-color: hsl(200 35% 75%);
+  }
+  .epic-bento-forest {
+    background: linear-gradient(145deg, hsl(152 35% 93%), hsl(152 30% 88%));
+    border-color: hsl(152 30% 72%);
   }
   .epic-vk-section {
     @apply py-12;
