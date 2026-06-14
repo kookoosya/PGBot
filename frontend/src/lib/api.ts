@@ -225,6 +225,28 @@ class ApiClient {
     return this.request<MapStats>("/places/map/stats");
   }
 
+  getWeather() {
+    return this.request<WeatherResponse>("/weather");
+  }
+
+  getToday(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<TodayResponse>(`/public/today${q}`);
+  }
+
+  getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+    const query = params
+      ? "?" + new URLSearchParams(
+          Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")) as Record<string, string>,
+        ).toString()
+      : "";
+    return this.request<PublicEventListResponse>(`/public/events${query}`);
+  }
+
+  getPublicEvent(id: number) {
+    return this.request<PublicEvent>(`/public/events/${id}`);
+  }
+
   getPlaces(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<PlaceListResponse>(`/places${query}`);
@@ -680,6 +702,102 @@ export interface MapStats {
   by_category: Record<string, number>;
   last_sync: string | null;
   center: { lat: number; lng: number };
+}
+
+export interface WeatherCurrent {
+  temperature: number;
+  apparent_temperature: number;
+  humidity: number;
+  precipitation: number;
+  wind_speed: number;
+  weather_code: number;
+  description: string;
+  icon: string;
+  time: string;
+}
+
+export interface WeatherHourlyItem {
+  time: string;
+  hour_label: string;
+  temperature: number;
+  apparent_temperature: number;
+  precipitation: number;
+  precipitation_probability: number | null;
+  humidity: number | null;
+  wind_speed: number;
+  weather_code: number;
+  description: string;
+  icon: string;
+}
+
+export interface WeatherResponse {
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  updated_at: string;
+  current: WeatherCurrent;
+  hourly: WeatherHourlyItem[];
+  cache_ttl_seconds: number;
+}
+
+export interface TodayClassifiedSnippet {
+  id: number;
+  title: string;
+  category_label: string;
+  created_at: string;
+}
+
+export interface TodayMapSnippet {
+  total_places: number;
+  total_reviews: number;
+  active_taxi_count: number;
+  route_count: number;
+}
+
+export interface TodayEventSnippet {
+  id: number;
+  title: string;
+  starts_at_label: string;
+  ends_at_label: string | null;
+  location: string | null;
+  region_label: string;
+  category_label: string;
+  description: string | null;
+  source_url: string | null;
+}
+
+export interface TodayResponse {
+  weather: WeatherResponse | null;
+  latest_classified: TodayClassifiedSnippet | null;
+  map: TodayMapSnippet;
+  upcoming_events: TodayEventSnippet[];
+  updated_at: string;
+  cache_ttl_seconds: number;
+}
+
+export type EventRegion = "pushkin_gory" | "pskov";
+
+export interface PublicEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  starts_at_label: string;
+  ends_at_label: string | null;
+  location: string | null;
+  region: EventRegion;
+  region_label: string;
+  category: string;
+  category_label: string;
+  source: string | null;
+  source_url: string | null;
+}
+
+export interface PublicEventListResponse {
+  items: PublicEvent[];
+  total: number;
 }
 
 export interface ServiceProvider {

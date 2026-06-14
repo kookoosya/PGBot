@@ -17,6 +17,8 @@ const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m
 const ServiceRegister = lazy(() => import("./pages/ServiceRegister").then((m) => ({ default: m.ServiceRegister })));
 const Classifieds = lazy(() => import("./pages/Classifieds").then((m) => ({ default: m.Classifieds })));
 const Jobs = lazy(() => import("./pages/Jobs").then((m) => ({ default: m.Jobs })));
+const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ default: m.EventsPage })));
+const EventDetail = lazy(() => import("./pages/EventDetail").then((m) => ({ default: m.EventDetail })));
 const ClassifiedDetail = lazy(() => import("./pages/ClassifiedDetail").then((m) => ({ default: m.ClassifiedDetail })));
 const Complaints = lazy(() => import("./pages/Complaints").then((m) => ({ default: m.Complaints })));
 const OfficialIssues = lazy(() => import("./pages/OfficialIssues").then((m) => ({ default: m.OfficialIssues })));
@@ -79,6 +81,8 @@ export default function App() {
         <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
         <Route path="classifieds/:id" element={<Lazy><ClassifiedDetail /></Lazy>} />
         <Route path="jobs" element={<Lazy><Jobs /></Lazy>} />
+        <Route path="events" element={<Lazy><EventsPage /></Lazy>} />
+        <Route path="events/:id" element={<Lazy><EventDetail /></Lazy>} />
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
         <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
