@@ -5,7 +5,7 @@
 set -e
 DEPLOY_DIR="/opt/pgbot"
 REPO_URL="${REPO_URL:-https://github.com/kookoosya/PGBot.git}"
-BRANCH="${BRANCH:-cursor/narodny-kontrol-mvp-e7fb}"
+BRANCH="${BRANCH:-main}"
 
 echo "=== PGBot Deploy ==="
 
