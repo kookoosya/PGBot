@@ -50,4 +50,5 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d --build
             docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
             docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py
+            docker compose -f docker-compose.prod.yml exec -T backend python scripts/enrich_events.py
             echo "Deploy OK: https://192-210-213-135.sslip.io"

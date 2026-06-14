@@ -22,6 +22,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EVENT_CATEGORY_LABELS, EVENT_REGION_LABELS, EventCategory, EventRegion
 from app.models.event import Event
 from app.services.audit import log_action
+from app.services.event_dedupe_service import dedupe_display_events
+from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
+from app.services.poster_service import resolve_event_poster
 from app.services.datetime_utils import format_event_datetime
 from app.services.service_errors import ServiceError
 
@@ -55,6 +58,8 @@ class EventCreateInput:
     source: Optional[str]
     source_url: Optional[str]
     region: EventRegion = EventRegion.PUSHKIN_GORY
+    genre: Optional[str] = None
+    poster_url: Optional[str] = None
     is_published: bool = True
 
 
@@ -71,7 +76,40 @@ class EventUpdateInput:
     category: Optional[EventCategory] = None
     source: Optional[str] = None
     source_url: Optional[str] = None
+    genre: Optional[str] = None
+    poster_url: Optional[str] = None
     is_published: Optional[bool] = None
+
+
+async def _attach_event_poster(event: Event, *, vk_poster_url: str | None = None) -> None:
+    if (event.poster_url or "").strip():
+        return
+    poster = await resolve_event_poster(
+        title=event.title,
+        category=event.category,
+        vk_poster_url=vk_poster_url,
+    )
+    if poster:
+        event.poster_url = poster
+
+
+def _apply_event_enrichment(
+    *,
+    title: str,
+    description: Optional[str],
+    category: EventCategory,
+    genre: Optional[str],
+    location: Optional[str],
+    region: EventRegion,
+) -> tuple[str, Optional[str], Optional[str]]:
+    return enrich_event_fields(
+        title=title,
+        description=description,
+        category=category,
+        genre=genre,
+        location=location,
+        region=region,
+    )
 
 
 def _validate_event_times(starts_at: datetime, ends_at: Optional[datetime]) -> None:
@@ -103,9 +141,10 @@ async def get_upcoming_events(
             select(Event)
             .where(*conditions)
             .order_by(Event.starts_at.asc())
-            .limit(safe_limit)
+            .limit(safe_limit * 3)
         )
-        return list(result.scalars().all())
+        events = dedupe_display_events(list(result.scalars().all()))
+        return events[:safe_limit]
     except Exception:
         logger.exception("Failed to load upcoming events")
         raise
@@ -143,6 +182,7 @@ async def search_public_events(
     db: AsyncSession,
     *,
     region: EventRegion | None = None,
+    category: EventCategory | None = None,
     search: str | None = None,
     limit: int = 30,
 ) -> list[Event]:
@@ -156,17 +196,26 @@ async def search_public_events(
     ]
     if region is not None:
         conditions.append(Event.region == region.value)
+    if category is not None:
+        conditions.append(Event.category == category.value)
     if search and search.strip():
         term = f"%{search.strip()}%"
-        conditions.append(or_(Event.title.ilike(term), Event.description.ilike(term)))
+        conditions.append(
+            or_(
+                Event.title.ilike(term),
+                Event.description.ilike(term),
+                Event.genre.ilike(term),
+            )
+        )
 
     result = await db.execute(
         select(Event)
         .where(*conditions)
         .order_by(Event.starts_at.asc())
-        .limit(safe_limit)
+        .limit(safe_limit * 3)
     )
-    return list(result.scalars().all())
+    events = dedupe_display_events(list(result.scalars().all()))
+    return events[:safe_limit]
 
 
 async def create_event(
@@ -177,20 +226,36 @@ async def create_event(
 ) -> Event:
     """Create and persist a new village event."""
     _validate_event_times(data.starts_at, data.ends_at)
-    event = Event(
+    location = (data.location or "").strip() or None
+    if data.category == EventCategory.CINEMA and location:
+        location = resolve_cinema_location_from_text(location, region=data.region) or location
+    title, genre, description = _apply_event_enrichment(
         title=data.title.strip(),
         description=(data.description or "").strip() or None,
+        category=data.category,
+        genre=data.genre,
+        location=location,
+        region=data.region,
+    )
+    event = Event(
+        title=title,
+        description=description,
         starts_at=data.starts_at,
         ends_at=data.ends_at,
-        location=(data.location or "").strip() or None,
+        location=location,
         region=data.region.value,
         category=data.category.value,
+        genre=genre,
+        poster_url=(data.poster_url or "").strip() or None,
         source=(data.source or "manual").strip() or "manual",
         source_url=(data.source_url or "").strip() or None,
         is_published=data.is_published,
     )
     db.add(event)
     await db.flush()
+    await _attach_event_poster(event)
+    if event.poster_url:
+        await db.flush()
     if actor_id:
         await log_action(db, "create_event", "event", event.id, user_id=actor_id, details={"title": event.title})
     logger.info("Event #%s created: %s", event.id, event.title)
@@ -209,6 +274,10 @@ async def update_event(
         event.title = data.title.strip()
     if data.description is not None:
         event.description = data.description.strip() or None
+    if data.genre is not None:
+        event.genre = data.genre.strip() or None
+    if data.poster_url is not None:
+        event.poster_url = data.poster_url.strip() or None
     if data.starts_at is not None:
         event.starts_at = data.starts_at
     if data.ends_at is not None:
@@ -227,6 +296,21 @@ async def update_event(
         event.is_published = data.is_published
 
     _validate_event_times(event.starts_at, event.ends_at)
+    region = EventRegion(event.region)
+    title, genre, description = _apply_event_enrichment(
+        title=event.title,
+        description=event.description,
+        category=EventCategory(event.category),
+        genre=event.genre,
+        location=event.location,
+        region=region,
+    )
+    event.title = title
+    event.genre = genre
+    event.description = description
+    if event.category == EventCategory.CINEMA.value and event.location:
+        event.location = resolve_cinema_location_from_text(event.location, region=region) or event.location
+    await _attach_event_poster(event)
     await db.flush()
     if actor_id:
         await log_action(db, "update_event", "event", event.id, user_id=actor_id)
@@ -268,6 +352,8 @@ def event_to_response(event: Event) -> dict:
         "region_label": event_region_label(event.region),
         "category": event.category,
         "category_label": event_category_label(event.category),
+        "genre": event.genre,
+        "poster_url": event.poster_url,
         "source": event.source,
         "source_url": event.source_url,
         "is_published": event.is_published,

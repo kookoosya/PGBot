@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, PublicEvent } from "@/lib/api";
-import { eventSourceLabel, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
+import {
+  categoryIcon,
+  eventSourceLabel,
+  isCinemaEvent,
+  regionChipClass,
+  shareEventUrl,
+} from "@/lib/eventUtils";
 
 export function EventDetail() {
   const { id } = useParams();
@@ -44,47 +49,70 @@ export function EventDetail() {
     return <div className="page-section text-center text-muted-foreground py-16">Загружаем событие…</div>;
   }
 
+  const cinema = isCinemaEvent(event);
+
   return (
-    <div className="page-section max-w-3xl">
-      <PageHeader icon="📅" title={event.title} subtitle={event.category_label}>
-        <Link to="/events" className="btn-hero-secondary text-sm no-underline">← Вся афиша</Link>
-        <button type="button" className="btn-hero-secondary text-sm" onClick={share}>
-          Поделиться
-        </button>
-      </PageHeader>
+    <div className="afisha-detail page-section max-w-3xl">
+      <nav className="afisha-breadcrumb" aria-label="Навигация">
+        <Link to="/">Главная</Link>
+        <span aria-hidden> / </span>
+        <Link to="/events">Афиша</Link>
+        <span aria-hidden> / </span>
+        <span className="afisha-breadcrumb-current">{event.title.slice(0, 40)}{event.title.length > 40 ? "…" : ""}</span>
+      </nav>
 
-      {shareMsg && <p className="alert-success mb-4">{shareMsg}</p>}
-
-      <article className="event-detail-card pushkin-card">
-        <div className="event-detail-meta">
-          <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-          <span className="events-category">{event.category_label}</span>
-          <span className="event-detail-source">Источник: {eventSourceLabel(event.source)}</span>
-        </div>
-
-        <div className="event-detail-when">
-          <p className="event-detail-label">Когда</p>
-          <p className="event-detail-value">
-            <time>{event.starts_at_label}</time>
-            {event.ends_at_label && <span className="event-detail-end"> — до {event.ends_at_label}</span>}
-          </p>
-        </div>
-
-        {event.location && (
-          <div className="event-detail-where">
-            <p className="event-detail-label">Где</p>
-            <p className="event-detail-value">📍 {event.location}</p>
+      <article className={`afisha-detail-card literary-card ${cinema ? "literary-card--forest afisha-detail-card--cinema" : "literary-card--gold"}`}>
+        {event.poster_url && (
+          <div className="afisha-detail-poster">
+            <img src={event.poster_url} alt={`Постер: ${event.title}`} loading="eager" decoding="async" />
           </div>
         )}
+        <div className="afisha-detail-hero">
+          <span className="afisha-detail-icon" aria-hidden>{categoryIcon(event.category)}</span>
+          <div className="afisha-detail-hero-copy">
+            <div className="afisha-card-meta">
+              <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
+              <span className="events-category">{event.category_label}</span>
+              {event.genre && <span className="afisha-genre-chip">{event.genre}</span>}
+            </div>
+            <h1 className="afisha-detail-title">{event.title}</h1>
+            {cinema && event.genre && (
+              <p className="afisha-detail-genre-line">Жанр: {event.genre}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="afisha-detail-facts">
+          <div className="afisha-fact">
+            <p className="event-detail-label">Когда</p>
+            <p className="event-detail-value">
+              <time dateTime={event.starts_at}>{event.starts_at_label}</time>
+              {event.ends_at_label && (
+                <span className="event-detail-end"> — до {event.ends_at_label}</span>
+              )}
+            </p>
+          </div>
+
+          {event.location && (
+            <div className="afisha-fact">
+              <p className="event-detail-label">Где</p>
+              <p className="event-detail-value">📍 {event.location}</p>
+            </div>
+          )}
+        </div>
 
         {event.description && (
-          <div className="event-detail-desc">
-            <p className="event-detail-label">О событии</p>
+          <div className="afisha-detail-desc">
+            <p className="event-detail-label">{cinema ? "О фильме" : "О событии"}</p>
             <p className="event-detail-text">{event.description}</p>
           </div>
         )}
 
-        <div className="event-detail-actions">
+        <p className="afisha-detail-source">Источник: {eventSourceLabel(event.source)}</p>
+
+        {shareMsg && <p className="alert-success">{shareMsg}</p>}
+
+        <div className="afisha-detail-actions">
           {event.source_url ? (
             <a
               href={event.source_url}
@@ -92,11 +120,11 @@ export function EventDetail() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Перейти к источнику ({eventSourceLabel(event.source)})
+              {cinema ? "Билеты / расписание" : `Перейти к источнику (${eventSourceLabel(event.source)})`}
             </a>
-          ) : (
-            <Button type="button" variant="outline" onClick={share}>Поделиться событием</Button>
-          )}
+          ) : null}
+          <Button type="button" variant="outline" onClick={share}>Поделиться</Button>
+          <Link to="/events" className="btn-hero-secondary no-underline inline-flex">← Вся афиша</Link>
         </div>
       </article>
     </div>

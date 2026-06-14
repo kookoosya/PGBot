@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.enums import EventRegion
+from app.models.enums import EventCategory, EventRegion
 from app.schemas.event import PublicEventListResponse, PublicEventResponse
 from app.schemas.today import TodayResponse
 from app.services.event_service import (
@@ -37,11 +37,14 @@ async def today_in_village(
 async def public_list_events(
     db: Annotated[AsyncSession, Depends(get_db)],
     region: EventRegion | None = Query(None),
+    category: EventCategory | None = Query(None),
     search: str | None = Query(None, max_length=100),
-    limit: int = Query(30, ge=1, le=50),
+    limit: int = Query(40, ge=1, le=60),
 ):
-    """Upcoming published events with optional region and text search."""
-    events = await search_public_events(db, region=region, search=search, limit=limit)
+    """Upcoming published events with optional region, category and text search."""
+    events = await search_public_events(
+        db, region=region, category=category, search=search, limit=limit,
+    )
     return PublicEventListResponse(
         items=[PublicEventResponse(**event_to_public_response(e)) for e in events],
         total=len(events),
