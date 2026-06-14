@@ -21,6 +21,7 @@ class Event(Base):
         String(50), default="pushkin_gory", server_default="pushkin_gory", index=True
     )
     category: Mapped[str] = mapped_column(String(50), default="other", server_default="other", index=True)
+    genre: Mapped[str | None] = mapped_column(String(120))
     source: Mapped[str | None] = mapped_column(String(100))
     source_url: Mapped[str | None] = mapped_column(String(1000))
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", index=True)

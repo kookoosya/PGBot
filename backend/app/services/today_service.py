@@ -26,12 +26,17 @@ TODAY_CACHE_TTL_SECONDS = 300
 class TodayEventRow:
     id: int
     title: str
+    starts_at: str
     starts_at_label: str
     ends_at_label: str | None
     location: str | None
+    region: str
     region_label: str
+    category: str
     category_label: str
+    genre: str | None
     description: str | None
+    source: str | None
     source_url: str | None
 
 
@@ -76,12 +81,17 @@ class TodaySnapshot:
                 TodayEventSnippet(
                     id=event.id,
                     title=event.title,
+                    starts_at=event.starts_at,
                     starts_at_label=event.starts_at_label,
                     ends_at_label=event.ends_at_label,
                     location=event.location,
+                    region=event.region,
                     region_label=event.region_label,
+                    category=event.category,
                     category_label=event.category_label,
+                    genre=event.genre,
                     description=event.description,
+                    source=event.source,
                     source_url=event.source_url,
                 )
                 for event in self.upcoming_events
@@ -142,12 +152,17 @@ async def build_today_snapshot(
             TodayEventRow(
                 id=event.id,
                 title=event.title,
+                starts_at=event.starts_at.isoformat(),
                 starts_at_label=format_event_datetime(event.starts_at),
                 ends_at_label=format_event_datetime(event.ends_at) if event.ends_at else None,
                 location=event.location,
+                region=event.region,
                 region_label=event_region_label(event.region),
+                category=event.category,
                 category_label=event_category_label(event.category),
+                genre=event.genre,
                 description=event.description,
+                source=event.source,
                 source_url=event.source_url,
             )
             for event in events
