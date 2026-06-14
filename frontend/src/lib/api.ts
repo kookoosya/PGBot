@@ -292,6 +292,19 @@ class ApiClient {
     });
   }
 
+  syncTimepadEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-timepad${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncAllEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-all`, {
+      method: "POST",
+    });
+  }
+
   getMyIssues(params?: Record<string, string>) {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return this.request<IssueMyListResponse>(`/issues/my${query}`);
@@ -1071,6 +1084,7 @@ export interface VkModerationOverview {
 }
 
 export interface EventSyncResult {
+  source?: string;
   region: string;
   fetched: number;
   created: number;

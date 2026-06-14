@@ -45,12 +45,20 @@ const emptyForm: EventCreate = {
   is_published: true,
 };
 
+const SOURCE_LABELS: Record<string, string> = {
+  vk: "VK",
+  timepad: "TimePad",
+  kudago: "KudaGo",
+};
+
 function formatSyncSummary(results: Awaited<ReturnType<typeof api.syncVkEvents>>): string {
   return results
     .map((r) => {
-      const label = r.region === "pskov" ? "Псков" : "Пушкинские Горы";
-      if (r.errors.length) return `${label}: ${r.errors[0]}`;
-      return `${label}: +${r.created} новых, обновлено ${r.updated}`;
+      const src = SOURCE_LABELS[r.source || ""] || r.source || "Источник";
+      const region =
+        r.region === "pskov" ? "Псков" : r.region === "pushkin_gory" ? "ПГ" : r.region;
+      if (r.errors.length) return `${src} (${region}): ${r.errors[0]}`;
+      return `${src} (${region}): +${r.created}, обновлено ${r.updated}`;
     })
     .join(" · ");
 }
@@ -131,14 +139,19 @@ export function AdminEvents() {
     }
   };
 
-  const runSync = async (source: "vk" | "kudago", region?: EventRegion) => {
+  const runSync = async (source: "vk" | "kudago" | "timepad" | "all", region?: EventRegion) => {
     setSyncing(true);
     setMsg("");
     setError("");
     try {
-      const results = source === "vk"
-        ? await api.syncVkEvents(region)
-        : await api.syncKudagoEvents(region);
+      const results =
+        source === "all"
+          ? await api.syncAllEvents()
+          : source === "vk"
+            ? await api.syncVkEvents(region)
+            : source === "timepad"
+              ? await api.syncTimepadEvents(region)
+              : await api.syncKudagoEvents(region);
       setMsg(formatSyncSummary(results));
       load();
     } catch (err) {
@@ -158,11 +171,17 @@ export function AdminEvents() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("all")}>
+            {syncing ? "Синхронизация…" : "Синхронизировать всё"}
+          </Button>
           <Button variant="outline" disabled={syncing} onClick={() => runSync("vk")}>
-            {syncing ? "Синхронизация…" : "Синхронизировать из VK"}
+            {syncing ? "…" : "VK"}
+          </Button>
+          <Button variant="outline" disabled={syncing} onClick={() => runSync("timepad")}>
+            {syncing ? "…" : "TimePad"}
           </Button>
           <Button variant="outline" disabled={syncing} onClick={() => runSync("kudago", "pskov")}>
-            {syncing ? "Синхронизация…" : "KudaGo (Псков)"}
+            {syncing ? "…" : "KudaGo"}
           </Button>
           <Button onClick={() => { resetForm(); setShowForm(true); }}>
             {showForm && !editId ? "Отмена" : "+ Добавить событие"}
@@ -171,8 +190,8 @@ export function AdminEvents() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        VK: музей-заповедник Пушкина и официальная группа Пскова (<code>VK_GROUP_TOKEN</code>).
-        KudaGo: кино и концерты Пскова — без токена, по открытому API.
+        VK — 6 групп (музей, район, Псков). TimePad — <code>TIMEPAD_API_TOKEN</code>.
+        Автосинхронизация каждые 12 ч. Дедупликация по ссылке и названию+дате.
       </p>
 
       {msg && <p className="text-green-700">{msg}</p>}
@@ -293,6 +312,8 @@ export function AdminEvents() {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {event.region_label} · {event.category_label} · {event.starts_at_label}
                   {event.source === "vk" && " · VK"}
+                  {event.source === "timepad" && " · TimePad"}
+                  {event.source === "kudago" && " · KudaGo"}
                   {!event.is_published && " · черновик"}
                 </p>
                 <p className="font-semibold text-lg">{event.title}</p>
