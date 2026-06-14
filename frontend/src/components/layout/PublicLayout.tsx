@@ -35,7 +35,7 @@ export function PublicLayout() {
               </div>
             </Link>
             <div className="pushkin-header-actions">
-              <WeatherWidgetCompact variant="header" />
+              {!isHome && <WeatherWidgetCompact variant="header" />}
               {!isHome && <VkBotLink />}
               {user ? (
                 <Link to={getUserHomePath(user)} className="pushkin-header-link">

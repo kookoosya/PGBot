@@ -153,6 +153,46 @@ class ApiClient {
     return this.request<Notification[]>("/admin/notifications");
   }
 
+  getAIEntitlements() {
+    return this.request<{ items: AIEntitlementRow[] }>("/admin/ai/entitlements");
+  }
+
+  grantAIEntitlement(data: AIEntitlementGrantPayload) {
+    return this.request<{ id: number; message: string }>("/admin/ai/entitlements", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  revokeAIEntitlement(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/entitlements/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  getAIKeys() {
+    return this.request<{ items: AIProviderKeyRow[] }>("/admin/ai/keys");
+  }
+
+  addAIKey(data: { api_key: string; label?: string; priority?: number }) {
+    return this.request<{ item: AIProviderKeyRow; message: string }>("/admin/ai/keys", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  activateAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}/activate`, { method: "PATCH" });
+  }
+
+  deactivateAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}/deactivate`, { method: "PATCH" });
+  }
+
+  deleteAIKey(id: number) {
+    return this.request<{ message: string }>(`/admin/ai/keys/${id}`, { method: "DELETE" });
+  }
+
   // Public AI
   getAIUsage() {
     return this.request<UsageInfo>("/ai/usage");
@@ -162,14 +202,42 @@ class ApiClient {
     return this.request<PaymentInfo>("/ai/payment-info");
   }
 
+  subscribeAI(planId: string) {
+    return this.request<AISubscribeResult>("/ai/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ plan_id: planId }),
+    });
+  }
+
+  getAIPaymentStatus(orderId: number) {
+    return this.request<AIPaymentStatus>(`/ai/payment/status/${orderId}`);
+  }
+
+  getLatestAIPayment() {
+    return this.request<AIPaymentStatus | null>("/ai/payment/latest");
+  }
+
   getAIModels() {
     return this.request<AIModelsInfo>("/ai/models");
   }
 
-  sendAIChat(message: string, history: { role: string; content: string }[], model?: string) {
+  getAIPlans() {
+    return this.request<AIPlansInfo>("/ai/plans");
+  }
+
+  getAIAccess() {
+    return this.request<AIAccessInfo>("/ai/access");
+  }
+
+  sendAIChat(
+    message: string,
+    history: { role: string; content: string }[],
+    model?: string,
+    chatMode?: string,
+  ) {
     return this.request<ChatResponse>("/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ message, history, model }),
+      body: JSON.stringify({ message, history, model, chat_mode: chatMode || "chat" }),
     });
   }
 
@@ -238,7 +306,12 @@ class ApiClient {
     return this.request<TodayResponse>(`/public/today${q}`);
   }
 
-  getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+  getPublicEvents(params?: {
+    region?: EventRegion;
+    category?: string;
+    search?: string;
+    limit?: string;
+  }) {
     const query = params ? "?" + new URLSearchParams(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")) as Record<string, string>,
     ).toString() : "";
@@ -246,7 +319,7 @@ class ApiClient {
   }
 
   getPublicEvent(id: number) {
-    return this.request<PublicEvent>(`/public/events/${id}`);
+    return this.request<PublicEventDetail>(`/public/events/${id}`);
   }
 
   getAdminEvents(includeUnpublished = true) {
@@ -288,6 +361,32 @@ class ApiClient {
   syncKudagoEvents(region?: EventRegion) {
     const q = region ? `?region=${region}` : "";
     return this.request<EventSyncResult[]>(`/admin/events/sync-kudago${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncTimepadEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-timepad${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncOrbiletEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-orbilet`, {
+      method: "POST",
+    });
+  }
+
+  syncProCultureEvents(region?: EventRegion) {
+    const q = region ? `?region=${region}` : "";
+    return this.request<EventSyncResult[]>(`/admin/events/sync-proculture${q}`, {
+      method: "POST",
+    });
+  }
+
+  syncAllEvents() {
+    return this.request<EventSyncResult[]>(`/admin/events/sync-all`, {
       method: "POST",
     });
   }
@@ -610,6 +709,9 @@ export interface ChatResponse {
   daily_limit: number;
   limit_reached: boolean;
   model?: string;
+  plan_id?: string;
+  plan_name?: string;
+  is_paid?: boolean;
 }
 
 export interface AIModelOption {
@@ -627,6 +729,8 @@ export interface AIStatus {
   image_provider: string;
   pollinations_configured: boolean;
   openrouter_configured?: boolean;
+  openai_configured?: boolean;
+  perplexity_configured?: boolean;
   gemini_configured: boolean;
   providers?: string[];
   message: string;
@@ -635,6 +739,78 @@ export interface AIStatus {
     site_note: string;
     providers_note: string;
   };
+}
+
+export interface AIPlan {
+  id: string;
+  name: string;
+  daily_limit: number;
+  price_rub: number;
+  period_days: number;
+  tagline: string;
+  features: string[];
+  chat_modes: string[];
+  model_id: string;
+  requires_login: boolean;
+  requires_payment: boolean;
+}
+
+export interface AIPlansInfo {
+  plans: AIPlan[];
+  notice: string;
+}
+
+export interface AIAccessInfo {
+  plan_id: string;
+  plan_name: string;
+  daily_limit: number;
+  chat_modes: string[];
+  model_id: string;
+  is_paid: boolean;
+  expires_at: string | null;
+  payment_reference: string | null;
+  used: number;
+  remaining: number;
+}
+
+export interface AIEntitlementGrantPayload {
+  plan_id: string;
+  user_id?: number;
+  vk_id?: number;
+  web_identifier?: string;
+  period_days?: number;
+  payment_reference?: string;
+  payment_amount?: number;
+  notes?: string;
+}
+
+export interface AIEntitlementRow {
+  id: number;
+  user_id: number | null;
+  vk_id: number | null;
+  web_identifier: string | null;
+  plan_id: string;
+  expires_at: string | null;
+  payment_reference: string | null;
+  payment_amount: number | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string | null;
+}
+
+export interface AIProviderKeyRow {
+  id: number;
+  provider: string;
+  label: string | null;
+  masked_key: string;
+  is_active: boolean;
+  priority: number;
+  use_count: number;
+  error_count: number;
+  last_used_at: string | null;
+  last_error_at: string | null;
+  last_error: string | null;
+  created_at: string | null;
 }
 
 export interface AIModelsInfo {
@@ -684,6 +860,23 @@ export interface PaymentInfo {
   bank_name?: string;
   amount_suggested: number;
   message: string;
+  auto_payment_available?: boolean;
+}
+
+export interface AISubscribeResult {
+  order_id: number;
+  payment_url: string;
+  amount_rub: number;
+  plan_id: string;
+  plan_name: string;
+}
+
+export interface AIPaymentStatus {
+  order_id: number;
+  status: string;
+  plan_id: string;
+  entitlement_id: number | null;
+  activated: boolean;
 }
 
 export interface Place {
@@ -965,12 +1158,18 @@ export interface TodayMapSnippet {
 export interface TodayEventSnippet {
   id: number;
   title: string;
+  starts_at: string;
   starts_at_label: string;
   ends_at_label?: string | null;
   location?: string | null;
+  region: EventRegion;
   region_label: string;
+  category: string;
   category_label: string;
+  genre?: string | null;
+  poster_url?: string | null;
   description?: string | null;
+  source?: string | null;
   source_url?: string | null;
 }
 
@@ -998,8 +1197,14 @@ export interface PublicEvent {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
+}
+
+export interface PublicEventDetail extends PublicEvent {
+  related_sessions: PublicEvent[];
 }
 
 export interface PublicEventListResponse {
@@ -1020,6 +1225,8 @@ export interface EventItem {
   region_label: string;
   category: string;
   category_label: string;
+  genre: string | null;
+  poster_url: string | null;
   source: string | null;
   source_url: string | null;
   is_published: boolean;
@@ -1035,6 +1242,8 @@ export interface EventCreate {
   location?: string;
   region?: EventRegion;
   category: string;
+  genre?: string | null;
+  poster_url?: string | null;
   source?: string;
   source_url?: string;
   is_published?: boolean;
@@ -1071,6 +1280,7 @@ export interface VkModerationOverview {
 }
 
 export interface EventSyncResult {
+  source?: string;
   region: string;
   fetched: number;
   created: number;

@@ -14,6 +14,7 @@ class AIUsage(Base):
     source: Mapped[str] = mapped_column(String(20), default="web")
     usage_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     message_count: Mapped[int] = mapped_column(Integer, default=0)
+    gemini_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

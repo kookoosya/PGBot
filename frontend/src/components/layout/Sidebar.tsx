@@ -16,6 +16,7 @@ import {
   Lock,
   Lightbulb,
   MessageCircle,
+  Bot,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -36,6 +37,7 @@ const navItems = [
   { to: "/admin/proposals", icon: Lock, label: "Предложения" },
   { to: "/admin/feedback", icon: Lightbulb, label: "Пожелания" },
   { to: "/admin/audit", icon: FileText, label: "Аудит" },
+  { to: "/admin/ai", icon: Bot, label: "ИИ Pro" },
   { to: "/admin/settings", icon: Settings, label: "Настройки" },
 ];
 

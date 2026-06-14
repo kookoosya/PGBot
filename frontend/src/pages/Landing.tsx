@@ -6,7 +6,7 @@ import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { VillageGallery } from "@/components/VillageGallery";
-import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
+import { WeatherWidgetDetailed } from "@/components/weather/WeatherWidgetDetailed";
 import { BRAND } from "@/lib/branding";
 import { api, type ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
@@ -55,10 +55,6 @@ export function Landing() {
             </h1>
             <p className="epic-lead">{BRAND.description}</p>
 
-            <div className="epic-weather-row">
-              <WeatherWidgetCompact variant="inline" />
-            </div>
-
             <div className="epic-cta-row">
               <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
                 🗺 Открыть карту
@@ -74,10 +70,11 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
+      <section className="page-section village-dashboard">
+        <UpcomingEvents />
+        <WeatherWidgetDetailed />
         <SeasonalTip />
         <TodayInVillage />
-        <UpcomingEvents />
       </section>
 
       <section className="epic-bento-section">

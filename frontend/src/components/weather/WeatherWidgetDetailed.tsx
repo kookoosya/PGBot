@@ -1,7 +1,46 @@
+import { useMemo } from "react";
 import { formatTemperature, formatUpdatedAt, useWeather } from "@/hooks/useWeather";
+import type { WeatherHourlyItem } from "@/lib/api";
+
+type DayForecast = {
+  key: string;
+  label: string;
+  icon: string;
+  min: number;
+  max: number;
+};
+
+function buildDailyForecast(hourly: WeatherHourlyItem[]): DayForecast[] {
+  const buckets = new Map<string, WeatherHourlyItem[]>();
+  for (const hour of hourly) {
+    const key = hour.time.slice(0, 10);
+    const list = buckets.get(key) ?? [];
+    list.push(hour);
+    buckets.set(key, list);
+  }
+
+  return [...buckets.entries()].slice(0, 5).map(([key, hours]) => {
+    const temps = hours.map((h) => h.temperature);
+    const date = new Date(`${key}T12:00:00`);
+    const label = date.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "short" });
+    const midday = hours[Math.min(4, hours.length - 1)];
+    return {
+      key,
+      label,
+      icon: midday.icon,
+      min: Math.min(...temps),
+      max: Math.max(...temps),
+    };
+  });
+}
 
 export function WeatherWidgetDetailed() {
   const { data, loading, error } = useWeather();
+
+  const daily = useMemo(
+    () => (data?.hourly ? buildDailyForecast(data.hourly) : []),
+    [data?.hourly],
+  );
 
   if (loading && !data) {
     return (
@@ -32,7 +71,7 @@ export function WeatherWidgetDetailed() {
       <div className="weather-panel-head">
         <div>
           <p className="weather-panel-kicker">{data.location_name}</p>
-          <h2>🌤 Погода сейчас</h2>
+          <h2>🌤 Погода и прогноз</h2>
         </div>
         <p className="weather-panel-updated">Обновлено {formatUpdatedAt(data.updated_at)}</p>
       </div>
@@ -68,9 +107,26 @@ export function WeatherWidgetDetailed() {
         </dl>
       </div>
 
+      {daily.length > 0 && (
+        <div className="weather-daily">
+          <h3 className="weather-hourly-title">По дням</h3>
+          <div className="weather-daily-scroll" role="list">
+            {daily.map((day) => (
+              <article key={day.key} className="weather-day-card" role="listitem">
+                <p className="weather-day-label">{day.label}</p>
+                <span className="weather-day-icon" aria-hidden>{day.icon}</span>
+                <p className="weather-day-temps">
+                  {formatTemperature(day.max)} <span>{formatTemperature(day.min)}</span>
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
       {hourly.length > 0 && (
         <div className="weather-hourly">
-          <h3 className="weather-hourly-title">Почасовой прогноз</h3>
+          <h3 className="weather-hourly-title">По часам</h3>
           <div className="weather-hourly-scroll" role="list">
             {hourly.map((hour) => (
               <article key={hour.time} className="weather-hour-card" role="listitem">

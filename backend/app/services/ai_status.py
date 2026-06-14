@@ -40,47 +40,79 @@ def is_valid_openrouter_key(key: str) -> bool:
     return bool(k) and k.startswith("sk-or-")
 
 
+def is_valid_openai_key(key: str) -> bool:
+    k = key.strip()
+    if not k or _looks_like_placeholder(k):
+        return False
+    return k.startswith("sk-") and not k.startswith("sk-or-")
+
+
+def is_valid_perplexity_key(key: str) -> bool:
+    k = key.strip()
+    if not k or _looks_like_placeholder(k):
+        return False
+    return k.startswith("pplx-")
+
+
+def env_gemini_keys() -> list[str]:
+    s = get_settings()
+    keys: list[str] = []
+    seen: set[str] = set()
+    for raw in (s.GEMINI_API_KEY, s.GEMINI_API_KEYS):
+        for part in (raw or "").replace("\n", ",").split(","):
+            key = part.strip()
+            if key and key not in seen and is_valid_gemini_key(key):
+                keys.append(key)
+                seen.add(key)
+    return keys
+
+
 def get_ai_status() -> dict:
     s = get_settings()
     poll_ok = is_valid_pollinations_key(s.POLLINATIONS_API_KEY)
     poll_img_ok = is_valid_pollinations_image_key(s.POLLINATIONS_API_KEY)
     or_ok = is_valid_openrouter_key(s.OPENROUTER_API_KEY)
-    gemini_ok = is_valid_gemini_key(s.GEMINI_API_KEY)
+    openai_ok = is_valid_openai_key(s.OPENAI_API_KEY)
+    gemini_ok = bool(env_gemini_keys())
 
-    if poll_ok:
+    if openai_ok:
+        chat_provider = "openai"
+    elif poll_ok:
         chat_provider = "pollinations"
-        if poll_img_ok:
-            image_provider = "pollinations"
-            ready = True
-            message = "ИИ работает."
-        elif or_ok:
-            image_provider = "openrouter"
-            ready = True
-            message = "ИИ работает."
-        else:
-            image_provider = "local-poster"
-            ready = True
-            message = "Чат работает. Картинки временно недоступны."
     elif or_ok:
         chat_provider = "openrouter"
-        image_provider = "openrouter"
-        ready = True
-        message = "ИИ работает."
     elif gemini_ok:
         chat_provider = "google"
-        image_provider = "local-fallback"
-        ready = True
-        message = "ИИ работает (только чат)."
     else:
         chat_provider = "local"
+
+    if poll_img_ok:
+        image_provider = "pollinations"
+    elif or_ok:
+        image_provider = "openrouter"
+    else:
         image_provider = "local-poster"
-        ready = False
-        if s.GEMINI_API_KEY.strip() and not gemini_ok:
-            message = "Ключ Gemini на сервере — заглушка. Нужен OPENROUTER_API_KEY или POLLINATIONS_API_KEY."
+
+    ready = chat_provider != "local"
+
+    if openai_ok:
+        message = "ИИ работает (ChatGPT)."
+    elif poll_ok:
+        if poll_img_ok or or_ok:
+            message = "ИИ работает."
         else:
-            message = "ИИ не настроен: нет рабочего API-ключа на сервере."
+            message = "Чат работает. Картинки временно недоступны."
+    elif or_ok:
+        message = "ИИ работает."
+    elif gemini_ok:
+        message = "ИИ работает (только чат)."
+    else:
+        ready = False
+        message = "ИИ не настроен: добавьте ключ Gemini в админке (/admin/ai) или POLLINATIONS_API_KEY в .env."
 
     providers = []
+    if openai_ok:
+        providers.append("ChatGPT (OpenAI)")
     if poll_ok:
         providers.append("Pollinations")
     if or_ok:
@@ -88,18 +120,32 @@ def get_ai_status() -> dict:
     if gemini_ok:
         providers.append("Gemini")
 
+    provider_notes = []
+    if openai_ok:
+        provider_notes.append("ChatGPT — ваш ключ OpenAI, у него свои лимиты на account.openai.com")
+    if poll_ok or or_ok or gemini_ok:
+        provider_notes.append("резервные провайдеры тоже с лимитами")
+
     return {
         "ready": ready,
         "chat_provider": chat_provider,
         "image_provider": image_provider,
         "pollinations_configured": poll_ok,
         "openrouter_configured": or_ok,
+        "openai_configured": openai_ok,
         "gemini_configured": gemini_ok,
         "providers": providers,
         "message": message,
         "limits": {
             "site_daily": s.AI_FREE_DAILY_LIMIT,
-            "site_note": f"{s.AI_FREE_DAILY_LIMIT} запросов в день на человека.",
-            "providers_note": "",
+            "site_note": (
+                f"Бесплатно — {s.AI_FREE_DAILY_LIMIT} сообщений или генераций картинок в день. "
+                f"ИИ Pro — до {s.AI_PRO_DAILY_LIMIT} сообщений в сутки. "
+                "Оплата картой, доступ автоматически."
+            ),
+            "providers_note": (
+                "У каждого AI-провайдера свои лимиты и кредиты. "
+                + ("; ".join(provider_notes) + "." if provider_notes else "При исчерпании ответ может быть недоступен.")
+            ),
         },
     }
