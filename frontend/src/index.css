@@ -2006,6 +2006,9 @@
     border-color: hsl(42 55% 88% / 0.25);
     color: hsl(42 85% 94%);
   }
+  .weather-compact--fallback {
+    opacity: 0.92;
+  }
   .weather-compact-icon { font-size: 1.1rem; }
   .weather-compact-temp {
     font-weight: 600;
