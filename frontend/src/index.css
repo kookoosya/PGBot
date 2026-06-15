@@ -1105,7 +1105,14 @@
     box-shadow:
       0 4px 14px rgba(0, 0, 0, 0.38),
       0 0 0 2px rgba(255, 255, 255, 0.35);
-    animation: pinBounce 3s ease-in-out infinite;
+  }
+  .map-marker-ref {
+    border-width: 3.5px;
+    border-color: hsl(48 100% 62%);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.42),
+      0 0 0 2px hsl(48 100% 70% / 0.45),
+      0 0 12px hsl(48 100% 55% / 0.35);
   }
   .map-marker-emoji {
     transform: rotate(45deg);
@@ -1134,6 +1141,35 @@
     box-shadow:
       0 4px 16px rgba(0, 0, 0, 0.4),
       0 0 14px hsl(48 100% 55% / 0.55);
+    animation: pinBounce 3s ease-in-out infinite;
+  }
+
+  .map-route-stop-pin {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, hsl(42 90% 62%), hsl(42 78% 48%));
+    color: hsl(152 50% 10%);
+    border: 2px solid hsl(42 95% 78%);
+    font-size: 0.75rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  .map-taxi-overlay {
+    @apply absolute inset-0 z-[900] flex items-center justify-center pointer-events-none;
+    background: hsl(220 40% 18% / 0.12);
+    backdrop-filter: blur(1px);
+  }
+  .map-taxi-overlay p {
+    @apply m-0 px-4 py-2 rounded-xl text-sm font-bold;
+    background: hsl(40 55% 99% / 0.92);
+    border: 2px solid hsl(42 65% 50%);
+    color: hsl(152 40% 18%);
+    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.15);
   }
 
   .map-overlay-controls {
@@ -1476,6 +1512,19 @@
   .org-list-rating {
     @apply text-xs font-bold shrink-0;
     color: hsl(42 78% 35%);
+  }
+
+  .org-list-ref {
+    @apply text-xs font-bold shrink-0;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(152 48% 22%);
+    color: hsl(42 85% 92%);
+    line-height: 1;
   }
 
   .org-detail-card {

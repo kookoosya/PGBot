@@ -42,7 +42,7 @@ function formatPlaceNote(text: string | null | undefined): string | null {
 const CATEGORY_ICONS: Record<string, string> = {
   shop: "🛒", supermarket: "🏪", pharmacy: "💊", cafe: "☕",
   restaurant: "🍽", bank: "🏦", post: "📮", school: "🏫",
-  hospital: "🏥", government: "🏛", transport: "🚌", culture: "🎭",
+  hospital: "🏥", government: "🏛", transport: "🚌", culture: "🏛",
   hotel: "🏨", gas: "⛽", beauty: "💇", tyre: "🛞", auto: "🔧",
   taxi: "🚕", parking: "🅿️", other: "📍",
 };
@@ -50,20 +50,32 @@ const CATEGORY_ICONS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   shop: "#e67e22", supermarket: "#d35400", pharmacy: "#27ae60",
   cafe: "#8e44ad", restaurant: "#c0392b", bank: "#2980b9",
-  government: "#2c3e50", culture: "#9b59b6", tyre: "#34495e",
-  auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085", beauty: "#e91e63",
+  post: "#1abc9c", school: "#3498db", hospital: "#e74c3c",
+  government: "#2c3e50", transport: "#16a085", culture: "#9b59b6",
+  tyre: "#34495e", auto: "#7f8c8d", gas: "#f39c12", hotel: "#16a085",
+  beauty: "#e91e63", parking: "#95a5a6", taxi: "#f1c40f",
   other: "#1a5c3a",
 };
 
-function makeIcon(category: string, rating: number) {
+function makeIcon(category: string, rating: number, isReference = false) {
   const color = CATEGORY_COLORS[category] || "#1a5c3a";
   const top = rating >= 4.5 ? " map-marker-top" : "";
+  const ref = isReference ? " map-marker-ref" : "";
   const star = rating > 0 ? `<span class="map-marker-star">★${rating.toFixed(1)}</span>` : "";
   return L.divIcon({
     className: "",
-    html: `<div class="map-marker-pin${top}" style="--pin-color:${color}"><span class="map-marker-emoji">${CATEGORY_ICONS[category] || "📍"}</span>${star}</div>`,
+    html: `<div class="map-marker-pin${top}${ref}" style="--pin-color:${color}"><span class="map-marker-emoji">${CATEGORY_ICONS[category] || "📍"}</span>${star}</div>`,
     iconSize: [38, 38],
     iconAnchor: [19, 19],
+  });
+}
+
+function makeRouteStopIcon(num: number) {
+  return L.divIcon({
+    className: "",
+    html: `<div class="map-route-stop-pin">${num}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 }
 
@@ -125,22 +137,29 @@ function ClusterLayer({
   useEffect(() => {
     if (!clusterRef.current) {
       clusterRef.current = L.markerClusterGroup({
-        maxClusterRadius: 45,
-        spiderfyOnMaxZoom: false,
+        maxClusterRadius: 42,
+        spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
-        zoomToBoundsOnClick: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 17,
       });
       map.addLayer(clusterRef.current);
     }
     const group = clusterRef.current;
     group.clearLayers();
     places.forEach((p) => {
+      const isRef = p.rating_source === "reference";
       const marker = L.marker([p.latitude, p.longitude], {
-        icon: makeIcon(p.category, p.display_rating),
+        icon: makeIcon(p.category, p.display_rating, isRef),
+        zIndexOffset: (isRef ? 250 : 0) + Math.round(p.display_rating * 10),
       });
+      const ratingLine = p.display_rating > 0
+        ? `★ ${p.display_rating.toFixed(1)} (${p.display_review_count})`
+        : "";
       marker.bindPopup(
-        `<strong>${p.name}</strong><br/>${p.category_label}<br/>` +
-        (p.display_rating > 0 ? `★ ${p.display_rating} (${p.display_review_count})` : "")
+        `<strong>${p.name}</strong><br/>${p.category_label}` +
+        (p.address ? `<br/><span style="opacity:.8;font-size:12px">${p.address}</span>` : "") +
+        (ratingLine ? `<br/>${ratingLine}` : "")
       );
       marker.on("click", () => onSelect(p.id));
       group.addLayer(marker);
@@ -149,6 +168,28 @@ function ClusterLayer({
       group.clearLayers();
     };
   }, [places, map, onSelect]);
+
+  return null;
+}
+
+function RouteStopsLayer({ route }: { route: MapRoute | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!route) return;
+    const markers: L.Marker[] = route.stops.map((stop, i) => {
+      const marker = L.marker([stop.latitude, stop.longitude], {
+        icon: makeRouteStopIcon(i + 1),
+        zIndexOffset: 1000 + i,
+      });
+      marker.bindPopup(`<strong>${i + 1}. ${stop.name}</strong>${stop.address ? `<br/>${stop.address}` : ""}`);
+      return marker;
+    });
+    markers.forEach((m) => m.addTo(map));
+    return () => {
+      markers.forEach((m) => map.removeLayer(m));
+    };
+  }, [route, map]);
 
   return null;
 }
@@ -186,6 +227,7 @@ export function MapPage() {
   const [activeRoute, setActiveRoute] = useState<MapRoute | null>(null);
   const [mapReportTypes, setMapReportTypes] = useState<ComplaintType[]>([]);
   const [search, setSearch] = useState("");
+  const [searchDebounced, setSearchDebounced] = useState("");
   const [mapStyle, setMapStyle] = useState<"scheme" | "satellite">("scheme");
   const [mapModes, setMapModes] = useState<MapFilterMode[]>(FALLBACK_MAP_MODES);
   const [taxiMode, setTaxiMode] = useState(false);
@@ -221,6 +263,11 @@ export function MapPage() {
     api.getMapFilterModes().then(setMapModes).catch(() => setMapModes(FALLBACK_MAP_MODES));
     api.getMapRoutes().then(setRoutes).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setSearchDebounced(search.trim()), 400);
+    return () => window.clearTimeout(t);
+  }, [search]);
 
   const isLodging = category === "hotel";
 
@@ -268,7 +315,7 @@ export function MapPage() {
     if (category) params.category = category;
     if (shopsOnly) params.shops_only = "true";
     if (usefulOnly) params.useful_only = "true";
-    if (search) params.search = search;
+    if (searchDebounced) params.search = searchDebounced;
     if (isLodging) {
       params.district = "true";
     } else if (b) {
@@ -301,7 +348,7 @@ export function MapPage() {
           setPlacesLoading(false);
         }
       });
-  }, [category, shopsOnly, usefulOnly, search, isLodging, taxiMode]);
+  }, [category, shopsOnly, usefulOnly, searchDebounced, isLodging, taxiMode]);
 
   async function handleOfflineDownload() {
     setOfflineBusy(true);
@@ -321,10 +368,15 @@ export function MapPage() {
 
   useEffect(() => {
     if (boundsRef.current || isLodging) loadPlaces(boundsRef.current ?? undefined);
-  }, [category, shopsOnly, usefulOnly, search, loadPlaces, isLodging]);
+  }, [category, shopsOnly, usefulOnly, searchDebounced, loadPlaces, isLodging]);
 
   const sortedPlaces = useMemo(
-    () => [...places].sort((a, b) => b.display_rating - a.display_rating || b.display_review_count - a.display_review_count),
+    () => [...places].sort((a, b) => {
+      const refA = a.rating_source === "reference" ? 1 : 0;
+      const refB = b.rating_source === "reference" ? 1 : 0;
+      if (refB !== refA) return refB - refA;
+      return b.display_rating - a.display_rating || b.display_review_count - a.display_review_count || a.name.localeCompare(b.name, "ru");
+    }),
     [places]
   );
 
@@ -514,15 +566,24 @@ export function MapPage() {
               url={mapStyle === "scheme" ? MAP_TILE_OSM : MAP_TILE_SAT}
             />
             <MapEvents onBounds={loadPlaces} pausedRef={boundsPausedRef} />
-            <ClusterLayer places={places} onSelect={openPlace} />
+            <ClusterLayer places={sortedPlaces} onSelect={openPlace} />
             {activeRoute && activeRoute.stops.length > 1 && (
-              <Polyline
-                positions={activeRoute.stops.map((s) => [s.latitude, s.longitude] as [number, number])}
-                pathOptions={{ color: "#c9a227", weight: 4, opacity: 0.85, dashArray: "10 8" }}
-              />
+              <>
+                <Polyline
+                  positions={activeRoute.stops.map((s) => [s.latitude, s.longitude] as [number, number])}
+                  pathOptions={{ color: "#c9a227", weight: 4, opacity: 0.85, dashArray: "10 8" }}
+                />
+                <RouteStopsLayer route={activeRoute} />
+              </>
             )}
             <FlyToPlace place={highlight} pausedRef={boundsPausedRef} />
           </MapContainer>
+
+          {taxiMode && (
+            <div className="map-taxi-overlay" aria-hidden>
+              <p>🚕 Режим такси — выберите службу выше</p>
+            </div>
+          )}
 
           <div className="map-overlay-controls">
             <button type="button" className={`map-layer-btn ${mapStyle === "scheme" ? "active" : ""}`} onClick={() => setMapStyle("scheme")}>
@@ -551,7 +612,6 @@ export function MapPage() {
               placeholder="Поиск организации..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && loadPlaces()}
             />
             <div className="map-filter-scroll">
               {mapModes.map((f) => (
@@ -751,14 +811,19 @@ export function MapPage() {
                 <button key={p.id} className="org-list-card" onClick={() => { openPlace(p.id); setMobileTab("map"); }}>
                   <span className="org-list-icon">{CATEGORY_ICONS[p.category] || "📍"}</span>
                   <div className="org-list-body">
-                    <div className="flex justify-between gap-2">
-                      <strong className="text-sm">{p.name}</strong>
-                      {p.display_rating > 0 && (
-                        <span className="org-list-rating">★ {p.display_rating.toFixed(1)}</span>
-                      )}
+                    <div className="flex justify-between gap-2 items-start">
+                      <strong className="text-sm text-left">{p.name}</strong>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {p.rating_source === "reference" && (
+                          <span className="org-list-ref" title="Проверенный справочник">✓</span>
+                        )}
+                        {p.display_rating > 0 && (
+                          <span className="org-list-rating">★ {p.display_rating.toFixed(1)}</span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">{p.category_label} · {p.address || "Пушкинские Горы"}</p>
-                    {p.phone && <p className="text-xs mt-1">📞 {p.phone}</p>}
+                    <p className="text-xs text-muted-foreground text-left">{p.category_label} · {p.address || "Пушкинские Горы"}</p>
+                    {p.phone && <p className="text-xs mt-1 text-left">📞 {p.phone}</p>}
                   </div>
                 </button>
               ))}
