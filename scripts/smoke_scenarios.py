@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
@@ -47,7 +48,7 @@ def run_checks(api_base: str) -> list[str]:
     else:
         errors.append("today response is not JSON")
 
-    code, events = _fetch(f"{api}/public/events?search=концерт")
+    code, events = _fetch(f"{api}/public/events?{urllib.parse.urlencode({'search': 'концерт'})}")
     if code != 200:
         errors.append(f"events search HTTP {code}")
     elif not isinstance(events, dict) or "items" not in events:
