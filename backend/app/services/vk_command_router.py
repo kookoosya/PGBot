@@ -265,7 +265,7 @@ async def _process_vk_ai(ctx: VkRouteContext, text: str) -> None:
 
 async def handle_welcome(ctx: VkRouteContext) -> None:
     """Меню / главная / start."""
-    clear_flow(ctx.peer_id)
+    await clear_flow(ctx.db, ctx.peer_id)
     await clear_ai_history(ctx.db, ctx.peer_id)
     await _send_welcome(ctx, get_welcome_message())
 
@@ -370,11 +370,11 @@ async def handle_routes_page(ctx: VkRouteContext) -> None:
 
 
 async def handle_map_report(ctx: VkRouteContext) -> None:
-    await _start_flow_message(ctx, start_map_report_flow(ctx.peer_id))
+    await _start_flow_message(ctx, await start_map_report_flow(ctx.db, ctx.peer_id))
 
 
 async def handle_classified_add(ctx: VkRouteContext) -> None:
-    msg = start_classified_flow(ctx.peer_id)
+    msg = await start_classified_flow(ctx.db, ctx.peer_id)
     await send_message(
         ctx.peer_id,
         f"{msg}\n\n🌐 Форма на сайте: {public_site_url()}/classifieds?new=1",
@@ -383,11 +383,11 @@ async def handle_classified_add(ctx: VkRouteContext) -> None:
 
 
 async def handle_classified_jobs(ctx: VkRouteContext) -> None:
-    await _start_flow_message(ctx, start_classified_flow(ctx.peer_id, jobs=True))
+    await _start_flow_message(ctx, await start_classified_flow(ctx.db, ctx.peer_id, jobs=True))
 
 
 async def handle_wish(ctx: VkRouteContext) -> None:
-    await _start_flow_message(ctx, start_wish_flow(ctx.peer_id))
+    await _start_flow_message(ctx, await start_wish_flow(ctx.db, ctx.peer_id))
 
 
 async def handle_taxi(ctx: VkRouteContext) -> None:
