@@ -4,6 +4,7 @@ import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } f
 import { type EventRegion } from "@/lib/api";
 import { isCinemaEvent } from "@/lib/eventUtils";
 import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { landingGridCountClass } from "@/lib/landingLayout";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -128,7 +129,15 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
           displayPushkin.length === 0 ? (
             <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
           ) : (
-            <ol className={`events-grid${isLanding ? " events-grid--landing" : " events-grid--wide"}`}>
+            <ol
+              className={[
+                "events-grid",
+                isLanding ? "events-grid--landing" : "events-grid--wide",
+                isLanding ? landingGridCountClass(displayPushkin.length, "events-grid--landing") : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               {displayPushkin.map((event) => (
                 <EventCard key={event.id} event={event} descLimit={isLanding ? 100 : 120} />
               ))}
@@ -200,7 +209,15 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
             linkTo="/events?region=pskov"
             linkLabel="Афиша Пскова →"
           />
-          <ol className={`events-grid${isLanding ? " events-grid--landing-pskov" : ""}`}>
+          <ol
+            className={[
+              "events-grid",
+              isLanding ? "events-grid--landing-pskov" : "",
+              isLanding ? landingGridCountClass(displayPskov.length, "events-grid--landing-pskov") : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {displayPskov.map((event) => (
               <EventCard key={event.id} event={event} descLimit={isLanding ? 90 : 100} />
             ))}

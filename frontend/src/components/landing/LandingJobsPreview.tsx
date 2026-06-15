@@ -4,6 +4,7 @@ import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { api, type ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { landingGridCountClass } from "@/lib/landingLayout";
 
 const PREVIEW_LIMIT = 3;
 
@@ -46,7 +47,14 @@ export function LandingJobsPreview() {
         </LiteraryEmptyState>
       ) : (
         <>
-          <div className="landing-jobs-grid">
+          <div
+            className={[
+              "landing-jobs-grid",
+              landingGridCountClass(jobAds.length, "landing-jobs-grid"),
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {jobAds.map((ad) => {
               const visual = getCategoryVisual(ad.category);
               return (

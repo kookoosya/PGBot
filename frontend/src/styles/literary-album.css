@@ -24,20 +24,21 @@
     margin-bottom: 1.25rem;
   }
   .literary-kicker {
-    margin: 0 0 0.35rem;
-    font-size: 0.75rem;
+    margin: 0 0 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: hsl(var(--gold));
   }
   .literary-title {
     margin: 0;
     font-family: "Playfair Display", Georgia, serif;
-    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-size: clamp(1.4375rem, 2.8vw, 1.875rem);
     font-weight: 600;
     color: hsl(var(--forest));
-    line-height: 1.2;
+    line-height: 1.22;
+    letter-spacing: -0.01em;
   }
   .literary-lead {
     margin: 0.5rem 0 0;
@@ -533,14 +534,31 @@
     gap: 0.9rem;
     align-items: stretch;
   }
+  .landing-jobs-grid--count-1 {
+    grid-template-columns: 1fr;
+    max-width: 22rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .landing-jobs-grid--count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   @media (min-width: 640px) {
-    .landing-jobs-grid {
+    .landing-jobs-grid:not(.landing-jobs-grid--count-1):not(.landing-jobs-grid--count-2) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .landing-jobs-grid--count-1 {
+      max-width: 26rem;
     }
   }
   @media (min-width: 1024px) {
-    .landing-jobs-grid {
+    .landing-jobs-grid:not(.landing-jobs-grid--count-1):not(.landing-jobs-grid--count-2) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .landing-jobs-grid--count-2 {
+      max-width: 44rem;
+      margin-inline: auto;
+      width: 100%;
     }
   }
   .landing-events {
@@ -562,6 +580,24 @@
   }
   .landing-album .literary-job-card:hover {
     border-color: hsl(var(--forest) / 0.35);
+  }
+  .landing-album .literary-btn:focus-visible,
+  .landing-album .literary-link:focus-visible,
+  .landing-album .literary-section-link:focus-visible,
+  .landing-album .today-card-action:focus-visible,
+  .landing-album .today-ad-link:focus-visible {
+    outline: 2px solid hsl(var(--gold) / 0.55);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .landing-album .literary-card:focus-within {
+    border-color: hsl(var(--gold) / 0.4);
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.15);
+  }
+  .landing-album .literary-job-card:focus-within,
+  .landing-album .literary-useful-card:focus-within {
+    border-color: hsl(var(--gold) / 0.45);
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.12);
   }
   .landing-vk-panel {
     text-align: center;
@@ -616,6 +652,23 @@
   /* Сегодня в посёлке — литературные карточки */
   .landing-today-panel .today-grid--landing {
     gap: 0.85rem;
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    .landing-today-panel .today-grid--landing {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .today-card--literary {
+      min-height: 11.5rem;
+    }
+  }
+  @media (min-width: 640px) and (max-width: 767px) {
+    .landing-today-panel .today-grid--landing {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .today-card--literary.today-card-map {
+      grid-column: 1 / -1;
+    }
   }
   .today-card--literary {
     background: linear-gradient(165deg, hsl(var(--card) / 0.95), hsl(var(--parchment) / 0.7));
@@ -692,27 +745,41 @@
   }
 
   /* Афиша на главной — сетки */
-  .events-grid--landing {
-    gap: 0.9rem;
-    align-items: stretch;
-  }
-  @media (min-width: 640px) {
-    .events-grid--landing {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  @media (min-width: 1024px) {
-    .events-grid--landing {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
+  .events-grid--landing,
   .events-grid--landing-pskov {
     gap: 0.9rem;
     align-items: stretch;
   }
+  .events-grid--landing--count-1,
+  .events-grid--landing-pskov--count-1 {
+    grid-template-columns: 1fr;
+    max-width: 26rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+  .events-grid--landing--count-2,
+  .events-grid--landing-pskov--count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   @media (min-width: 640px) {
-    .events-grid--landing-pskov {
+    .events-grid--landing:not(.events-grid--landing--count-1):not(.events-grid--landing--count-2) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .events-grid--landing-pskov:not(.events-grid--landing-pskov--count-1) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .events-grid--landing--count-1 {
+      max-width: 30rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .events-grid--landing:not(.events-grid--landing--count-1):not(.events-grid--landing--count-2) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .events-grid--landing--count-2 {
+      max-width: 52rem;
+      margin-inline: auto;
+      width: 100%;
     }
   }
   .events-grid--landing > li,
@@ -731,6 +798,9 @@
   .events-grid--landing .event-card,
   .events-grid--landing-pskov .event-card {
     flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Полезное рядом — landing */
@@ -998,12 +1068,24 @@
   .cinema-spotlight--empty {
     padding-bottom: 2rem;
   }
+  .cinema-spotlight--empty::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(0deg, hsl(30 14% 8% / 0.35) 0%, transparent 100%);
+    pointer-events: none;
+  }
   .cinema-spotlight--empty .literary-section-head {
     margin-bottom: 1.15rem;
   }
   .cinema-spotlight--empty .literary-empty--dark {
-    max-width: 28rem;
+    max-width: 26rem;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
   }
   .events-grid--cinema-pair .event-card-landing-secondary .literary-card--cinema-spotlight {
     opacity: 0.97;
@@ -1042,14 +1124,17 @@
     flex-direction: column;
   }
   @media (max-width: 767px) {
-    .events-grid--landing {
+    .events-grid--landing,
+    .events-grid--landing-pskov,
+    .events-grid--landing--count-2,
+    .events-grid--landing-pskov--count-2 {
       grid-template-columns: 1fr;
+      max-width: none;
     }
-    .events-grid--landing-pskov {
+    .landing-jobs-grid,
+    .landing-jobs-grid--count-2 {
       grid-template-columns: 1fr;
-    }
-    .landing-jobs-grid {
-      grid-template-columns: 1fr;
+      max-width: none;
     }
     .cinema-spotlight--featured {
       padding: 1.65rem 1.25rem 1.75rem;
@@ -1057,6 +1142,15 @@
     .landing-album-section--divider::after {
       font-size: 0.5625rem;
       padding: 0 0.5rem;
+    }
+    .landing-block .literary-section-head-aside {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .literary-useful-grid--landing {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   @media (min-width: 768px) {
@@ -1093,6 +1187,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    flex: 1;
+    min-height: 0;
+  }
+  .event-card--cinema .event-card-body {
+    flex: 1;
   }
   .literary-card--cinema-spotlight {
     background: hsl(var(--card) / 0.97);
