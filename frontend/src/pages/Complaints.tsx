@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { api, Issue } from "@/lib/api";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+
+const copy = PAGE_SECTIONS.complaints;
 
 export function Complaints() {
   const { user } = useUserAuth();
@@ -79,28 +82,28 @@ export function Complaints() {
   };
 
   return (
-    <div className="page-section">
-      <PageHeader
-        icon="⚠️"
-        title="Жалобы и обращения"
-        subtitle="Сообщите о проблеме в посёлке — дороги, ЖКХ, освещение, мусор. Обращение увидят администрация и ответственные службы."
-      />
+    <div className="literary-page page-section max-w-5xl">
+      <PageHeader icon="⚠️" title={copy.title} subtitle={copy.lead} />
 
-      <div className="grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
+      <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Подать обращение</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowForm(!showForm)}>
+            <LiterarySectionHead
+              kicker={copy.form.kicker}
+              title={copy.form.title}
+              lead={copy.form.lead}
+            />
+            <button type="button" className="literary-btn literary-btn--ghost text-sm shrink-0" onClick={() => setShowForm(!showForm)}>
               {showForm ? "Свернуть" : "Открыть форму"}
-            </Button>
+            </button>
           </div>
 
           {showForm && (
-            <form onSubmit={submit} className="pushkin-card p-6 space-y-4 form-glow">
+            <form onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow">
               {!user && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium">Ваше имя</label>
+                    <label className="event-detail-label">Ваше имя</label>
                     <Input
                       value={form.full_name}
                       onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
@@ -108,7 +111,7 @@ export function Complaints() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Телефон</label>
+                    <label className="event-detail-label">Телефон</label>
                     <Input
                       value={form.phone}
                       onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
@@ -120,7 +123,7 @@ export function Complaints() {
               )}
 
               <div>
-                <label className="text-sm font-medium">Категория</label>
+                <label className="event-detail-label">Категория</label>
                 <select
                   className="pushkin-select w-full"
                   value={form.category}
@@ -134,7 +137,7 @@ export function Complaints() {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Адрес / место</label>
+                <label className="event-detail-label">Адрес / место</label>
                 <Input
                   value={form.address}
                   onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
@@ -143,9 +146,9 @@ export function Complaints() {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Опишите проблему</label>
+                <label className="event-detail-label">Опишите проблему</label>
                 <textarea
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-background min-h-[120px]"
+                  className="literary-textarea w-full min-h-[120px]"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Например: не работает уличное освещение на перекрёстке..."
@@ -166,18 +169,16 @@ export function Complaints() {
               />
 
               {msg && (
-                <p className={`text-sm ${msgType === "ok" ? "text-green-700" : "text-destructive"}`}>
-                  {msg}
-                </p>
+                <p className={msgType === "ok" ? "alert-success" : "alert-error"}>{msg}</p>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Отправляем..." : "Отправить обращение"}
-              </Button>
+              <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
+                {loading ? "Отправляем…" : "Отправить обращение"}
+              </button>
 
               {!user && (
-                <p className="text-xs text-muted-foreground text-center">
-                  <Link to="/cabinet/login" className="text-primary hover:underline">Войдите</Link>
+                <p className="landing-muted text-xs text-center m-0">
+                  <Link to="/cabinet/login" className="literary-link">Войдите</Link>
                   {" "}чтобы видеть историю обращений
                 </p>
               )}
@@ -186,48 +187,55 @@ export function Complaints() {
         </div>
 
         <div className="space-y-6">
-          <div className="pushkin-card p-6">
-            <h3 className="font-bold text-lg mb-3">🏛 Для служб и организаций</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Администрация, ЖКХ и организации регистрируются на портале и после проверки
-              получают доступ к обращениям жителей.
-            </p>
+          <section className="page-panel page-panel--gold">
+            <LiterarySectionHead
+              kicker={copy.orgs.kicker}
+              title={copy.orgs.title}
+              lead={copy.orgs.lead}
+            />
             <div className="flex flex-wrap gap-2">
-              <Link to="/register">
-                <Button size="sm">Регистрация</Button>
-              </Link>
-              <Link to="/cabinet/login?next=/official">
-                <Button size="sm" variant="outline">Вход для служб</Button>
-              </Link>
+              <Link to="/register" className="literary-btn literary-btn--primary text-sm no-underline">Регистрация</Link>
+              <Link to="/cabinet/login?next=/official" className="literary-btn literary-btn--ghost text-sm no-underline">Вход для служб</Link>
             </div>
-          </div>
+          </section>
 
           {user && (
-            <div>
-              <h3 className="font-bold text-lg mb-3">Мои обращения</h3>
+            <section>
+              <LiterarySectionHead
+                kicker={copy.mine.kicker}
+                title={copy.mine.title}
+                lead={copy.mine.lead}
+              />
               {myIssues.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Пока нет обращений</p>
+                <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact />
               ) : (
                 <div className="space-y-3">
                   {myIssues.map((issue) => (
-                    <div key={issue.id} className="pushkin-card p-4">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">#{issue.id}</span>
-                        <Badge className={STATUS_COLORS[issue.status]}>
-                          {STATUS_LABELS[issue.status]}
-                        </Badge>
-                        {issue.category && (
-                          <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm mt-2">
-                        {issue.ai_analysis?.summary || issue.description}
-                      </p>
-                      {issue.status_timeline && issue.status_timeline.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">
-                            История статусов
+                    <article key={issue.id} className="literary-issue-card literary-issue-card--static">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="literary-issue-id">#{issue.id}</span>
+                            <Badge className={STATUS_COLORS[issue.status]}>
+                              {STATUS_LABELS[issue.status]}
+                            </Badge>
+                            {issue.category && (
+                              <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
+                            )}
+                          </div>
+                          <p className="literary-issue-summary mt-2">
+                            {issue.ai_analysis?.summary || issue.description}
                           </p>
+                          {issue.address && (
+                            <p className="literary-issue-address">📍 {issue.address}</p>
+                          )}
+                        </div>
+                        <span className="literary-issue-date">{formatDate(issue.created_at)}</span>
+                      </div>
+
+                      {issue.status_timeline && issue.status_timeline.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-dashed border-border/60">
+                          <p className="event-detail-label mb-2">История статусов</p>
                           <ol className="issue-status-timeline">
                             {issue.status_timeline.map((event, index) => (
                               <li
@@ -252,26 +260,25 @@ export function Complaints() {
                           </ol>
                         </div>
                       )}
+
                       {issue.resolution_text && (
-                        <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm">
-                          <strong className="text-emerald-800">Ответ службы:</strong>
-                          <p className="m-0 mt-1 text-emerald-900">{issue.resolution_text}</p>
+                        <div className="literary-page-note mt-3">
+                          <strong>Ответ службы:</strong>
+                          <p className="m-0 mt-1">{issue.resolution_text}</p>
                         </div>
                       )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(issue.created_at)}
-                        {issue.resolved_at && ` · решено ${formatDate(issue.resolved_at)}`}
-                      </p>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
           )}
 
           <VkBotBanner />
         </div>
       </div>
+
+      <p className="literary-page-verse" aria-hidden>{LITERARY_VERSES.complaints}</p>
     </div>
   );
 }

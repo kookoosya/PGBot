@@ -456,6 +456,8 @@ def place_rating_meta(place: Place) -> PlaceRatingMeta:
             "display_review_count": place.review_count,
             "rating_source": "users",
         }
+    if place.external_source == "reference":
+        return {"display_rating": 0.0, "display_review_count": 0, "rating_source": "reference"}
     return {"display_rating": 0.0, "display_review_count": 0, "rating_source": None}
 
 

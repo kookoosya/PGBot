@@ -42,7 +42,7 @@ MAP_ROUTES: list[dict] = [
         "description": "Площадь, кафе, магазины, музей-заповедник",
         "stops": [
             {"name": "Площадь Ленина", "address": "пл. Ленина", "latitude": 57.0269, "longitude": 28.9115},
-            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0269, "longitude": 28.9115},
+            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0267, "longitude": 28.9112},
             {"name": "Пятёрочка", "address": "ул. Ленина, 20А", "latitude": 57.0264, "longitude": 28.9106},
             {"name": "Музей-заповедник (касса)", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
         ],
@@ -55,7 +55,7 @@ MAP_ROUTES: list[dict] = [
         "stops": [
             {"name": "Свято-Успенская лавра", "address": "Пушкинские Горы", "latitude": 57.0245, "longitude": 28.9125},
             {"name": "Площадь Ленина", "address": "пл. Ленина", "latitude": 57.0269, "longitude": 28.9115},
-            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0269, "longitude": 28.9115},
+            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0267, "longitude": 28.9112},
         ],
     },
     {
@@ -97,10 +97,10 @@ MAP_ROUTES: list[dict] = [
         "duration": "5–7 часов",
         "description": "Автовокзал → музеи → обратно",
         "stops": [
-            {"name": "Автовокзал Пушкинские Горы", "address": "ул. Красноармейская, 30", "latitude": 57.0280, "longitude": 28.9050},
+            {"name": "Автовокзал Пушкинские Горы", "address": "ул. Новоржевская, 30", "latitude": 57.0280, "longitude": 28.9050},
             {"name": "Касса музея-заповедника", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
             {"name": "Усадьба «Михайловское»", "address": "с. Михайловское", "latitude": 57.0540, "longitude": 28.9680},
-            {"name": "Автовокзал (обратно)", "address": "ул. Красноармейская, 30", "latitude": 57.0280, "longitude": 28.9050},
+            {"name": "Автовокзал (обратно)", "address": "ул. Новоржевская, 30", "latitude": 57.0280, "longitude": 28.9050},
         ],
     },
     {
@@ -124,7 +124,7 @@ MAP_ROUTES: list[dict] = [
         "stops": [
             {"name": "Касса музея-заповедника", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
             {"name": "Усадьба «Михайловское»", "address": "с. Михайловское", "latitude": 57.0540, "longitude": 28.9680},
-            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0269, "longitude": 28.9115},
+            {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0267, "longitude": 28.9112},
         ],
     },
 ]

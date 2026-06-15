@@ -1,7 +1,8 @@
 export function PageLoader() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">
-      Загрузка…
+    <div className="literary-page-loader" role="status" aria-live="polite">
+      <span className="literary-page-loader-icon" aria-hidden>🪶</span>
+      <span>Открываем страницу альбома…</span>
     </div>
   );
 }

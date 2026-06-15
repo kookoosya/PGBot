@@ -15,6 +15,14 @@ export function formatDate(date: string) {
   });
 }
 
+/** Короткая дата для карточек объявлений */
+export function formatShortDate(date: string) {
+  return new Date(date).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   NEW: "Новое",
   UNDER_REVIEW: "На рассмотрении",

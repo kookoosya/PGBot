@@ -102,6 +102,15 @@ class Settings(BaseSettings):
     # Yandex Maps Organization Search API (optional — enriches ratings)
     YANDEX_MAPS_API_KEY: str = ""
 
+    # Event import (TimePad, PRO.Культура, Kinopoisk posters)
+    TIMEPAD_API_TOKEN: str = ""
+    PROCULTURE_API_KEY: str = ""
+    PROCULTURE_PSKOV_LOCALE_ID: int = 0
+    KINOPOISK_API_TOKEN: str = ""
+
+    # Auto-sync village events from external sources (hours; 0 = disabled)
+    EVENT_SYNC_INTERVAL_HOURS: int = 12
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

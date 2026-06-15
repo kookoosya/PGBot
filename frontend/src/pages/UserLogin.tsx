@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
+import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { getUserHomePath } from "@/lib/navigation";
 import { useUserAuth } from "@/lib/userAuth";
+
+const copy = PAGE_SECTIONS.auth;
 
 export function UserLogin() {
   const [username, setUsername] = useState("");
@@ -34,21 +37,17 @@ export function UserLogin() {
   };
 
   return (
-    <div className="page-section max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-2">Вход в личный кабинет</h1>
-      <p className="text-center text-sm text-muted-foreground mb-8">
-        Для жителей, организаций и служб (администрация, ЖКХ).
-        Владелец сайта входит через{" "}
-        <Link to="/admin/login" className="text-primary hover:underline">отдельную панель</Link>.
-      </p>
+    <div className="literary-page page-section max-w-md mx-auto">
+      <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
 
-      <form onSubmit={submit} className="pushkin-card p-6 space-y-4">
+      <form onSubmit={submit} className="page-panel page-panel--forest literary-auth-panel space-y-4 mt-6">
         <Input
           placeholder="Логин"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
           autoComplete="username"
+          className="pushkin-select"
         />
         <Input
           type="password"
@@ -57,15 +56,23 @@ export function UserLogin() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
+          className="pushkin-select"
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Входим..." : "Войти"}
-        </Button>
+        {error && <p className="text-sm text-destructive m-0">{error}</p>}
+        <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
+          {loading ? "Входим…" : "Войти"}
+        </button>
       </form>
 
       <p className="text-center text-sm mt-6 text-muted-foreground">
-        Нет аккаунта? <Link to="/register" className="text-primary hover:underline">Зарегистрироваться</Link>
+        Нет аккаунта?{" "}
+        <Link to="/register" className="literary-link">
+          Зарегистрироваться
+        </Link>
+        <span className="mx-2 opacity-40">·</span>
+        <Link to="/admin/login" className="literary-link text-muted-foreground">
+          Панель владельца
+        </Link>
       </p>
     </div>
   );

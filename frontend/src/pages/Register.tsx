@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { api } from "@/lib/api";
 
 const ROLES = [
@@ -10,6 +10,8 @@ const ROLES = [
   { value: "social_service", label: "ЖКХ / управляющая компания" },
   { value: "moderator", label: "Модератор" },
 ];
+
+const copy = PAGE_SECTIONS.registerOfficial;
 
 export function Register() {
   const [form, setForm] = useState({
@@ -39,107 +41,118 @@ export function Register() {
 
   if (success) {
     return (
-      <div className="mx-auto max-w-lg px-6 py-16 text-center">
-        <div className="pushkin-card p-10">
-          <span className="text-5xl">✅</span>
-          <h2 className="text-2xl font-bold mt-4">Заявка отправлена!</h2>
-          <p className="text-muted-foreground mt-4">
-            Ваша заявка на регистрацию передана на верификацию.
-            Суперадминистратор проверит данные и активирует аккаунт.
-            Вы получите доступ после одобрения.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center mt-6">
-            <Link to="/cabinet/login?next=/official" className="text-primary hover:underline font-medium">
+      <div className="literary-page page-section max-w-lg mx-auto py-12">
+        <LiteraryEmptyState {...EMPTY_STATES.registerOfficialSuccess}>
+          <div className="landing-inline-actions flex flex-wrap gap-3 justify-center mt-4">
+            <Link to="/cabinet/login?next=/official" className="literary-btn literary-btn--primary no-underline">
               Войти после одобрения →
             </Link>
-            <Link to="/" className="text-muted-foreground hover:underline">На главную</Link>
+            <Link to="/" className="literary-btn literary-btn--ghost no-underline">На главную</Link>
           </div>
-        </div>
+        </LiteraryEmptyState>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-xl px-6 py-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">Регистрация службы</h2>
-        <p className="text-muted-foreground mt-2">
-          Для администрации, ЖКХ, управляющих компаний и соцслужб. После проверки — портал обращений жителей.
-        </p>
-        <p className="text-sm mt-3">
-          <Link to="/register" className="text-primary hover:underline">← Все варианты регистрации</Link>
-        </p>
-      </div>
+    <div className="literary-page page-section max-w-xl mx-auto">
+      <LiterarySectionHead
+        kicker={copy.kicker}
+        title={copy.title}
+        lead={copy.lead}
+        linkTo="/register"
+        linkLabel="← Все варианты"
+      />
 
-      <Card className="pushkin-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Данные для верификации</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Все поля обязательны. Заявка проверяется вручную, чтобы посторонние не получили доступ.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">ФИО</label>
-                <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} required />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Телефон</label>
-                <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+7..." required />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Организация</label>
-              <Input value={form.organization} onChange={(e) => set("organization", e.target.value)} placeholder="Администрация ПГО" required />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Должность</label>
-              <Input value={form.position} onChange={(e) => set("position", e.target.value)} placeholder="Специалист отдела ЖКХ" required />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Роль в системе</label>
-              <select
-                className="w-full h-10 rounded-md border px-3 text-sm bg-background"
-                value={form.role}
-                onChange={(e) => set("role", e.target.value)}
-              >
-                {ROLES.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">Логин</label>
-                <Input value={form.username} onChange={(e) => set("username", e.target.value)} required />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} required />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Пароль</label>
-              <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} minLength={10} required />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Комментарий для проверки</label>
-              <textarea
-                className="w-full rounded-md border px-3 py-2 text-sm bg-background min-h-[80px]"
-                value={form.verification_note}
-                onChange={(e) => set("verification_note", e.target.value)}
-                placeholder="Рабочий телефон, кабинет, ссылка на сайт организации..."
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Отправка..." : "Подать заявку на верификацию"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <p className="literary-page-note text-sm p-4 mb-6 mt-4">
+        <strong>Зачем верификация?</strong> Портал обращений — для служб посёлка.
+        Заявка проверяется вручную, чтобы посторонние не получили доступ к заявкам жителей.
+      </p>
+
+      <form onSubmit={handleSubmit} className="page-panel page-panel--forest literary-auth-panel space-y-4">
+        <h3 className="font-semibold m-0">Сотрудник</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Input
+            placeholder="ФИО полностью"
+            value={form.full_name}
+            onChange={(e) => set("full_name", e.target.value)}
+            required
+          />
+          <Input
+            placeholder="Телефон (+7...)"
+            value={form.phone}
+            onChange={(e) => set("phone", e.target.value)}
+            required
+          />
+        </div>
+        <Input
+          placeholder="Организация (Администрация ПГО)"
+          value={form.organization}
+          onChange={(e) => set("organization", e.target.value)}
+          required
+        />
+        <Input
+          placeholder="Должность (специалист отдела ЖКХ)"
+          value={form.position}
+          onChange={(e) => set("position", e.target.value)}
+          required
+        />
+        <div>
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Роль в системе</label>
+          <select
+            className="w-full h-10 rounded-md border px-3 text-sm bg-background"
+            value={form.role}
+            onChange={(e) => set("role", e.target.value)}
+          >
+            {ROLES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <h3 className="font-semibold pt-2 m-0">Учётная запись</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Input
+            placeholder="Логин"
+            value={form.username}
+            onChange={(e) => set("username", e.target.value)}
+            required
+          />
+          <Input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            required
+          />
+        </div>
+        <Input
+          type="password"
+          placeholder="Пароль (не менее 10 символов)"
+          value={form.password}
+          onChange={(e) => set("password", e.target.value)}
+          minLength={10}
+          required
+        />
+        <div>
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Комментарий для проверки</label>
+          <textarea
+            className="w-full rounded-md border px-3 py-2 text-sm bg-background min-h-[80px]"
+            value={form.verification_note}
+            onChange={(e) => set("verification_note", e.target.value)}
+            placeholder="Рабочий телефон, кабинет, ссылка на сайт организации…"
+          />
+        </div>
+
+        {error && <p className="text-sm text-destructive m-0">{error}</p>}
+        <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
+          {loading ? "Отправка…" : "Подать заявку на верификацию"}
+        </button>
+      </form>
+
+      <p className="literary-page-verse literary-page-verse--inline mt-8" aria-hidden>
+        {LITERARY_VERSES.register}
+      </p>
     </div>
   );
 }

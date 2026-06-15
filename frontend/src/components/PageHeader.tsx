@@ -7,7 +7,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ icon, title, subtitle, children }: PageHeaderProps) {
   return (
-    <div className="page-header">
+    <header className="page-header page-header--literary">
       <div className="page-header-inner">
         <span className="page-header-icon" aria-hidden>
           {icon}
@@ -18,6 +18,6 @@ export function PageHeader({ icon, title, subtitle, children }: PageHeaderProps)
         </div>
       </div>
       {children && <div className="page-header-actions">{children}</div>}
-    </div>
+    </header>
   );
 }

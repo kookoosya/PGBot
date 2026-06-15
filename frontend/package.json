@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/source-sans-3": "^5.2.9",
     "@fontsource/source-serif-4": "^5.2.9",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",

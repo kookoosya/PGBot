@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { api } from "@/lib/api";
 
 export function RegisterOrganization() {
@@ -40,33 +41,35 @@ export function RegisterOrganization() {
 
   if (success) {
     return (
-      <div className="page-section max-w-lg mx-auto text-center pushkin-card p-10">
-        <span className="text-5xl">✅</span>
-        <h2 className="text-2xl font-bold mt-4">Заявка принята</h2>
-        <p className="text-muted-foreground mt-4">
-          Мы проверим организацию и ответственное лицо. После одобрения вы сможете войти в личный кабинет
-          и управлять информацией о своём бизнесе на портале.
-        </p>
-        <div className="flex flex-wrap gap-4 justify-center mt-6">
-          <Link to="/cabinet/login" className="text-primary hover:underline font-medium">Войти после одобрения →</Link>
-          <Link to="/" className="text-muted-foreground hover:underline">На главную</Link>
-        </div>
+      <div className="literary-page page-section max-w-lg mx-auto py-12">
+        <LiteraryEmptyState {...EMPTY_STATES.registerSuccess} icon="✅">
+          <div className="landing-inline-actions flex flex-wrap gap-3 justify-center mt-4">
+            <Link to="/cabinet/login" className="literary-btn literary-btn--primary no-underline">
+              Войти после одобрения →
+            </Link>
+            <Link to="/" className="literary-btn literary-btn--ghost no-underline">На главную</Link>
+          </div>
+        </LiteraryEmptyState>
       </div>
     );
   }
 
   return (
-    <div className="page-section max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-2">Регистрация организации</h1>
-      <div className="human-note mb-8">
-        <p className="m-0 text-sm">
-          <strong>Почему полная форма?</strong> На портале посёлка публикуются магазины, аптеки и услуги.
-          Нам важно знать <strong>ответственное лицо</strong> — того, кто отвечает за информацию и
-          связь с жителями. Это защищает и вас, и посетителей сайта.
-        </p>
-      </div>
+    <div className="literary-page page-section max-w-xl mx-auto">
+      <LiterarySectionHead
+        kicker="🏢 Организация"
+        title="Регистрация организации"
+        lead="Магазины, аптеки и услуги — с ответственным лицом, чтобы жители доверяли информации на портале."
+        linkTo="/register"
+        linkLabel="← Все варианты"
+      />
 
-      <form onSubmit={submit} className="pushkin-card p-6 space-y-4">
+      <p className="literary-page-note text-sm p-4 mb-6 mt-4">
+        <strong>Зачем полная форма?</strong> На портале публикуются реальные организации посёлка.
+        Нам важно знать ответственное лицо — того, кто отвечает за информацию и связь с жителями.
+      </p>
+
+      <form onSubmit={submit} className="page-panel page-panel--forest literary-auth-panel space-y-4">
         <h3 className="font-semibold">Организация</h3>
         <Input placeholder="Название (ИП Иванов / ООО ...)" value={form.organization_name} onChange={(e) => set("organization_name", e.target.value)} required />
         <Input placeholder="Адрес в посёлке" value={form.org_address} onChange={(e) => set("org_address", e.target.value)} required />
@@ -91,15 +94,11 @@ export function RegisterOrganization() {
         <Input placeholder="Логин" value={form.username} onChange={(e) => set("username", e.target.value)} required />
         <Input type="password" placeholder="Пароль" value={form.password} onChange={(e) => set("password", e.target.value)} required minLength={10} />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Отправка..." : "Подать на проверку"}
-        </Button>
+        {error && <p className="text-sm text-destructive m-0">{error}</p>}
+        <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
+          {loading ? "Отправка…" : "Подать на проверку"}
+        </button>
       </form>
-
-      <p className="text-center text-sm mt-6 text-muted-foreground">
-        <Link to="/register" className="hover:underline">← Все варианты</Link>
-      </p>
     </div>
   );
 }

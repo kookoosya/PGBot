@@ -22,9 +22,13 @@ DEPRECATED_ADDRESS_PARTS = (
     "строителей, 1",
     "лермонтова, 10",
     "лермонтова, 42",
+    "красноармейская",
 )
 SKIP_OSM_SHOPS = {"parcel_locker", "outpost", "kiosk", "ticket", "lottery"}
 SKIP_OSM_AMENITIES = {"parcel_locker", "vending_machine"}
+
+# Радиус, в котором OSM/Yandex считается дублем справочника
+REF_DEDUP_KM = 0.15
 
 
 def _norm_name(name: str) -> str:
@@ -53,6 +57,28 @@ def _distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return 2 * r * math.asin(math.sqrt(a))
 
 
+def _nearby_reference(
+    place: Place,
+    reference: list[Place],
+    *,
+    radius_km: float = REF_DEDUP_KM,
+) -> Place | None:
+    """Найти справочную точку рядом с тем же смыслом (имя или категория сети)."""
+    brand = _norm_name(place.name)
+    for ref in reference:
+        if _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) > radius_km:
+            continue
+        if _names_overlap(place.name, ref.name):
+            return ref
+        # Сетевые магазины: дубль только если рядом уже есть справочник той же сети
+        if place.category == ref.category:
+            ref_brand = _norm_name(ref.name)
+            for token in ("пятёрочка", "пятерочка", "магнит", "аптека"):
+                if token in brand and token in ref_brand:
+                    return ref
+    return None
+
+
 async def cleanup_map_places(db: AsyncSession) -> dict:
     """Деактивируем Авито, посуточку-агрегаторы, мусор OSM и дубли."""
     deactivated = 0
@@ -77,40 +103,19 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
         elif place.external_source == "seed":
             reason = "legacy_seed"
         elif place.external_source in ("osm", "yandex"):
-            brand = _norm_name(place.name)
-            ref_brands = {_norm_name(r.name) for r in reference}
-            has_pyaterochka = any("пятёрочка" in b or "пятерочка" in b for b in ref_brands)
-            has_magnit = any("магнит" in b for b in ref_brands)
-            has_apteka = any("аптека" in b for b in ref_brands)
-            has_gas = any(r.category == PlaceCategory.GAS for r in reference)
-            if has_pyaterochka and ("пятёрочка" in brand or "пятерочка" in brand):
-                reason = "brand_duplicate_ref"
-            elif has_magnit and "магнит" in brand and place.category == PlaceCategory.SUPERMARKET:
-                reason = "brand_duplicate_ref"
-            elif has_apteka and "аптека" in brand and place.category == PlaceCategory.PHARMACY:
-                reason = "brand_duplicate_ref"
-            elif has_gas and place.category == PlaceCategory.GAS:
-                reason = "brand_duplicate_ref"
+            name_l = _norm_name(place.name)
+            if any(skip in name_l for skip in SKIP_OSM_NAMES):
+                reason = "osm_junk_name"
+            elif not place.address and not place.phone:
+                reason = "osm_no_contact"
             elif place.category in (
                 PlaceCategory.SUPERMARKET,
                 PlaceCategory.PHARMACY,
                 PlaceCategory.GAS,
             ) and not place.address:
                 reason = "unverified_no_address"
-        elif place.external_source == "osm":
-            name_l = _norm_name(place.name)
-            if any(skip in name_l for skip in SKIP_OSM_NAMES):
-                reason = "osm_junk_name"
-            elif not place.address and not place.phone:
-                reason = "osm_no_contact"
-            else:
-                for ref in reference:
-                    if (
-                        _distance_km(place.latitude, place.longitude, ref.latitude, ref.longitude) < 0.2
-                        and (_names_overlap(place.name, ref.name) or place.category == ref.category)
-                    ):
-                        reason = "osm_duplicate_ref"
-                        break
+            elif _nearby_reference(place, reference):
+                reason = "duplicate_ref_nearby"
 
         if reason:
             place.is_active = False

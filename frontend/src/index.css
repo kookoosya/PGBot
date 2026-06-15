@@ -4,28 +4,29 @@
 
 @layer base {
   :root {
-    --background: 42 38% 97%;
-    --foreground: 152 42% 12%;
-    --card: 40 55% 99%;
-    --card-foreground: 152 42% 12%;
-    --primary: 152 48% 20%;
-    --primary-foreground: 42 85% 94%;
-    --secondary: 42 52% 90%;
-    --secondary-foreground: 152 40% 14%;
-    --muted: 42 28% 92%;
-    --muted-foreground: 152 18% 32%;
-    --accent: 42 78% 46%;
-    --accent-foreground: 152 48% 10%;
-    --destructive: 0 72% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 42 35% 78%;
-    --input: 42 40% 88%;
-    --ring: 42 78% 46%;
+    /* Пушкиногорский альбом */
+    --background: 40 33% 95%;
+    --foreground: 30 14% 15%;
+    --card: 40 100% 98%;
+    --card-foreground: 30 14% 15%;
+    --primary: 158 26% 23%;
+    --primary-foreground: 40 33% 95%;
+    --secondary: 40 28% 92%;
+    --secondary-foreground: 30 14% 15%;
+    --muted: 40 22% 90%;
+    --muted-foreground: 30 10% 38%;
+    --accent: 43 89% 38%;
+    --accent-foreground: 40 33% 95%;
+    --destructive: 347 50% 30%;
+    --destructive-foreground: 40 33% 95%;
+    --border: 40 22% 82%;
+    --input: 40 30% 88%;
+    --ring: 43 89% 38%;
     --radius: 0.875rem;
-    --gold: 42 78% 46%;
-    --forest: 152 48% 20%;
-    --burgundy: 350 52% 30%;
-    --parchment: 42 38% 97%;
+    --gold: 43 89% 38%;
+    --forest: 158 26% 23%;
+    --burgundy: 347 50% 30%;
+    --parchment: 40 33% 95%;
   }
 }
 
@@ -1105,7 +1106,14 @@
     box-shadow:
       0 4px 14px rgba(0, 0, 0, 0.38),
       0 0 0 2px rgba(255, 255, 255, 0.35);
-    animation: pinBounce 3s ease-in-out infinite;
+  }
+  .map-marker-ref {
+    border-width: 3.5px;
+    border-color: hsl(48 100% 62%);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.42),
+      0 0 0 2px hsl(48 100% 70% / 0.45),
+      0 0 12px hsl(48 100% 55% / 0.35);
   }
   .map-marker-emoji {
     transform: rotate(45deg);
@@ -1134,6 +1142,35 @@
     box-shadow:
       0 4px 16px rgba(0, 0, 0, 0.4),
       0 0 14px hsl(48 100% 55% / 0.55);
+    animation: pinBounce 3s ease-in-out infinite;
+  }
+
+  .map-route-stop-pin {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, hsl(42 90% 62%), hsl(42 78% 48%));
+    color: hsl(152 50% 10%);
+    border: 2px solid hsl(42 95% 78%);
+    font-size: 0.75rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  .map-taxi-overlay {
+    @apply absolute inset-0 z-[900] flex items-center justify-center pointer-events-none;
+    background: hsl(220 40% 18% / 0.12);
+    backdrop-filter: blur(1px);
+  }
+  .map-taxi-overlay p {
+    @apply m-0 px-4 py-2 rounded-xl text-sm font-bold;
+    background: hsl(40 55% 99% / 0.92);
+    border: 2px solid hsl(42 65% 50%);
+    color: hsl(152 40% 18%);
+    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.15);
   }
 
   .map-overlay-controls {
@@ -1476,6 +1513,19 @@
   .org-list-rating {
     @apply text-xs font-bold shrink-0;
     color: hsl(42 78% 35%);
+  }
+
+  .org-list-ref {
+    @apply text-xs font-bold shrink-0;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(152 48% 22%);
+    color: hsl(42 85% 92%);
+    line-height: 1;
   }
 
   .org-detail-card {

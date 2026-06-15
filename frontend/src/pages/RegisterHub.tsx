@@ -1,67 +1,70 @@
 import { Link } from "react-router-dom";
-import { BRAND } from "@/lib/branding";
+import { LiterarySectionHead } from "@/components/literary";
+import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+
+const copy = PAGE_SECTIONS.register;
 
 const options = [
   {
     to: "/signup",
     icon: "🏠",
     title: "Я житель",
-    desc: "Простая регистрация — имя, телефон и пароль. Личный кабинет для объявлений и отзывов.",
+    desc: "Имя, телефон и пароль — личный кабинет для объявлений, афиши и обращений.",
     badge: "2 минуты",
   },
   {
     to: "/register/organization",
     icon: "🏢",
     title: "Организация",
-    desc: "Магазин, аптека, ИП — полная регистрация с ответственным лицом. Проверяем, чтобы на сайте были только настоящие организации.",
+    desc: "Магазин, аптека, ИП — с ответственным лицом. На сайте только проверенные организации.",
     badge: "Полная форма",
   },
   {
     to: "/register/official",
     icon: "🏛",
     title: "Администрация / ЖКХ",
-    desc: "Для сотрудников администрации, ЖКХ, управляющих компаний и соцслужб. После проверки — доступ к обращениям жителей.",
+    desc: "Для служб посёлка. После проверки — доступ к обращениям жителей.",
     badge: "Верификация",
   },
   {
     to: "/services/register",
     icon: "💇",
     title: "Мастер услуг",
-    desc: "Маникюр, стрижки, ремонт — профиль в каталоге после модерации.",
+    desc: "Маникюр, стрижки, ремонт — профиль в справочнике после модерации.",
     badge: "Модерация",
   },
 ];
 
 export function RegisterHub() {
   return (
-    <div className="page-section max-w-3xl">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold">Регистрация на портале</h1>
-        <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-          {BRAND.name} — для жителей, бизнеса и служб. Выберите подходящий вариант.
-        </p>
-      </div>
+    <div className="literary-page page-section max-w-3xl">
+      <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
 
-      <div className="space-y-4">
+      <div className="space-y-3 mt-6">
         {options.map((o) => (
-          <Link key={o.to} to={o.to} className="register-option-card no-underline text-inherit">
-            <span className="text-4xl">{o.icon}</span>
-            <div className="flex-1">
+          <Link key={o.to} to={o.to} className="literary-register-option no-underline text-inherit block">
+            <span className="literary-register-option-icon" aria-hidden>{o.icon}</span>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-bold m-0">{o.title}</h2>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
-                  {o.badge}
-                </span>
+                <h2 className="literary-title text-lg m-0">{o.title}</h2>
+                <span className="literary-register-badge">{o.badge}</span>
               </div>
-              <p className="text-sm text-muted-foreground mt-2 mb-0">{o.desc}</p>
+              <p className="text-sm text-muted-foreground mt-2 mb-0 leading-relaxed">{o.desc}</p>
             </div>
-            <span className="text-2xl opacity-50">→</span>
+            <span className="text-xl opacity-40 shrink-0" aria-hidden>→</span>
           </Link>
         ))}
       </div>
 
       <p className="text-center text-sm text-muted-foreground mt-8">
-        Уже есть аккаунт? <Link to="/cabinet/login" className="text-primary hover:underline">Войти в кабинет</Link>
+        Уже есть аккаунт?{" "}
+        <Link to="/cabinet/login" className="literary-link">
+          Войти в кабинет
+        </Link>
+      </p>
+
+      <p className="literary-page-verse literary-page-verse--inline mt-6" aria-hidden>
+        {LITERARY_VERSES.register}
       </p>
     </div>
   );

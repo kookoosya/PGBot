@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { useUserAuth } from "@/lib/userAuth";
@@ -34,23 +34,28 @@ export function Signup() {
   };
 
   return (
-    <div className="page-section max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-2">Регистрация жителя</h1>
-      <p className="text-center text-sm text-muted-foreground mb-8">
-        Простая форма — без лишних полей. Сразу получите личный кабинет.
-      </p>
+    <div className="literary-page page-section max-w-md mx-auto">
+      <LiterarySectionHead
+        kicker="🏠 Житель"
+        title="Регистрация жителя"
+        lead="Простая форма — имя, контакты и пароль. Сразу откроется личный кабинет."
+        linkTo="/register"
+        linkLabel="← Все варианты"
+      />
 
-      <form onSubmit={submit} className="pushkin-card p-6 space-y-4">
+      <form onSubmit={submit} className="page-panel page-panel--gold literary-auth-panel space-y-4 mt-6">
         <Input
           placeholder="Как к вам обращаться?"
           value={form.full_name}
           onChange={(e) => setForm({ ...form, full_name: e.target.value })}
           required
+          className="pushkin-select"
         />
         <Input
           placeholder="Телефон"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="pushkin-select"
         />
         <Input
           type="email"
@@ -58,12 +63,14 @@ export function Signup() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           required
+          className="pushkin-select"
         />
         <Input
           placeholder="Логин"
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           required
+          className="pushkin-select"
         />
         <Input
           type="password"
@@ -72,16 +79,13 @@ export function Signup() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
           minLength={10}
+          className="pushkin-select"
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Создаём кабинет..." : "Зарегистрироваться"}
-        </Button>
+        {error && <p className="text-sm text-destructive m-0">{error}</p>}
+        <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
+          {loading ? "Создаём кабинет…" : "Зарегистрироваться"}
+        </button>
       </form>
-
-      <p className="text-center text-sm mt-6 text-muted-foreground">
-        <Link to="/register" className="hover:underline">← Все варианты регистрации</Link>
-      </p>
     </div>
   );
 }

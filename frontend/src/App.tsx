@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { PageLoader } from "./components/PageLoader";
+import { LiteraryInlineLoader } from "./components/literary";
 import { Layout } from "./components/layout/Layout";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { useAuth } from "./lib/auth";
@@ -53,14 +54,14 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function UserRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUserAuth();
-  if (loading) return <div className="page-section text-center text-muted-foreground">Загрузка...</div>;
+  if (loading) return <LiteraryInlineLoader label="Проверяем доступ…" />;
   if (!user) return <Navigate to="/cabinet/login" replace />;
   return <>{children}</>;
 }
 
 function OfficialRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUserAuth();
-  if (loading) return <div className="page-section text-center text-muted-foreground">Загрузка...</div>;
+  if (loading) return <LiteraryInlineLoader label="Проверяем доступ…" />;
   if (!user) return <Navigate to="/cabinet/login?next=/official" replace />;
   if (!isOfficialUser(user)) return <Navigate to="/cabinet" replace />;
   return <>{children}</>;

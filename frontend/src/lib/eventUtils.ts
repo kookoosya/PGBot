@@ -1,10 +1,55 @@
-import type { EventRegion } from "@/lib/api";
+import type { EventRegion, PublicEvent, TodayEventSnippet } from "@/lib/api";
+
+export type ShowGroupable = {
+  id: number;
+  title: string;
+  starts_at?: string;
+  starts_at_label: string;
+  ends_at_label?: string | null;
+  location?: string | null;
+  region?: EventRegion;
+  category?: string;
+  category_label?: string;
+  genre?: string | null;
+  poster_url?: string | null;
+  description?: string | null;
+  region_label?: string;
+  source?: string | null;
+  source_url?: string | null;
+};
+
+export type GroupedPublicEvent = ShowGroupable & {
+  extraSessions?: ShowGroupable[];
+};
+
+export type EventCardEvent = PublicEvent | TodayEventSnippet | GroupedPublicEvent;
 
 export const EVENT_SOURCE_LABELS: Record<string, string> = {
   vk: "ВКонтакте",
   kudago: "KudaGo",
+  timepad: "TimePad",
+  orbilet: "Orbilet",
+  kinopskov: "Kinopskov60",
+  mirage: "Мираж Синема",
+  silver: "Silver Cinema",
+  proculture: "PRO.Культура",
   manual: "Организатор",
 };
+
+const CINEMA_AFISHA_SOURCES = new Set([
+  "orbilet",
+  "kinopskov",
+  "mirage",
+  "silver",
+  "kudago",
+  "timepad",
+]);
+
+const CULTURE_LIKE_TITLE =
+  /культурно-просветительн|мероприяти[ея]|петрушкин|спектакл|концерт|выставк|праздник|фестиваль|экскурс|лекци|ярмарк|театр|музе[йя]|мастер[- ]класс|постановк|игра\s*«/i;
+
+const GENERIC_CINEMA_TITLE =
+  /^(кино|киноафиша|афиша|сеанс|сеансы|кинотеатр|кинопоказ|премьера недели|новинки кино|в прокате)$/i;
 
 export function eventSourceLabel(source: string | null | undefined): string {
   if (!source) return "Организатор";
@@ -16,8 +61,125 @@ export function regionChipClass(regionLabel: string): string {
   return "events-region-chip events-region-chip--pushkin";
 }
 
+export function isCinemaEvent(event: { category?: string }): boolean {
+  return event.category === "cinema";
+}
+
+/** Only real film sessions — not miscategorized culture events. */
+export function isRealCinemaEvent(event: EventCardEvent): boolean {
+  if (!isCinemaEvent(event)) return false;
+
+  const title = event.title.trim();
+  if (CULTURE_LIKE_TITLE.test(title)) return false;
+  if (GENERIC_CINEMA_TITLE.test(title)) return false;
+
+  const source = "source" in event ? event.source : null;
+  if (source && CINEMA_AFISHA_SOURCES.has(source)) return true;
+
+  if (event.genre) return true;
+  if (/[«»"]/.test(title)) return true;
+
+  return false;
+}
+
 export function regionLabelFromFilter(region: EventRegion): string {
   return region === "pskov" ? "Псков" : "Пушкинские Горы";
+}
+
+function collapseRepeatedPhrases(text: string): string {
+  const parts = text
+    .split(/(?<=[.!?…])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length <= 1) return text.trim();
+
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/\s+/g, " ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(part);
+  }
+  return unique.join(" ").trim();
+}
+
+export function eventTeaser(event: EventCardEvent, maxLen = 120): string {
+  if (!event.description) return "";
+
+  let text = event.description
+    .replace(/^Жанр:\s*[^.]+\.\s*/i, "")
+    .replace(/\s*Билеты на orbilet\.ru\.?\s*/gi, "")
+    .replace(/\s*Билеты на mirage\.ru\.?\s*/gi, "")
+    .replace(/\s*Билеты на silvercinema\.ru\.?\s*/gi, "")
+    .trim();
+
+  const title = event.title.replace(/"/g, "").trim();
+  const quotedTitle = `"${title}"`;
+  for (const prefix of [quotedTitle, title, `«${title}»`]) {
+    while (text.startsWith(prefix)) {
+      text = text.slice(prefix.length).replace(/^[.\s"«»]+/, "").trim();
+    }
+  }
+
+  text = text
+    .replace(/^Место:\s*[^.]+\.\s*/gi, "")
+    .replace(/^Сеанс:\s*[^.]+\.\s*/gi, "")
+    .replace(/^Зал №\d+\.\s*/gi, "")
+    .trim();
+
+  if (event.location) {
+    const location = event.location.trim();
+    const escaped = location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    text = text.replace(new RegExp(`^${escaped}[.\\s]+`, "i"), "").trim();
+  }
+
+  text = collapseRepeatedPhrases(text);
+
+  if (!text || text === event.location) return "";
+  if (text.length <= maxLen) return text;
+  return `${text.slice(0, maxLen - 1).trim()}…`;
+}
+
+const STOCK_GALLERY_PREFIX = "/images/gallery/";
+
+export function isDisplayablePoster(
+  posterUrl: string | null | undefined,
+  category?: string,
+): boolean {
+  if (!posterUrl?.trim()) return false;
+  const lower = posterUrl.toLowerCase();
+  if (posterUrl.startsWith(STOCK_GALLERY_PREFIX)) return false;
+  if (lower.includes("no-poster") || lower.includes("no_poster")) return false;
+  if (category === "cinema" && posterUrl.startsWith("/images/")) return false;
+  return true;
+}
+
+export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
+  const buckets = new Map<string, T[]>();
+  for (const event of events) {
+    const key = `${event.title}|${event.location || ""}|${event.region || event.region_label || ""}`;
+    const list = buckets.get(key) ?? [];
+    list.push(event);
+    buckets.set(key, list);
+  }
+
+  const grouped: (T & { extraSessions?: T[] })[] = [];
+  for (const list of buckets.values()) {
+    list.sort((a, b) => (a.starts_at || a.starts_at_label).localeCompare(b.starts_at || b.starts_at_label));
+    const [first, ...rest] = list;
+    grouped.push(rest.length ? { ...first, extraSessions: rest } : first);
+  }
+  return grouped.sort((a, b) =>
+    (a.starts_at || a.starts_at_label).localeCompare(b.starts_at || b.starts_at_label),
+  );
+}
+
+export function formatExtraSessions(sessions: Pick<ShowGroupable, "starts_at_label">[]): string {
+  if (!sessions.length) return "";
+  const labels = sessions.slice(0, 3).map((s) => s.starts_at_label);
+  const tail = sessions.length > 3 ? ` и ещё ${sessions.length - 3}` : "";
+  return `Ещё сеансы: ${labels.join(", ")}${tail}`;
 }
 
 export async function shareEventUrl(title: string): Promise<string | null> {
