@@ -6,7 +6,7 @@ import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
-import { formatDate, issueStatusHint, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
 const STATUS_LABELS_VERIFY: Record<string, { text: string; tone: string }> = {
   pending: { text: "На проверке — мы свяжемся с вами", tone: "text-amber-700 bg-amber-50 border-amber-200" },
@@ -40,6 +40,7 @@ export function UserCabinet() {
 
   const status = user.verification_status ? STATUS_LABELS_VERIFY[user.verification_status] : null;
   const isOrg = !!user.organization;
+  const activeIssues = recentIssues.filter((i) => ISSUE_ACTIVE_STATUSES.has(i.status)).length;
 
   return (
     <div className="literary-page page-section max-w-2xl mx-auto">
@@ -52,6 +53,12 @@ export function UserCabinet() {
       </PageHeader>
 
       <p className="literary-lead text-center mb-6 -mt-2">{PAGE_SECTIONS.cabinet.lead}</p>
+
+      <div className="literary-quick-actions mb-6">
+        <Link to="/complaints" className="literary-btn literary-btn--primary text-sm no-underline">⚠️ Обращение</Link>
+        <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">📋 Объявление</Link>
+        <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">📅 Афиша</Link>
+      </div>
 
       <div className="literary-card literary-card--forest p-6 space-y-4 mb-6">
         <h2 className="literary-title text-lg m-0">Профиль</h2>
@@ -104,7 +111,14 @@ export function UserCabinet() {
         <div className="literary-card literary-card--gold p-6 mb-6 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="literary-title text-lg m-0">Мои обращения</h2>
-            <Link to="/complaints" className="literary-link text-sm">Все →</Link>
+            <div className="flex items-center gap-2">
+              {activeIssues > 0 && (
+                <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+                  {activeIssues} в работе
+                </span>
+              )}
+              <Link to="/complaints" className="literary-link text-sm">Все →</Link>
+            </div>
           </div>
           {recentIssues.map((issue) => (
             <Link
@@ -120,6 +134,12 @@ export function UserCabinet() {
               <p className="text-base mt-1 line-clamp-2">{issue.ai_analysis?.summary || issue.description}</p>
               {issueStatusHint(issue.status) && (
                 <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
+              )}
+              {issue.resolution_text && (
+                <p className="text-sm mt-1 line-clamp-2">
+                  <span className="text-muted-foreground">Ответ службы: </span>
+                  {issue.resolution_text}
+                </p>
               )}
             </Link>
           ))}

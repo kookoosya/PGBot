@@ -26,7 +26,7 @@ from app.services.issue_processor import process_incoming_message
 from app.services.issue_utils import issue_display_summary
 from app.services.notifications import issue_status_hint
 from app.services.site_urls import public_site_url
-from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_CLASSIFIEDS, LINK_COMPLAINTS, LINK_EVENTS, LINK_MAP, LINK_SUBMIT_CLASSIFIED, LINK_SUBMIT_COMPLAINT
+from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_CABINET, LINK_CLASSIFIEDS, LINK_COMPLAINTS, LINK_EVENTS, LINK_MAP, LINK_SUBMIT_CLASSIFIED, LINK_SUBMIT_COMPLAINT
 from app.services.vk import (
     get_ai_keyboard,
     get_inline_links_keyboard,
@@ -485,8 +485,27 @@ async def handle_my_issues(ctx: VkRouteContext) -> None:
     )
 
 
+async def handle_cabinet(ctx: VkRouteContext) -> None:
+    await _send_with_site_links(
+        ctx.peer_id,
+        box(
+            "Личный кабинет",
+            "На сайте — ваши обращения, профиль и быстрые ссылки.\n"
+            "Войдите по логину, который указали при регистрации.",
+        ),
+        (LINK_CABINET, "/cabinet/login"),
+        (LINK_COMPLAINTS, "/complaints"),
+    )
+
+
 async def handle_help(ctx: VkRouteContext) -> None:
-    await _send_welcome(ctx, help_text())
+    await _send_with_site_links(
+        ctx.peer_id,
+        help_text(),
+        (LINK_SUBMIT_CLASSIFIED, "/classifieds?new=1"),
+        (LINK_SUBMIT_COMPLAINT, "/complaints"),
+        (LINK_EVENTS, "/events"),
+    )
 
 
 async def handle_weather(ctx: VkRouteContext) -> None:
@@ -534,6 +553,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "site": handle_site,
     "map": handle_map,
     "my_issues": handle_my_issues,
+    "cabinet": handle_cabinet,
     "events": handle_events,
     "weather": handle_weather,
     "help": handle_help,
@@ -630,6 +650,12 @@ COMMAND_ALIASES: dict[str, str] = {
     "почасовой прогноз": "weather",
     "📋 мои обращения": "my_issues",
     "мои обращения": "my_issues",
+    "статус обращения": "my_issues",
+    "статус заявки": "my_issues",
+    "🪶 кабинет": "cabinet",
+    "кабинет": "cabinet",
+    "личный кабинет": "cabinet",
+    "мой кабинет": "cabinet",
     "📅 афиша": "events",
     "афиша": "events",
     "события": "events",
