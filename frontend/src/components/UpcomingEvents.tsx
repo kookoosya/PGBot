@@ -150,7 +150,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
       </section>
 
       {showCinemaBlock && (
-        <CinemaSpotlight featured={isLanding}>
+        <CinemaSpotlight featured={isLanding} empty={isLanding && displayCinema.length === 0}>
           {displayCinema.length > 0 ? (
             <ol
               className={[
@@ -158,6 +158,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
                 "events-grid--cinema",
                 isLanding ? "events-grid--cinema-landing" : "",
                 cinemaSingle ? "events-grid--cinema-single" : "",
+                isLanding && displayCinema.length === 2 ? "events-grid--cinema-pair" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -169,7 +170,11 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
                   descLimit={isLanding ? 90 : 100}
                   spotlight
                   className={
-                    isLanding && (index === 0 || cinemaSingle) ? "event-card-landing-featured" : ""
+                    isLanding && (index === 0 || cinemaSingle)
+                      ? "event-card-landing-featured"
+                      : isLanding && index === 1
+                        ? "event-card-landing-secondary"
+                        : ""
                   }
                 />
               ))}
@@ -178,7 +183,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
             <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark">
               <div className="landing-inline-actions">
                 <Link to="/events" className="literary-btn literary-btn--gold no-underline">
-                  Вся афиша →
+                  Смотреть афишу →
                 </Link>
               </div>
             </LiteraryEmptyState>

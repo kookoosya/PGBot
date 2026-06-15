@@ -42,8 +42,9 @@
   .literary-lead {
     margin: 0.5rem 0 0;
     max-width: 42rem;
+    font-family: "Source Serif 4", Georgia, serif;
     font-size: 0.9375rem;
-    line-height: 1.6;
+    line-height: 1.65;
     color: hsl(var(--muted-foreground));
   }
   .literary-section-link {
@@ -63,9 +64,20 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.35rem;
+    gap: 0.5rem;
     flex-shrink: 0;
     text-align: right;
+  }
+  .literary-section-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .literary-section-link {
+    text-decoration: none;
+    border-bottom: 1px solid hsl(var(--gold) / 0.3);
+    padding-bottom: 0.1rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
   }
 
   /* === Альбомные карточки === */
@@ -356,8 +368,9 @@
 
   /* === Лендинг: альбомные блоки === */
   .landing-album {
-    --landing-gap: 2.5rem;
-    --landing-panel-pad: 1.5rem 1.65rem 1.55rem 1.75rem;
+    --landing-gap: 2.75rem;
+    --landing-inner-gap: 1.25rem;
+    --landing-panel-pad: clamp(1.25rem, 3vw, 1.5rem) clamp(1.35rem, 3.5vw, 1.75rem) clamp(1.35rem, 3vw, 1.55rem);
     position: relative;
     background:
       radial-gradient(ellipse 120% 60% at 50% 0%, hsl(var(--gold) / 0.04) 0%, transparent 55%),
@@ -375,7 +388,7 @@
   .landing-album-inner {
     position: relative;
     z-index: 1;
-    padding: 2.25rem 0 3.25rem;
+    padding: clamp(1.75rem, 4vw, 2.5rem) 0 clamp(2.5rem, 5vw, 3.5rem);
   }
   .landing-album-section {
     padding: 0;
@@ -419,7 +432,7 @@
 
   .landing-today {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
   .landing-stack {
     display: grid;
@@ -435,12 +448,25 @@
       inset 0 1px 0 hsl(40 100% 100% / 0.55);
   }
   .landing-block .literary-section-head {
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.25rem;
     align-items: flex-start;
+    gap: 1rem 1.5rem;
   }
   @media (min-width: 640px) {
     .landing-block .literary-section-head {
       align-items: flex-end;
+    }
+  }
+  @media (max-width: 639px) {
+    .landing-block .literary-section-head {
+      flex-direction: column;
+    }
+    .landing-block .literary-section-head-aside {
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
     }
   }
   .landing-block-footer {
@@ -455,22 +481,35 @@
   }
   .landing-verse,
   .landing-section-verse {
-    margin: 1.1rem 0 0;
+    margin: 1.15rem 0 0;
+    padding-top: 0.85rem;
+    border-top: 1px dashed hsl(var(--border) / 0.55);
     font-family: "Playfair Display", Georgia, serif;
     font-style: italic;
     font-size: 0.8125rem;
-    color: hsl(var(--gold) / 0.8);
+    line-height: 1.5;
+    color: hsl(var(--gold) / 0.75);
     text-align: right;
+  }
+  .landing-section-verse--today {
+    margin-top: 1rem;
+    text-align: center;
+    border-top-color: hsl(var(--gold) / 0.2);
   }
   .landing-block-footer .landing-verse {
     margin: 0;
     max-width: 20rem;
   }
   .landing-muted,
-  .landing-updated {
+  .landing-updated,
+  .landing-loading {
     margin: 0;
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
+  }
+  .landing-loading {
+    font-style: italic;
+    padding: 0.5rem 0;
   }
   .landing-updated {
     flex-shrink: 0;
@@ -506,7 +545,23 @@
   }
   .landing-events {
     display: grid;
-    gap: 1.35rem;
+    gap: var(--landing-inner-gap);
+  }
+
+  /* Единые hover-эффекты на главной */
+  .landing-album .literary-card,
+  .landing-album .literary-job-card,
+  .landing-album .literary-useful-card {
+    transition:
+      box-shadow 0.22s ease,
+      transform 0.22s ease,
+      border-color 0.22s ease;
+  }
+  .landing-album .literary-card:hover {
+    border-color: hsl(var(--gold) / 0.32);
+  }
+  .landing-album .literary-job-card:hover {
+    border-color: hsl(var(--forest) / 0.35);
   }
   .landing-vk-panel {
     text-align: center;
@@ -612,14 +667,16 @@
 
   /* Пустые состояния — варианты */
   .literary-empty--landing {
-    background: linear-gradient(165deg, hsl(var(--card) / 0.7), hsl(var(--parchment) / 0.5));
+    background: linear-gradient(165deg, hsl(var(--card) / 0.75), hsl(var(--parchment) / 0.55));
     border-style: solid;
-    border-color: hsl(var(--border) / 0.7);
+    border-color: hsl(var(--border) / 0.65);
+    box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.4);
   }
   .literary-empty--dark {
-    background: hsl(30 14% 12% / 0.45);
-    border-color: hsl(var(--gold) / 0.25);
+    background: hsl(30 14% 12% / 0.4);
+    border-color: hsl(var(--gold) / 0.22);
     border-style: dashed;
+    backdrop-filter: blur(6px);
   }
   .literary-empty--dark .literary-empty-title {
     color: hsl(var(--parchment));
@@ -678,15 +735,22 @@
 
   /* Полезное рядом — landing */
   .literary-useful-grid--landing {
-    gap: 0.85rem;
+    gap: 0.8rem;
     align-items: stretch;
   }
   .literary-useful-grid--landing .literary-useful-card {
-    min-height: 8.5rem;
-    padding: 1.1rem 1.15rem 1.1rem 1.3rem;
-    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.75));
+    min-height: 8.25rem;
+    padding: 1.05rem 1.1rem 1.05rem 1.25rem;
+    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.72));
     box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.45);
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  @media (max-width: 479px) {
+    .literary-useful-grid--landing {
+      grid-template-columns: 1fr;
+    }
+    .literary-useful-grid--landing .literary-useful-card {
+      min-height: auto;
+    }
   }
   .literary-useful-grid--landing .literary-useful-card:hover {
     border-color: hsl(var(--gold) / 0.45);
@@ -696,7 +760,11 @@
   .literary-useful-grid--landing .literary-useful-card:hover .literary-useful-title {
     color: hsl(var(--gold));
   }
-  .literary-useful-grid--landing .literary-useful-title {
+  .literary-useful-grid--landing .literary-useful-card:hover .literary-useful-go {
+    color: hsl(var(--forest));
+  }
+  .literary-useful-grid--landing .literary-useful-title,
+  .literary-useful-grid--landing .literary-useful-go {
     transition: color 0.15s ease;
   }
 
@@ -704,8 +772,11 @@
   .literary-job-card--landing {
     height: 100%;
     align-content: start;
-    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.8));
+    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.78));
     box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.45);
+  }
+  .literary-job-card--landing::before {
+    background: linear-gradient(180deg, hsl(var(--forest)), hsl(var(--gold) / 0.7));
   }
   .literary-job-card--landing:hover .literary-job-title {
     color: hsl(var(--gold));
@@ -914,18 +985,79 @@
   }
   .cinema-spotlight--featured .cinema-spotlight-glow {
     background:
-      radial-gradient(ellipse 60% 50% at 30% 20%, hsl(var(--gold) / 0.1) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 75% 30%, hsl(var(--burgundy) / 0.15) 0%, transparent 55%),
-      radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--gold) / 0.12) 0%, transparent 70%);
+      radial-gradient(ellipse 60% 50% at 30% 20%, hsl(var(--gold) / 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 75% 30%, hsl(var(--burgundy) / 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--gold) / 0.14) 0%, transparent 70%);
   }
-  .events-grid--cinema-landing {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    align-items: stretch;
+  .cinema-spotlight-glow--soft {
+    top: -30%;
+    width: 90%;
+    height: 55%;
+    background: radial-gradient(ellipse, hsl(var(--gold) / 0.08) 0%, transparent 65%);
+  }
+  .cinema-spotlight--empty {
+    padding-bottom: 2rem;
+  }
+  .cinema-spotlight--empty .literary-section-head {
+    margin-bottom: 1.15rem;
+  }
+  .cinema-spotlight--empty .literary-empty--dark {
+    max-width: 28rem;
+    margin: 0 auto;
+  }
+  .events-grid--cinema-pair .event-card-landing-secondary .literary-card--cinema-spotlight {
+    opacity: 0.97;
+  }
+  .events-grid--cinema-pair .event-card-landing-secondary .event-card--cinema-featured {
+    grid-template-columns: 5.5rem 1fr;
+  }
+  @media (min-width: 768px) {
+    .events-grid--cinema-pair .event-card-landing-secondary .event-card--cinema-featured {
+      grid-template-columns: 6rem 1fr;
+    }
+    .events-grid--cinema-pair .event-card-landing-secondary .event-card-poster {
+      min-height: 7rem;
+    }
+    .events-grid--cinema-pair .event-card-landing-secondary .event-card-title {
+      font-size: 1rem;
+    }
   }
   .events-grid--cinema-single {
     grid-template-columns: 1fr;
-    max-width: 36rem;
+    max-width: 38rem;
+    margin: 0 auto;
+  }
+  .events-grid--cinema-landing {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    align-items: stretch;
+  }
+  .events-grid--cinema-landing > li {
+    display: flex;
+    flex-direction: column;
+  }
+  .events-grid--cinema-landing .literary-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (max-width: 767px) {
+    .events-grid--landing {
+      grid-template-columns: 1fr;
+    }
+    .events-grid--landing-pskov {
+      grid-template-columns: 1fr;
+    }
+    .landing-jobs-grid {
+      grid-template-columns: 1fr;
+    }
+    .cinema-spotlight--featured {
+      padding: 1.65rem 1.25rem 1.75rem;
+    }
+    .landing-album-section--divider::after {
+      font-size: 0.5625rem;
+      padding: 0 0.5rem;
+    }
   }
   @media (min-width: 768px) {
     .events-grid--cinema-landing:not(.events-grid--cinema-single) {
@@ -935,8 +1067,6 @@
     .event-card-landing-featured {
       grid-row: span 1;
     }
-  }
-  @media (min-width: 768px) {
     .cinema-spotlight .events-grid--cinema {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

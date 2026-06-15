@@ -35,7 +35,7 @@ export function LiterarySectionHead({
       </div>
       {(meta || (linkTo && linkLabel)) && (
         <div className="literary-section-head-aside">
-          {meta}
+          {meta && <div className="literary-section-meta">{meta}</div>}
           {linkTo && linkLabel && (
             <Link to={linkTo} className="literary-section-link">
               {linkLabel}

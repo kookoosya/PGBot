@@ -32,7 +32,7 @@ export function LandingJobsPreview() {
       />
 
       {loading ? (
-        <p className="landing-muted">Ищем вакансии в округе…</p>
+        <p className="landing-muted landing-loading" aria-busy="true">Ищем вакансии в округе…</p>
       ) : jobAds.length === 0 ? (
         <LiteraryEmptyState {...EMPTY_STATES.jobs} compact className="literary-empty--landing">
           <div className="landing-inline-actions">

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { LiterarySectionHead } from "@/components/literary";
 import { formatTemperature } from "@/hooks/useWeather";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
-import { LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { formatDate } from "@/lib/utils";
 
 const copy = LANDING_SECTIONS.today;
@@ -117,6 +117,9 @@ export function TodayInVillage() {
           </Link>
         </article>
       </div>
+      <p className="landing-section-verse landing-section-verse--today" aria-hidden>
+        {LITERARY_VERSES.today}
+      </p>
     </section>
   );
 }
