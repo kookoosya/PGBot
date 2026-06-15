@@ -28,6 +28,7 @@ export function Classifieds() {
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(openNew);
+  const [showExtras, setShowExtras] = useState(false);
   const [form, setForm] = useState({
     category: "firewood",
     title: "",
@@ -204,18 +205,32 @@ export function Classifieds() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             required
           />
-          <div className="grid grid-cols-2 gap-2">
-            <Input type="number" placeholder="Ваша цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-            <Input placeholder="за что (смена, месяц…)" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
-          </div>
           <Input placeholder="Телефон +7…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
           <Input placeholder="Ваше имя" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
-          <Input placeholder="Адрес / район" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <Input
-            placeholder="ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
-            value={form.contact_vk}
-            onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
-          />
+
+          <button
+            type="button"
+            className="literary-btn literary-btn--ghost text-sm w-full"
+            onClick={() => setShowExtras(!showExtras)}
+          >
+            {showExtras ? "Скрыть дополнительно" : "Цена, адрес и ВК (необязательно)"}
+          </button>
+
+          {showExtras && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="number" placeholder="Ваша цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+                <Input placeholder="за что (смена, месяц…)" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
+              </div>
+              <Input placeholder="Адрес / район" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              <Input
+                placeholder="ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
+                value={form.contact_vk}
+                onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
+              />
+            </>
+          )}
+
           <input
             type="text"
             name="website_url"

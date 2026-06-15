@@ -206,18 +206,23 @@ async def _handle_deduplication(
     duplicate_prob: float,
 ) -> Issue | None:
     """Link complaint to an existing issue when duplicate probability is high."""
-    if duplicate_prob >= settings.DUPLICATE_THRESHOLD and existing:
-        parent_issue = existing[0]
-        parent_issue.confirmation_count += 1
-        db.add(
-            IssueDuplicate(
-                issue_id=parent_issue.id,
-                duplicate_of_id=parent_issue.id,
-                similarity_score=duplicate_prob,
-            )
+    if not should_link_duplicate_issue(duplicate_prob, has_existing=bool(existing)):
+        return None
+    parent_issue = existing[0]
+    parent_issue.confirmation_count += 1
+    db.add(
+        IssueDuplicate(
+            issue_id=parent_issue.id,
+            duplicate_of_id=parent_issue.id,
+            similarity_score=duplicate_prob,
         )
-        return parent_issue
-    return None
+    )
+    return parent_issue
+
+
+def should_link_duplicate_issue(duplicate_probability: float, *, has_existing: bool) -> bool:
+    """Business rule: link new complaint to an open issue when AI confidence is high."""
+    return duplicate_probability >= settings.DUPLICATE_THRESHOLD and has_existing
 
 
 def _create_ai_analysis(

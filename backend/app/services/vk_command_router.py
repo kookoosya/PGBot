@@ -26,7 +26,7 @@ from app.services.issue_processor import process_incoming_message
 from app.services.issue_utils import issue_display_summary
 from app.services.notifications import issue_status_hint
 from app.services.site_urls import public_site_url
-from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_COMPLAINTS, LINK_EVENTS, LINK_CLASSIFIEDS
+from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_CLASSIFIEDS, LINK_COMPLAINTS, LINK_EVENTS, LINK_MAP, LINK_SUBMIT_CLASSIFIED, LINK_SUBMIT_COMPLAINT
 from app.services.vk import (
     get_ai_keyboard,
     get_inline_links_keyboard,
@@ -275,7 +275,8 @@ async def handle_classifieds(ctx: VkRouteContext) -> None:
     await _send_with_site_links(
         ctx.peer_id,
         msg,
-        ("📋 Все объявления", "/classifieds"),
+        (LINK_CLASSIFIEDS, "/classifieds"),
+        (LINK_SUBMIT_CLASSIFIED, "/classifieds?new=1"),
         ("💼 Вакансии", "/jobs"),
     )
 
@@ -401,6 +402,7 @@ async def handle_complaints_info(ctx: VkRouteContext) -> None:
     await _send_with_site_links(
         ctx.peer_id,
         box("Обращения жителей", COMPLAINTS_INFO_VK),
+        (LINK_SUBMIT_COMPLAINT, "/complaints"),
         (LINK_COMPLAINTS, "/complaints"),
     )
 
@@ -417,34 +419,36 @@ async def handle_events(ctx: VkRouteContext) -> None:
 
 
 async def handle_register(ctx: VkRouteContext) -> None:
-    await _send_welcome(
-        ctx,
+    await _send_with_site_links(
+        ctx.peer_id,
         box(
             "Регистрация",
-            f"{public_site_url()}/register\n\n"
-            "🏠 Житель\n🏢 Организация\n"
-            "🏛 Администрация / ЖКХ\n💇 Мастер услуг",
+            "🏠 Житель · 🏢 Организация\n"
+            "🏛 Администрация / ЖКХ · 💇 Мастер услуг",
         ),
+        ("✍️ Регистрация", "/register"),
     )
 
 
 async def handle_site(ctx: VkRouteContext) -> None:
-    site = public_site_url()
-    await _send_welcome(
-        ctx,
-        box("Портал посёлка", f"{site}\n\nГлавная · Карта · Объявления · Услуги · Жалобы · ИИ"),
+    await _send_with_site_links(
+        ctx.peer_id,
+        box("Портал посёлка", f"{public_site_url()}\n\nАфиша · Карта · Объявления · Обращения · ИИ"),
+        (LINK_EVENTS, "/events"),
+        (LINK_MAP, "/map"),
+        (LINK_CLASSIFIEDS, "/classifieds"),
     )
 
 
 async def handle_map(ctx: VkRouteContext) -> None:
-    await _send_welcome(
-        ctx,
+    await _send_with_site_links(
+        ctx.peer_id,
         box(
             "Карта посёлка",
-            f"{public_site_url()}/map\n\n"
             "Магазины, аптеки, кафе, АЗС, гостиницы, маршруты.\n"
             "Напишите: «аптека», «магазин», «заправка», «музей»",
         ),
+        (LINK_MAP, "/map"),
     )
 
 

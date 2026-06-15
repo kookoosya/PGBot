@@ -25,6 +25,7 @@ from app.constants.portal_copy import (
     CLASSIFIED_REJECTED_VK,
     LINK_CLASSIFIED,
     LINK_CLASSIFIEDS,
+    LINK_SUBMIT_CLASSIFIED,
 )
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
@@ -775,7 +776,7 @@ async def moderate_classified_ad(
         ad,
         CLASSIFIED_REJECTED_VK.format(title=ad.title),
         context="reject",
-        links=((LINK_CLASSIFIEDS, "/classifieds"),),
+        links=((LINK_SUBMIT_CLASSIFIED, "/classifieds?new=1"),),
     )
 
     audit_logged = await _safe_classified_audit(

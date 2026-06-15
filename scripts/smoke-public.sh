@@ -85,6 +85,13 @@ check "API events" "$API/public/events" "items"
 check "API classifieds" "$API/classifieds" "items"
 check "API classifieds categories" "$API/classifieds/categories" "value"
 
+# Critical API flows (validation + schema)
+if python3 "$SCRIPT_DIR/smoke_scenarios.py" "$API"; then
+  pass=$((pass + 1))
+else
+  fail=$((fail + 1))
+fi
+
 # Cinema block — real films, not culture events
 if [[ "${SMOKE_SKIP_CINEMA:-}" == "1" ]]; then
   echo -e "${YELLOW}SKIP${NC} cinema block (SMOKE_SKIP_CINEMA=1)"
