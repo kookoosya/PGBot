@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
-import { isCinemaEvent } from "@/lib/eventUtils";
+import { groupEventsByShow, isRealCinemaEvent } from "@/lib/eventUtils";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type RegionFilter = "all" | EventRegion;
@@ -49,18 +49,18 @@ export function EventsPage() {
   }, [events, categoryFilter]);
 
   const cinemaEvents = useMemo(
-    () => visibleEvents.filter(isCinemaEvent),
+    () => groupEventsByShow(visibleEvents.filter(isRealCinemaEvent)),
     [visibleEvents],
   );
   const pushkinEvents = useMemo(
-    () => visibleEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isCinemaEvent(e)),
+    () => visibleEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isRealCinemaEvent(e)),
     [visibleEvents],
   );
   const pskovEvents = useMemo(
-    () => visibleEvents.filter((e) => e.region_label === "Псков" && !isCinemaEvent(e)),
+    () => visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
     [visibleEvents],
   );
-  const showCinemaBlock = cinemaEvents.length > 0 && regionFilter !== "pushkin_gory";
+  const showCinemaBlock = regionFilter !== "pushkin_gory";
 
   return (
     <div className="literary-page page-section max-w-5xl">
@@ -128,12 +128,16 @@ export function EventsPage() {
       ) : (
         <div className="literary-dashboard">
           {showCinemaBlock && (
-            <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →">
-              <ol className="events-grid events-grid--cinema">
-                {cinemaEvents.map((event) => (
-                  <EventCard key={event.id} event={event} spotlight />
-                ))}
-              </ol>
+            <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →" empty={cinemaEvents.length === 0}>
+              {cinemaEvents.length > 0 ? (
+                <ol className="events-grid events-grid--cinema">
+                  {cinemaEvents.map((event) => (
+                    <EventCard key={event.id} event={event} spotlight />
+                  ))}
+                </ol>
+              ) : (
+                <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark" />
+              )}
             </CinemaSpotlight>
           )}
 

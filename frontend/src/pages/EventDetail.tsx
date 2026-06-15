@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
-import { eventSourceLabel, isCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
+import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
 import { LITERARY_VERSES } from "@/lib/literaryCopy";
 
 export function EventDetail() {
@@ -50,7 +50,8 @@ export function EventDetail() {
     );
   }
 
-  const cinema = isCinemaEvent(event);
+  const cinema = isRealCinemaEvent(event);
+  const posterUrl = isDisplayablePoster(event.poster_url, event.category) ? event.poster_url : null;
 
   return (
     <div className="literary-page page-section max-w-3xl">
@@ -66,13 +67,24 @@ export function EventDetail() {
       <article className={`page-panel event-detail-panel ${cinema ? "page-panel--burgundy" : "page-panel--gold"}`}>
         {cinema && (
           <div className="event-detail-cinema-row">
-            <div className="event-card-poster event-detail-poster" aria-hidden>
-              <span className="event-card-poster-icon">🎬</span>
-              <span className="event-card-poster-badge">Сеанс</span>
-            </div>
+            {posterUrl ? (
+              <div className="event-card-poster event-card-poster--image event-detail-poster">
+                <img src={posterUrl} alt="" loading="lazy" decoding="async" />
+                <span className="event-card-poster-badge">Сеанс</span>
+              </div>
+            ) : (
+              <div className="event-card-poster event-detail-poster" aria-hidden>
+                <span className="event-card-poster-icon">🎬</span>
+                <span className="event-card-poster-badge">Сеанс</span>
+              </div>
+            )}
             <div className="event-detail-meta">
               <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-              <span className="events-category">{event.category_label}</span>
+              {event.genre ? (
+                <span className="events-category events-genre">{event.genre}</span>
+              ) : (
+                <span className="events-category">{event.category_label}</span>
+              )}
             </div>
           </div>
         )}
@@ -105,7 +117,7 @@ export function EventDetail() {
         {event.description && (
           <div className="event-detail-desc">
             <LiterarySectionHead kicker="🪶 О событии" title="Подробности" />
-            <p className="event-detail-text">{event.description}</p>
+            <p className="event-detail-text">{cinema ? eventTeaser(event, 600) || event.description : event.description}</p>
           </div>
         )}
 

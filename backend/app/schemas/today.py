@@ -22,12 +22,18 @@ class TodayMapSnippet(BaseModel):
 class TodayEventSnippet(BaseModel):
     id: int
     title: str
+    starts_at: str
     starts_at_label: str
     ends_at_label: str | None = None
     location: str | None = None
+    region: str
     region_label: str
+    category: str
     category_label: str
+    genre: str | None = None
+    poster_url: str | None = None
     description: str | None = None
+    source: str | None = None
     source_url: str | None = None
 
 

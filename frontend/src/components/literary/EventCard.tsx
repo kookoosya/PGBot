@@ -1,18 +1,16 @@
 import { Link } from "react-router-dom";
-import { isCinemaEvent, regionChipClass } from "@/lib/eventUtils";
+import {
+  eventTeaser,
+  formatExtraSessions,
+  isDisplayablePoster,
+  isRealCinemaEvent,
+  regionChipClass,
+  type EventCardEvent,
+  type GroupedPublicEvent,
+} from "@/lib/eventUtils";
 
 interface EventCardProps {
-  event: {
-    id: number;
-    title: string;
-    description?: string | null;
-    starts_at_label: string;
-    ends_at_label?: string | null;
-    location?: string | null;
-    region_label: string;
-    category_label: string;
-    category?: string;
-  };
+  event: EventCardEvent;
   descLimit?: number;
   showReadMore?: boolean;
   className?: string;
@@ -27,12 +25,17 @@ export function EventCard({
   className = "",
   spotlight = false,
 }: EventCardProps) {
-  const cinema = isCinemaEvent(event);
+  const cinema = isRealCinemaEvent(event);
   const isPskov = event.region_label === "Псков";
   const isPushkin = !isPskov;
-  const desc = event.description?.trim();
-  const shortDesc =
-    desc && desc.length > descLimit ? `${desc.slice(0, descLimit)}…` : desc;
+  const posterUrl = isDisplayablePoster(
+    "poster_url" in event ? event.poster_url : null,
+    event.category,
+  )
+    ? (event as { poster_url?: string | null }).poster_url
+    : null;
+  const extraSessions = (event as GroupedPublicEvent).extraSessions;
+  const teaser = eventTeaser(event, descLimit);
 
   const cardClass = [
     "literary-card",
@@ -63,10 +66,17 @@ export function EventCard({
       <Link to={`/events/${event.id}`} className={innerClass}>
         {cinema && (
           <div className="event-card-poster-wrap">
-            <div className="event-card-poster" aria-hidden>
-              <span className="event-card-poster-icon">🎬</span>
-              {spotlight && <span className="event-card-poster-badge">Сеанс</span>}
-            </div>
+            {posterUrl ? (
+              <div className="event-card-poster event-card-poster--image">
+                <img src={posterUrl} alt="" loading="lazy" decoding="async" />
+                {spotlight && <span className="event-card-poster-badge">Сеанс</span>}
+              </div>
+            ) : (
+              <div className="event-card-poster" aria-hidden>
+                <span className="event-card-poster-icon">🎬</span>
+                {spotlight && <span className="event-card-poster-badge">Сеанс</span>}
+              </div>
+            )}
             <div className="event-card-film-strip" aria-hidden />
           </div>
         )}
@@ -76,12 +86,19 @@ export function EventCard({
             {event.ends_at_label && (
               <span className="events-date-end">до {event.ends_at_label}</span>
             )}
-            <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-            <span className="events-category">{event.category_label}</span>
+            <span className={regionChipClass(event.region_label || "Пушкинские Горы")}>{event.region_label}</span>
+            {event.genre ? (
+              <span className="events-category events-genre">{event.genre}</span>
+            ) : (
+              <span className="events-category">{event.category_label}</span>
+            )}
           </div>
           <h3 className="event-card-title">{event.title}</h3>
           {event.location && <p className="event-card-location">📍 {event.location}</p>}
-          {shortDesc && <p className="event-card-desc">{shortDesc}</p>}
+          {extraSessions && extraSessions.length > 0 && (
+            <p className="event-card-sessions">{formatExtraSessions(extraSessions)}</p>
+          )}
+          {teaser && <p className="event-card-desc">{teaser}</p>}
           {showReadMore && (
             <span className="event-card-footer">
               {cinema ? "Билеты и подробности" : "Подробнее"}

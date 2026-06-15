@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
-import { isCinemaEvent } from "@/lib/eventUtils";
+import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
 import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
 import { useToday } from "@/hooks/useToday";
@@ -55,15 +55,18 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   }, [events, regionFilter, searchInput]);
 
   const pushkinEvents = useMemo(
-    () => filteredEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isCinemaEvent(e)),
+    () =>
+      filteredEvents.filter(
+        (e) => e.region_label === "Пушкинские Горы" && !isRealCinemaEvent(e),
+      ),
     [filteredEvents],
   );
   const cinemaEvents = useMemo(
-    () => filteredEvents.filter((e) => isCinemaEvent(e)),
+    () => groupEventsByShow(filteredEvents.filter(isRealCinemaEvent)),
     [filteredEvents],
   );
   const otherPskovEvents = useMemo(
-    () => filteredEvents.filter((e) => e.region_label === "Псков" && !isCinemaEvent(e)),
+    () => filteredEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
     [filteredEvents],
   );
 
@@ -148,7 +151,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         ) : (
           <ol className="events-grid events-grid--wide">
             {filteredEvents.map((event) => (
-              <EventCard key={event.id} event={event} descLimit={120} spotlight={isCinemaEvent(event)} />
+              <EventCard key={event.id} event={event} descLimit={120} spotlight={isRealCinemaEvent(event)} />
             ))}
           </ol>
         )}
