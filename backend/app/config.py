@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
     VK_ADMIN_PEER_ID: str = ""
-    PUBLIC_SITE_URL: str = "https://pushkinskie-gory.ru"
+    PUBLIC_SITE_URL: str = "https://192-210-213-135.sslip.io"
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""

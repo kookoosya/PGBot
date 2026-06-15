@@ -191,7 +191,7 @@ def _openrouter_headers() -> dict[str, str]:
     return {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": settings.PUBLIC_SITE_URL or "https://pushkinskie-gory.ru",
+        "HTTP-Referer": settings.PUBLIC_SITE_URL or "https://192-210-213-135.sslip.io",
         "X-Title": "Pushkinskie Gory Portal",
     }
 

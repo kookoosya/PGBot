@@ -74,11 +74,11 @@ fi
 ENV_FILE="/opt/pgbot/.env"
 if [ -f "$ENV_FILE" ]; then
   if grep -q '^PUBLIC_SITE_URL=' "$ENV_FILE"; then
-    sed -i "s|^PUBLIC_SITE_URL=.*|PUBLIC_SITE_URL=https://$PRIMARY_DOMAIN|" "$ENV_FILE"
+    sed -i "s|^PUBLIC_SITE_URL=.*|PUBLIC_SITE_URL=https://$MIRROR_DOMAIN|" "$ENV_FILE"
   else
-    echo "PUBLIC_SITE_URL=https://$PRIMARY_DOMAIN" >> "$ENV_FILE"
+    echo "PUBLIC_SITE_URL=https://$MIRROR_DOMAIN" >> "$ENV_FILE"
   fi
 fi
 
-echo "Основной: https://$PRIMARY_DOMAIN"
-echo "Резерв: https://$MIRROR_DOMAIN"
+echo "Канонический URL (VK, smoke): https://$MIRROR_DOMAIN"
+echo "Домен .ru (отложен): https://$PRIMARY_DOMAIN"

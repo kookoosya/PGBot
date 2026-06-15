@@ -1,5 +1,5 @@
-/** Основной домен портала (купленный .ru) */
-export const PRIMARY_SITE_URL = "https://pushkinskie-gory.ru";
+/** Канонический URL портала (прод на sslip.io; .ru отложен) */
+export const PRIMARY_SITE_URL = "https://192-210-213-135.sslip.io";
 
 export function siteOrigin(): string {
   if (typeof window !== "undefined") return window.location.origin;
