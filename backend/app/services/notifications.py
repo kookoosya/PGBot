@@ -2,9 +2,10 @@ import logging
 import re
 
 from app.config import get_settings
+from app.constants.portal_copy import ISSUE_STATUS_HINTS, LINK_COMPLAINTS
 from app.services.site_urls import public_site_url
 from app.services.telegram import send_telegram_message
-from app.services.vk import send_message
+from app.services.vk import get_inline_links_keyboard, send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -82,31 +83,52 @@ def issue_status_text(status: str | None) -> str:
     return ISSUE_STATUS_TEXT.get(status, status)
 
 
+def issue_status_hint(status: str | None) -> str:
+    if not status:
+        return ""
+    return ISSUE_STATUS_HINTS.get(status, "")
+
+
 async def notify_issue_status(issue, *, previous_status: str | None = None) -> bool:
     """Уведомить автора жалобы в VK об изменении статуса."""
     peer_id = getattr(issue, "vk_peer_id", None)
     if not peer_id:
         return False
     status = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
+    hint = issue_status_hint(status)
     lines = [
-        f"📋 Ваше обращение #{issue.id} перешло в статус «{issue_status_text(status)}»",
+        f"📋 Обращение #{issue.id}: «{issue_status_text(status)}»",
     ]
+    if hint:
+        lines.append(hint)
     if previous_status and previous_status != status:
         lines.insert(1, f"Было: {issue_status_label(previous_status)}")
     if issue.resolution_text:
-        lines.append(f"\nОтвет:\n{issue.resolution_text[:500]}")
-    lines.append(f"\n🌐 {public_site_url()}/complaints")
-    return await notify_vk_user(int(peer_id), "\n".join(lines))
+        lines.append(f"\nОтвет службы:\n{issue.resolution_text[:500]}")
+    path = f"/complaints?issue={issue.id}"
+    return await notify_vk_user_with_links(int(peer_id), "\n".join(lines), (LINK_COMPLAINTS, path))
 
 
 async def notify_vk_user(vk_ref: str | int | None, message: str) -> bool:
+    return await notify_vk_user_with_links(vk_ref, message)
+
+
+async def notify_vk_user_with_links(
+    vk_ref: str | int | None,
+    message: str,
+    *link_pairs: tuple[str, str],
+) -> bool:
+    """VK DM с кнопками-ссылками на портал. link_pairs: (label, path)."""
     if vk_ref is None:
         return False
     peer_id = parse_vk_id(str(vk_ref)) if not isinstance(vk_ref, int) else vk_ref
     if not peer_id or not settings.VK_GROUP_TOKEN:
         return False
     try:
-        await send_message(peer_id, message)
+        site = public_site_url()
+        links = [(label, f"{site}{path}") for label, path in link_pairs]
+        keyboard = get_inline_links_keyboard(links) if links else None
+        await send_message(peer_id, message, keyboard=keyboard)
         return True
     except Exception as exc:
         logger.error("VK user notification failed for %s: %s", vk_ref, exc)

@@ -71,10 +71,15 @@ check "Услуги" "$BASE/services" "root"
 check "Карта" "$BASE/map" "root"
 check "Регистрация" "$BASE/register" "root"
 check "Вход в кабинет" "$BASE/cabinet/login" "root"
+check "Обращения" "$BASE/complaints" "root"
+check "Кабинет" "$BASE/cabinet" "root"
 check "ИИ-помощник" "$BASE/ai" "root"
 
 # API
 check "API today" "$API/public/today" "upcoming_events"
+check "API events" "$API/public/events" "items"
+check "API classifieds" "$API/classifieds" "items"
+check "API classifieds categories" "$API/classifieds/categories" "value"
 
 # Cinema block — real films, not culture events
 if [[ "${SMOKE_SKIP_CINEMA:-}" == "1" ]]; then

@@ -1468,6 +1468,44 @@
     gap: 0.75rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .literary-cabinet-nav--comfort .literary-useful-card {
+    min-height: 5.5rem;
+    padding: 1.125rem 1.25rem;
+  }
+  .literary-cabinet-nav--comfort .literary-useful-title {
+    font-size: 1.0625rem;
+  }
+  .literary-cabinet-nav--comfort .literary-useful-desc {
+    font-size: 0.9375rem;
+  }
+  .literary-cabinet-issue {
+    padding: 0.25rem 0;
+  }
+  .literary-form-comfort .event-detail-label {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .literary-form-comfort input,
+  .literary-form-comfort select,
+  .literary-form-comfort textarea,
+  .literary-form-comfort .pushkin-select {
+    font-size: 1.0625rem;
+    min-height: 2.75rem;
+  }
+  .literary-form-comfort textarea {
+    min-height: 7rem;
+  }
+  .literary-form-comfort .literary-btn {
+    font-size: 1.0625rem;
+    min-height: 3rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  .literary-issue-card--highlight {
+    outline: 2px solid hsl(var(--gold) / 0.65);
+    outline-offset: 2px;
+    background: hsl(var(--gold) / 0.06);
+  }
   @media (min-width: 640px) {
     .literary-cabinet-nav {
       grid-template-columns: repeat(2, minmax(0, 1fr));

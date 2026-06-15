@@ -173,6 +173,17 @@ export const PAGE_SECTIONS = {
   },
 } as const;
 
+/** Понятные подсказки к статусам обращений (сайт + VK). */
+export const ISSUE_STATUS_HINTS: Record<string, string> = {
+  NEW: "Принято — ждёт рассмотрения",
+  UNDER_REVIEW: "Смотрят специалисты службы",
+  ASSIGNED: "Назначен ответственный",
+  IN_PROGRESS: "Служба уже работает над проблемой",
+  RESOLVED: "Проблема решена",
+  REJECTED: "Обращение отклонено — уточните в службе",
+  ARCHIVED: "Архив",
+};
+
 export const LANDING_SECTIONS = {
   today: {
     kicker: "🪶 Этот день",

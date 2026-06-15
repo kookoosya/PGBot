@@ -5,6 +5,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.constants.portal_copy import CLASSIFIED_EMPTY_VK
 from app.config import get_settings
 from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
@@ -38,11 +39,7 @@ async def list_recent_ads(db: AsyncSession, limit: int = 5) -> list[ClassifiedAd
 async def format_ads_message(db: AsyncSession) -> str:
     ads = await list_recent_ads(db)
     if not ads:
-        return (
-            "📋 Объявлений пока нет.\n\n"
-            f"Подайте первым — кнопка «➕ Объявление» или:\n{public_site_url()}/classifieds\n\n"
-            "✨ Размещение бесплатно"
-        )
+        return CLASSIFIED_EMPTY_VK
     lines = [f"📋 Свежие объявления ({len(ads)}):\n"]
     for ad in ads:
         cat = CLASSIFIED_LABELS.get(ad.category, ad.category)

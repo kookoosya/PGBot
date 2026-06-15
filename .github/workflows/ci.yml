@@ -35,6 +35,13 @@ jobs:
         working-directory: backend
         run: pip install -r requirements.txt
 
+      - name: Migrate database
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
+        run: alembic upgrade head
+
       - name: Lint import check
         working-directory: backend
         env:
@@ -44,6 +51,14 @@ jobs:
 
       - name: Cinema smoke logic (fixture)
         run: python3 scripts/smoke_check_cinema.py /dev/null --fixture scripts/fixtures/smoke_today_ok.json
+
+      - name: Backend tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
+          DEBUG: "true"
+        run: pytest -q
 
   frontend:
     runs-on: ubuntu-latest

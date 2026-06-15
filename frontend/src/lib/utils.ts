@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ISSUE_STATUS_HINTS } from "@/lib/literaryCopy";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,6 +33,10 @@ export const STATUS_LABELS: Record<string, string> = {
   REJECTED: "Отклонено",
   ARCHIVED: "Архив",
 };
+
+export function issueStatusHint(status: string): string {
+  return ISSUE_STATUS_HINTS[status] || "";
+}
 
 export const STATUS_COLORS: Record<string, string> = {
   NEW: "bg-blue-100 text-blue-800",
