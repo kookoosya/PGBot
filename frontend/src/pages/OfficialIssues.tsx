@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
-import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
@@ -182,6 +182,8 @@ export function OfficialIssues() {
           </div>
         )}
       </div>
+
+      <p className="literary-page-verse" aria-hidden>{LITERARY_VERSES.official}</p>
     </div>
   );
 }

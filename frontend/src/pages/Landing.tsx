@@ -12,7 +12,7 @@ import {
   LandingUsefulNearby,
 } from "@/components/landing";
 import { BRAND } from "@/lib/branding";
-import { LANDING_HERO, LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { LANDING_HERO, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 import { Link } from "react-router-dom";
 
@@ -99,6 +99,10 @@ export function Landing() {
               <VkBotBanner />
             </div>
           </LandingAlbumSection>
+
+          <p className="landing-album-closing-verse" aria-hidden>
+            {LITERARY_VERSES.landing}
+          </p>
         </div>
       </div>
 

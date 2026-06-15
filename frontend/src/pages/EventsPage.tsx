@@ -122,7 +122,7 @@ export function EventsPage() {
       </section>
 
       {loading ? (
-        <p className="landing-muted">Собираем афишу…</p>
+        <p className="landing-muted landing-loading">Собираем афишу Пушкиногорья…</p>
       ) : visibleEvents.length === 0 ? (
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (
