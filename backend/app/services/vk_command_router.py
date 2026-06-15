@@ -24,6 +24,7 @@ from app.services.ai_chat import (
 )
 from app.services.issue_processor import process_incoming_message
 from app.services.issue_utils import issue_display_summary
+from app.services.notifications import issue_status_hint
 from app.services.site_urls import public_site_url
 from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_COMPLAINTS, LINK_EVENTS, LINK_CLASSIFIEDS
 from app.services.vk import (
@@ -371,7 +372,12 @@ async def handle_map_report(ctx: VkRouteContext) -> None:
 
 
 async def handle_classified_add(ctx: VkRouteContext) -> None:
-    await _start_flow_message(ctx, start_classified_flow(ctx.peer_id))
+    msg = start_classified_flow(ctx.peer_id)
+    await send_message(
+        ctx.peer_id,
+        f"{msg}\n\n🌐 Форма на сайте: {public_site_url()}/classifieds?new=1",
+        keyboard=get_welcome_keyboard(),
+    )
 
 
 async def handle_classified_jobs(ctx: VkRouteContext) -> None:
@@ -462,8 +468,17 @@ async def handle_my_issues(ctx: VkRouteContext) -> None:
     lines = ["📋 Ваши обращения:\n"]
     for issue in issues:
         emoji = ISSUE_STATUS_EMOJI.get(issue.status, "📋")
+        status_val = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
+        hint = issue_status_hint(status_val)
         lines.append(f"{emoji} #{issue.id} — {issue_display_summary(issue, max_len=50)}")
-    await _send_with_site_links(ctx.peer_id, "\n".join(lines), (LINK_COMPLAINTS, "/complaints"))
+        if hint:
+            lines.append(f"   {hint}")
+    latest = issues[0]
+    await _send_with_site_links(
+        ctx.peer_id,
+        "\n".join(lines),
+        (LINK_COMPLAINTS, f"/complaints?issue={latest.id}"),
+    )
 
 
 async def handle_help(ctx: VkRouteContext) -> None:

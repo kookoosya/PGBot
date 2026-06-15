@@ -12,6 +12,7 @@ import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy
 export function Classifieds() {
   const [searchParams] = useSearchParams();
   const neighborMode = searchParams.get("neighbor") === "1";
+  const openNew = searchParams.get("new") === "1";
   if (searchParams.get("jobs") === "1") {
     return <Navigate to="/jobs" replace />;
   }
@@ -26,7 +27,7 @@ export function Classifieds() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [filter, setFilter] = useState("");
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(openNew);
   const [form, setForm] = useState({
     category: "firewood",
     title: "",
@@ -68,6 +69,10 @@ export function Classifieds() {
       .catch(console.error)
       .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    if (openNew) setShowForm(true);
+  }, [openNew]);
 
   useEffect(() => {
     api.getClassifiedCategories().then(setCategories).catch(console.error);

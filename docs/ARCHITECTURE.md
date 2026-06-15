@@ -1,68 +1,126 @@
-# Архитектура
+# Архитектура портала Пушкинские Горы
 
-## Поток данных
+Публичный портал посёлка с VK-ботом, афишей, объявлениями, картой и обращениями жителей. Визуальный стиль публичной части — **«Пушкиногорский альбом»** (литературные тексты, тёплая палитра, шрифты Playfair Display + Source Sans 3).
+
+## Обзор системы
 
 ```
-Житель → ВКонтакте → VK Callback API → FastAPI Backend
-                                              ↓
-                                         Gemini API (анализ)
-                                              ↓
-                                         PostgreSQL
-                                              ↓
-                                    Admin Panel (React)
-                                              ↓
-                                    Telegram (уведомления)
+Житель / гость
+    ├── Сайт (React SPA) ──► FastAPI /api/v1 ──► PostgreSQL
+    ├── VK-бот ──► VK Callback ──► Issue / Classified flows
+    └── Telegram (уведомления владельцу)
+
+Внешние источники афиши: VK, Kudago, TimePad, Orbilet, ProCulture, кинотеатры Пскова
+Фоновые задачи: синхронизация событий (cron), обогащение кино, дедупликация
 ```
 
-## Компоненты
+## Backend (FastAPI)
 
-### Backend (FastAPI)
+| Модуль | Назначение |
+|--------|------------|
+| `app/api/v1/public_info.py` | Публичные эндпоинты: `/public/today`, `/public/events`, `/public/info` |
+| `app/api/v1/classifieds.py` | Доска объявлений (список, создание, модерация) |
+| `app/api/v1/issues.py` | Обращения жителей (сайт + антиспам) |
+| `app/api/v1/vk_webhook.py` | VK Callback API |
+| `app/services/vk_command_router.py` | Маршрутизация команд VK-бота |
+| `app/services/vk_flows.py` | Пошаговые сценарии: объявление, пожелание, ошибка карты |
+| `app/services/issue_processor.py` | AI-анализ, дедупликация обращений, уведомления |
+| `app/services/classified_service.py` | Объявления: валидация, модерация, VK-уведомления |
+| `app/services/event_service.py` | Публичная афиша, фильтр кино |
+| `app/services/event_dedupe_service.py` | Дедупликация событий в ленте |
+| `app/services/cinema_enrichment.py` | Фильтр «реальных» фильмов vs культурные события |
+| `app/services/event_sources/` | Синхронизация внешних источников афиши |
+| `app/constants/portal_copy.py` | Тексты VK в едином тоне с фронтендом |
 
-- **VK Webhook** (`/api/v1/vk/callback`) — приём сообщений от жителей
-- **Issue Processor** — обработка обращений: AI-анализ, дедупликация, назначение отдела
-- **REST API** — CRUD для админ-панели
-- **Telegram Service** — отправка уведомлений
+### Публичные API
 
-### Frontend (React)
+- `GET /api/v1/public/today` — снимок для главной: погода, афиша, объявление дня, статистика карты
+- `GET /api/v1/public/events` — список событий (`region`, `search`)
+- `GET /api/v1/public/events/{id}` — карточка события
+- `GET /api/v1/classifieds` — доска объявлений
+- `GET /health` — проверка живости
 
-Админ-панель с разделами: Dashboard, Issues, Residents, Departments, Analytics, Audit, Settings.
+## Frontend (React + Vite)
 
-### База данных
+### Публичные страницы
 
-PostgreSQL с таблицами: users, roles, issues, issue_photos, issue_comments, issue_duplicates, departments, notifications, audit_logs, ai_analysis.
+| Путь | Компонент | Описание |
+|------|-----------|----------|
+| `/` | `Landing.tsx` | Главная, блок «Сегодня в посёлке» |
+| `/events` | `EventsPage.tsx` | Афиша (посёлок + Псков + кино) |
+| `/classifieds` | `Classifieds.tsx` | Объявления; `?new=1` — открыть форму |
+| `/complaints` | `Complaints.tsx` | Обращения; `?issue={id}` — подсветка заявки |
+| `/cabinet` | `UserCabinet.tsx` | Личный кабинет жителя |
+| `/map` | `Map.tsx` | Карта (маркеры, маршруты, такси) |
 
-## Роли
+### Стиль «Пушкиногорский альбом»
 
-| Роль | Доступ |
-|------|--------|
-| Resident | Отправка обращений через VK |
-| Moderator | Модерация, объединение дубликатов |
-| Administration | Управление обращениями, статусы |
-| SocialService | Социальные обращения |
-| SuperAdmin | Полный доступ |
+- **Тексты:** `frontend/src/lib/literaryCopy.ts` — стихи, заголовки секций, пустые состояния
+- **Стили:** `frontend/src/styles/literary-album.css` — карточки, панели, формы
+- **Компоненты:** `frontend/src/components/literary/` — `LiterarySectionHead`, `LiteraryEmptyState`, loaders
+- **Удобство:** класс `.literary-form-comfort` — крупные поля для пожилых пользователей
 
-## AI-анализ (Gemini)
+### Связь VK ↔ сайт
 
-На каждое обращение возвращается JSON:
+- Общие тексты: `portal_copy.py` ↔ `literaryCopy.ts`
+- Deep links из VK: `/classifieds/{id}`, `/complaints?issue={id}`, `/events`, `/classifieds?new=1`
+- Inline-кнопки: `get_inline_links_keyboard()` в `app/services/vk.py`
 
-```json
-{
-  "is_valid": true,
-  "category": "Освещение",
-  "priority": "medium",
-  "summary": "Не работает фонарь возле дома",
-  "duplicate_probability": 0.85,
-  "suggested_department": "ЖКХ"
-}
-```
+## VK-бот
 
-При недоступности Gemini используется rule-based fallback.
+Клавиатура меню: ИИ, карта, объявления, работа, услуги, афиша, подача объявления, обращения, такси, погода.
+
+Свободный текст «аптека», «магазин» → справочник карты. Жалоба с фото → `issue_processor`. Команда «Мои обращения» → статусы с подсказками и ссылкой на портал.
+
+## База данных (PostgreSQL)
+
+Основные сущности: `users`, `issues`, `classified_ads`, `village_events`, `places`, `taxi_services`, `vk_subscribers`, `ai_analysis`, `audit_logs`.
+
+## AI-анализ обращений (Gemini)
+
+На каждое обращение возвращается JSON с категорией, приоритетом, summary и `duplicate_probability`. При недоступности Gemini — rule-based fallback.
 
 ## Дедупликация
 
+### Обращения
+
 Если `duplicate_probability > 0.80`, обращение связывается с существующим, счётчик подтверждений увеличивается.
+
+### События афиши
+
+`event_dedupe_key()` — нормализованный заголовок + время + регион + категория + площадка. При дублях сохраняется запись с лучшим источником (`orbilet` > `vk` > `kudago`).
+
+### Кино
+
+`is_real_cinema_event()` отсекает культурные мероприятия, попавшие в категорию cinema, и планетарий.
+
+## Карта (интегрировано из PR #30)
+
+- Золотые маркеры проверенных мест (`map-marker-ref`)
+- Кластеризация и spiderfy
+- Дедупликация OSM/Yandex рядом с эталонными точками (`place_cleanup.py`)
+- Литературное оформление панелей маршрутов и такси (#37)
+
+## Инфраструктура
+
+| Компонент | Файл |
+|-----------|------|
+| Деплой | `scripts/remote-deploy.sh` |
+| Smoke-тесты | `scripts/smoke-public.sh`, `scripts/smoke_check_cinema.py` |
+| Cron синхронизации | `scripts/vps-sync-events.sh`, `scripts/install-vps-cron.sh` |
+| CI | `.github/workflows/ci.yml` — build, pytest, smoke prod |
+| Тесты | `backend/tests/` — cinema filter, event dedupe, public API |
+
+## Роли пользователей
+
+| Роль | Доступ |
+|------|--------|
+| Resident | Кабинет, объявления, обращения |
+| Service provider | Кабинет мастера, запись |
+| Administration / SocialService | Портал служб `/official` |
+| SuperAdmin | Админ-панель `/admin` |
 
 ## Уведомления
 
-- **Высокий приоритет** — немедленная отправка в Telegram
-- **Обычный** — добавление в очередь (`notifications` table)
+- **VK** — автору объявления/обращения (модерация, смена статуса) с deep links
+- **Telegram / VK admin** — владельцу портала (новые заявки, алерты кино)
