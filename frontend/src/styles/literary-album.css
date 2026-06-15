@@ -1424,6 +1424,9 @@
     box-shadow: 0 14px 36px hsl(var(--forest) / 0.11);
     transform: translateY(-2px);
   }
+  .literary-job-card:hover .literary-job-title {
+    color: hsl(var(--gold));
+  }
   .literary-job-card:focus-within {
     outline: none;
     border-color: hsl(var(--gold) / 0.35);
@@ -1452,6 +1455,7 @@
     font-family: "Playfair Display", Georgia, serif;
     font-size: 1.0625rem;
     color: hsl(var(--forest));
+    transition: color 0.15s ease;
   }
   .literary-job-pay {
     margin: 0.5rem 0 0;
@@ -2303,6 +2307,14 @@
     min-height: auto;
     padding: 2.5rem 1rem;
     font-size: 0.9375rem;
+  }
+  .literary-page-loader--compact {
+    padding: 1.25rem 0.5rem;
+    font-size: 0.875rem;
+    gap: 0.5rem;
+  }
+  .literary-page-loader--compact .literary-page-loader-icon {
+    font-size: 1.35rem;
   }
   .literary-page-loader-icon {
     font-size: 1.75rem;

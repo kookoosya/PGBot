@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { LiterarySectionHead } from "@/components/literary";
+import { LiterarySectionHead, LiteraryInlineLoader } from "@/components/literary";
 import { formatTemperature } from "@/hooks/useWeather";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
-import { LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { formatDate } from "@/lib/utils";
 
 const copy = LANDING_SECTIONS.today;
@@ -14,7 +14,7 @@ export function TodayInVillage() {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
         <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
-        <p className="landing-muted">Собираем сводку дня…</p>
+        <LiteraryInlineLoader label="Собираем сводку дня…" compact />
       </section>
     );
   }
@@ -85,7 +85,10 @@ export function TodayInVillage() {
               <p className="today-ad-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
-            <p className="landing-muted">Пока тихо на доске объявлений</p>
+            <p className="landing-muted m-0">
+              {EMPTY_STATES.todayNoAd.text}{" "}
+              <Link to="/classifieds" className="literary-link">Подать объявление →</Link>
+            </p>
           )}
           <Link to="/classifieds" className="today-card-action">
             Все объявления →

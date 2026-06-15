@@ -101,7 +101,7 @@ export function ClassifiedDetail() {
             </p>
           </div>
 
-          <p className="landing-section-verse literary-classified-detail-verse" aria-hidden>
+          <p className="literary-page-verse literary-classified-detail-verse" aria-hidden>
             {LITERARY_VERSES.classifieds}
           </p>
         </div>

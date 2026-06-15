@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
 import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
-import { LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
 
 export function EventDetail() {
   const { id } = useParams();
@@ -35,7 +35,7 @@ export function EventDetail() {
   if (error) {
     return (
       <div className="literary-page page-section max-w-3xl">
-        <LiteraryEmptyState icon="📅" title="Событие не найдено" text={error}>
+        <LiteraryEmptyState {...EMPTY_STATES.eventNotFound} text={error}>
           <Link to="/events" className="literary-btn literary-btn--ghost mt-2 no-underline">← К афише</Link>
         </LiteraryEmptyState>
       </div>
@@ -45,7 +45,7 @@ export function EventDetail() {
   if (!event) {
     return (
       <div className="literary-page page-section max-w-3xl">
-        <p className="landing-muted text-center py-16">Загружаем событие…</p>
+        <LiteraryInlineLoader label="Загружаем событие…" />
       </div>
     );
   }
@@ -138,7 +138,7 @@ export function EventDetail() {
           )}
         </div>
 
-        <p className="landing-section-verse event-detail-verse" aria-hidden>
+        <p className="literary-page-verse event-detail-verse" aria-hidden>
           {cinema ? LITERARY_VERSES.cinema : LITERARY_VERSES.events}
         </p>
       </article>

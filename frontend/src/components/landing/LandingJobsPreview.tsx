@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, type ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
@@ -33,7 +33,7 @@ export function LandingJobsPreview() {
       />
 
       {loading ? (
-        <p className="landing-muted landing-loading" aria-busy="true">Ищем вакансии в округе…</p>
+        <LiteraryInlineLoader label="Ищем вакансии в округе…" compact />
       ) : jobAds.length === 0 ? (
         <LiteraryEmptyState {...EMPTY_STATES.jobs} compact className="literary-empty--landing">
           <div className="landing-inline-actions">

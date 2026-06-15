@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
 import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
 import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
@@ -127,7 +127,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         )}
 
         {loading && !data ? (
-          <p className="landing-muted">Собираем афишу Пушкиногорья…</p>
+          <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
         ) : showSplit ? (
           displayPushkin.length === 0 ? (
             <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />

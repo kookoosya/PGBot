@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
 import { groupEventsByShow, isRealCinemaEvent } from "@/lib/eventUtils";
@@ -122,7 +122,7 @@ export function EventsPage() {
       </section>
 
       {loading ? (
-        <p className="landing-muted landing-loading">Собираем афишу Пушкиногорья…</p>
+        <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" />
       ) : visibleEvents.length === 0 ? (
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (
