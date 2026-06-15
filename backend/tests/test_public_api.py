@@ -116,6 +116,17 @@ async def test_public_events_limit(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_public_classifieds_pagination(client: AsyncClient):
+    response = await client.get("/api/v1/classifieds", params={"page": 1, "page_size": 5})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+    assert data["page_size"] == 5
+    assert "has_next" in data
+    assert "has_prev" in data
+
+
+@pytest.mark.asyncio
 async def test_public_event_not_found(client: AsyncClient):
     response = await client.get("/api/v1/public/events/999999999")
     assert response.status_code == 404
