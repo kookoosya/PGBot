@@ -11,9 +11,10 @@
 |---|--------|-------|-------|
 | 0.1 | Канонический URL = sslip.io | VK deep links, smoke, уведомления | `setup-russia-mirror.sh`, `config.py`, `siteUrl.ts` |
 | 0.2 | Один uvicorn worker (временно) | VK flows и AI mode в RAM — ломаются при 2 workers | `docker-compose.prod.yml` |
+| 0.2b | **VK flows в PostgreSQL** | Диалоги переживают рестарт; можно вернуть 2 workers | `vk_flow_store.py`, миграция 020 |
 | 0.3 | Smoke/deploy только на sslip.io | Не ссылаться на .ru в CI и deploy | `remote-deploy.sh`, `MERGE_PLAN.md` |
 
-**Следующий шаг после 0.2:** перенести `vk_flows._flows` и `ai_mode._ai_peers` в PostgreSQL (как уже сделано для `vk_ai_sessions`).
+**Следующий шаг после 0.2b:** перенести `ai_mode._ai_peers` в PostgreSQL (как уже сделано для `vk_ai_sessions`).
 
 ---
 
