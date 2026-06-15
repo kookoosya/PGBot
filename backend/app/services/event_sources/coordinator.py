@@ -67,6 +67,52 @@ async def sync_event_source(
             errors=[f"Неизвестный источник: {source_name}"],
         )]
     results = await source.sync_events(db, region=region, actor_id=actor_id)
+    await _post_sync_cleanup(db, label=source_name)
+    return results
+
+
+CINEMA_SOURCE_NAMES: tuple[str, ...] = ("kinopskov", "mirage", "silver", "orbilet")
+
+
+async def sync_cinema_event_sources(
+    db: AsyncSession,
+    *,
+    actor_id: int | None = None,
+) -> list[EventSyncResult]:
+    """Sync cinema afisha sources only (idempotent upsert per source)."""
+    results: list[EventSyncResult] = []
+    for name in CINEMA_SOURCE_NAMES:
+        source = get_event_source(name)
+        if not source:
+            continue
+        try:
+            results.extend(await source.sync_events(db, actor_id=actor_id))
+        except EventValidationError as exc:
+            results.append(EventSyncResult(
+                source=name,
+                region="all",
+                fetched=0,
+                created=0,
+                updated=0,
+                skipped=0,
+                errors=[exc.detail],
+            ))
+        except Exception as exc:
+            logger.exception("Cinema sync failed for %s", name)
+            results.append(EventSyncResult(
+                source=name,
+                region="all",
+                fetched=0,
+                created=0,
+                updated=0,
+                skipped=0,
+                errors=[str(exc)],
+            ))
+    await _post_sync_cleanup(db, label="cinema")
+    return results
+
+
+async def _post_sync_cleanup(db: AsyncSession, *, label: str) -> None:
     planetarium = await recategorize_planetarium_from_cinema(db)
     theater = await recategorize_theater_from_cinema(db)
     recategorized = await recategorize_other_events(db)
@@ -75,16 +121,17 @@ async def sync_event_source(
     removed = await cleanup_duplicate_events(db)
     demos = await unpublish_stale_demo_cinema(db)
     if planetarium:
-        logger.info("Post-sync planetarium recategorize (%s): %s events", source_name, planetarium)
+        logger.info("Post-sync planetarium recategorize (%s): %s events", label, planetarium)
     if theater:
-        logger.info("Post-sync theater recategorize (%s): %s events", source_name, theater)
+        logger.info("Post-sync theater recategorize (%s): %s events", label, theater)
+    if recategorized:
+        logger.info("Post-sync recategorize (%s): %s events", label, recategorized)
     if enriched:
-        logger.info("Post-sync event enrichment (%s): %s events updated", source_name, enriched)
+        logger.info("Post-sync event enrichment (%s): %s events updated", label, enriched)
     if posters:
-        logger.info("Post-sync poster enrichment (%s): %s events updated", source_name, posters)
+        logger.info("Post-sync poster enrichment (%s): %s events updated", label, posters)
     if removed or demos:
-        logger.info("Post-sync dedupe (%s): -%s dupes, -%s demo cinema", source_name, removed, demos)
-    return results
+        logger.info("Post-sync dedupe (%s): -%s dupes, -%s demo cinema", label, removed, demos)
 
 
 async def sync_all_event_sources(
@@ -119,21 +166,5 @@ async def sync_all_event_sources(
                 skipped=0,
                 errors=[str(exc)],
             ))
-    planetarium = await recategorize_planetarium_from_cinema(db)
-    theater = await recategorize_theater_from_cinema(db)
-    recategorized = await recategorize_other_events(db)
-    enriched = await enrich_stale_events(db)
-    posters = await enrich_missing_posters(db)
-    removed = await cleanup_duplicate_events(db)
-    demos = await unpublish_stale_demo_cinema(db)
-    if planetarium:
-        logger.info("Post-sync planetarium recategorize: %s events", planetarium)
-    if theater:
-        logger.info("Post-sync theater recategorize: %s events", theater)
-    if enriched:
-        logger.info("Post-sync event enrichment: %s events updated", enriched)
-    if posters:
-        logger.info("Post-sync poster enrichment: %s events updated", posters)
-    if removed or demos:
-        logger.info("Post-sync dedupe: -%s dupes, -%s demo cinema", removed, demos)
+    await _post_sync_cleanup(db, label="all")
     return results

@@ -48,6 +48,18 @@ jobs:
             bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
             bash scripts/setup-russia-mirror.sh
             docker compose -f docker-compose.prod.yml up -d --build
-            docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
-            docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py
+            docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \
+              || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
+            docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
+            bash scripts/install-vps-cron.sh /opt/pgbot
+            bash scripts/vps-sync-events.sh cinema || true
             echo "Deploy OK: https://192-210-213-135.sslip.io"
+
+      - uses: actions/checkout@v4
+
+      - name: Smoke after deploy
+        env:
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://192-210-213-135.sslip.io' }}
+        run: |
+          sleep 15
+          bash scripts/smoke-public.sh "$SMOKE_BASE_URL"

@@ -1,0 +1,18 @@
+{
+  "upcoming_events": [
+    {
+      "id": 1,
+      "title": "Майкл",
+      "category": "cinema",
+      "genre": "биография",
+      "source": "kinopskov",
+      "location": "Кинотеатр Мираж"
+    },
+    {
+      "id": 2,
+      "title": "Петрушкины забавы",
+      "category": "cinema",
+      "source": "vk"
+    }
+  ]
+}

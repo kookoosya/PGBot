@@ -42,6 +42,9 @@ jobs:
           DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
         run: python -c "from app.main import app; print('OK:', app.title)"
 
+      - name: Cinema smoke logic (fixture)
+        run: python3 scripts/smoke_check_cinema.py /dev/null --fixture scripts/fixtures/smoke_today_ok.json
+
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -56,3 +59,15 @@ jobs:
         run: |
           npm install
           npm run build
+
+  smoke-prod:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Smoke public URLs (production)
+        env:
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://192-210-213-135.sslip.io' }}
+        run: bash scripts/smoke-public.sh "$SMOKE_BASE_URL"
