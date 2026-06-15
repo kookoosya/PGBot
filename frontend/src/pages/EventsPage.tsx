@@ -4,7 +4,7 @@ import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } f
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
 import { isCinemaEvent } from "@/lib/eventUtils";
-import { EMPTY_STATES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type RegionFilter = "all" | EventRegion;
 
@@ -13,6 +13,8 @@ const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
   { id: "pushkin_gory", label: "Пушкинские Горы" },
   { id: "pskov", label: "Псков" },
 ];
+
+const copy = PAGE_SECTIONS.events;
 
 export function EventsPage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
@@ -61,14 +63,15 @@ export function EventsPage() {
   const showCinemaBlock = cinemaEvents.length > 0 && regionFilter !== "pushkin_gory";
 
   return (
-    <div className="page-section max-w-5xl">
-      <PageHeader
-        icon="📅"
-        title="Афиша Пушкиногорья"
-        subtitle="От площади Ленина до кинозалов Пскова — культурная жизнь края в одном месте"
-      />
+    <div className="literary-page page-section max-w-5xl">
+      <PageHeader icon="📅" title={copy.title} subtitle={copy.lead} />
 
-      <div className="page-panel page-panel--forest mb-6">
+      <section className="page-panel page-panel--gold mb-6">
+        <LiterarySectionHead
+          kicker="🔍 Поиск"
+          title="Найти в афише"
+          lead="Концерт, кино, ярмарка — введите слово и выберите регион."
+        />
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <Input
             placeholder="Поиск: концерт, кино, ярмарка…"
@@ -77,7 +80,7 @@ export function EventsPage() {
             onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
             className="flex-1 pushkin-select"
           />
-          <button type="button" className="literary-btn literary-btn--primary" onClick={() => setSearch(searchInput.trim())}>
+          <button type="button" className="literary-btn literary-btn--primary shrink-0" onClick={() => setSearch(searchInput.trim())}>
             Найти
           </button>
         </div>
@@ -96,7 +99,7 @@ export function EventsPage() {
         </div>
 
         {categoryFilters.length > 1 && (
-          <div className="filter-bar mt-4">
+          <div className="literary-filter-bar mt-4">
             <button
               type="button"
               className={`filter-chip${!categoryFilter ? " filter-chip-active" : ""}`}
@@ -116,16 +119,16 @@ export function EventsPage() {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {loading ? (
-        <p className="events-muted">Собираем афишу…</p>
+        <p className="landing-muted">Собираем афишу…</p>
       ) : visibleEvents.length === 0 ? (
-        <LiteraryEmptyState {...EMPTY_STATES.events} />
+        <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (
         <div className="literary-dashboard">
           {showCinemaBlock && (
-            <CinemaSpotlight linkTo="/events">
+            <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →">
               <ol className="events-grid events-grid--cinema">
                 {cinemaEvents.map((event) => (
                   <EventCard key={event.id} event={event} spotlight />
@@ -137,9 +140,9 @@ export function EventsPage() {
           {pushkinEvents.length > 0 && regionFilter !== "pskov" && (
             <section className="page-panel page-panel--forest">
               <LiterarySectionHead
-                kicker="🪶 Посёлок"
-                title="В Пушкинских Горах"
-                lead="Праздники, концерты и встречи у НКЦ и на площади."
+                kicker={copy.pushkin.kicker}
+                title={copy.pushkin.title}
+                lead={copy.pushkin.lead}
               />
               <ol className="events-grid events-grid--wide">
                 {pushkinEvents.map((event) => (
@@ -152,9 +155,9 @@ export function EventsPage() {
           {pskovEvents.length > 0 && regionFilter !== "pushkin_gory" && (
             <section className="page-panel page-panel--gold">
               <LiterarySectionHead
-                kicker="🏛 Псков"
-                title="Мероприятия в городе"
-                lead="Концерты, выставки и городские праздники."
+                kicker={copy.pskov.kicker}
+                title={copy.pskov.title}
+                lead={copy.pskov.lead}
               />
               <ol className="events-grid">
                 {pskovEvents.map((event) => (
@@ -164,6 +167,10 @@ export function EventsPage() {
             </section>
           )}
         </div>
+      )}
+
+      {!loading && visibleEvents.length > 0 && (
+        <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.events}</p>
       )}
     </div>
   );

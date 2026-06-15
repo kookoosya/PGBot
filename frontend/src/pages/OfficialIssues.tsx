@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { api, Issue } from "@/lib/api";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
@@ -14,6 +15,8 @@ const ROLE_LABELS: Record<string, string> = {
   social_service: "ЖКХ / соцслужбы",
   moderator: "Модератор",
 };
+
+const copy = PAGE_SECTIONS.official;
 
 export function OfficialIssues() {
   const { user, logout } = useUserAuth();
@@ -50,18 +53,19 @@ export function OfficialIssues() {
   };
 
   return (
-    <div className="page-section max-w-6xl space-y-6">
+    <div className="literary-page page-section max-w-6xl space-y-6">
       <PageHeader
         icon="🏛"
-        title="Портал служб"
+        title={copy.title}
         subtitle={`${user?.organization || user?.full_name || ""}${user?.role ? ` · ${ROLE_LABELS[user.role] || user.role}` : ""}`}
       >
-        <Link to="/" className="btn-hero-secondary text-sm no-underline">На главную</Link>
-        <Link to="/complaints" className="btn-hero-secondary text-sm no-underline">Форма жалобы</Link>
-        <button type="button" className="btn-hero-secondary text-sm" onClick={logout}>Выйти</button>
+        <Link to="/" className="literary-btn literary-btn--ghost text-sm no-underline">На главную</Link>
+        <Link to="/complaints" className="literary-btn literary-btn--ghost text-sm no-underline">Форма жалобы</Link>
+        <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={logout}>Выйти</button>
       </PageHeader>
 
-      <div className="page-panel page-panel--gold">
+      <section className="page-panel page-panel--gold">
+        <LiterarySectionHead kicker={copy.kicker} title="Фильтр обращений" lead={copy.lead} />
         <div className="flex flex-wrap gap-3">
           <select
             className="pushkin-select"
@@ -80,9 +84,11 @@ export function OfficialIssues() {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && loadIssues()}
           />
-          <Button onClick={loadIssues} size="sm">Найти</Button>
+          <button type="button" className="literary-btn literary-btn--primary" onClick={loadIssues}>
+            Найти
+          </button>
         </div>
-      </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-3">
@@ -90,13 +96,13 @@ export function OfficialIssues() {
             <button
               key={issue.id}
               type="button"
-              className={`issue-list-card w-full text-left${selected?.id === issue.id ? " issue-list-card--selected" : ""}`}
+              className={`literary-issue-card w-full text-left${selected?.id === issue.id ? " literary-issue-card--selected" : ""}`}
               onClick={() => { setSelected(issue); setResolution(issue.resolution_text || ""); }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">#{issue.id}</span>
+                    <span className="literary-issue-id">#{issue.id}</span>
                     <Badge className={STATUS_COLORS[issue.status]}>
                       {STATUS_LABELS[issue.status]}
                     </Badge>
@@ -104,68 +110,72 @@ export function OfficialIssues() {
                       <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
                     )}
                   </div>
-                  <p className="mt-2 text-sm">{issue.ai_analysis?.summary || issue.description}</p>
+                  <p className="literary-issue-summary mt-2">{issue.ai_analysis?.summary || issue.description}</p>
                   {issue.address && (
-                    <p className="mt-1 text-xs text-muted-foreground">📍 {issue.address}</p>
+                    <p className="literary-issue-address">📍 {issue.address}</p>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="literary-issue-date">
                   {formatDate(issue.created_at)}
                 </span>
               </div>
             </button>
           ))}
           {issues.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">Обращения не найдены</p>
+            <LiteraryEmptyState {...EMPTY_STATES.official} compact />
           )}
-          <div className="flex justify-between">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          <div className="flex justify-between pt-2">
+            <button type="button" className="literary-btn literary-btn--ghost text-sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               Назад
-            </Button>
-            <span className="text-sm text-muted-foreground self-center">
+            </button>
+            <span className="landing-muted self-center text-sm">
               Стр. {page} из {Math.ceil(total / 20) || 1}
             </span>
-            <Button variant="outline" size="sm" disabled={page * 20 >= total} onClick={() => setPage(page + 1)}>
+            <button type="button" className="literary-btn literary-btn--ghost text-sm" disabled={page * 20 >= total} onClick={() => setPage(page + 1)}>
               Далее
-            </Button>
+            </button>
           </div>
         </div>
 
         {selected && (
-          <div className="pushkin-card p-5 h-fit sticky top-8 space-y-4">
-            <h2 className="text-lg font-bold m-0 official-detail-title">Обращение #{selected.id}</h2>
+          <div className="page-panel page-panel--forest h-fit sticky top-8 space-y-4">
+            <LiterarySectionHead
+              kicker="📬 Обращение"
+              title={`#${selected.id}`}
+              lead={formatDate(selected.created_at)}
+            />
             <div>
-              <p className="text-sm font-medium">Описание</p>
-              <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>
+              <p className="event-detail-label">Описание</p>
+              <p className="event-detail-text">{selected.description}</p>
             </div>
             {selected.ai_analysis && (
-              <div className="rounded-md bg-muted/60 p-3 text-sm space-y-1">
-                <p><strong>AI:</strong> {selected.ai_analysis.summary}</p>
-                <p>Категория: {selected.ai_analysis.category}</p>
-                <p>Приоритет: {selected.ai_analysis.priority}</p>
+              <div className="literary-page-note">
+                <p className="m-0 text-sm"><strong>AI:</strong> {selected.ai_analysis.summary}</p>
+                <p className="m-0 text-sm mt-1">Категория: {selected.ai_analysis.category}</p>
+                <p className="m-0 text-sm">Приоритет: {selected.ai_analysis.priority}</p>
               </div>
             )}
             <div>
-              <p className="text-sm font-medium mb-2">Комментарий при закрытии</p>
+              <p className="event-detail-label mb-2">Комментарий при закрытии</p>
               <textarea
-                className="pushkin-select w-full min-h-[60px] py-2"
+                className="literary-textarea w-full min-h-[60px]"
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value)}
                 placeholder="Что сделано…"
               />
             </div>
             <div>
-              <p className="text-sm font-medium mb-2">Статус</p>
+              <p className="event-detail-label mb-2">Статус</p>
               <div className="flex flex-wrap gap-2">
                 {STATUSES.map((s) => (
-                  <Button
+                  <button
                     key={s}
-                    size="sm"
-                    variant={selected.status === s ? "default" : "outline"}
+                    type="button"
+                    className={`literary-btn text-xs py-1 px-2 ${selected.status === s ? "literary-btn--primary" : "literary-btn--ghost"}`}
                     onClick={() => handleStatusChange(selected, s)}
                   >
                     {STATUS_LABELS[s]}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
