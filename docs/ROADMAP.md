@@ -15,7 +15,7 @@
 | 0.2c | **AI mode в PostgreSQL** | ✅ сделано | `vk_ai_mode_store.py`, миграция 021 |
 | 0.3 | Smoke/deploy только на sslip.io | Не ссылаться на .ru в CI и deploy | `remote-deploy.sh`, `MERGE_PLAN.md` |
 
-**Следующий шаг:** вернуть `--workers 2` в prod и разбить `services/vk/` (фаза 1.1).
+**Следующий шаг:** объединить объявления VK с `create_classified_ad()`; перенести `vk_bot`, `vk_digest` в пакет `vk/`.
 
 ---
 
@@ -25,24 +25,24 @@
 
 ```
 backend/app/services/vk/
-├── client.py          ← app/services/vk.py
-├── bot.py
-├── flows.py           ← с персистенцией в БД
-├── command_router/    ← разбить vk_command_router.py (~800 строк)
-│   ├── menu.py
-│   ├── map_keywords.py
-│   ├── ai.py
-│   ├── complaints.py
-│   └── weather.py
-├── messages.py
-├── moderation.py
-└── digest.py
+├── __init__.py         # VK API client (без циклических импортов)
+├── client.py           # send_message, keyboards, parse_vk_message
+├── context.py          # VkRouteContext
+├── command_router.py   # публичный API маршрутизации (тонкий)
+├── message_handler.py  # route_welcome, route_vk_message, route_complaint
+├── commands.py         # handle_* + COMMAND_ALIASES
+├── ai_handler.py       # route_ai_message, route_free_chat
+├── ai_mode.py          # enter/exit/is AI mode (PostgreSQL)
+├── flows.py            # многошаговые сценарии
+├── flow_store.py       # персистенция flows
+└── helpers.py          # ответы, карта, такси
 ```
 
 | Задача | Объём |
 |--------|-------|
-| Персистенция flows (peer_id, kind, step, data JSON) | Средний |
-| Персистенция AI mode в БД или Redis | Малый |
+| Персистенция flows (peer_id, kind, step, data JSON) | ✅ `vk/flows.py`, `vk/flow_store.py` |
+| Персистенция AI mode в БД | ✅ `vk/ai_mode.py` |
+| Структура `services/vk/` + разбиение router | ✅ `commands.py`, `message_handler.py`, `ai_handler.py` |
 | Объявление из VK → `create_classified_ad()` (единая валидация) | Средний |
 | Единый источник статусов/эмодзи | `portal_copy.py` только | Малый |
 
