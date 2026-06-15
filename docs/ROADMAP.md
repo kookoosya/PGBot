@@ -43,7 +43,8 @@ backend/app/services/vk/
 | Персистенция flows (peer_id, kind, step, data JSON) | ✅ `vk/flows.py`, `vk/flow_store.py` |
 | Персистенция AI mode в БД | ✅ `vk/ai_mode.py` |
 | Структура `services/vk/` + разбиение router | ✅ `commands.py`, `message_handler.py`, `ai_handler.py` |
-| Объявление из VK → `create_classified_ad()` (единая валидация) | Средний |
+| Объявление из VK → `create_classified_ad()` (единая валидация) | ✅ `create_classified_ad_from_vk` |
+| Перенос `vk_bot`, `vk_digest`, moderation в `vk/` | ✅ `bot.py`, `digest.py`, `moderation.py` |
 | Единый источник статусов/эмодзи | `portal_copy.py` только | Малый |
 
 ### 1.2 «Божественные» сервисы
