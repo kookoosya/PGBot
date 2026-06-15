@@ -12,7 +12,7 @@ from app.models.enums import CLASSIFIED_LABELS, ClassifiedPaymentStatus
 from app.models.vk_subscriber import VkSubscriber
 from app.services.site_urls import public_site_url
 from app.services.vk.client import send_message
-from app.services.vk_subscription import (
+from app.services.vk.subscription import (
     normalize_subscription_categories,
     subscriber_wants_category,
     subscription_options_text,

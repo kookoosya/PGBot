@@ -35,7 +35,13 @@ backend/app/services/vk/
 ├── ai_mode.py          # enter/exit/is AI mode (PostgreSQL)
 ├── flows.py            # многошаговые сценарии
 ├── flow_store.py       # персистенция flows
-└── helpers.py          # ответы, карта, такси
+├── helpers.py          # ответы, карта, такси
+├── bot.py              # подписки, список объявлений
+├── digest.py           # ежедневная сводка
+├── moderation.py       # антиспам, баны
+├── subscription.py     # пресеты подписок
+├── ai_history.py       # история ИИ-диалога в БД
+└── voice.py            # распознавание голосовых
 ```
 
 | Задача | Объём |

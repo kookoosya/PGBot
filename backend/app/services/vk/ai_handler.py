@@ -11,7 +11,7 @@ from app.services.ai_chat import (
 from app.services.vk.ai_mode import enter_ai_mode, is_ai_mode
 from app.services.vk.context import VkRouteContext
 from app.services.vk.helpers import send_ai
-from app.services.vk_ai_history import append_ai_turn, get_ai_history
+from app.services.vk.ai_history import append_ai_turn, get_ai_history
 from app.services.vk_messages import ai_limit_text, ai_reply_footer, looks_like_ai_question, looks_like_complaint
 
 settings = get_settings()
