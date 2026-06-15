@@ -26,14 +26,9 @@ from app.models.enums import (
 from app.models.issue import Issue
 from app.models.place import Place, PlaceComplaint
 from app.models.site_feedback import SiteFeedback
-from app.services.classified_antifraud import (
-    check_phone_rate_limit,
-    check_recent_duplicate,
-    find_scam_phrase,
-    validate_phone,
-)
+from app.services.classified_antifraud import validate_phone
+from app.services.classified_service import ClassifiedValidationError, create_classified_ad_from_vk
 from app.services.map_routes import get_map_routes
-from app.services.notifications import notify_owner
 from app.services.vk.client import get_inline_links_keyboard, send_message
 from app.services.vk.flow_store import clear_flow as clear_flow_state
 from app.services.vk.flow_store import get_flow as get_flow_state
@@ -277,45 +272,21 @@ async def handle_flow_message(
                 return "Имя от 2 символов. Или «отмена»."
             data["author_name"] = name
 
-            scam = find_scam_phrase(f"{data['title']} {data['description']}")
-            if scam:
+            try:
+                await create_classified_ad_from_vk(
+                    db,
+                    from_id=from_id,
+                    category=data.get("category", ClassifiedCategory.OTHER),
+                    title=data["title"],
+                    description=data["description"],
+                    phone=data["phone"],
+                    author_name=name,
+                )
+            except ClassifiedValidationError as exc:
                 await clear_flow_state(db, peer_id)
-                return "Текст похож на мошенничество. Уберите предоплату и попробуйте снова."
+                return str(exc)
 
-            rate_err = await check_phone_rate_limit(db, data["phone"])
-            if rate_err:
-                await clear_flow_state(db, peer_id)
-                return rate_err
-
-            dup_err = await check_recent_duplicate(db, data["phone"], data["title"])
-            if dup_err:
-                await clear_flow_state(db, peer_id)
-                return dup_err
-
-            ad = ClassifiedAd(
-                category=data.get("category", ClassifiedCategory.OTHER),
-                title=data["title"],
-                description=data["description"],
-                phone=data["phone"],
-                author_name=name,
-                vk_id=from_id,
-                is_active=False,
-                payment_status=ClassifiedPaymentStatus.PENDING,
-                placement_fee=0,
-            )
-            db.add(ad)
-            await db.flush()
             await clear_flow_state(db, peer_id)
-
-            cat_label = CLASSIFIED_LABELS.get(ad.category, ad.category)
-            await notify_owner(
-                "📢 ОБЪЯВЛЕНИЕ ИЗ VK\n\n"
-                f"#{ad.id} · {cat_label}\n"
-                f"«{ad.title}»\n"
-                f"{ad.description[:200]}\n\n"
-                f"👤 {name}\n📞 {data['phone']}\n\n"
-                f"Модерация: {public_site_url()}/admin/classifieds"
-            )
             msg = box("Принято!", CLASSIFIED_SUBMITTED_VK)
             await send_message(
                 peer_id,

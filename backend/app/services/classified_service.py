@@ -707,6 +707,31 @@ async def create_classified_ad(
     )
 
 
+async def create_classified_ad_from_vk(
+    db: AsyncSession,
+    *,
+    from_id: int,
+    category: ClassifiedCategory,
+    title: str,
+    description: str,
+    phone: str,
+    author_name: str,
+) -> ClassifiedCreateResult:
+    """Создать объявление из VK-бота — та же валидация и уведомления, что на сайте."""
+    return await create_classified_ad(
+        db,
+        ClassifiedCreateInput(
+            category=category,
+            title=title,
+            description=description,
+            phone=phone,
+            author_name=author_name,
+            contact_vk=str(from_id),
+            agree_rules=True,
+        ),
+    )
+
+
 async def moderate_classified_ad(
     db: AsyncSession,
     ad_id: int,
@@ -738,7 +763,7 @@ async def moderate_classified_ad(
 
         subscribers_notified = 0
         try:
-            from app.services.vk_bot import notify_subscribers_new_ad
+            from app.services.vk.bot import notify_subscribers_new_ad
 
             subscribers_notified = await notify_subscribers_new_ad(db, ad)
         except Exception:

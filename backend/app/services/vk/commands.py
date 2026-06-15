@@ -39,7 +39,7 @@ from app.services.vk.helpers import (
 )
 from app.services.vk.ai_mode import enter_ai_mode
 from app.services.vk_ai_history import clear_ai_history
-from app.services.vk_bot import format_ads_message, unsubscribe_peer
+from app.services.vk.bot import format_ads_message, unsubscribe_peer
 from app.services.vk_messages import ai_enter_text, box, help_text
 from app.services.weather_service import (
     WeatherFetchError,

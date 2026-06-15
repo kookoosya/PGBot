@@ -9,7 +9,7 @@ from app.models.taxi import TaxiService
 from app.services.site_urls import public_site_url
 from app.services.vk.client import get_ai_keyboard, get_inline_links_keyboard, get_welcome_keyboard, send_message
 from app.services.vk.context import VkRouteContext
-from app.services.vk_bot import subscribe_peer
+from app.services.vk.bot import subscribe_peer
 
 AI_EXAMPLES = (
     "• Напиши объявление про дрова\n"
