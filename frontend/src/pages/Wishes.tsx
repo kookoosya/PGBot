@@ -1,9 +1,11 @@
 import { FormEvent, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { api } from "@/lib/api";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
+
+const copy = PAGE_SECTIONS.wishes;
 
 const ideas = [
   "Добавить расписание автобусов",
@@ -42,28 +44,27 @@ export function Wishes() {
   };
 
   return (
-    <div className="page-section">
-      <PageHeader
-        icon="💡"
-        title="Пожелания"
-        subtitle="Предложите, как сделать портал лучше — идеи увидит администратор"
-      />
+    <div className="literary-page page-section max-w-5xl">
+      <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
 
       {sent ? (
-        <div className="epic-bento-card epic-bento-emerald max-w-xl mx-auto text-center p-8">
-          <p className="text-4xl mb-3">✨</p>
-          <h2 className="text-xl font-bold m-0">Спасибо!</h2>
-          <p className="text-muted-foreground mt-2 mb-4">Ваше пожелание принято. Мы учтём его при развитии портала.</p>
-          <Button onClick={() => setSent(false)}>Отправить ещё</Button>
-        </div>
+        <LiteraryEmptyState {...EMPTY_STATES.wishesSent}>
+          <button
+            type="button"
+            className="literary-btn literary-btn--ghost mt-3"
+            onClick={() => setSent(false)}
+          >
+            Отправить ещё
+          </button>
+        </LiteraryEmptyState>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[1fr_320px] max-w-5xl mx-auto">
-          <form onSubmit={submit} className="pushkin-card p-6 md:p-8 space-y-4 form-glow">
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px] mt-6">
+          <form onSubmit={submit} className="page-panel page-panel--forest literary-auth-panel space-y-4">
             <label className="block text-sm font-semibold">
               Ваше пожелание или идея
               <textarea
-                className="mt-2 w-full min-h-[160px] rounded-xl border px-4 py-3 text-sm"
-                placeholder="Опишите, что улучшить на сайте, какой раздел добавить, что неудобно..."
+                className="mt-2 w-full min-h-[160px] rounded-lg border px-4 py-3 text-sm pushkin-select"
+                placeholder="Опишите, что улучшить на сайте, какой раздел добавить, что неудобно…"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
@@ -74,22 +75,26 @@ export function Wishes() {
             <label className="block text-sm font-semibold">
               Контакт (необязательно)
               <input
-                className="mt-2 w-full rounded-xl border px-4 py-2.5 text-sm"
+                className="mt-2 w-full rounded-lg border px-4 py-2.5 text-sm pushkin-select"
                 placeholder="Телефон, VK или email — чтобы уточнить детали"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 maxLength={200}
               />
             </label>
-            {error && <p className="alert-error">{error}</p>}
-            <Button type="submit" disabled={loading || message.trim().length < 5} className="w-full md:w-auto">
+            {error && <p className="alert-error m-0">{error}</p>}
+            <button
+              type="submit"
+              className="literary-btn literary-btn--primary w-full md:w-auto"
+              disabled={loading || message.trim().length < 5}
+            >
               {loading ? "Отправляю…" : "Отправить пожелание"}
-            </Button>
+            </button>
           </form>
 
           <aside className="space-y-4">
-            <div className="pushkin-card p-5">
-              <h3 className="font-bold m-0 mb-2">Примеры идей</h3>
+            <div className="page-panel page-panel--gold p-5">
+              <h3 className="literary-title text-base m-0 mb-2">Примеры идей</h3>
               <div className="suggest-chips">
                 {ideas.map((idea) => (
                   <button
@@ -103,11 +108,17 @@ export function Wishes() {
                 ))}
               </div>
             </div>
-            <div className="pushkin-card p-5 text-sm text-muted-foreground">
-              Пожелания помогают развивать портал для жителей и гостей Пушкинских Гор. Можно писать про дизайн, карту, объявления, жалобы и VK-бота.
-            </div>
+            <p className="literary-page-note text-sm text-muted-foreground p-4 rounded-lg border border-border/60">
+              Пожелания помогают развивать портал для жителей и гостей Пушкинских Гор — про дизайн, карту, объявления, жалобы и VK-бота.
+            </p>
           </aside>
         </div>
+      )}
+
+      {!sent && (
+        <p className="landing-section-verse text-center mt-10" aria-hidden>
+          {LITERARY_VERSES.wishes}
+        </p>
       )}
     </div>
   );

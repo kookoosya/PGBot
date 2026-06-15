@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { LITERARY_VERSES } from "@/lib/literaryCopy";
+import { LiterarySectionHead } from "@/components/literary";
 import { Button } from "@/components/ui/button";
 import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
+import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type Tab = "chat" | "image";
+
+const copy = PAGE_SECTIONS.ai;
 
 export function AIChat() {
   const [tab, setTab] = useState<Tab>("chat");
@@ -104,14 +106,19 @@ export function AIChat() {
   ];
 
   return (
-    <div className="page-section max-w-3xl ai-page">
-      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Тексты, идеи и картинки — с душой Пушкиногорья">
-        {usage && (
-          <span className="ai-usage-pill">
-            {usage.remaining} из {usage.daily_limit} сегодня
-          </span>
-        )}
-      </PageHeader>
+    <div className="literary-page page-section max-w-3xl ai-page">
+      <LiterarySectionHead
+        kicker={copy.kicker}
+        title={copy.title}
+        lead={copy.lead}
+        meta={
+          usage ? (
+            <span className="ai-usage-pill">
+              {usage.remaining} из {usage.daily_limit} сегодня
+            </span>
+          ) : undefined
+        }
+      />
 
       {aiStatus && !aiStatus.ready && (
         <div className="ai-status-warn" role="status">
@@ -244,6 +251,7 @@ export function AIChat() {
           )}
         </div>
       )}
+      <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.ai}</p>
     </div>
   );
 }

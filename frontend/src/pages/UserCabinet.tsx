@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LITERARY_VERSES } from "@/lib/literaryCopy";
+import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
@@ -36,14 +36,16 @@ export function UserCabinet() {
   const isOrg = !!user.organization;
 
   return (
-    <div className="page-section max-w-2xl mx-auto">
+    <div className="literary-page page-section max-w-2xl mx-auto">
       <PageHeader
         icon="🪶"
         title={isOrg ? "Кабинет организации" : "Личный кабинет"}
-        subtitle={`Добро пожаловать, ${user.full_name || user.username} — ваш уголок в Пушкиногорье`}
+        subtitle={`Добро пожаловать, ${user.full_name || user.username}`}
       >
         <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={logout}>Выйти</button>
       </PageHeader>
+
+      <p className="literary-lead text-center mb-6 -mt-2">{PAGE_SECTIONS.cabinet.lead}</p>
 
       <div className="literary-card literary-card--forest p-6 space-y-4 mb-6">
         <h2 className="literary-title text-lg m-0">Профиль</h2>

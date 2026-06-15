@@ -2279,6 +2279,135 @@
     );
   }
 
+  .literary-page-loader {
+    display: flex;
+    min-height: 40vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-family: "Source Serif 4", Georgia, serif;
+    color: hsl(var(--walnut) / 0.72);
+  }
+  .literary-page-loader-icon {
+    font-size: 1.75rem;
+    opacity: 0.85;
+    animation: literary-pulse 2s ease-in-out infinite;
+  }
+  @keyframes literary-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+  .literary-register-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--gold) / 0.28);
+    background: linear-gradient(
+      145deg,
+      hsl(var(--parchment) / 0.98) 0%,
+      hsl(var(--cream) / 0.92) 100%
+    );
+    box-shadow: 0 2px 12px hsl(30 14% 8% / 0.06);
+    transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .literary-register-option:hover {
+    border-color: hsl(var(--gold) / 0.5);
+    box-shadow: 0 8px 24px hsl(30 14% 8% / 0.1);
+    transform: translateY(-2px);
+  }
+  .literary-register-option-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .literary-register-badge {
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: hsl(var(--gold) / 0.2);
+    color: hsl(var(--walnut));
+    border: 1px solid hsl(var(--gold) / 0.35);
+  }
+  .literary-auth-panel {
+    padding: 1.5rem;
+  }
+  .literary-provider-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .literary-gallery-section {
+    padding: 3rem 0 4rem;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--parchment) / 0.35) 0%,
+      hsl(var(--cream) / 0.5) 50%,
+      hsl(var(--background)) 100%
+    );
+    border-top: 1px dashed hsl(var(--gold) / 0.2);
+  }
+  .literary-gallery-card {
+    border-radius: calc(var(--radius) + 0.125rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.82));
+    box-shadow: 0 8px 28px hsl(var(--forest) / 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  .literary-gallery-card:hover {
+    border-color: hsl(var(--gold) / 0.38);
+    box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
+    transform: translateY(-2px);
+  }
+  .literary-gallery-photo {
+    position: relative;
+  }
+  .literary-gallery-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 55%, hsl(30 14% 8% / 0.35) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .literary-gallery-card:hover .literary-gallery-scrim {
+    opacity: 1;
+  }
+  .literary-gallery-caption {
+    padding: 1rem 1.15rem 1.2rem;
+  }
+  .literary-gallery-title {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.35rem;
+    color: hsl(var(--walnut));
+  }
+  .literary-gallery-sub {
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+    line-height: 1.45;
+  }
+  .literary-gallery-verse {
+    margin: 0.65rem 0 0;
+    padding-top: 0.55rem;
+    border-top: 1px dashed hsl(var(--gold) / 0.22);
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: hsl(var(--gold) / 0.85);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .literary-card,
     .literary-classified-card,

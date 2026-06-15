@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { api } from "@/lib/api";
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -59,31 +59,30 @@ export function ServiceRegister() {
 
   if (success) {
     return (
-      <div className="mx-auto max-w-lg px-6 py-16 text-center pushkin-card p-10 mt-12">
-        <span className="text-5xl">✅</span>
-        <h2 className="text-2xl font-bold mt-4">Заявка отправлена!</h2>
-        <p className="text-muted-foreground mt-4">После проверки вы появитесь в каталоге мастеров.</p>
-        <div className="flex flex-wrap gap-4 justify-center mt-6">
-          <Link to="/cabinet/login?next=/services/cabinet" className="text-primary hover:underline font-medium">
-            Войти после одобрения →
-          </Link>
-          <Link to="/services" className="text-muted-foreground hover:underline">К услугам</Link>
-        </div>
+      <div className="literary-page page-section max-w-lg mx-auto py-12">
+        <LiteraryEmptyState {...EMPTY_STATES.registerSuccess} icon="✅">
+          <div className="landing-inline-actions flex flex-wrap gap-3 justify-center mt-4">
+            <Link to="/cabinet/login?next=/services/cabinet" className="literary-btn literary-btn--primary no-underline">
+              Войти после одобрения →
+            </Link>
+            <Link to="/services" className="literary-btn literary-btn--ghost no-underline">К услугам</Link>
+          </div>
+        </LiteraryEmptyState>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-xl px-6 py-12">
-      <h2 className="text-3xl font-bold text-center mb-2">Регистрация мастера</h2>
-      <p className="text-center text-muted-foreground mb-2">Маникюр, стрижки, брови и другие услуги</p>
-      <p className="text-center text-sm mb-8">
-        <Link to="/register" className="text-primary hover:underline">← Все варианты регистрации</Link>
-      </p>
-      <Card className="pushkin-card">
-        <CardHeader><CardTitle>Ваши данные</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4">
+    <div className="literary-page page-section max-w-xl mx-auto">
+      <LiterarySectionHead
+        kicker="💇 Мастер"
+        title="Регистрация мастера"
+        lead="Маникюр, стрижки, брови и другие услуги — профиль в справочнике после модерации."
+        linkTo="/register"
+        linkLabel="← Все варианты"
+      />
+
+      <form onSubmit={submit} className="page-panel page-panel--gold literary-auth-panel space-y-4 mt-6">
             <Input placeholder="ФИО" value={form.full_name} onChange={(e) => set("full_name", e.target.value)} required />
             <Input placeholder="Телефон" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
             <Input placeholder="Адрес приёма" value={form.address} onChange={(e) => set("address", e.target.value)} />
@@ -128,11 +127,9 @@ export function ServiceRegister() {
                 )}
               </div>
             ))}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Подать заявку</Button>
-          </form>
-        </CardContent>
-      </Card>
+            {error && <p className="text-sm text-destructive m-0">{error}</p>}
+            <button type="submit" className="literary-btn literary-btn--primary w-full">Подать заявку</button>
+      </form>
     </div>
   );
 }
