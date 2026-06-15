@@ -21,7 +21,7 @@ from app.database import get_db
 from app.services.ai_mode import exit_ai_mode
 from app.services.vk import get_welcome_keyboard, parse_vk_message, send_message
 from app.services.vk_flows import handle_flow_message
-from app.services.vk_voice import extract_audio_url, transcribe_audio_url
+from app.services.vk.voice import extract_audio_url, transcribe_audio_url
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
