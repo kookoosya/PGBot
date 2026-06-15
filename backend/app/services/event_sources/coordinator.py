@@ -22,6 +22,7 @@ from app.services.event_enrichment_batch import (
     enrich_stale_events,
     recategorize_other_events,
     recategorize_planetarium_from_cinema,
+    recategorize_theater_from_cinema,
 )
 from app.services.event_sources.vk_source import VkEventSource
 
@@ -67,6 +68,7 @@ async def sync_event_source(
         )]
     results = await source.sync_events(db, region=region, actor_id=actor_id)
     planetarium = await recategorize_planetarium_from_cinema(db)
+    theater = await recategorize_theater_from_cinema(db)
     recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
@@ -74,6 +76,8 @@ async def sync_event_source(
     demos = await unpublish_stale_demo_cinema(db)
     if planetarium:
         logger.info("Post-sync planetarium recategorize (%s): %s events", source_name, planetarium)
+    if theater:
+        logger.info("Post-sync theater recategorize (%s): %s events", source_name, theater)
     if enriched:
         logger.info("Post-sync event enrichment (%s): %s events updated", source_name, enriched)
     if posters:
@@ -116,6 +120,7 @@ async def sync_all_event_sources(
                 errors=[str(exc)],
             ))
     planetarium = await recategorize_planetarium_from_cinema(db)
+    theater = await recategorize_theater_from_cinema(db)
     recategorized = await recategorize_other_events(db)
     enriched = await enrich_stale_events(db)
     posters = await enrich_missing_posters(db)
@@ -123,6 +128,8 @@ async def sync_all_event_sources(
     demos = await unpublish_stale_demo_cinema(db)
     if planetarium:
         logger.info("Post-sync planetarium recategorize: %s events", planetarium)
+    if theater:
+        logger.info("Post-sync theater recategorize: %s events", theater)
     if enriched:
         logger.info("Post-sync event enrichment: %s events updated", enriched)
     if posters:

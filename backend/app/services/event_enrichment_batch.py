@@ -39,6 +39,25 @@ def _needs_enrichment(event: Event) -> bool:
     return False
 
 
+async def recategorize_theater_from_cinema(db: AsyncSession, *, limit: int = 200) -> int:
+    """Theater plays from Orbilet must not appear in the cinema block."""
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.category == EventCategory.CINEMA.value,
+        ).limit(limit)
+    )
+    updated = 0
+    for event in result.scalars().all():
+        if _CULTURE_LIKE_TITLE_RE.search(event.title):
+            event.category = EventCategory.CULTURE.value
+            updated += 1
+    if updated:
+        await db.flush()
+        logger.info("Recategorized %s theater events from cinema to culture", updated)
+    return updated
+
+
 async def recategorize_planetarium_from_cinema(db: AsyncSession, *, limit: int = 200) -> int:
     """Planetarium full-dome shows are culture, not commercial cinema."""
     result = await db.execute(

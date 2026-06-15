@@ -40,6 +40,8 @@ class OrbiletEvent:
 
 def _map_category(title: str) -> EventCategory:
     lower = title.lower()
+    if any(word in lower for word in ("спектакл", "постановк", "театр")) or lower.startswith("игра «"):
+        return EventCategory.CULTURE
     if any(word in lower for word in ("фильм", "кино", "полнокупольн")):
         return EventCategory.CINEMA
     for category, keywords in EVENT_CATEGORY_KEYWORDS.items():
