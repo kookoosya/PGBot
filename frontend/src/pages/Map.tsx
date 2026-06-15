@@ -447,7 +447,7 @@ export function MapPage() {
       <div className="page-section pb-2">
         <PageHeader
           icon="🗺"
-          title="Карта посёлка"
+          title="Карта Пушкиногорья"
           subtitle={PUSHKIN_QUOTES.map}
         />
       </div>

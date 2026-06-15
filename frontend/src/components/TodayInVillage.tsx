@@ -34,11 +34,11 @@ export function TodayInVillage() {
   const ad = data.latest_classified;
 
   return (
-    <section className="today-panel" aria-label="Сегодня в посёлке">
+    <section className="today-panel page-panel page-panel--gold" aria-label="Сегодня в Пушкиногорье">
       <div className="today-panel-head">
         <div>
           <p className="today-kicker">🪶 Актуально сейчас</p>
-          <h2>Сегодня в посёлке</h2>
+          <h2>Сегодня в Пушкиногорье</h2>
         </div>
         <p className="today-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>
       </div>

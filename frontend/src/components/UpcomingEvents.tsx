@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
-import { regionChipClass } from "@/lib/eventUtils";
+import { isCinemaEvent } from "@/lib/eventUtils";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function UpcomingEvents() {
   const { data, loading } = useToday(apiRegion);
   const events = data?.upcoming_events ?? [];
 
-  const visibleEvents = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     let list = events;
     if (regionFilter !== "all") {
       const label = regionFilter === "pskov" ? "Псков" : "Пушкинские Горы";
@@ -39,78 +39,125 @@ export function UpcomingEvents() {
     return list;
   }, [events, regionFilter, searchInput]);
 
+  const pushkinEvents = useMemo(
+    () => filteredEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isCinemaEvent(e)),
+    [filteredEvents],
+  );
+  const cinemaEvents = useMemo(
+    () => filteredEvents.filter((e) => isCinemaEvent(e)),
+    [filteredEvents],
+  );
+  const otherPskovEvents = useMemo(
+    () => filteredEvents.filter((e) => e.region_label === "Псков" && !isCinemaEvent(e)),
+    [filteredEvents],
+  );
+
+  const showSplit = regionFilter === "all" && !searchInput.trim();
+
   return (
-    <section className="events-panel" aria-label="Ближайшие события">
-      <div className="events-panel-head">
-        <div>
-          <p className="events-kicker">📅 Афиша региона</p>
-          <h2>Ближайшие события</h2>
-          <p className="events-lead">
-            Концерты и праздники в Пушкинских Горах, кино и мероприятия в Пскове — для жителей и гостей.
-          </p>
-        </div>
-        <Link to="/events" className="events-all-link">Вся афиша →</Link>
-      </div>
+    <div className="literary-dashboard">
+      <section className="page-panel page-panel--forest" aria-label="Ближайшее в Пушкиногорье">
+        <LiterarySectionHead
+          kicker="📅 Афиша посёлка"
+          title="Ближайшее в Пушкиногорье"
+          lead="Концерты, праздники и встречи в рп. Пушкинские Горы — для жителей и гостей музея-заповедника."
+          linkTo="/events"
+          linkLabel="Вся афиша →"
+        />
 
-      <div className="events-toolbar">
-        <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
-          {REGION_FILTERS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
-              onClick={() => setRegionFilter(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="events-toolbar mb-4">
+          <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
+            {REGION_FILTERS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
+                onClick={() => setRegionFilter(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="events-search-row">
+            <Input
+              placeholder="Поиск по афише…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="events-search-input pushkin-select"
+            />
+            {searchInput && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setSearchInput("")}>
+                Сброс
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="events-search-row">
-          <Input
-            placeholder="Поиск…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="events-search-input"
+
+        {loading && !data ? (
+          <p className="events-muted">Загружаем афишу…</p>
+        ) : showSplit ? (
+          pushkinEvents.length === 0 ? (
+            <LiteraryEmptyState
+              icon="🎭"
+              title="Афиша готовится"
+              text="Скоро здесь появятся концерты, ярмарки и праздники в посёлке."
+              verse="«И долго буду тем любезен я народу…»"
+            />
+          ) : (
+            <ol className="events-grid events-grid--wide">
+              {pushkinEvents.map((event) => (
+                <EventCard key={event.id} event={event} descLimit={120} />
+              ))}
+            </ol>
+          )
+        ) : filteredEvents.length === 0 ? (
+          <LiteraryEmptyState
+            icon="🔍"
+            title="Ничего не найдено"
+            text="Попробуйте другой запрос или смените регион."
           />
-          {searchInput && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setSearchInput("")}>
-              Сброс
-            </Button>
-          )}
-        </div>
-      </div>
+        ) : (
+          <ol className="events-grid events-grid--wide">
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} event={event} descLimit={120} />
+            ))}
+          </ol>
+        )}
+      </section>
 
-      {loading && !data ? (
-        <p className="events-muted">Загружаем афишу…</p>
-      ) : visibleEvents.length === 0 ? (
-        <p className="events-muted">
-          {searchInput
-            ? "Ничего не найдено — попробуйте другой запрос."
-            : regionFilter === "all"
-              ? "Скоро здесь появятся концерты, ярмарки и встречи — следите за обновлениями или откройте всю афишу."
-              : "В этом регионе пока нет ближайших событий."}
-        </p>
-      ) : (
-        <ol className="events-list">
-          {visibleEvents.map((event) => (
-            <li key={event.id} className="events-item literary-card literary-card--gold">
-              <div className="events-item-meta">
-                <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-                <span className="events-category">{event.category_label}</span>
-                <time className="events-date">{event.starts_at_label}</time>
-                {event.ends_at_label && (
-                  <span className="events-date-end">до {event.ends_at_label}</span>
-                )}
-              </div>
-              <Link to={`/events/${event.id}`} className="events-title events-title-link">
-                {event.title}
-              </Link>
-              {event.location && <p className="events-location">📍 {event.location}</p>}
-              {event.description && <p className="events-desc">{event.description.slice(0, 120)}{event.description.length > 120 ? "…" : ""}</p>}
-            </li>
-          ))}
-        </ol>
+      {showSplit && cinemaEvents.length > 0 && (
+        <section className="page-panel page-panel--gold" aria-label="Кино в Пскове">
+          <LiterarySectionHead
+            kicker="🎬 Кинотеатры"
+            title="Кино в Пскове"
+            lead="Сеансы в городе — удобно совместить с поездкой из Пушкинских Гор."
+            linkTo="/events?region=pskov"
+            linkLabel="Все сеансы →"
+          />
+          <ol className="events-grid events-grid--cinema">
+            {cinemaEvents.map((event) => (
+              <EventCard key={event.id} event={event} descLimit={100} />
+            ))}
+          </ol>
+        </section>
       )}
-    </section>
+
+      {showSplit && otherPskovEvents.length > 0 && (
+        <section className="page-panel page-panel--gold" aria-label="События в Пскове">
+          <LiterarySectionHead
+            kicker="🏛 Псков"
+            title="В Пскове"
+            lead="Концерты и мероприятия в областном центре."
+            linkTo="/events?region=pskov"
+            linkLabel="Афиша Пскова →"
+          />
+          <ol className="events-grid">
+            {otherPskovEvents.map((event) => (
+              <EventCard key={event.id} event={event} descLimit={100} />
+            ))}
+          </ol>
+        </section>
+      )}
+    </div>
   );
 }

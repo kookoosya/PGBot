@@ -16,6 +16,10 @@ export function regionChipClass(regionLabel: string): string {
   return "events-region-chip events-region-chip--pushkin";
 }
 
+export function isCinemaEvent(event: { category?: string; category_label: string }): boolean {
+  return event.category === "cinema" || /кино|фильм|сеанс/i.test(event.category_label);
+}
+
 export function regionLabelFromFilter(region: EventRegion): string {
   return region === "pskov" ? "Псков" : "Пушкинские Горы";
 }

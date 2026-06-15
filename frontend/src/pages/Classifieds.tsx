@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryEmptyState } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,7 +114,7 @@ export function Classifieds() {
             : `${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`
         }
       >
-        <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
+        <button type="button" className="literary-btn literary-btn--primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Подать объявление"}
         </button>
         <span className="free-badge">🆓 Бесплатно</span>
@@ -244,7 +245,7 @@ export function Classifieds() {
         {ads.map((ad) => {
           const visual = getCategoryVisual(ad.category);
           return (
-            <div key={ad.id} className="classified-ad-card">
+            <div key={ad.id} className="classified-ad-card literary-card literary-card--gold">
               <div className="classified-ad-image" style={{ background: visual.gradient }}>
                 <span className="classified-ad-icon">{visual.icon}</span>
                 <span className="classified-ad-badge">{ad.category_label}</span>
@@ -269,7 +270,12 @@ export function Classifieds() {
           );
         })}
         {!loading && ads.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">Объявлений пока нет. Будьте первым!</p>
+          <LiteraryEmptyState
+            icon="📋"
+            title="Пока тихо"
+            text="Объявлений ещё нет — разместите первое бесплатно."
+            verse="«Соседи — лучшие друзья на земле.»"
+          />
         )}
         {loading && <p className="text-center text-muted-foreground py-6">Загрузка…</p>}
         {ads.length > 0 && ads.length < total && (

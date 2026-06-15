@@ -1,0 +1,398 @@
+/* Пушкиногорский альбом — литературно-усадебный визуальный стиль */
+
+/* === Типографика и UI-шрифт === */
+  .literary-ui,
+  .pushkin-select,
+  .filter-chip,
+  .events-region-filter,
+  .map-filter-chip,
+  .literary-btn,
+  .literary-kicker {
+    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  }
+
+  /* === Заголовки секций === */
+  .literary-section {
+    margin: 0;
+  }
+  .literary-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .literary-kicker {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--gold));
+  }
+  .literary-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 600;
+    color: hsl(var(--forest));
+    line-height: 1.2;
+  }
+  .literary-lead {
+    margin: 0.5rem 0 0;
+    max-width: 42rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-section-link {
+    flex-shrink: 0;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .literary-section-link:hover {
+    color: hsl(var(--gold));
+    text-decoration: underline;
+  }
+
+  /* === Альбомные карточки === */
+  .literary-card {
+    position: relative;
+    padding: 1.25rem 1.5rem 1.25rem 1.65rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(
+      165deg,
+      hsl(var(--card) / 0.98) 0%,
+      hsl(var(--parchment) / 0.92) 100%
+    );
+    box-shadow:
+      0 10px 32px hsl(var(--forest) / 0.06),
+      inset 0 1px 0 hsl(40 100% 100% / 0.6);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .literary-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: hsl(var(--forest));
+  }
+  .literary-card--gold::before { background: hsl(var(--gold)); }
+  .literary-card--burgundy::before { background: hsl(var(--burgundy)); }
+  .literary-card--forest::before { background: hsl(var(--forest)); }
+  .literary-card:hover {
+    box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
+    transform: translateY(-1px);
+  }
+
+  /* === Панели страниц === */
+  .page-panel {
+    position: relative;
+    padding: 1.35rem 1.5rem 1.35rem 1.65rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.9));
+    box-shadow: 0 12px 36px hsl(var(--forest) / 0.06);
+    overflow: hidden;
+  }
+  .page-panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: hsl(var(--forest) / 0.35);
+  }
+  .page-panel--gold::before { background: hsl(var(--gold)); }
+  .page-panel--forest::before { background: hsl(var(--forest)); }
+  .page-panel--burgundy::before { background: hsl(var(--burgundy)); }
+
+  /* === Кнопки и ссылки === */
+  .literary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .literary-btn--primary {
+    background: hsl(var(--forest));
+    color: hsl(var(--parchment));
+    border-color: hsl(var(--forest));
+  }
+  .literary-btn--primary:hover {
+    background: hsl(158 26% 18%);
+    transform: translateY(-1px);
+  }
+  .literary-btn--gold {
+    background: hsl(var(--gold));
+    color: hsl(var(--parchment));
+    border-color: hsl(var(--gold));
+  }
+  .literary-btn--gold:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+  .literary-btn--ghost {
+    background: hsl(var(--card) / 0.85);
+    color: hsl(var(--forest));
+    border-color: hsl(var(--border));
+  }
+  .literary-btn--ghost:hover {
+    border-color: hsl(var(--gold) / 0.55);
+    background: hsl(var(--card));
+  }
+  .literary-link {
+    color: hsl(var(--forest));
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid hsl(var(--gold) / 0.35);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .literary-link:hover {
+    color: hsl(var(--gold));
+    border-bottom-color: hsl(var(--gold));
+  }
+
+  /* === Пустые состояния === */
+  .literary-empty {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px dashed hsl(var(--border));
+    background: hsl(var(--card) / 0.6);
+  }
+  .literary-empty-icon {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    opacity: 0.85;
+  }
+  .literary-empty-title {
+    margin: 0 0 0.5rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.25rem;
+    color: hsl(var(--forest));
+  }
+  .literary-empty-text {
+    margin: 0 auto 1rem;
+    max-width: 28rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-empty-verse {
+    margin: 1rem 0 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-size: 0.875rem;
+    color: hsl(var(--gold));
+    opacity: 0.9;
+  }
+
+  /* === Карточки событий === */
+  .event-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 100%;
+    text-decoration: none;
+    color: inherit;
+  }
+  .event-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .event-card-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: hsl(var(--forest));
+    transition: color 0.15s ease;
+  }
+  .event-card:hover .event-card-title,
+  a.event-card:hover .event-card-title {
+    color: hsl(var(--gold));
+  }
+  .event-card-location {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .event-card-desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .event-card-footer {
+    margin-top: auto;
+    padding-top: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(var(--gold));
+    font-family: "Source Sans 3", system-ui, sans-serif;
+  }
+
+  /* Кино — с постером */
+  .event-card--cinema {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.85rem 1rem;
+    align-items: start;
+  }
+  @media (min-width: 480px) {
+    .event-card--cinema {
+      grid-template-columns: 5.5rem 1fr;
+    }
+  }
+  .event-card-poster {
+    aspect-ratio: 2 / 3;
+    border-radius: calc(var(--radius) - 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background:
+      linear-gradient(145deg, hsl(var(--burgundy) / 0.15), hsl(var(--forest) / 0.2)),
+      linear-gradient(180deg, hsl(30 14% 15% / 0.85), hsl(var(--forest) / 0.9));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    box-shadow: 0 6px 18px hsl(var(--forest) / 0.15);
+  }
+  .event-card--cinema .event-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+  .event-card--cinema.event-card--pskov .event-card-poster {
+    border-color: hsl(var(--gold) / 0.45);
+    background:
+      linear-gradient(145deg, hsl(var(--gold) / 0.2), hsl(var(--burgundy) / 0.12)),
+      linear-gradient(180deg, hsl(43 40% 18%), hsl(var(--forest) / 0.85));
+  }
+
+  /* === PageHeader литературный === */
+  .page-header--literary {
+    border-left: 4px solid hsl(var(--gold));
+  }
+  .page-header--literary .page-header-subtitle {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-style: italic;
+    opacity: 0.92;
+  }
+
+  /* === Лендинг: альбомные блоки === */
+  .literary-album-section {
+    padding: 2.5rem 0;
+  }
+  .literary-album-section + .literary-album-section {
+    border-top: 1px solid hsl(var(--border) / 0.65);
+  }
+  .literary-dashboard {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .literary-useful-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 768px) {
+    .literary-useful-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .literary-useful-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.15rem 1.25rem 1.15rem 1.4rem;
+    border-radius: calc(var(--radius) + 0.125rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.95);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .literary-useful-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: hsl(var(--forest));
+  }
+  .literary-useful-card--gold::before { background: hsl(var(--gold)); }
+  .literary-useful-card:hover {
+    box-shadow: 0 12px 32px hsl(var(--forest) / 0.08);
+    transform: translateY(-2px);
+  }
+  .literary-useful-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .literary-useful-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.0625rem;
+    color: hsl(var(--forest));
+  }
+  .literary-useful-desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-useful-go {
+    margin-top: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(var(--gold));
+    font-family: "Source Sans 3", system-ui, sans-serif;
+  }
+
+  .events-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  @media (min-width: 640px) {
+    .events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .events-grid--cinema { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .events-grid--wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }

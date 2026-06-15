@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { LiteraryEmptyState } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
-import { eventSourceLabel, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
+import { eventSourceLabel, isCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
 
 export function EventDetail() {
   const { id } = useParams();
@@ -33,9 +33,10 @@ export function EventDetail() {
 
   if (error) {
     return (
-      <div className="page-section max-w-3xl text-center py-16">
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <Link to="/events" className="btn-hero-secondary inline-flex no-underline">← К афише</Link>
+      <div className="page-section max-w-3xl">
+        <LiteraryEmptyState icon="📅" title="Событие не найдено" text={error}>
+          <Link to="/events" className="literary-btn literary-btn--ghost mt-2">← К афише</Link>
+        </LiteraryEmptyState>
       </div>
     );
   }
@@ -44,23 +45,39 @@ export function EventDetail() {
     return <div className="page-section text-center text-muted-foreground py-16">Загружаем событие…</div>;
   }
 
+  const cinema = isCinemaEvent(event);
+
   return (
     <div className="page-section max-w-3xl">
-      <PageHeader icon="📅" title={event.title} subtitle={event.category_label}>
-        <Link to="/events" className="btn-hero-secondary text-sm no-underline">← Вся афиша</Link>
-        <button type="button" className="btn-hero-secondary text-sm" onClick={share}>
+      <PageHeader icon={cinema ? "🎬" : "📅"} title={event.title} subtitle={event.category_label}>
+        <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">← Вся афиша</Link>
+        <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={share}>
           Поделиться
         </button>
       </PageHeader>
 
       {shareMsg && <p className="alert-success mb-4">{shareMsg}</p>}
 
-      <article className="event-detail-card pushkin-card">
-        <div className="event-detail-meta">
-          <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-          <span className="events-category">{event.category_label}</span>
-          <span className="event-detail-source">Источник: {eventSourceLabel(event.source)}</span>
-        </div>
+      <article className={`event-detail-card literary-card ${cinema ? "literary-card--burgundy" : "literary-card--gold"}`}>
+        {cinema && (
+          <div className="event-card--cinema mb-4" style={{ display: "grid", gridTemplateColumns: "5.5rem 1fr", gap: "1rem" }}>
+            <div className="event-card-poster" aria-hidden>🎬</div>
+            <div className="event-card-body">
+              <div className="event-detail-meta">
+                <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
+                <span className="events-category">{event.category_label}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!cinema && (
+          <div className="event-detail-meta">
+            <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
+            <span className="events-category">{event.category_label}</span>
+            <span className="event-detail-source">Источник: {eventSourceLabel(event.source)}</span>
+          </div>
+        )}
 
         <div className="event-detail-when">
           <p className="event-detail-label">Когда</p>
@@ -88,14 +105,16 @@ export function EventDetail() {
           {event.source_url ? (
             <a
               href={event.source_url}
-              className="btn-hero-primary no-underline inline-flex"
+              className="literary-btn literary-btn--primary no-underline"
               target="_blank"
               rel="noopener noreferrer"
             >
               Перейти к источнику ({eventSourceLabel(event.source)})
             </a>
           ) : (
-            <Button type="button" variant="outline" onClick={share}>Поделиться событием</Button>
+            <button type="button" className="literary-btn literary-btn--ghost" onClick={share}>
+              Поделиться событием
+            </button>
           )}
         </div>
       </article>

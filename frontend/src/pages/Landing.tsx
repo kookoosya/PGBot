@@ -14,13 +14,13 @@ import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 
-const highlights = [
-  { n: "01", icon: "🗺", title: "Карта", desc: "Магазины, такси, музеи и туристические маршруты по Пушкиногорью", to: "/map", tone: "sky" },
-  { n: "02", icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — бесплатно, без регистрации", to: "/classifieds", tone: "gold" },
-  { n: "03", icon: "💼", title: "Работа", desc: "Вакансии и подработка от местных работодателей", to: "/jobs", tone: "emerald" },
-  { n: "04", icon: "📅", title: "Афиша", desc: "Концерты, праздники, кино в Пушкинских Горах и Пскове", to: "/events", tone: "rose" },
-  { n: "05", icon: "🤖", title: "ИИ-помощник", desc: "30 сообщений в день — тексты, идеи, ответы о посёлке", to: "/ai", tone: "violet" },
-  { n: "06", icon: "⚠️", title: "Жалобы", desc: "Дороги, ЖКХ, освещение — официальный канал для жителей", to: "/complaints", tone: "forest" },
+const usefulNearby = [
+  { icon: "🗺", title: "Карта", desc: "Магазины, аптеки, НКЦ, такси и маршруты по Пушкиногорью", to: "/map", tone: "forest" },
+  { icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — бесплатно от соседей", to: "/classifieds", tone: "gold" },
+  { icon: "💼", title: "Работа", desc: "Вакансии и подработка в посёлке", to: "/jobs", tone: "forest" },
+  { icon: "📅", title: "Афиша", desc: "События в Пушкинских Горах и кино в Пскове", to: "/events", tone: "gold" },
+  { icon: "🤖", title: "ИИ-помощник", desc: "Тексты, идеи и ответы о посёлке", to: "/ai", tone: "forest" },
+  { icon: "⚠️", title: "Обращения", desc: "Дороги, ЖКХ, освещение — официальный канал", to: "/complaints", tone: "gold" },
 ];
 
 export function Landing() {
@@ -74,42 +74,41 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="page-section max-w-5xl mx-auto px-4 village-dashboard">
+      <section className="page-section max-w-5xl mx-auto px-4 literary-dashboard">
         <SeasonalTip />
         <TodayInVillage />
         <UpcomingEvents />
       </section>
 
-      <section className="epic-bento-section">
-        <div className="page-section">
-          <div className="epic-section-head">
-            <p className="epic-section-kicker">Всё в одном месте</p>
-            <h2 className="epic-section-title">Портал для жителей и гостей</h2>
-            <p className="epic-section-desc">
-              Карта, объявления, работа, афиша, услуги и ИИ — на сайте и в VK-боте
-            </p>
+      <section className="literary-album-section">
+        <div className="page-section max-w-5xl mx-auto px-4">
+          <div className="literary-section-head">
+            <div>
+              <p className="literary-kicker">🧭 Для жителей и гостей</p>
+              <h2 className="literary-title">Полезное рядом</h2>
+              <p className="literary-lead">
+                Карта посёлка, объявления соседей, работа, афиша и обращения — всё, что нужно в Пушкиногорье.
+              </p>
+            </div>
           </div>
-
-          <div className="epic-bento">
-            {highlights.map((item, i) => (
+          <div className="literary-useful-grid">
+            {usefulNearby.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`epic-bento-card epic-bento-${item.tone} animate-in`}
-                style={{ animationDelay: `${i * 80}ms` }}
+                className={`literary-useful-card literary-useful-card--${item.tone} animate-in`}
               >
-                <span className="epic-bento-num">{item.n}</span>
-                <span className="epic-bento-icon">{item.icon}</span>
-                <h3 className="epic-bento-title">{item.title}</h3>
-                <p className="epic-bento-desc">{item.desc}</p>
-                <span className="epic-bento-go">Перейти →</span>
+                <span className="literary-useful-icon">{item.icon}</span>
+                <h3 className="literary-useful-title">{item.title}</h3>
+                <p className="literary-useful-desc">{item.desc}</p>
+                <span className="literary-useful-go">Открыть →</span>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="epic-jobs-section">
+      <section className="epic-jobs-section literary-album-section">
         <div className="page-section">
           <div className="epic-jobs-head">
             <div>
