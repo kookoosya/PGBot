@@ -96,8 +96,6 @@ BRANCH=main bash scripts/remote-deploy.sh
 
 ```bash
 bash scripts/smoke-public.sh https://192-210-213-135.sslip.io
-# или
-bash scripts/smoke-public.sh https://pushkinskie-gory.ru
 ```
 
 Проверяются: главная, `/events`, `/classifieds`, `/map`, `/api/v1/public/today`, статические ассеты.

@@ -59,4 +59,4 @@ else
   exit 1
 fi
 
-echo "Deploy OK: https://pushkinskie-gory.ru"
+echo "Deploy OK: https://192-210-213-135.sslip.io"
