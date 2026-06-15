@@ -329,7 +329,7 @@ async def handle_unsubscribe(ctx: VkRouteContext) -> None:
 
 
 async def handle_ai_enter(ctx: VkRouteContext) -> None:
-    enter_ai_mode(ctx.peer_id)
+    await enter_ai_mode(ctx.db, ctx.peer_id)
     await _send_ai(ctx, ai_enter_text())
 
 
@@ -684,7 +684,7 @@ def _matches_classified_jobs(text_lower: str) -> bool:
 
 async def _dispatch(ctx: VkRouteContext, command_id: str) -> None:
     if command_id not in AI_PRESERVE_MODE:
-        exit_ai_mode(ctx.peer_id)
+        await exit_ai_mode(ctx.db, ctx.peer_id)
     await COMMAND_HANDLERS[command_id](ctx)
 
 
@@ -717,7 +717,7 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
         return True
 
     if _matches_classified_jobs(ctx.text_lower):
-        exit_ai_mode(ctx.peer_id)
+        await exit_ai_mode(ctx.db, ctx.peer_id)
         await handle_classified_jobs(ctx)
         return True
 
@@ -743,7 +743,7 @@ async def route_vk_message(ctx: VkRouteContext) -> bool:
 
 async def route_ai_message(ctx: VkRouteContext) -> bool:
     """Handle active AI mode or auto-detected AI questions."""
-    if is_ai_mode(ctx.peer_id) or ctx.text_lower.startswith("ии:"):
+    if await is_ai_mode(ctx.db, ctx.peer_id) or ctx.text_lower.startswith("ии:"):
         msg = ctx.text[3:].strip() if ctx.text_lower.startswith("ии:") else ctx.text
         if len(msg) < 2:
             await _send_ai(ctx, "Напишите вопрос — отвечу в режиме ИИ.")
@@ -752,7 +752,7 @@ async def route_ai_message(ctx: VkRouteContext) -> bool:
         return True
 
     if looks_like_ai_question(ctx.text) and not looks_like_complaint(ctx.text):
-        enter_ai_mode(ctx.peer_id)
+        await enter_ai_mode(ctx.db, ctx.peer_id)
         await _process_vk_ai(ctx, ctx.text)
         return True
 
@@ -798,7 +798,7 @@ async def route_free_chat(ctx: VkRouteContext) -> bool:
     if len(text.split()) == 1 and len(text) < 12:
         return False
 
-    enter_ai_mode(ctx.peer_id)
+    await enter_ai_mode(ctx.db, ctx.peer_id)
     await _process_vk_ai(
         ctx,
         "Ты — дружелюбный помощник портала Пушкинские Горы. "

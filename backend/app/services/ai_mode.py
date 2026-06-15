@@ -1,15 +1,22 @@
-"""In-memory AI mode state for VK bot peers."""
+"""AI mode state for VK bot peers — persisted in PostgreSQL."""
 
-_ai_peers: set[int] = set()
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-def enter_ai_mode(peer_id: int) -> None:
-    _ai_peers.add(peer_id)
-
-
-def exit_ai_mode(peer_id: int) -> None:
-    _ai_peers.discard(peer_id)
+from app.services.vk_ai_mode_store import enter_ai_mode as _enter_ai_mode
+from app.services.vk_ai_mode_store import exit_ai_mode as _exit_ai_mode
+from app.services.vk_ai_mode_store import is_ai_mode as _is_ai_mode
 
 
-def is_ai_mode(peer_id: int) -> bool:
-    return peer_id in _ai_peers
+async def enter_ai_mode(db: AsyncSession, peer_id: int) -> None:
+    """Включить AI-режим для peer_id."""
+    await _enter_ai_mode(db, peer_id)
+
+
+async def exit_ai_mode(db: AsyncSession, peer_id: int) -> None:
+    """Выключить AI-режим для peer_id."""
+    await _exit_ai_mode(db, peer_id)
+
+
+async def is_ai_mode(db: AsyncSession, peer_id: int) -> bool:
+    """Проверить, активен ли AI-режим для peer_id."""
+    return await _is_ai_mode(db, peer_id)

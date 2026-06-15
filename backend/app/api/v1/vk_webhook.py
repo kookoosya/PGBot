@@ -82,7 +82,7 @@ async def vk_callback(request: Request, db: Annotated[AsyncSession, Depends(get_
     # Multi-step flows (classified, wish, map report, …)
     flow_reply = await handle_flow_message(db, ctx.peer_id, ctx.from_id, ctx.text)
     if flow_reply:
-        exit_ai_mode(ctx.peer_id)
+        await exit_ai_mode(db, ctx.peer_id)
         await send_message(ctx.peer_id, flow_reply, keyboard=get_welcome_keyboard())
         return PlainTextResponse("ok")
 

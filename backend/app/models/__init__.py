@@ -14,6 +14,7 @@ from app.models.notification import Notification
 from app.models.page_visit import PageVisit
 from app.models.site_feedback import SiteFeedback
 from app.models.user import Role, User
+from app.models.vk_ai_mode import VkAiMode
 from app.models.vk_flow_state import VkFlowState
 from app.models.vk_subscriber import VkSubscriber
 from app.models.vk_moderation import VkModerationLog, VkUserModeration
@@ -46,6 +47,7 @@ __all__ = [
     "SiteFeedback",
     "VkSubscriber",
     "VkFlowState",
+    "VkAiMode",
     "VkModerationLog",
     "VkUserModeration",
 ]
