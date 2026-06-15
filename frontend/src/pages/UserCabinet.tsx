@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LITERARY_VERSES } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
@@ -39,13 +40,13 @@ export function UserCabinet() {
       <PageHeader
         icon="🪶"
         title={isOrg ? "Кабинет организации" : "Личный кабинет"}
-        subtitle={`Здравствуйте, ${user.full_name || user.username}!`}
+        subtitle={`Добро пожаловать, ${user.full_name || user.username} — ваш уголок в Пушкиногорье`}
       >
-        <button type="button" className="btn-hero-secondary text-sm" onClick={logout}>Выйти</button>
+        <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={logout}>Выйти</button>
       </PageHeader>
 
-      <div className="pushkin-card p-6 space-y-4 mb-6">
-        <h2 className="font-semibold text-lg m-0">Профиль</h2>
+      <div className="literary-card literary-card--forest p-6 space-y-4 mb-6">
+        <h2 className="literary-title text-lg m-0">Профиль</h2>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">Логин</dt>
@@ -82,10 +83,10 @@ export function UserCabinet() {
       </div>
 
       {recentIssues.length > 0 && (
-        <div className="pushkin-card p-6 mb-6 space-y-3">
+        <div className="literary-card literary-card--gold p-6 mb-6 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold text-lg m-0">Мои обращения</h2>
-            <Link to="/complaints" className="text-sm text-primary hover:underline">Все →</Link>
+            <h2 className="literary-title text-lg m-0">Мои обращения</h2>
+            <Link to="/complaints" className="literary-link text-sm">Все →</Link>
           </div>
           {recentIssues.map((issue) => (
             <div key={issue.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
@@ -100,36 +101,38 @@ export function UserCabinet() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Link to="/classifieds" className="register-option-card no-underline text-inherit">
-          <span className="text-3xl">📋</span>
+      <div className="literary-cabinet-nav">
+        <Link to="/classifieds" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
+          <span className="literary-useful-icon">📋</span>
           <div>
-            <h3 className="font-bold m-0">Объявления</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-0">Подать объявление соседям</p>
+            <h3 className="literary-useful-title">Объявления</h3>
+            <p className="literary-useful-desc">Подать объявление соседям</p>
           </div>
         </Link>
-        <Link to="/complaints" className="register-option-card no-underline text-inherit">
-          <span className="text-3xl">⚠️</span>
+        <Link to="/complaints" className="literary-useful-card no-underline text-inherit">
+          <span className="literary-useful-icon">⚠️</span>
           <div>
-            <h3 className="font-bold m-0">Мои обращения</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-0">Жалобы и статус рассмотрения</p>
+            <h3 className="literary-useful-title">Обращения</h3>
+            <p className="literary-useful-desc">Жалобы и статус рассмотрения</p>
           </div>
         </Link>
-        <Link to="/events" className="register-option-card no-underline text-inherit">
-          <span className="text-3xl">📅</span>
+        <Link to="/events" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
+          <span className="literary-useful-icon">📅</span>
           <div>
-            <h3 className="font-bold m-0">Афиша</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-0">События в округе и Пскове</p>
+            <h3 className="literary-useful-title">Афиша</h3>
+            <p className="literary-useful-desc">События в Пушкиногорье и Пскове</p>
           </div>
         </Link>
-        <Link to="/map" className="register-option-card no-underline text-inherit">
-          <span className="text-3xl">🗺</span>
+        <Link to="/map" className="literary-useful-card no-underline text-inherit">
+          <span className="literary-useful-icon">🗺</span>
           <div>
-            <h3 className="font-bold m-0">Карта</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-0">Заведения, отзывы, такси</p>
+            <h3 className="literary-useful-title">Карта</h3>
+            <p className="literary-useful-desc">Заведения, отзывы, такси</p>
           </div>
         </Link>
       </div>
+
+      <p className="text-center text-sm text-muted-foreground mt-8 italic">{LITERARY_VERSES.cabinet}</p>
     </div>
   );
 }

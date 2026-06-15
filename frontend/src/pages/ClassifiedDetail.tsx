@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
+import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
 
 export function ClassifiedDetail() {
   const { id } = useParams();
@@ -38,15 +39,20 @@ export function ClassifiedDetail() {
 
   if (error) {
     return (
-      <div className="page-section max-w-3xl text-center py-16">
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <Link to="/classifieds" className="epic-btn epic-btn-glass inline-flex no-underline">← К доске</Link>
+      <div className="literary-page page-section max-w-3xl">
+        <LiteraryEmptyState {...EMPTY_STATES.classifiedNotFound} text={error}>
+          <Link to="/classifieds" className="literary-btn literary-btn--ghost mt-2 no-underline">← К доске</Link>
+        </LiteraryEmptyState>
       </div>
     );
   }
 
   if (!ad) {
-    return <div className="page-section text-center text-muted-foreground py-16">Загрузка…</div>;
+    return (
+      <div className="literary-page page-section max-w-3xl">
+        <p className="landing-muted text-center py-16">Загрузка…</p>
+      </div>
+    );
   }
 
   const visual = getCategoryVisual(ad.category);
@@ -55,33 +61,49 @@ export function ClassifiedDetail() {
   const backLabel = isJob ? "← Все вакансии" : "← К доске";
 
   return (
-    <div className="page-section max-w-3xl">
+    <div className="literary-page page-section max-w-3xl">
       <PageHeader icon={visual.icon} title={ad.title} subtitle={ad.category_label}>
-        <Link to={backTo} className="btn-hero-secondary text-sm no-underline">{backLabel}</Link>
-        <Button type="button" variant="outline" size="sm" onClick={share}>
+        <Link to={backTo} className="literary-btn literary-btn--ghost text-sm no-underline">{backLabel}</Link>
+        <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={share}>
           Поделиться
-        </Button>
+        </button>
       </PageHeader>
 
-      {shareMsg && <p className="text-sm text-green-700 mb-4">{shareMsg}</p>}
+      {shareMsg && <p className="alert-success mb-4">{shareMsg}</p>}
 
-      <article className="classified-ad-card">
-        <div className="classified-ad-image" style={{ background: visual.gradient, minHeight: "8rem" }}>
-          <span className="classified-ad-icon text-4xl">{visual.icon}</span>
-          <span className="classified-ad-badge">{ad.category_label}</span>
+      <article className="page-panel page-panel--gold literary-classified-detail">
+        <div className="literary-classified-detail-hero" style={{ background: visual.gradient }}>
+          <span className="literary-classified-detail-icon">{visual.icon}</span>
+          <span className="literary-classified-detail-badge">{ad.category_label}</span>
         </div>
-        <div className="classified-ad-body p-6">
+
+        <div className="literary-classified-detail-body">
           {ad.price != null && (
-            <p className="text-xl font-bold text-amber-700 mb-2">
+            <p className="literary-classified-price literary-classified-price--large">
               {ad.price} {ad.price_unit || "₽"}
             </p>
           )}
-          <p className="text-sm text-muted-foreground mb-4">{ad.author_name}</p>
-          <p className="text-base leading-relaxed whitespace-pre-wrap">{ad.description}</p>
-          <p className="text-lg mt-6">
-            📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone font-semibold">{ad.phone}</a>
+
+          <LiterarySectionHead
+            kicker="🪶 От соседа"
+            title={ad.author_name}
+            lead={ad.address ? `📍 ${ad.address}` : undefined}
+          />
+
+          <div className="literary-classified-detail-desc">
+            <p className="event-detail-text">{ad.description}</p>
+          </div>
+
+          <div className="literary-classified-detail-contact">
+            <p className="event-detail-label">Связаться</p>
+            <p className="event-detail-value">
+              📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone literary-link">{ad.phone}</a>
+            </p>
+          </div>
+
+          <p className="landing-section-verse literary-classified-detail-verse" aria-hidden>
+            {LITERARY_VERSES.classifieds}
           </p>
-          {ad.address && <p className="text-sm mt-2">📍 {ad.address}</p>}
         </div>
       </article>
     </div>
