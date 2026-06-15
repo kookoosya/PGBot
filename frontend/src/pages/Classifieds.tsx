@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryClassifiedCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
@@ -44,6 +44,9 @@ export function Classifieds() {
   });
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
+  const [submittedId, setSubmittedId] = useState<number | null>(null);
+  const [submittedNotifyVk, setSubmittedNotifyVk] = useState(false);
+  const successRef = useRef<HTMLDivElement | null>(null);
 
   const adCategories = categories.filter((c) => !JOB_CATEGORY_IDS.has(c.value));
 
@@ -76,6 +79,12 @@ export function Classifieds() {
   }, [openNew]);
 
   useEffect(() => {
+    if (submittedId && successRef.current) {
+      successRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [submittedId]);
+
+  useEffect(() => {
     api.getClassifiedCategories().then(setCategories).catch(console.error);
   }, []);
 
@@ -91,6 +100,8 @@ export function Classifieds() {
         price: form.price ? +form.price : undefined,
       });
       setMsgType("ok");
+      setSubmittedId(res.id);
+      setSubmittedNotifyVk(!!form.contact_vk.trim());
       setMsg(res.message);
       setShowForm(false);
       setForm((f) => ({
@@ -148,6 +159,15 @@ export function Classifieds() {
             onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
             className="flex-1 pushkin-select"
           />
+          {search && (
+            <button
+              type="button"
+              className="literary-btn literary-btn--ghost shrink-0 text-sm"
+              onClick={() => { setSearch(""); setSearchInput(""); }}
+            >
+              Сбросить
+            </button>
+          )}
           <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
             Найти
           </button>
@@ -257,7 +277,25 @@ export function Classifieds() {
         </form>
       )}
 
-      {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
+      {msg && (
+        <div
+          ref={successRef}
+          className={`mb-6 page-panel space-y-2 ${msgType === "ok" ? "page-panel--gold" : "alert-error"}`}
+        >
+          <p className="m-0 font-medium">{msg}</p>
+          {msgType === "ok" && submittedId && (
+            <>
+              <p className="text-sm text-muted-foreground m-0">
+                Обычно проверяем до суток. После публикации объявление появится на доске.
+                {submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение, когда опубликуем."}
+              </p>
+              <Link to="/classifieds" className="literary-link text-sm font-medium">
+                Вернуться к доске →
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="mb-8">
         <VkBotBanner />

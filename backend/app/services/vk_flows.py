@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.constants.portal_copy import CLASSIFIED_SUBMITTED_VK, LINK_CLASSIFIEDS
+from app.constants.portal_copy import CLASSIFIED_SUBMITTED_VK, LINK_CLASSIFIEDS, LINK_SUBMIT_CLASSIFIED
 from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
@@ -316,6 +316,7 @@ async def handle_flow_message(
                 msg,
                 keyboard=get_inline_links_keyboard([
                     (LINK_CLASSIFIEDS, f"{public_site_url()}/classifieds"),
+                    (LINK_SUBMIT_CLASSIFIED, f"{public_site_url()}/classifieds?new=1"),
                 ]),
             )
             return None

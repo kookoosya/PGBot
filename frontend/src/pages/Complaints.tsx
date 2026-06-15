@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { api, Issue } from "@/lib/api";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
-import { formatDate, issueStatusHint, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+
+const ISSUE_FILTER_ACTIVE = ISSUE_ACTIVE_STATUSES;
+const ISSUE_FILTER_DONE = ISSUE_DONE_STATUSES;
+
+type IssueFilter = "all" | "active" | "done";
 
 const copy = PAGE_SECTIONS.complaints;
 
@@ -34,6 +39,7 @@ export function Complaints() {
   const [loading, setLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState<number | null>(null);
   const [categoriesError, setCategoriesError] = useState(false);
+  const [issueFilter, setIssueFilter] = useState<IssueFilter>("all");
 
   useEffect(() => {
     api.getCategories()
@@ -96,6 +102,12 @@ export function Complaints() {
       setLoading(false);
     }
   };
+
+  const filteredIssues = myIssues.filter((issue) => {
+    if (issueFilter === "active") return ISSUE_FILTER_ACTIVE.has(issue.status);
+    if (issueFilter === "done") return ISSUE_FILTER_DONE.has(issue.status);
+    return true;
+  });
 
   return (
     <div className="literary-page page-section max-w-5xl">
@@ -211,6 +223,14 @@ export function Complaints() {
                       Посмотреть статус обращения →
                     </Link>
                   )}
+                  {msgType === "ok" && submittedId && !user && (
+                    <Link
+                      to={`/cabinet/login?next=/complaints?issue=${submittedId}`}
+                      className="literary-link text-sm font-medium"
+                    >
+                      Войти, чтобы отслеживать статус →
+                    </Link>
+                  )}
                 </div>
               )}
 
@@ -260,11 +280,38 @@ export function Complaints() {
                 title={copy.mine.title}
                 lead={copy.mine.lead}
               />
+              {myIssues.length > 0 && (
+                <div className="literary-filter-bar mb-4">
+                  <button
+                    type="button"
+                    className={`classified-quick-btn ${issueFilter === "all" ? "classified-quick-btn-active" : ""}`}
+                    onClick={() => setIssueFilter("all")}
+                  >
+                    Все ({myIssues.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`classified-quick-btn ${issueFilter === "active" ? "classified-quick-btn-active" : ""}`}
+                    onClick={() => setIssueFilter("active")}
+                  >
+                    В работе ({myIssues.filter((i) => ISSUE_FILTER_ACTIVE.has(i.status)).length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`classified-quick-btn ${issueFilter === "done" ? "classified-quick-btn-active" : ""}`}
+                    onClick={() => setIssueFilter("done")}
+                  >
+                    Завершённые ({myIssues.filter((i) => ISSUE_FILTER_DONE.has(i.status)).length})
+                  </button>
+                </div>
+              )}
               {myIssues.length === 0 ? (
                 <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact />
+              ) : filteredIssues.length === 0 ? (
+                <p className="text-sm text-muted-foreground">По этому фильтру обращений нет.</p>
               ) : (
                 <div className="space-y-3">
-                  {myIssues.map((issue) => (
+                  {filteredIssues.map((issue) => (
                     <article
                       key={issue.id}
                       ref={highlightId === String(issue.id) ? highlightRef : undefined}

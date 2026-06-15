@@ -34,6 +34,15 @@ export const STATUS_LABELS: Record<string, string> = {
   ARCHIVED: "Архив",
 };
 
+export const ISSUE_ACTIVE_STATUSES = new Set([
+  "NEW",
+  "UNDER_REVIEW",
+  "ASSIGNED",
+  "IN_PROGRESS",
+]);
+
+export const ISSUE_DONE_STATUSES = new Set(["RESOLVED", "REJECTED", "ARCHIVED"]);
+
 export function issueStatusHint(status: string): string {
   return ISSUE_STATUS_HINTS[status] || "";
 }
