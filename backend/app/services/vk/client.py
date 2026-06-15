@@ -1,3 +1,5 @@
+"""VK API client: send messages, keyboards, webhook parsing."""
+
 import json
 import logging
 import random
