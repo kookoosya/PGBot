@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
-import { regionChipClass } from "@/lib/eventUtils";
+import { isCinemaEvent } from "@/lib/eventUtils";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 type RegionFilter = "all" | EventRegion;
 
@@ -46,12 +46,26 @@ export function EventsPage() {
     return events.filter((e) => e.category_label === categoryFilter);
   }, [events, categoryFilter]);
 
+  const cinemaEvents = useMemo(
+    () => visibleEvents.filter(isCinemaEvent),
+    [visibleEvents],
+  );
+  const pushkinEvents = useMemo(
+    () => visibleEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isCinemaEvent(e)),
+    [visibleEvents],
+  );
+  const pskovEvents = useMemo(
+    () => visibleEvents.filter((e) => e.region_label === "Псков" && !isCinemaEvent(e)),
+    [visibleEvents],
+  );
+  const showCinemaBlock = cinemaEvents.length > 0 && regionFilter !== "pushkin_gory";
+
   return (
     <div className="page-section max-w-5xl">
       <PageHeader
         icon="📅"
-        title="Афиша региона"
-        subtitle="Концерты, праздники и кино в Пушкинских Горах и Пскове"
+        title="Афиша Пушкиногорья"
+        subtitle="От площади Ленина до кинозалов Пскова — культурная жизнь края в одном месте"
       />
 
       <div className="page-panel page-panel--forest mb-6">
@@ -61,11 +75,11 @@ export function EventsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-            className="flex-1"
+            className="flex-1 pushkin-select"
           />
-          <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
+          <button type="button" className="literary-btn literary-btn--primary" onClick={() => setSearch(searchInput.trim())}>
             Найти
-          </Button>
+          </button>
         </div>
 
         <div className="events-region-filters mb-0" role="group" aria-label="Регион">
@@ -105,26 +119,51 @@ export function EventsPage() {
       </div>
 
       {loading ? (
-        <p className="events-muted">Загружаем афишу…</p>
+        <p className="events-muted">Собираем афишу…</p>
       ) : visibleEvents.length === 0 ? (
-        <p className="events-muted">Событий не найдено — попробуйте другой фильтр или загляните позже.</p>
+        <LiteraryEmptyState {...EMPTY_STATES.events} />
       ) : (
-        <ol className="events-list">
-          {visibleEvents.map((event) => (
-            <li key={event.id} className="events-item literary-card literary-card--gold">
-              <div className="events-item-meta">
-                <span className={regionChipClass(event.region_label)}>{event.region_label}</span>
-                <span className="events-category">{event.category_label}</span>
-                <time className="events-date">{event.starts_at_label}</time>
-              </div>
-              <Link to={`/events/${event.id}`} className="events-title events-title-link">
-                {event.title}
-              </Link>
-              {event.location && <p className="events-location">📍 {event.location}</p>}
-              {event.description && <p className="events-desc">{event.description.slice(0, 160)}{event.description.length > 160 ? "…" : ""}</p>}
-            </li>
-          ))}
-        </ol>
+        <div className="literary-dashboard">
+          {showCinemaBlock && (
+            <CinemaSpotlight linkTo="/events">
+              <ol className="events-grid events-grid--cinema">
+                {cinemaEvents.map((event) => (
+                  <EventCard key={event.id} event={event} spotlight />
+                ))}
+              </ol>
+            </CinemaSpotlight>
+          )}
+
+          {pushkinEvents.length > 0 && regionFilter !== "pskov" && (
+            <section className="page-panel page-panel--forest">
+              <LiterarySectionHead
+                kicker="🪶 Посёлок"
+                title="В Пушкинских Горах"
+                lead="Праздники, концерты и встречи у НКЦ и на площади."
+              />
+              <ol className="events-grid events-grid--wide">
+                {pushkinEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {pskovEvents.length > 0 && regionFilter !== "pushkin_gory" && (
+            <section className="page-panel page-panel--gold">
+              <LiterarySectionHead
+                kicker="🏛 Псков"
+                title="Мероприятия в городе"
+                lead="Концерты, выставки и городские праздники."
+              />
+              <ol className="events-grid">
+                {pskovEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
       )}
     </div>
   );

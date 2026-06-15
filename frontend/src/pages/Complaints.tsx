@@ -83,7 +83,7 @@ export function Complaints() {
       <PageHeader
         icon="⚠️"
         title="Жалобы и обращения"
-        subtitle="Сообщите о проблеме в посёлке — дороги, ЖКХ, освещение, мусор. Обращение увидят администрация и ответственные службы."
+        subtitle="Сообщите о проблеме в Пушкиногорье — дороги, ЖКХ, освещение, мусор. Обращение увидят администрация и ответственные службы."
       />
 
       <div className="grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
@@ -96,7 +96,7 @@ export function Complaints() {
           </div>
 
           {showForm && (
-            <form onSubmit={submit} className="pushkin-card p-6 space-y-4 form-glow">
+            <form onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow">
               {!user && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -186,7 +186,7 @@ export function Complaints() {
         </div>
 
         <div className="space-y-6">
-          <div className="pushkin-card p-6">
+          <div className="page-panel page-panel--gold p-6">
             <h3 className="font-bold text-lg mb-3">🏛 Для служб и организаций</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Администрация, ЖКХ и организации регистрируются на портале и после проверки

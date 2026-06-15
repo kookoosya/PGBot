@@ -1,29 +1,29 @@
 import { Link } from "react-router-dom";
+import { LiterarySectionHead } from "@/components/literary";
 import { formatTemperature } from "@/hooks/useWeather";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
+import { LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { formatDate } from "@/lib/utils";
+
+const copy = LANDING_SECTIONS.today;
 
 export function TodayInVillage() {
   const { data, loading, error } = useToday();
 
   if (loading && !data) {
     return (
-      <section className="today-panel" aria-busy="true">
-        <div className="today-panel-head">
-          <h2>Сегодня в посёлке</h2>
-        </div>
-        <p className="today-muted">Собираем актуальную информацию…</p>
+      <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <p className="landing-muted">Собираем актуальную информацию…</p>
       </section>
     );
   }
 
   if (error && !data) {
     return (
-      <section className="today-panel">
-        <div className="today-panel-head">
-          <h2>Сегодня в посёлке</h2>
-        </div>
-        <p className="today-muted">Сводка временно недоступна.</p>
+      <section className="page-panel page-panel--gold landing-block landing-today-panel">
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <p className="landing-muted">Сводка временно недоступна.</p>
       </section>
     );
   }
@@ -34,17 +34,16 @@ export function TodayInVillage() {
   const ad = data.latest_classified;
 
   return (
-    <section className="today-panel" aria-label="Сегодня в посёлке">
-      <div className="today-panel-head">
-        <div>
-          <p className="today-kicker">🪶 Актуально сейчас</p>
-          <h2>Сегодня в посёлке</h2>
-        </div>
-        <p className="today-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>
-      </div>
+    <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в Пушкиногорье">
+      <LiterarySectionHead
+        kicker={copy.kicker}
+        title={copy.title}
+        lead={copy.lead}
+        meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
+      />
 
-      <div className="today-grid">
-        <article className="today-card today-card-weather">
+      <div className="today-grid today-grid--landing">
+        <article className="today-card today-card--literary today-card-weather">
           <h3 className="today-card-title">Погода</h3>
           {weather ? (
             <>
@@ -71,11 +70,11 @@ export function TodayInVillage() {
               )}
             </>
           ) : (
-            <p className="today-muted">Прогноз временно недоступен</p>
+            <p className="landing-muted">Прогноз временно недоступен</p>
           )}
         </article>
 
-        <article className="today-card today-card-ad">
+        <article className="today-card today-card--literary today-card-ad">
           <h3 className="today-card-title">Свежее объявление</h3>
           {ad ? (
             <>
@@ -86,14 +85,14 @@ export function TodayInVillage() {
               <p className="today-ad-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
-            <p className="today-muted">Пока нет новых объявлений</p>
+            <p className="landing-muted">Пока нет новых объявлений</p>
           )}
           <Link to="/classifieds" className="today-card-action">
             Все объявления →
           </Link>
         </article>
 
-        <article className="today-card today-card-map">
+        <article className="today-card today-card--literary today-card-map">
           <h3 className="today-card-title">Карта посёлка</h3>
           <dl className="today-map-stats">
             <div>
@@ -118,6 +117,9 @@ export function TodayInVillage() {
           </Link>
         </article>
       </div>
+      <p className="landing-section-verse landing-section-verse--today" aria-hidden>
+        {LITERARY_VERSES.today}
+      </p>
     </section>
   );
 }

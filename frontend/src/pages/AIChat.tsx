@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { LITERARY_VERSES } from "@/lib/literaryCopy";
 import { Button } from "@/components/ui/button";
 import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
 
@@ -11,7 +12,7 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "🪶 Привет! Спросите что угодно — или нарисуйте картинку во вкладке «Картинки».",
+        "🪶 Здравствуйте! Я помощник Пушкиногорья — подскажу про музеи, напишу объявление или стих. Спросите что угодно — или нарисуйте картинку во вкладке «Картинки».",
     },
   ]);
   const [input, setInput] = useState("");
@@ -104,7 +105,7 @@ export function AIChat() {
 
   return (
     <div className="page-section max-w-3xl ai-page">
-      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Текст и картинки">
+      <PageHeader icon="🤖" title="ИИ-помощник" subtitle="Тексты, идеи и картинки — с душой Пушкиногорья">
         {usage && (
           <span className="ai-usage-pill">
             {usage.remaining} из {usage.daily_limit} сегодня
@@ -151,7 +152,7 @@ export function AIChat() {
         <>
           {chatModels.length > 1 && (
             <div className="mb-3">
-              <select className="w-full border rounded px-3 py-2 text-sm" value={chatModel} onChange={(e) => setChatModel(e.target.value)} aria-label="Режим чата">
+              <select className="pushkin-select w-full" value={chatModel} onChange={(e) => setChatModel(e.target.value)} aria-label="Режим чата">
                 {chatModels.map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
@@ -159,7 +160,8 @@ export function AIChat() {
             </div>
           )}
 
-          <div className="pushkin-card ai-chat-panel flex flex-col">
+          <div className="ai-literary-panel flex flex-col">
+            <p className="ai-literary-welcome m-0">{LITERARY_VERSES.ai}</p>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -197,9 +199,9 @@ export function AIChat() {
       )}
 
       {tab === "image" && (
-        <div className="pushkin-card p-6 space-y-4">
+        <div className="page-panel page-panel--gold p-6 space-y-4">
           {imageModels.length > 1 && (
-            <select className="w-full border rounded px-3 py-2 text-sm" value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Стиль картинки">
+            <select className="pushkin-select w-full" value={imageModel} onChange={(e) => setImageModel(e.target.value)} aria-label="Стиль картинки">
               {imageModels.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}</option>
               ))}
@@ -219,9 +221,9 @@ export function AIChat() {
             onChange={(e) => setImagePrompt(e.target.value)}
             maxLength={500}
           />
-          <Button className="w-full" onClick={generateImage} disabled={imageLoading || !imagePrompt.trim()}>
+          <button type="button" className="literary-btn literary-btn--primary w-full" onClick={generateImage} disabled={imageLoading || !imagePrompt.trim()}>
             {imageLoading ? "Рисую…" : "🎨 Сгенерировать"}
-          </Button>
+          </button>
           {imageLoading && (
             <div className="ai-image-skeleton">
               <div className="ai-image-skeleton-shimmer" />
@@ -235,7 +237,7 @@ export function AIChat() {
                 <p className="text-xs text-amber-700 m-0">Не удалось нарисовать — попробуйте ещё раз</p>
               )}
               <img src={generatedImage} alt="Картинка" className="w-full rounded-lg border shadow-md" />
-              <a href={generatedImage.split("?")[0]} download="pushkin-ai.jpg" className="btn-hero-secondary text-sm inline-block no-underline">
+              <a href={generatedImage.split("?")[0]} download="pushkin-ai.jpg" className="literary-btn literary-btn--ghost text-sm inline-block no-underline">
                 Скачать
               </a>
             </div>
