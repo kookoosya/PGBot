@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
 import { api, CatalogItem, ClassifiedAd, ServiceProvider, TimeSlot } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
-import { PUSHKIN_QUOTES } from "@/lib/pushkin";
+import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
 
 const STATUS: Record<string, { label: string; color: string }> = {
   free: { label: "🟢 Свободен", color: "text-green-700" },
@@ -100,29 +101,35 @@ export function Services() {
 
   return (
     <div className="page-section max-w-5xl">
-      <PageHeader icon="🛠" title="Услуги посёлка" subtitle={PUSHKIN_QUOTES.services}>
-        <Link to="/classifieds" className="btn-hero-secondary text-sm">Подать объявление</Link>
+      <PageHeader icon="🛠" title="Услуги и помощь" subtitle="Мастера, справочник и объявления соседей — всё для быта в Пушкиногорье">
+        <Link to="/classifieds" className="literary-btn literary-btn--ghost text-sm no-underline">Подать объявление</Link>
         <div className="flex flex-wrap gap-2">
-          <Link to="/services/cabinet" className="btn-hero-secondary text-sm">Кабинет мастера</Link>
-          <Link to="/services/register" className="btn-hero-secondary text-sm">Стать мастером</Link>
+          <Link to="/services/cabinet" className="literary-btn literary-btn--ghost text-sm no-underline">Кабинет мастера</Link>
+          <Link to="/services/register" className="literary-btn literary-btn--primary text-sm no-underline">Стать мастером</Link>
         </div>
       </PageHeader>
 
-      <div className="filter-bar mb-6">
+      <div className="page-panel page-panel--forest mb-6">
+        <div className="filter-bar">
         <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>Все</button>
         {categories.map((c) => (
           <button key={c.value} type="button" className={`filter-chip ${filter === c.value ? "filter-chip-active" : ""}`} onClick={() => setFilter(c.value)}>
             {CATALOG_ICONS[c.value] || "📋"} {c.label}
           </button>
         ))}
+        </div>
       </div>
 
       {filteredCatalog.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3">📍 Справочник услуг</h2>
+        <section className="page-panel page-panel--gold mb-8">
+          <LiterarySectionHead
+            kicker="📍 Справочник"
+            title="Проверенные услуги"
+            lead="Покос, дрова, доставка и ремонт — то, что нужно в посёлке и на даче."
+          />
           <div className="grid gap-3 md:grid-cols-2">
             {filteredCatalog.map((item) => (
-              <div key={item.id} className="pushkin-card p-4">
+              <div key={item.id} className="literary-card literary-card--forest">
                 <div className="flex gap-3 items-start">
                   <span className="text-2xl">{CATALOG_ICONS[item.category] || "📋"}</span>
                   <div className="flex-1 min-w-0">
@@ -133,12 +140,12 @@ export function Services() {
                     {item.address && <p className="text-xs mt-1">📍 {item.address}</p>}
                     <div className="flex flex-wrap gap-2 mt-3">
                       {item.phone && (
-                        <a href={telHref(item.phone)} className="btn-hero-primary text-xs px-3 py-1.5 no-underline">
+                        <a href={telHref(item.phone)} className="literary-btn literary-btn--primary text-xs px-3 py-1.5 no-underline">
                           📞 Позвонить
                         </a>
                       )}
                       {item.external_url && (
-                        <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="btn-hero-secondary text-xs px-3 py-1.5 no-underline">
+                        <a href={item.external_url} target="_blank" rel="noopener noreferrer" className="literary-btn literary-btn--ghost text-xs px-3 py-1.5 no-underline">
                           Подробнее →
                         </a>
                       )}
@@ -152,13 +159,17 @@ export function Services() {
       )}
 
       {filteredAds.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3">📋 Объявления соседей</h2>
+        <section className="page-panel page-panel--gold mb-8">
+          <LiterarySectionHead
+            kicker="🤝 Соседи"
+            title="Объявления с услугами"
+            lead="Жители сами предлагают помощь — звоните напрямую, без посредников."
+          />
           <div className="space-y-3">
             {filteredAds.map((ad) => {
               const visual = getCategoryVisual(ad.category);
               return (
-                <div key={ad.id} className="classified-ad-card">
+                <div key={ad.id} className="classified-ad-card literary-card literary-card--gold">
                   <div className="classified-ad-image" style={{ background: visual.gradient }}>
                     <span className="classified-ad-icon">{visual.icon}</span>
                     <span className="classified-ad-badge">{ad.category_label}</span>
@@ -177,13 +188,17 @@ export function Services() {
         </section>
       )}
 
-      <section>
-        <h2 className="text-lg font-bold mb-3">💇 Мастера с онлайн-записью</h2>
+      <section className="page-panel page-panel--forest">
+        <LiterarySectionHead
+          kicker="💇 Запись"
+          title="Мастера онлайн"
+          lead="Парикмахеры и мастера красоты — запись на удобное время."
+        />
         <div className="grid gap-4 md:grid-cols-2">
           {providers.map((p) => (
             <div
               key={p.id}
-              className="pushkin-card-hover p-5 cursor-pointer"
+              className="literary-card literary-card--forest cursor-pointer"
               role="button"
               tabIndex={0}
               onClick={() => p.status_today !== "off" && openBooking(p)}
@@ -213,11 +228,16 @@ export function Services() {
             </div>
           ))}
           {providers.length === 0 && (
-            <p className="col-span-2 text-sm text-muted-foreground py-4">
-              Мастеров с записью пока нет — <Link to="/services/register" className="text-primary underline">зарегистрируйтесь</Link>.
-            </p>
+            <div className="col-span-2">
+              <LiteraryEmptyState {...EMPTY_STATES.providers}>
+                <Link to="/services/register" className="literary-btn literary-btn--primary mt-2 no-underline">
+                  Стать мастером
+                </Link>
+              </LiteraryEmptyState>
+            </div>
           )}
         </div>
+        <p className="text-center text-sm text-muted-foreground mt-6 italic">{LITERARY_VERSES.services}</p>
       </section>
 
       {booking && (

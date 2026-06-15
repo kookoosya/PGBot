@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { EventCard, LiteraryEmptyState } from "@/components/literary";
+import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
 import { isCinemaEvent } from "@/lib/eventUtils";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 type RegionFilter = "all" | EventRegion;
 
@@ -49,8 +50,12 @@ export function EventsPage() {
     () => visibleEvents.filter(isCinemaEvent),
     [visibleEvents],
   );
-  const otherEvents = useMemo(
-    () => visibleEvents.filter((e) => !isCinemaEvent(e)),
+  const pushkinEvents = useMemo(
+    () => visibleEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isCinemaEvent(e)),
+    [visibleEvents],
+  );
+  const pskovEvents = useMemo(
+    () => visibleEvents.filter((e) => e.region_label === "Псков" && !isCinemaEvent(e)),
     [visibleEvents],
   );
   const showCinemaBlock = cinemaEvents.length > 0 && regionFilter !== "pushkin_gory";
@@ -60,7 +65,7 @@ export function EventsPage() {
       <PageHeader
         icon="📅"
         title="Афиша Пушкиногорья"
-        subtitle="Концерты, праздники и кино — в посёлке Пушкинские Горы и в Пскове"
+        subtitle="От площади Ленина до кинозалов Пскова — культурная жизнь края в одном месте"
       />
 
       <div className="page-panel page-panel--forest mb-6">
@@ -114,41 +119,51 @@ export function EventsPage() {
       </div>
 
       {loading ? (
-        <p className="events-muted">Загружаем афишу…</p>
+        <p className="events-muted">Собираем афишу…</p>
       ) : visibleEvents.length === 0 ? (
-        <LiteraryEmptyState
-          icon="📅"
-          title="Афиша пока пуста"
-          text="Событий не найдено — попробуйте другой фильтр или загляните позже."
-          verse="«Всё, что ни происходит — всё к лучшему…»"
-        />
+        <LiteraryEmptyState {...EMPTY_STATES.events} />
       ) : (
-        <>
+        <div className="literary-dashboard">
           {showCinemaBlock && (
-            <section className="mb-8">
-              <h2 className="literary-title mb-4">🎬 Кино в Пскове</h2>
+            <CinemaSpotlight linkTo="/events">
               <ol className="events-grid events-grid--cinema">
                 {cinemaEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={event} spotlight />
                 ))}
               </ol>
-            </section>
+            </CinemaSpotlight>
           )}
-          {otherEvents.length > 0 && (
-            <section>
-              {showCinemaBlock && (
-                <h2 className="literary-title mb-4">
-                  {regionFilter === "pskov" ? "Мероприятия в Пскове" : "Ближайшее в Пушкиногорье"}
-                </h2>
-              )}
+
+          {pushkinEvents.length > 0 && regionFilter !== "pskov" && (
+            <section className="page-panel page-panel--forest">
+              <LiterarySectionHead
+                kicker="🪶 Посёлок"
+                title="В Пушкинских Горах"
+                lead="Праздники, концерты и встречи у НКЦ и на площади."
+              />
               <ol className="events-grid events-grid--wide">
-                {otherEvents.map((event) => (
+                {pushkinEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </ol>
             </section>
           )}
-        </>
+
+          {pskovEvents.length > 0 && regionFilter !== "pushkin_gory" && (
+            <section className="page-panel page-panel--gold">
+              <LiterarySectionHead
+                kicker="🏛 Псков"
+                title="Мероприятия в городе"
+                lead="Концерты, выставки и городские праздники."
+              />
+              <ol className="events-grid">
+                {pskovEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
       )}
     </div>
   );

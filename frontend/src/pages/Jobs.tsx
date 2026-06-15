@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
-import { BRAND } from "@/lib/branding";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS, JOB_FORM_HINTS, LOCAL_EMPLOYERS } from "@/lib/jobs";
+import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
 
 export function Jobs() {
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
@@ -92,26 +93,30 @@ export function Jobs() {
     <div className="page-section max-w-5xl">
       <PageHeader
         icon="💼"
-        title="Работа в посёлке"
-        subtitle={`${BRAND.name} и Пушкиногорский район — вакансии без посредников`}
+        title="Работа в Пушкиногорье"
+        subtitle="Вакансии музея, гостиниц и местных организаций — без посредников"
       >
-        <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
+        <button type="button" className="literary-btn literary-btn--primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Разместить вакансию"}
         </button>
         <span className="free-badge">🆓 Бесплатно</span>
       </PageHeader>
 
-      <div className="human-note mb-6">
-        <p className="m-0 text-sm">
-          Здесь — только <strong>работа и подработка</strong>: музей, гостиницы, магазины, ЖКХ, сезонные дела.
-          Дрова, покос и услуги мастеров — в{" "}
-          <Link to="/classifieds" className="text-primary hover:underline">объявлениях</Link> и{" "}
-          <Link to="/services" className="text-primary hover:underline">услугах</Link>.
+      <div className="literary-page-note mb-6">
+        <p className="m-0">
+          Здесь — <strong>работа и подработка</strong> в посёлке и районе: музей-заповедник, гостиницы, магазины, ЖКХ.
+          Дрова и услуги мастеров — в{" "}
+          <Link to="/classifieds" className="literary-link">объявлениях</Link> и{" "}
+          <Link to="/services" className="literary-link">справочнике услуг</Link>.
         </p>
       </div>
 
-      <section className="jobs-employers mb-8">
-        <h2 className="text-lg font-bold mb-3">Кто нанимает в округе</h2>
+      <section className="page-panel page-panel--forest mb-8">
+        <LiterarySectionHead
+          kicker="🏛 Район"
+          title="Кто нанимает в округе"
+          lead="Музей-заповедник, туризм и местный бизнес — главные работодатели Пушкиногорья."
+        />
         <div className="jobs-employers-grid">
           {LOCAL_EMPLOYERS.map((e) => (
             <div key={e.title} className="jobs-employer-card">
@@ -164,7 +169,7 @@ export function Jobs() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4 form-glow">
+        <form onSubmit={submit} className="page-panel page-panel--gold mb-8 space-y-4 form-glow">
           <div className="free-banner">
             <span className="text-lg">🆓</span>
             <div>
@@ -230,45 +235,49 @@ export function Jobs() {
 
       {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
 
-      <div className="epic-jobs-grid classified-jobs-list">
+      <div className="grid gap-4 md:grid-cols-2">
         {ads.map((ad) => {
           const visual = getCategoryVisual(ad.category);
           return (
-            <Link key={ad.id} to={`/classifieds/${ad.id}`} className="epic-job-card no-underline text-inherit">
-              <div className="epic-job-icon" style={{ background: visual.gradient }}>
+            <Link key={ad.id} to={`/classifieds/${ad.id}`} className="literary-job-card no-underline text-inherit">
+              <div className="literary-job-icon" style={{ background: visual.gradient }}>
                 {visual.icon}
               </div>
-              <div className="epic-job-body">
-                <span className="epic-job-badge">{ad.category_label}</span>
-                <h3 className="epic-job-title">{ad.title}</h3>
-                <p className="epic-job-desc">{ad.description}</p>
+              <div>
+                <span className="literary-job-badge">{ad.category_label}</span>
+                <h3 className="literary-job-title">{ad.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{ad.description}</p>
                 {ad.price != null && (
-                  <p className="epic-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
+                  <p className="literary-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
                 )}
-                <p className="epic-job-contact">
+                <p className="text-xs text-muted-foreground mt-2">
                   📞 <span className="clickable-phone">{ad.phone}</span>
                   {ad.address && ` · 📍 ${ad.address}`}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">{ad.author_name}</p>
               </div>
             </Link>
           );
         })}
         {!loading && ads.length === 0 && (
-          <div className="epic-job-empty col-span-full">
-            <p>Вакансий пока нет — разместите первую, если ищете сотрудника.</p>
-            <Button type="button" onClick={() => setShowForm(true)}>+ Разместить вакансию</Button>
+          <div className="col-span-full">
+            <LiteraryEmptyState {...EMPTY_STATES.jobs}>
+              <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
+                + Разместить вакансию
+              </button>
+            </LiteraryEmptyState>
           </div>
         )}
-        {loading && <p className="text-center text-muted-foreground py-6 col-span-full">Загрузка…</p>}
+        {loading && <p className="text-center text-muted-foreground py-6 col-span-full">Ищем вакансии…</p>}
         {ads.length > 0 && ads.length < total && (
           <div className="col-span-full text-center pt-4">
-            <Button type="button" variant="outline" disabled={loading} onClick={() => load(page + 1, true)}>
+            <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>
               Ещё ({ads.length} из {total})
-            </Button>
+            </button>
           </div>
         )}
       </div>
+
+      <p className="text-center text-sm text-muted-foreground mt-8 italic">{LITERARY_VERSES.jobs}</p>
 
       <div className="mt-10">
         <VkBotBanner />

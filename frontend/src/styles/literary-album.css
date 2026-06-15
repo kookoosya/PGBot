@@ -274,6 +274,7 @@
     }
   }
   .event-card-poster {
+    position: relative;
     aspect-ratio: 2 / 3;
     border-radius: calc(var(--radius) - 0.25rem);
     border: 1px solid hsl(var(--border));
@@ -395,4 +396,287 @@
   @media (min-width: 1024px) {
     .events-grid--cinema { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .events-grid--wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* === Кино-блок: кинематографичный акцент === */
+  .cinema-spotlight {
+    position: relative;
+    padding: 1.75rem 1.5rem 1.85rem;
+    border-radius: calc(var(--radius) + 0.5rem);
+    background:
+      linear-gradient(155deg, hsl(30 14% 10%) 0%, hsl(var(--burgundy) / 0.92) 42%, hsl(158 26% 14%) 100%);
+    border: 1px solid hsl(var(--gold) / 0.28);
+    box-shadow:
+      0 24px 64px hsl(var(--burgundy) / 0.35),
+      inset 0 1px 0 hsl(var(--gold) / 0.12);
+    overflow: hidden;
+  }
+  .cinema-spotlight-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  .cinema-spotlight-curtains {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, hsl(var(--burgundy)), hsl(var(--gold)), hsl(var(--burgundy)));
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .cinema-spotlight-inner {
+    position: relative;
+    z-index: 1;
+  }
+  .cinema-spotlight .literary-kicker {
+    color: hsl(43 89% 62%);
+    text-shadow: 0 1px 8px hsl(var(--burgundy) / 0.5);
+  }
+  .cinema-spotlight .literary-title {
+    color: hsl(var(--parchment));
+    text-shadow: 0 2px 12px hsl(30 14% 8% / 0.4);
+  }
+  .cinema-spotlight .literary-lead {
+    color: hsl(40 33% 95% / 0.78);
+  }
+  .cinema-spotlight .literary-section-link {
+    color: hsl(43 89% 68%);
+    border-bottom: 1px solid hsl(var(--gold) / 0.4);
+  }
+  .cinema-spotlight .literary-section-link:hover {
+    color: hsl(var(--parchment));
+  }
+  .cinema-spotlight-link {
+    color: hsl(43 89% 68%);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .cinema-spotlight-link:hover {
+    text-decoration: underline;
+  }
+  .cinema-spotlight .events-grid {
+    gap: 1rem;
+  }
+  @media (min-width: 768px) {
+    .cinema-spotlight .events-grid--cinema {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* === EventCard: иерархия и варианты === */
+  .event-card-date {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+    font-variant-numeric: tabular-nums;
+  }
+  .event-card--pushkin .event-card-date {
+    color: hsl(var(--forest));
+  }
+  .event-card--pskov .event-card-date {
+    color: hsl(32 55% 28%);
+  }
+  .event-card--cinema .event-card-date {
+    color: hsl(var(--burgundy));
+  }
+  .event-card-body--stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .literary-card--cinema-spotlight {
+    background: hsl(var(--card) / 0.97);
+    border-color: hsl(var(--gold) / 0.22);
+    box-shadow: 0 12px 36px hsl(30 14% 8% / 0.45);
+  }
+  .literary-card--cinema-spotlight::before {
+    background: linear-gradient(180deg, hsl(var(--gold)), hsl(var(--burgundy)));
+    width: 5px;
+  }
+  .literary-card--cinema-spotlight:hover {
+    box-shadow: 0 16px 48px hsl(30 14% 8% / 0.55);
+    transform: translateY(-2px);
+  }
+
+  .event-card-poster-wrap {
+    position: relative;
+  }
+  .event-card-film-strip {
+    position: absolute;
+    left: -4px;
+    top: 8%;
+    bottom: 8%;
+    width: 8px;
+    background: repeating-linear-gradient(
+      180deg,
+      hsl(30 14% 12%) 0px,
+      hsl(30 14% 12%) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+  .event-card-poster-icon {
+    font-size: 1.75rem;
+    filter: drop-shadow(0 2px 6px hsl(0 0% 0% / 0.4));
+  }
+  .event-card-poster-badge {
+    position: absolute;
+    bottom: 0.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(var(--parchment));
+    background: hsl(var(--burgundy) / 0.9);
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .event-card--cinema-featured {
+    grid-template-columns: 6.5rem 1fr;
+  }
+  @media (min-width: 480px) {
+    .event-card--cinema-featured {
+      grid-template-columns: 7.5rem 1fr;
+    }
+  }
+  .event-card--cinema-featured .event-card-poster {
+    min-height: 7.5rem;
+    font-size: 2rem;
+    box-shadow:
+      0 8px 28px hsl(30 14% 8% / 0.5),
+      inset 0 0 0 1px hsl(var(--gold) / 0.25);
+  }
+  .event-card--cinema-featured .event-card-title {
+    font-size: 1.125rem;
+  }
+  .event-card--pushkin .event-card-title {
+    color: hsl(var(--forest));
+  }
+  .event-card--pskov:not(.event-card--cinema) .event-card-title {
+    color: hsl(32 50% 22%);
+  }
+  .event-card--cinema .event-card-footer {
+    color: hsl(var(--burgundy));
+  }
+  .cinema-spotlight .event-card--cinema .event-card-footer {
+    color: hsl(var(--gold));
+  }
+
+  /* === Страницы: работа, услуги, кабинет === */
+  .literary-page-note {
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius);
+    border-left: 3px solid hsl(var(--gold));
+    background: hsl(var(--card) / 0.85);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-job-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem 1.15rem 1.4rem;
+    border-radius: calc(var(--radius) + 0.125rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.95);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .literary-job-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: hsl(var(--forest));
+  }
+  .literary-job-card:hover {
+    box-shadow: 0 12px 32px hsl(var(--forest) / 0.1);
+    transform: translateY(-2px);
+  }
+  .literary-job-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .literary-job-badge {
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: hsl(var(--gold));
+  }
+  .literary-job-title {
+    margin: 0.25rem 0 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.0625rem;
+    color: hsl(var(--forest));
+  }
+  .literary-job-pay {
+    margin: 0.5rem 0 0;
+    font-weight: 700;
+    color: hsl(32 55% 28%);
+    font-size: 0.9375rem;
+  }
+  .literary-cabinet-nav {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 640px) {
+    .literary-cabinet-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* ИИ-чат в альбомном стиле */
+  .ai-literary-panel {
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--parchment) / 0.9));
+    box-shadow: 0 12px 36px hsl(var(--forest) / 0.06);
+    overflow: hidden;
+  }
+  .ai-literary-welcome {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid hsl(var(--border) / 0.6);
+    background: hsl(var(--forest) / 0.04);
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-size: 0.9375rem;
+    color: hsl(var(--forest));
+    line-height: 1.5;
+  }
+  .ai-usage-pill {
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: hsl(var(--gold) / 0.15);
+    color: hsl(32 55% 28%);
+    border: 1px solid hsl(var(--gold) / 0.35);
   }

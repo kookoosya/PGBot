@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
 import { isCinemaEvent } from "@/lib/eventUtils";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,9 @@ export function UpcomingEvents() {
     <div className="literary-dashboard">
       <section className="page-panel page-panel--forest" aria-label="Ближайшее в Пушкиногорье">
         <LiterarySectionHead
-          kicker="📅 Афиша посёлка"
-          title="Ближайшее в Пушкиногорье"
-          lead="Концерты, праздники и встречи в рп. Пушкинские Горы — для жителей и гостей музея-заповедника."
+          kicker="🪶 Пушкиногорье"
+          title="Ближайшее в посёлке"
+          lead="Концерты у НКЦ, праздники на площади, встречи музея-заповедника — жизнь рп. Пушкинские Горы."
           linkTo="/events"
           linkLabel="Вся афиша →"
         />
@@ -94,15 +95,10 @@ export function UpcomingEvents() {
         </div>
 
         {loading && !data ? (
-          <p className="events-muted">Загружаем афишу…</p>
+          <p className="events-muted">Собираем афишу Пушкиногорья…</p>
         ) : showSplit ? (
           pushkinEvents.length === 0 ? (
-            <LiteraryEmptyState
-              icon="🎭"
-              title="Афиша готовится"
-              text="Скоро здесь появятся концерты, ярмарки и праздники в посёлке."
-              verse="«И долго буду тем любезен я народу…»"
-            />
+            <LiteraryEmptyState {...EMPTY_STATES.events} />
           ) : (
             <ol className="events-grid events-grid--wide">
               {pushkinEvents.map((event) => (
@@ -111,43 +107,32 @@ export function UpcomingEvents() {
             </ol>
           )
         ) : filteredEvents.length === 0 ? (
-          <LiteraryEmptyState
-            icon="🔍"
-            title="Ничего не найдено"
-            text="Попробуйте другой запрос или смените регион."
-          />
+          <LiteraryEmptyState {...EMPTY_STATES.eventsSearch} />
         ) : (
           <ol className="events-grid events-grid--wide">
             {filteredEvents.map((event) => (
-              <EventCard key={event.id} event={event} descLimit={120} />
+              <EventCard key={event.id} event={event} descLimit={120} spotlight={isCinemaEvent(event)} />
             ))}
           </ol>
         )}
       </section>
 
       {showSplit && cinemaEvents.length > 0 && (
-        <section className="page-panel page-panel--gold" aria-label="Кино в Пскове">
-          <LiterarySectionHead
-            kicker="🎬 Кинотеатры"
-            title="Кино в Пскове"
-            lead="Сеансы в городе — удобно совместить с поездкой из Пушкинских Гор."
-            linkTo="/events?region=pskov"
-            linkLabel="Все сеансы →"
-          />
+        <CinemaSpotlight>
           <ol className="events-grid events-grid--cinema">
             {cinemaEvents.map((event) => (
-              <EventCard key={event.id} event={event} descLimit={100} />
+              <EventCard key={event.id} event={event} descLimit={100} spotlight />
             ))}
           </ol>
-        </section>
+        </CinemaSpotlight>
       )}
 
       {showSplit && otherPskovEvents.length > 0 && (
         <section className="page-panel page-panel--gold" aria-label="События в Пскове">
           <LiterarySectionHead
-            kicker="🏛 Псков"
+            kicker="🏛 Областной центр"
             title="В Пскове"
-            lead="Концерты и мероприятия в областном центре."
+            lead="Концерты, выставки и городские праздники — рядом с Пушкинским краем."
             linkTo="/events?region=pskov"
             linkLabel="Афиша Пскова →"
           />
