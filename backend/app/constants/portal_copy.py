@@ -80,6 +80,16 @@ ISSUE_STATUS_HINTS: dict[str, str] = {
     "ARCHIVED": "Архив",
 }
 
+ISSUE_STATUS_EMOJI: dict[str, str] = {
+    "NEW": "🆕",
+    "UNDER_REVIEW": "🔍",
+    "ASSIGNED": "👤",
+    "IN_PROGRESS": "🔧",
+    "RESOLVED": "✅",
+    "REJECTED": "❌",
+    "ARCHIVED": "📦",
+}
+
 # Deep link button labels
 LINK_EVENTS = "📅 Афиша"
 LINK_CLASSIFIEDS = "📋 Объявления"

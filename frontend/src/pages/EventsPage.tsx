@@ -19,12 +19,14 @@ const copy = PAGE_SECTIONS.events;
 export function EventsPage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
+    setLoadError(false);
     api
       .getPublicEvents({
         region: regionFilter === "all" ? undefined : regionFilter,
@@ -32,7 +34,10 @@ export function EventsPage() {
         limit: "40",
       })
       .then((r) => setEvents(r.items))
-      .catch(console.error)
+      .catch(() => {
+        setEvents([]);
+        setLoadError(true);
+      })
       .finally(() => setLoading(false));
   }, [regionFilter, search]);
 
@@ -83,6 +88,15 @@ export function EventsPage() {
           <button type="button" className="literary-btn literary-btn--primary shrink-0" onClick={() => setSearch(searchInput.trim())}>
             Найти
           </button>
+          {search && (
+            <button
+              type="button"
+              className="literary-btn literary-btn--ghost shrink-0 text-sm"
+              onClick={() => { setSearch(""); setSearchInput(""); }}
+            >
+              Сбросить
+            </button>
+          )}
         </div>
 
         <div className="events-region-filters mb-0" role="group" aria-label="Регион">
@@ -123,6 +137,13 @@ export function EventsPage() {
 
       {loading ? (
         <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" />
+      ) : loadError ? (
+        <LiteraryEmptyState
+          icon="⚠️"
+          title="Афиша временно недоступна"
+          text="Не удалось загрузить события. Попробуйте обновить страницу через минуту."
+          verse={LITERARY_VERSES.events}
+        />
       ) : visibleEvents.length === 0 ? (
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (

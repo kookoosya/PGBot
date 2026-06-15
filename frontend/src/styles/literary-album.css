@@ -1502,6 +1502,19 @@
     padding-left: 1rem;
     padding-right: 1rem;
   }
+  .literary-cabinet-nav--comfort .literary-useful-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .literary-cabinet-nav--comfort .literary-useful-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px hsl(var(--forest) / 0.08);
+  }
+  .classified-quick-btn:focus-visible,
+  .filter-chip:focus-visible,
+  .events-region-filter:focus-visible {
+    outline: 2px solid hsl(var(--gold) / 0.7);
+    outline-offset: 2px;
+  }
   .literary-form-comfort .event-detail-label {
     font-size: 1rem;
     font-weight: 600;
