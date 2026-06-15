@@ -57,7 +57,7 @@ backend/app/services/vk/
 
 | Файл | Строк | Разбить на |
 |------|-------|------------|
-| `classified_service.py` | ~900 | search, create, moderation, notify |
+| `classified_service.py` | ~900 | ✅ split → `classified/` package |
 | `place_service.py` | ~900 | crud, map, reviews, sync |
 | `issue_service.py` | ~800 | search, status, comments, official |
 | `issue_processor.py` | ~540 | оставить ingest; lifecycle в issue_service |
