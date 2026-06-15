@@ -100,6 +100,22 @@ async def test_public_classifieds_categories(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_public_classifieds_neighbor_filter(client: AsyncClient):
+    response = await client.get("/api/v1/classifieds", params={"neighbor_only": "true"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+
+
+@pytest.mark.asyncio
+async def test_public_events_limit(client: AsyncClient):
+    response = await client.get("/api/v1/public/events", params={"limit": 5})
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) <= 5
+
+
+@pytest.mark.asyncio
 async def test_public_event_not_found(client: AsyncClient):
     response = await client.get("/api/v1/public/events/999999999")
     assert response.status_code == 404

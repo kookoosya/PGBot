@@ -54,6 +54,12 @@ def run_checks(api_base: str) -> list[str]:
     elif not isinstance(events, dict) or "items" not in events:
         errors.append("events search missing items")
 
+    code, region_events = _fetch(f"{api}/public/events?region=pushkin_gory&limit=5")
+    if code != 200:
+        errors.append(f"events region HTTP {code}")
+    elif not isinstance(region_events, dict) or "items" not in region_events:
+        errors.append("events region missing items")
+
     code, _ = _fetch(f"{api}/issues", method="POST", data={"description": "abc"})
     if code != 422:
         errors.append(f"issue validation expected 422, got {code}")

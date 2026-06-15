@@ -2,7 +2,7 @@ import logging
 import re
 
 from app.config import get_settings
-from app.constants.portal_copy import ISSUE_STATUS_HINTS, LINK_COMPLAINTS
+from app.constants.portal_copy import ISSUE_STATUS_EMOJI, ISSUE_STATUS_HINTS, LINK_COMPLAINTS
 from app.services.site_urls import public_site_url
 from app.services.telegram import send_telegram_message
 from app.services.vk import get_inline_links_keyboard, send_message
@@ -96,8 +96,9 @@ async def notify_issue_status(issue, *, previous_status: str | None = None) -> b
         return False
     status = issue.status.value if hasattr(issue.status, "value") else str(issue.status)
     hint = issue_status_hint(status)
+    emoji = ISSUE_STATUS_EMOJI.get(status, "📋")
     lines = [
-        f"📋 Обращение #{issue.id}: «{issue_status_text(status)}»",
+        f"{emoji} Обращение #{issue.id}: «{issue_status_text(status)}»",
     ]
     if hint:
         lines.append(hint)

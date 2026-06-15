@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryInlineLoader } from "@/components/literary";
+import { VkBotBanner } from "@/components/VkBotLink";
 import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
@@ -55,7 +56,7 @@ export function UserCabinet() {
       <p className="literary-lead text-center mb-6 -mt-2">{PAGE_SECTIONS.cabinet.lead}</p>
 
       <div className="literary-quick-actions mb-6">
-        <Link to="/complaints" className="literary-btn literary-btn--primary text-sm no-underline">⚠️ Обращение</Link>
+        <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline">⚠️ Обращение</Link>
         <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">📋 Объявление</Link>
         <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">📅 Афиша</Link>
       </div>
@@ -101,7 +102,7 @@ export function UserCabinet() {
         <div className="literary-card literary-card--gold p-6 mb-6 text-center space-y-3">
           <p className="literary-title text-lg m-0">{EMPTY_STATES.complaintsMine.title}</p>
           <p className="text-sm text-muted-foreground m-0">{EMPTY_STATES.complaintsMine.text}</p>
-          <Link to="/complaints" className="literary-btn literary-btn--primary text-sm no-underline inline-block">
+          <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline inline-block">
             Подать обращение
           </Link>
         </div>
@@ -178,6 +179,11 @@ export function UserCabinet() {
       </div>
 
       <p className="text-center text-sm text-muted-foreground mt-8 italic">{LITERARY_VERSES.cabinet}</p>
+
+      <div className="mt-6">
+        <p className="text-sm text-muted-foreground text-center mb-3">{PAGE_SECTIONS.cabinet.vkHint}</p>
+        <VkBotBanner />
+      </div>
     </div>
   );
 }

@@ -282,15 +282,16 @@ async def handle_classifieds(ctx: VkRouteContext) -> None:
 
 
 async def handle_services(ctx: VkRouteContext) -> None:
-    site = public_site_url()
-    await _send_welcome(
-        ctx,
+    await _send_with_site_links(
+        ctx.peer_id,
         box(
             "Услуги посёлка",
-            f"Огород, дрова, покос, мастера с записью:\n{site}/services\n\n"
-            f"📋 Объявления соседей:\n{site}/classifieds\n\n"
+            "Огород, дрова, покос, мастера с записью.\n"
+            "Объявления соседей — на доске.\n\n"
             "✨ Всё бесплатно",
         ),
+        ("🛠 Услуги", "/services"),
+        (LINK_CLASSIFIEDS, "/classifieds"),
     )
 
 
@@ -523,7 +524,11 @@ async def handle_weather(ctx: VkRouteContext) -> None:
     else:
         message = format_weather_vk_current(snapshot)
 
-    await _send_welcome(ctx, box("Погода", message))
+    await _send_with_site_links(
+        ctx.peer_id,
+        box("Погода", message),
+        (LINK_EVENTS, "/events"),
+    )
 
 
 # --- Routing tables ---

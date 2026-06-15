@@ -21,7 +21,9 @@ export function Complaints() {
   const { user } = useUserAuth();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get("issue");
+  const openNew = searchParams.get("new") === "1";
   const highlightRef = useRef<HTMLDivElement | null>(null);
+  const issuesSectionRef = useRef<HTMLElement | null>(null);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [showForm, setShowForm] = useState(true);
@@ -40,6 +42,7 @@ export function Complaints() {
   const [submittedId, setSubmittedId] = useState<number | null>(null);
   const [categoriesError, setCategoriesError] = useState(false);
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("all");
+  const [issuesError, setIssuesError] = useState(false);
 
   useEffect(() => {
     api.getCategories()
@@ -48,13 +51,22 @@ export function Complaints() {
   }, []);
 
   useEffect(() => {
+    if (openNew) setShowForm(true);
+  }, [openNew]);
+
+  useEffect(() => {
     if (!user) {
       setMyIssues([]);
+      setIssuesError(false);
       return;
     }
+    setIssuesError(false);
     api.getMyIssues({ limit: "10" })
       .then((r) => setMyIssues(r.items))
-      .catch(() => setMyIssues([]));
+      .catch(() => {
+        setMyIssues([]);
+        setIssuesError(true);
+      });
   }, [user]);
 
   useEffect(() => {
@@ -94,6 +106,7 @@ export function Complaints() {
       if (user) {
         const r = await api.getMyIssues({ limit: "10" });
         setMyIssues(r.items);
+        setTimeout(() => issuesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
       }
     } catch (err) {
       setMsgType("err");
@@ -274,7 +287,7 @@ export function Complaints() {
           )}
 
           {user && (
-            <section>
+            <section ref={issuesSectionRef}>
               <LiterarySectionHead
                 kicker={copy.mine.kicker}
                 title={copy.mine.title}
@@ -305,7 +318,11 @@ export function Complaints() {
                   </button>
                 </div>
               )}
-              {myIssues.length === 0 ? (
+              {issuesError ? (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  Не удалось загрузить обращения. Обновите страницу чуть позже.
+                </p>
+              ) : myIssues.length === 0 ? (
                 <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact />
               ) : filteredIssues.length === 0 ? (
                 <p className="text-sm text-muted-foreground">По этому фильтру обращений нет.</p>
