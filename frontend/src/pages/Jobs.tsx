@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
@@ -274,7 +274,7 @@ export function Jobs() {
             </button>
           </LiteraryEmptyState>
         )}
-        {loading && <p className="landing-muted landing-loading text-center py-6">Ищем вакансии в округе…</p>}
+        {loading && <LiteraryInlineLoader label="Ищем вакансии в округе…" />}
         {ads.length > 0 && ads.length < total && (
           <div className="text-center pt-4">
             <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>

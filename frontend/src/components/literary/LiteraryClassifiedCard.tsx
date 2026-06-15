@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { formatShortDate } from "@/lib/utils";
 
 interface LiteraryClassifiedCardProps {
   ad: ClassifiedAd;
@@ -28,6 +29,11 @@ export function LiteraryClassifiedCard({ ad, compact = false }: LiteraryClassifi
             </span>
           )}
           <span className="literary-classified-author">{ad.author_name}</span>
+          {ad.created_at && (
+            <time className="literary-classified-date" dateTime={ad.created_at}>
+              {formatShortDate(ad.created_at)}
+            </time>
+          )}
         </div>
         {!compact && (
           <p className="literary-classified-contact">

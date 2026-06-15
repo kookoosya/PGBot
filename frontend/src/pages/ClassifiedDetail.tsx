@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
@@ -50,7 +50,7 @@ export function ClassifiedDetail() {
   if (!ad) {
     return (
       <div className="literary-page page-section max-w-3xl">
-        <p className="landing-muted text-center py-16">Загрузка…</p>
+        <LiteraryInlineLoader label="Открываем объявление…" />
       </div>
     );
   }

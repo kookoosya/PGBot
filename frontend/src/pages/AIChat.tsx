@@ -251,7 +251,7 @@ export function AIChat() {
           )}
         </div>
       )}
-      <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.ai}</p>
+      <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.ai}</p>
     </div>
   );
 }

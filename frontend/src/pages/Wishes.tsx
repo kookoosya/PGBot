@@ -116,7 +116,7 @@ export function Wishes() {
       )}
 
       {!sent && (
-        <p className="landing-section-verse text-center mt-10" aria-hidden>
+        <p className="literary-page-verse mt-10" aria-hidden>
           {LITERARY_VERSES.wishes}
         </p>
       )}

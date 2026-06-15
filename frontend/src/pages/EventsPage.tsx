@@ -174,7 +174,7 @@ export function EventsPage() {
       )}
 
       {!loading && visibleEvents.length > 0 && (
-        <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.events}</p>
+        <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.events}</p>
       )}
     </div>
   );

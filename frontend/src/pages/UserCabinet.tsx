@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryInlineLoader } from "@/components/literary";
 import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
@@ -25,7 +26,7 @@ export function UserCabinet() {
   }, [user]);
 
   if (loading) {
-    return <div className="page-section text-center text-muted-foreground">Загрузка кабинета…</div>;
+    return <LiteraryInlineLoader label="Загрузка кабинета…" />;
   }
 
   if (!user) return <Navigate to="/cabinet/login" replace />;

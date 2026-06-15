@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
@@ -37,7 +37,7 @@ export function ProviderCabinet() {
   }, [user]);
 
   if (loading) {
-    return <div className="literary-page-loader"><span className="literary-page-loader-icon">🪶</span><span>Загрузка кабинета…</span></div>;
+    return <LiteraryInlineLoader label="Загрузка кабинета…" />;
   }
 
   if (!user) {

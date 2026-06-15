@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryClassifiedCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryClassifiedCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
@@ -254,7 +254,7 @@ export function Classifieds() {
             </button>
           </LiteraryEmptyState>
         )}
-        {loading && <p className="landing-muted text-center py-6">Загрузка…</p>}
+        {loading && <LiteraryInlineLoader label="Ищем объявления соседей…" />}
         {ads.length > 0 && ads.length < total && (
           <div className="text-center pt-4">
             <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>
@@ -264,7 +264,7 @@ export function Classifieds() {
         )}
       </div>
 
-      <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.classifieds}</p>
+      <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.classifieds}</p>
     </div>
   );
 }
