@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryInlineLoader } from "@/components/literary";
-import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
@@ -17,12 +17,17 @@ const STATUS_LABELS_VERIFY: Record<string, { text: string; tone: string }> = {
 export function UserCabinet() {
   const { user, loading, logout } = useUserAuth();
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
+  const [issuesLoaded, setIssuesLoaded] = useState(false);
 
   useEffect(() => {
-    if (!user || isOfficialUser(user)) return;
+    if (!user || isOfficialUser(user)) {
+      setIssuesLoaded(true);
+      return;
+    }
     api.getMyIssues({ limit: "5" })
       .then((r) => setRecentIssues(r.items))
-      .catch(() => setRecentIssues([]));
+      .catch(() => setRecentIssues([]))
+      .finally(() => setIssuesLoaded(true));
   }, [user]);
 
   if (loading) {
@@ -85,6 +90,16 @@ export function UserCabinet() {
         )}
       </div>
 
+      {issuesLoaded && recentIssues.length === 0 && (
+        <div className="literary-card literary-card--gold p-6 mb-6 text-center space-y-3">
+          <p className="literary-title text-lg m-0">{EMPTY_STATES.complaintsMine.title}</p>
+          <p className="text-sm text-muted-foreground m-0">{EMPTY_STATES.complaintsMine.text}</p>
+          <Link to="/complaints" className="literary-btn literary-btn--primary text-sm no-underline inline-block">
+            Подать обращение
+          </Link>
+        </div>
+      )}
+
       {recentIssues.length > 0 && (
         <div className="literary-card literary-card--gold p-6 mb-6 space-y-3">
           <div className="flex items-center justify-between gap-2">
@@ -112,7 +127,7 @@ export function UserCabinet() {
       )}
 
       <div className="literary-cabinet-nav literary-cabinet-nav--comfort">
-        <Link to="/classifieds" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
+        <Link to="/classifieds?new=1" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
           <span className="literary-useful-icon">📋</span>
           <div>
             <h3 className="literary-useful-title">Объявления</h3>

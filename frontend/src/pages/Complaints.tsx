@@ -32,9 +32,13 @@ export function Complaints() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [loading, setLoading] = useState(false);
+  const [submittedId, setSubmittedId] = useState<number | null>(null);
+  const [categoriesError, setCategoriesError] = useState(false);
 
   useEffect(() => {
-    api.getCategories().then(setCategories).catch(console.error);
+    api.getCategories()
+      .then(setCategories)
+      .catch(() => setCategoriesError(true));
   }, []);
 
   useEffect(() => {
@@ -78,6 +82,7 @@ export function Complaints() {
         website_url: form.website_url || undefined,
       });
       setMsgType("ok");
+      setSubmittedId(issue.id);
       setMsg(`Обращение #${issue.id} принято! Статус: на рассмотрении.`);
       setForm((f) => ({ ...f, description: "", address: "" }));
       if (user) {
@@ -192,8 +197,21 @@ export function Complaints() {
                 aria-hidden="true"
               />
 
+              {categoriesError && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 m-0">
+                  Список категорий временно недоступен — ИИ определит её автоматически.
+                </p>
+              )}
+
               {msg && (
-                <p className={msgType === "ok" ? "alert-success" : "alert-error"}>{msg}</p>
+                <div className={msgType === "ok" ? "alert-success space-y-2" : "alert-error"}>
+                  <p className="m-0">{msg}</p>
+                  {msgType === "ok" && submittedId && user && (
+                    <Link to={`/complaints?issue=${submittedId}`} className="literary-link text-sm font-medium">
+                      Посмотреть статус обращения →
+                    </Link>
+                  )}
+                </div>
               )}
 
               <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
