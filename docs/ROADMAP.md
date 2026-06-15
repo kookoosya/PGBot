@@ -59,12 +59,13 @@ backend/app/services/vk/
 |------|-------|------------|
 | `classified_service.py` | ~900 | ✅ split → `classified/` package |
 | `place_service.py` | ~900 | crud, map, reviews, sync |
-| `issue_service.py` | ~800 | search, status, comments, official |
-| `issue_processor.py` | ~540 | оставить ingest; lifecycle в issue_service |
+| `issue_service.py` | ~800 | ✅ split → `issue/` package |
+| `issue_processor.py` | ~540 | оставить ingest; lifecycle в issue/ |
 
 ### 1.3 API и тесты
 
 - Покрыть: auth, classifieds create/moderate, issue lifecycle, VK webhook (mock)
+- ✅ `issue/` package + facade; тесты: `test_issue_facade`, `test_issue_lifecycle`, VK complaint routing
 - Цель: **50+** интеграционных тестов на критические пути
 - Frontend: **0 тестов сейчас** → Vitest на `eventUtils`, `literaryCopy`, API hooks (фаза 1b)
 
