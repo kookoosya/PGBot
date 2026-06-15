@@ -15,11 +15,12 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
 import { PageHeader } from "@/components/PageHeader";
+import { LiterarySectionHead } from "@/components/literary";
 import { Button } from "@/components/ui/button";
 import { telHref } from "@/components/VkBotLink";
 import { api, ComplaintType, MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
 import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
-import { PUSHKIN_QUOTES } from "@/lib/pushkin";
+import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const CENTER: [number, number] = [57.0267, 28.91];
 
@@ -443,20 +444,24 @@ export function MapPage() {
   };
 
   return (
-    <div>
+    <div className="literary-page">
       <div className="page-section pb-2">
         <PageHeader
           icon="🗺"
-          title="Карта Пушкиногорья"
-          subtitle={PUSHKIN_QUOTES.map}
+          title={PAGE_SECTIONS.map.title}
+          subtitle={PAGE_SECTIONS.map.lead}
         />
       </div>
 
 
       {routes.length > 0 && (
         <div className="page-section pb-3">
-          <div className="map-routes-panel">
-            <h3 className="map-routes-title">🧭 Маршруты для туристов</h3>
+          <div className="page-panel page-panel--gold map-routes-panel">
+            <LiterarySectionHead
+              kicker={PAGE_SECTIONS.map.routes.kicker}
+              title={PAGE_SECTIONS.map.routes.title}
+              lead={PAGE_SECTIONS.map.routes.lead}
+            />
             <div className="map-routes-grid">
               {routes.map((route) => (
                 <button
@@ -510,10 +515,12 @@ export function MapPage() {
 
       {taxi.length > 0 && (
         <div className="page-section pb-3">
-          <div className={`taxi-panel${taxiMode ? " taxi-panel-active" : ""}`}>
-            <div className="taxi-panel-header">
-              <h3>🚕 Такси {taxiMode ? "в посёлке" : "для туристов"}</h3>
-            </div>
+          <div className={`page-panel page-panel--forest taxi-panel${taxiMode ? " taxi-panel-active" : ""}`}>
+            <LiterarySectionHead
+              kicker={PAGE_SECTIONS.map.taxi.kicker}
+              title={`${PAGE_SECTIONS.map.taxi.title}${taxiMode ? " в посёлке" : ""}`}
+              lead={PAGE_SECTIONS.map.taxi.lead}
+            />
             <div className="taxi-grid">
               {taxi.map((t) => (
                 <a
@@ -608,7 +615,7 @@ export function MapPage() {
         <div className={`w-full lg:w-[420px] border-l map-sidebar map-sidebar-glass overflow-y-auto ${mobileTab === "map" ? "map-sidebar-hidden-mobile" : ""}`}>
           <div className="p-4 space-y-3 border-b sticky top-0 map-sidebar-head z-10">
             <input
-              className="w-full rounded-md border px-3 py-2 text-sm"
+              className="pushkin-select w-full"
               placeholder="Поиск организации..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -627,7 +634,7 @@ export function MapPage() {
             </div>
             <div className="map-filter-row">
               <select
-                className="text-sm rounded-md border px-2 py-1.5 flex-1"
+                className="pushkin-select text-sm flex-1"
                 value={shopsOnly ? "" : category}
                 onChange={(e) => {
                   setShopsOnly(false);
@@ -654,8 +661,8 @@ export function MapPage() {
           </div>
 
           {selected ? (
-            <div className="p-4 org-detail-card">
-              <button className="text-sm text-muted-foreground mb-3" onClick={() => { setSelected(null); setHighlight(null); }}>← К списку</button>
+            <div className="p-4 org-detail-card page-panel page-panel--gold literary-map-detail">
+              <button type="button" className="literary-btn literary-btn--ghost text-sm mb-3" onClick={() => { setSelected(null); setHighlight(null); }}>← К списку</button>
 
               <div className="org-detail-header">
                 <span className="org-detail-icon">{CATEGORY_ICONS[selected.category] || "📍"}</span>
@@ -842,6 +849,8 @@ export function MapPage() {
           )}
         </div>
       </div>
+
+      <p className="literary-page-verse page-section text-center pb-6" aria-hidden>{LITERARY_VERSES.map}</p>
     </div>
   );
 }

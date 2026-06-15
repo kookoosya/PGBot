@@ -1890,3 +1890,246 @@
       justify-content: center;
     }
   }
+
+  /* === Jobs, Services, Complaints, Map — литературные страницы === */
+  .literary-jobs-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+  @media (min-width: 768px) {
+    .literary-jobs-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .literary-job-contact {
+    margin: 0.35rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-form-hints {
+    margin: 0;
+    padding-left: 1.15rem;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: hsl(var(--muted-foreground));
+  }
+  .jobs-employer-card--literary {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: calc(var(--radius) + 0.125rem);
+    border: 1px solid hsl(var(--border) / 0.85);
+    background: linear-gradient(165deg, hsl(var(--card) / 0.95), hsl(var(--parchment) / 0.7));
+    box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.45);
+  }
+  .jobs-employer-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+  }
+  .jobs-employer-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .literary-services-grid,
+  .literary-providers-grid {
+    display: grid;
+    gap: 0.85rem;
+  }
+  @media (min-width: 768px) {
+    .literary-services-grid,
+    .literary-providers-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .literary-service-card-inner {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+  }
+  .literary-service-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .literary-service-title {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+  }
+  .literary-service-category {
+    margin: 0.15rem 0 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: hsl(var(--gold));
+  }
+  .literary-service-desc {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-service-price {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+  }
+  .literary-service-address {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-service-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .literary-provider-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .literary-provider-card:hover:not(.literary-provider-card--off) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px hsl(var(--forest) / 0.1);
+  }
+  .literary-provider-card--off {
+    opacity: 0.72;
+    cursor: default;
+  }
+  .literary-provider-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .literary-provider-name {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: hsl(var(--forest));
+  }
+  .literary-provider-status {
+    margin: 0.2rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .literary-provider-rating {
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+  }
+  .literary-provider-address {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .literary-provider-services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+  .literary-provider-chip {
+    font-size: 0.6875rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: hsl(var(--forest) / 0.08);
+    border: 1px solid hsl(var(--border) / 0.75);
+    color: hsl(var(--foreground));
+  }
+  .literary-page-verse--inline {
+    margin-top: 1.25rem;
+    margin-bottom: 0;
+    padding-top: 0.85rem;
+  }
+
+  .literary-issue-card--static {
+    cursor: default;
+  }
+  .literary-issue-card--static:hover {
+    transform: none;
+  }
+
+  .literary-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: hsl(152 45% 8% / 0.55);
+    backdrop-filter: blur(6px);
+  }
+  .literary-booking-modal {
+    width: 100%;
+    max-width: 28rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px hsl(var(--forest) / 0.2);
+  }
+  .literary-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+  .literary-slot-btn {
+    padding: 0.45rem 0.25rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.95);
+    font-size: 0.8125rem;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .literary-slot-btn:hover:not(:disabled) {
+    border-color: hsl(var(--gold) / 0.45);
+  }
+  .literary-slot-btn--active {
+    border-color: hsl(var(--gold));
+    background: hsl(var(--gold) / 0.15);
+    font-weight: 600;
+  }
+  .literary-slot-btn--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .literary-page .map-routes-panel,
+  .literary-page .taxi-panel {
+    margin: 0;
+    box-shadow: 0 12px 36px hsl(var(--forest) / 0.08);
+  }
+  .literary-page .map-sidebar-head {
+    background: hsl(40 55% 99% / 0.94);
+    backdrop-filter: blur(12px);
+  }
+  .literary-map-detail {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+  .literary-page .map-layer-btn.active {
+    border-color: hsl(var(--gold));
+    background: hsl(var(--gold) / 0.15);
+    color: hsl(var(--forest));
+  }
+  .literary-page .map-filter-chip-active {
+    border-color: hsl(var(--gold) / 0.5);
+    background: hsl(var(--gold) / 0.12);
+    color: hsl(var(--forest));
+  }
