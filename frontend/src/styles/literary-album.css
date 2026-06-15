@@ -45,7 +45,7 @@
     max-width: 42rem;
     font-family: "Source Serif 4", Georgia, serif;
     font-size: 0.9375rem;
-    line-height: 1.65;
+    line-height: 1.68;
     color: hsl(var(--muted-foreground));
   }
   .literary-section-link {
@@ -113,6 +113,21 @@
   .literary-card:hover {
     box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
     transform: translateY(-1px);
+    border-color: hsl(var(--gold) / 0.22);
+  }
+  .literary-card:focus-within {
+    outline: none;
+    box-shadow:
+      0 14px 40px hsl(var(--forest) / 0.1),
+      0 0 0 2px hsl(var(--gold) / 0.2);
+    border-color: hsl(var(--gold) / 0.35);
+  }
+  .literary-card .event-card-footer {
+    transition: letter-spacing 0.2s ease, color 0.15s ease;
+  }
+  .literary-card:hover .event-card-footer,
+  .literary-card:focus-within .event-card-footer {
+    letter-spacing: 0.02em;
   }
 
   /* === Панели страниц === */
@@ -180,6 +195,10 @@
     border-color: hsl(var(--gold) / 0.55);
     background: hsl(var(--card));
   }
+  .literary-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.35);
+  }
   .literary-link {
     color: hsl(var(--forest));
     font-weight: 600;
@@ -194,11 +213,28 @@
 
   /* === Пустые состояния === */
   .literary-empty {
+    position: relative;
     text-align: center;
-    padding: 2.5rem 1.5rem;
+    padding: 2.5rem 1.5rem 2.25rem;
     border-radius: calc(var(--radius) + 0.25rem);
-    border: 1px dashed hsl(var(--border));
-    background: hsl(var(--card) / 0.6);
+    border: 1px dashed hsl(var(--gold) / 0.28);
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--gold) / 0.06), transparent 55%),
+      linear-gradient(165deg, hsl(var(--card) / 0.92), hsl(var(--parchment) / 0.65));
+    box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.5);
+  }
+  .literary-empty-ornament {
+    width: 3.5rem;
+    height: 1px;
+    margin: 0 auto 1rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--gold) / 0.5) 25%,
+      hsl(var(--gold) / 0.75) 50%,
+      hsl(var(--gold) / 0.5) 75%,
+      transparent
+    );
   }
   .literary-empty-icon {
     font-size: 2rem;
@@ -316,6 +352,17 @@
     font-weight: 600;
     color: hsl(var(--gold));
     font-family: "Source Sans 3", system-ui, sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+  }
+  .event-card-footer-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+  .literary-card:hover .event-card-footer-arrow,
+  .literary-card:focus-within .event-card-footer-arrow {
+    transform: translateX(3px);
   }
 
   /* Кино — с постером */
@@ -898,7 +945,7 @@
   }
   .literary-dashboard {
     display: grid;
-    gap: 1.5rem;
+    gap: 1.35rem;
   }
   .literary-useful-grid {
     display: grid;
@@ -1011,6 +1058,11 @@
   .cinema-spotlight-inner {
     position: relative;
     z-index: 1;
+  }
+  .cinema-spotlight .literary-section-head {
+    margin-bottom: 1.35rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid hsl(var(--gold) / 0.15);
   }
   .cinema-spotlight .literary-kicker {
     color: hsl(43 89% 62%);
@@ -1346,8 +1398,14 @@
     background: hsl(var(--forest));
   }
   .literary-job-card:hover {
-    box-shadow: 0 12px 32px hsl(var(--forest) / 0.1);
+    border-color: hsl(var(--forest) / 0.25);
+    box-shadow: 0 14px 36px hsl(var(--forest) / 0.11);
     transform: translateY(-2px);
+  }
+  .literary-job-card:focus-within {
+    outline: none;
+    border-color: hsl(var(--gold) / 0.35);
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.15);
   }
   .literary-job-icon {
     width: 3rem;
@@ -1446,15 +1504,15 @@
     -webkit-backdrop-filter: blur(8px);
   }
   .literary-page-verse {
-    margin: 2rem 0 0;
-    padding-top: 1rem;
-    border-top: 1px dashed hsl(var(--border) / 0.65);
+    margin: 2.25rem 0 0;
+    padding-top: 1.15rem;
+    border-top: 1px dashed hsl(var(--gold) / 0.22);
     font-family: "Playfair Display", Georgia, serif;
     font-style: italic;
-    font-size: 0.8125rem;
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.55;
     text-align: center;
-    color: hsl(var(--gold) / 0.75);
+    color: hsl(var(--gold) / 0.82);
   }
   .literary-filter-bar {
     display: flex;
@@ -1507,8 +1565,15 @@
   }
   .literary-classified-card:hover {
     border-color: hsl(var(--gold) / 0.4);
-    box-shadow: 0 12px 36px hsl(var(--forest) / 0.09);
-    transform: translateY(-1px);
+    box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
+    transform: translateY(-2px);
+  }
+  .literary-classified-card:focus-within {
+    outline: none;
+    border-color: hsl(var(--gold) / 0.45);
+    box-shadow:
+      0 14px 40px hsl(var(--forest) / 0.1),
+      0 0 0 2px hsl(var(--gold) / 0.18);
   }
   .literary-classified-card:hover .literary-classified-title {
     color: hsl(var(--gold));
@@ -1673,9 +1738,14 @@
     background: hsl(var(--forest) / 0.35);
   }
   .literary-issue-card:hover {
-    border-color: hsl(var(--gold) / 0.35);
-    box-shadow: 0 8px 24px hsl(var(--forest) / 0.07);
+    border-color: hsl(var(--gold) / 0.38);
+    box-shadow: 0 12px 32px hsl(var(--forest) / 0.09);
     transform: translateY(-1px);
+  }
+  .literary-issue-card:focus-visible {
+    outline: none;
+    border-color: hsl(var(--gold) / 0.45);
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.18);
   }
   .literary-issue-card--selected {
     border-color: hsl(var(--gold) / 0.5);
@@ -2132,4 +2202,80 @@
     border-color: hsl(var(--gold) / 0.5);
     background: hsl(var(--gold) / 0.12);
     color: hsl(var(--forest));
+  }
+
+  /* === Атмосферная полировка: ритм, фильтры, карточки услуг === */
+  .literary-page .classified-quick-btn,
+  .literary-page .filter-chip,
+  .literary-page .events-region-filter {
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .literary-page .classified-quick-btn:hover:not(.classified-quick-btn-active),
+  .literary-page .filter-chip:hover:not(.filter-chip-active),
+  .literary-page .events-region-filter:hover:not(.events-region-filter--active) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px hsl(var(--forest) / 0.06);
+  }
+  .literary-page .classified-quick-btn:focus-visible,
+  .literary-page .filter-chip:focus-visible,
+  .literary-page .events-region-filter:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.25);
+  }
+
+  .literary-service-card.literary-card:hover {
+    border-color: hsl(var(--forest) / 0.22);
+  }
+  .literary-provider-card.literary-card:hover {
+    border-color: hsl(var(--gold) / 0.25);
+  }
+
+  .literary-page-note {
+    font-family: "Source Serif 4", Georgia, serif;
+    line-height: 1.62;
+    box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.4);
+  }
+
+  .landing-section-verse,
+  .landing-verse {
+    letter-spacing: 0.01em;
+  }
+
+  .literary-empty--dark .literary-empty-ornament {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(43 89% 62% / 0.35) 25%,
+      hsl(43 89% 62% / 0.55) 50%,
+      hsl(43 89% 62% / 0.35) 75%,
+      transparent
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .literary-card,
+    .literary-classified-card,
+    .literary-job-card,
+    .literary-issue-card,
+    .literary-btn,
+    .literary-provider-card,
+    .classified-quick-btn,
+    .filter-chip,
+    .events-region-filter {
+      transition: none !important;
+    }
+    .literary-card:hover,
+    .literary-classified-card:hover,
+    .literary-job-card:hover,
+    .literary-issue-card:hover,
+    .literary-btn:hover,
+    .classified-quick-btn:hover,
+    .filter-chip:hover {
+      transform: none !important;
+    }
   }

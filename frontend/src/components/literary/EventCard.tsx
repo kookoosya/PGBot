@@ -84,7 +84,8 @@ export function EventCard({
           {shortDesc && <p className="event-card-desc">{shortDesc}</p>}
           {showReadMore && (
             <span className="event-card-footer">
-              {cinema ? "Билеты и подробности →" : "Подробнее →"}
+              {cinema ? "Билеты и подробности" : "Подробнее"}
+              <span className="event-card-footer-arrow" aria-hidden> →</span>
             </span>
           )}
         </div>

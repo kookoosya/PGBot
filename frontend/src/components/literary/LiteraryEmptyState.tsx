@@ -34,6 +34,7 @@ export function LiteraryEmptyState({
         .filter(Boolean)
         .join(" ")}
     >
+      <div className="literary-empty-ornament" aria-hidden />
       <div className="literary-empty-icon" aria-hidden>{icon}</div>
       <h3 className="literary-empty-title">{title}</h3>
       <p className="literary-empty-text">{text}</p>
