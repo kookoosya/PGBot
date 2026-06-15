@@ -12,7 +12,7 @@ export function TodayInVillage() {
 
   if (loading && !data) {
     return (
-      <section className="page-panel page-panel--gold landing-block" aria-busy="true">
+      <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
         <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
         <p className="landing-muted">Собираем актуальную информацию…</p>
       </section>
@@ -21,7 +21,7 @@ export function TodayInVillage() {
 
   if (error && !data) {
     return (
-      <section className="page-panel page-panel--gold landing-block">
+      <section className="page-panel page-panel--gold landing-block landing-today-panel">
         <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
         <p className="landing-muted">Сводка временно недоступна.</p>
       </section>
@@ -34,7 +34,7 @@ export function TodayInVillage() {
   const ad = data.latest_classified;
 
   return (
-    <section className="page-panel page-panel--gold landing-block" aria-label="Сегодня в Пушкиногорье">
+    <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в Пушкиногорье">
       <LiterarySectionHead
         kicker={copy.kicker}
         title={copy.title}
@@ -42,8 +42,8 @@ export function TodayInVillage() {
         meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
       />
 
-      <div className="today-grid">
-        <article className="today-card today-card-weather">
+      <div className="today-grid today-grid--landing">
+        <article className="today-card today-card--literary today-card-weather">
           <h3 className="today-card-title">Погода</h3>
           {weather ? (
             <>
@@ -74,7 +74,7 @@ export function TodayInVillage() {
           )}
         </article>
 
-        <article className="today-card today-card-ad">
+        <article className="today-card today-card--literary today-card-ad">
           <h3 className="today-card-title">Свежее объявление</h3>
           {ad ? (
             <>
@@ -92,7 +92,7 @@ export function TodayInVillage() {
           </Link>
         </article>
 
-        <article className="today-card today-card-map">
+        <article className="today-card today-card--literary today-card-map">
           <h3 className="today-card-title">Карта посёлка</h3>
           <dl className="today-map-stats">
             <div>

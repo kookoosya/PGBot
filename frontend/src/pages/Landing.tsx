@@ -64,7 +64,7 @@ export function Landing() {
       <div className="landing-album">
         <div className="landing-album-inner max-w-5xl mx-auto px-4">
           <LandingAlbumSection>
-            <div className="landing-stack">
+            <div className="landing-today">
               <SeasonalTip />
               <TodayInVillage />
             </div>

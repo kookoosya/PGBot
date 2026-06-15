@@ -6,7 +6,7 @@ export function SeasonalTip() {
   if (!tip) return null;
 
   return (
-    <aside className="seasonal-tip seasonal-tip--literary" aria-label="Сезонная подсказка">
+    <aside className="seasonal-tip seasonal-tip--literary seasonal-tip--landing" aria-label="Сезонная подсказка">
       <span className="seasonal-tip-icon" aria-hidden>{tip.icon}</span>
       <div className="seasonal-tip-body">
         <p className="seasonal-tip-title">{tip.title}</p>

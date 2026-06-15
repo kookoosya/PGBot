@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
 import { isCinemaEvent } from "@/lib/eventUtils";
-import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
     [filteredEvents],
   );
 
-  const showSplit = (isLanding || (regionFilter === "all" && !searchInput.trim()));
+  const showSplit = isLanding || (regionFilter === "all" && !searchInput.trim());
 
   const displayPushkin = isLanding ? pushkinEvents.slice(0, LANDING_LIMITS.pushkin) : pushkinEvents;
   const displayCinema = isLanding ? cinemaEvents.slice(0, LANDING_LIMITS.cinema) : cinemaEvents;
@@ -73,6 +74,8 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
   const eventsCopy = LANDING_SECTIONS.events;
   const pskovCopy = LANDING_SECTIONS.pskov;
+  const showCinemaBlock = showSplit && (displayCinema.length > 0 || isLanding);
+  const cinemaSingle = isLanding && displayCinema.length === 1;
 
   return (
     <div className={isLanding ? "landing-events" : "literary-dashboard"}>
@@ -125,7 +128,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
           displayPushkin.length === 0 ? (
             <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
           ) : (
-            <ol className={`events-grid${isLanding ? "" : " events-grid--wide"}`}>
+            <ol className={`events-grid${isLanding ? " events-grid--landing" : " events-grid--wide"}`}>
               {displayPushkin.map((event) => (
                 <EventCard key={event.id} event={event} descLimit={isLanding ? 100 : 120} />
               ))}
@@ -140,21 +143,46 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
             ))}
           </ol>
         )}
+
+        {isLanding && displayPushkin.length > 0 && (
+          <p className="landing-section-verse" aria-hidden>{LITERARY_VERSES.events}</p>
+        )}
       </section>
 
-      {showSplit && displayCinema.length > 0 && (
+      {showCinemaBlock && (
         <CinemaSpotlight featured={isLanding}>
-          <ol className={`events-grid events-grid--cinema${isLanding ? " events-grid--cinema-landing" : ""}`}>
-            {displayCinema.map((event, index) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                descLimit={isLanding ? 90 : 100}
-                spotlight
-                className={isLanding && index === 0 ? "event-card-landing-featured" : ""}
-              />
-            ))}
-          </ol>
+          {displayCinema.length > 0 ? (
+            <ol
+              className={[
+                "events-grid",
+                "events-grid--cinema",
+                isLanding ? "events-grid--cinema-landing" : "",
+                cinemaSingle ? "events-grid--cinema-single" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {displayCinema.map((event, index) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  descLimit={isLanding ? 90 : 100}
+                  spotlight
+                  className={
+                    isLanding && (index === 0 || cinemaSingle) ? "event-card-landing-featured" : ""
+                  }
+                />
+              ))}
+            </ol>
+          ) : (
+            <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark">
+              <div className="landing-inline-actions">
+                <Link to="/events" className="literary-btn literary-btn--gold no-underline">
+                  Вся афиша →
+                </Link>
+              </div>
+            </LiteraryEmptyState>
+          )}
         </CinemaSpotlight>
       )}
 
@@ -167,7 +195,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
             linkTo="/events?region=pskov"
             linkLabel="Афиша Пскова →"
           />
-          <ol className="events-grid">
+          <ol className={`events-grid${isLanding ? " events-grid--landing-pskov" : ""}`}>
             {displayPskov.map((event) => (
               <EventCard key={event.id} event={event} descLimit={isLanding ? 90 : 100} />
             ))}

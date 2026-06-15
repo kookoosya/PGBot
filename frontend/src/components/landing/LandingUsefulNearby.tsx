@@ -21,7 +21,7 @@ export function LandingUsefulNearby() {
         title={copy.title}
         lead={copy.lead}
       />
-      <div className="literary-useful-grid">
+      <div className="literary-useful-grid literary-useful-grid--landing">
         {usefulItems.map((item) => (
           <Link
             key={item.to}

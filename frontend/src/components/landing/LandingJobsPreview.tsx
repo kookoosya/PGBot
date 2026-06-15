@@ -34,7 +34,7 @@ export function LandingJobsPreview() {
       {loading ? (
         <p className="landing-muted">Ищем вакансии в округе…</p>
       ) : jobAds.length === 0 ? (
-        <LiteraryEmptyState {...EMPTY_STATES.jobs} compact>
+        <LiteraryEmptyState {...EMPTY_STATES.jobs} compact className="literary-empty--landing">
           <div className="landing-inline-actions">
             <Link to="/jobs" className="literary-btn literary-btn--primary no-underline">
               Разместить вакансию
@@ -53,17 +53,19 @@ export function LandingJobsPreview() {
                 <Link
                   key={ad.id}
                   to={`/classifieds/${ad.id}`}
-                  className="literary-job-card no-underline text-inherit"
+                  className="literary-job-card literary-job-card--landing no-underline text-inherit"
                 >
                   <div className="literary-job-icon" style={{ background: visual.gradient }}>
                     {visual.icon}
                   </div>
-                  <div>
+                  <div className="literary-job-body">
                     <span className="literary-job-badge">{ad.category_label}</span>
                     <h3 className="literary-job-title">{ad.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{ad.description}</p>
+                    <p className="literary-job-desc">{ad.description}</p>
                     {ad.price != null && (
-                      <p className="literary-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
+                      <p className="literary-job-pay">
+                        {ad.price} {ad.price_unit || "₽"}
+                      </p>
                     )}
                   </div>
                 </Link>
