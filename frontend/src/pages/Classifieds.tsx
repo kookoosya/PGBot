@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { LiteraryClassifiedCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
-import { BRAND } from "@/lib/branding";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
-import { PUSHKIN_QUOTES } from "@/lib/pushkin";
+import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
@@ -16,6 +15,8 @@ export function Classifieds() {
   if (searchParams.get("jobs") === "1") {
     return <Navigate to="/jobs" replace />;
   }
+
+  const pageCopy = neighborMode ? PAGE_SECTIONS.classifieds.neighbor : PAGE_SECTIONS.classifieds;
 
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [total, setTotal] = useState(0);
@@ -103,54 +104,57 @@ export function Classifieds() {
   };
 
   return (
-    <div className="page-section max-w-5xl">
+    <div className="literary-page page-section max-w-5xl">
       <PageHeader
         icon={neighborMode ? "🤝" : "📋"}
-        title={neighborMode ? "Сосед помогает" : "Доска объявлений"}
-        subtitle={
-          neighborMode
-            ? "Бесплатные объявления о взаимной помощи — без цены и без оплаты размещения"
-            : `${BRAND.name} — «${PUSHKIN_QUOTES.classifieds.replace(/«|»/g, "")}»`
-        }
+        title={neighborMode ? pageCopy.title : PAGE_SECTIONS.classifieds.title}
+        subtitle={pageCopy.lead}
       >
-        <button type="button" className="btn-hero-primary text-sm" onClick={() => setShowForm(!showForm)}>
+        <button type="button" className="literary-btn literary-btn--primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Подать объявление"}
         </button>
         <span className="free-badge">🆓 Бесплатно</span>
       </PageHeader>
 
-      <div className="human-note mb-6">
-        <p className="m-0 text-sm">
+      <div className="literary-page-note mb-6">
+        <p className="m-0">
           Дрова, покос, продажа, аренда — <strong>бесплатно и без регистрации</strong>.
-          Вакансии — на вкладке{" "}
-          <Link to="/jobs" className="text-primary hover:underline">«Работа»</Link>.
-          Мастера — на{" "}
-          <Link to="/services" className="text-primary hover:underline">«Услуги»</Link>.
-          {" "}Взаимная помощь —{" "}
-          <Link to="/classifieds?neighbor=1" className="text-primary hover:underline">«Сосед помогает»</Link>.
+          Вакансии — на{" "}
+          <Link to="/jobs" className="literary-link">«Работа»</Link>,
+          мастера — в{" "}
+          <Link to="/services" className="literary-link">«Услуги»</Link>,
+          взаимная помощь —{" "}
+          <Link to="/classifieds?neighbor=1" className="literary-link">«Сосед помогает»</Link>.
         </p>
       </div>
 
-      <div className="page-panel page-panel--gold mb-4">
+      <section className="page-panel page-panel--gold mb-4">
+        <LiterarySectionHead
+          kicker="🔍 Поиск"
+          title="Найти объявление"
+          lead="Введите слово из заголовка или описания."
+        />
         <div className="flex flex-col sm:flex-row gap-2">
           <Input
             placeholder="Поиск по заголовку…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-            className="flex-1"
+            className="flex-1 pushkin-select"
           />
-          <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
+          <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
             Найти
-          </Button>
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div className="category-grid mb-4">
-        <button type="button" className={`category-tile ${!filter ? "category-tile-active" : ""}`} onClick={() => setFilter("")}>
-          <div className="category-tile-bg" style={{ background: "linear-gradient(135deg, #1a4d3a, #2d6a4f)" }} />
-          <span className="category-tile-icon">🪶</span>
-          <span className="category-tile-label">Все</span>
+      <div className="literary-filter-bar mb-6">
+        <button
+          type="button"
+          className={`classified-quick-btn ${!filter ? "classified-quick-btn-active" : ""}`}
+          onClick={() => setFilter("")}
+        >
+          🪶 Все {total > 0 && `(${total})`}
         </button>
         {adCategories.map((c) => {
           const visual = getCategoryVisual(c.value);
@@ -158,31 +162,28 @@ export function Classifieds() {
             <button
               key={c.value}
               type="button"
-              className={`category-tile ${filter === c.value ? "category-tile-active" : ""}`}
+              className={`classified-quick-btn ${filter === c.value ? "classified-quick-btn-active" : ""}`}
               onClick={() => setFilter(c.value)}
             >
-              <div className="category-tile-bg" style={{ background: visual.gradient }} />
-              <span className="category-tile-icon">{visual.icon}</span>
-              <span className="category-tile-label">{c.label}</span>
+              {visual.icon} {c.label}
             </button>
           );
         })}
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="pushkin-card p-6 mb-8 space-y-4 form-glow">
+        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow">
+          <LiterarySectionHead
+            kicker="✍️ Новое объявление"
+            title="Подать на модерацию"
+            lead="Регистрация не нужна. Проверим и опубликуем в течение суток."
+          />
           <div className="free-banner">
             <span className="text-lg">🆓</span>
             <div>
               <p className="font-bold m-0">Бесплатное размещение</p>
-              <p className="text-sm text-muted-foreground m-0 mt-1">Регистрация не нужна. Проверим и опубликуем после модерации.</p>
+              <p className="text-sm text-muted-foreground m-0 mt-1">Честные объявления — без предоплаты и переводов незнакомцам.</p>
             </div>
-          </div>
-
-          <div className="antifraud-note">
-            <p className="m-0 text-sm">
-              <strong>Без обмана:</strong> не просите предоплату, залог и переводы на карту.
-            </p>
           </div>
 
           <select className="pushkin-select w-full" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
@@ -192,7 +193,7 @@ export function Classifieds() {
           </select>
           <Input placeholder="Заголовок" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           <textarea
-            className="w-full border rounded-lg px-3 py-2 text-sm min-h-[100px]"
+            className="literary-textarea w-full min-h-[100px]"
             placeholder="Описание"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -230,7 +231,9 @@ export function Classifieds() {
             />
             <span>Объявление честное: без предоплаты и переводов незнакомцам.</span>
           </label>
-          <Button type="submit" className="w-full">🆓 Отправить на модерацию</Button>
+          <button type="submit" className="literary-btn literary-btn--primary w-full">
+            🆓 Отправить на модерацию
+          </button>
         </form>
       )}
 
@@ -240,46 +243,28 @@ export function Classifieds() {
         <VkBotBanner />
       </div>
 
-      <div className="space-y-4">
-        {ads.map((ad) => {
-          const visual = getCategoryVisual(ad.category);
-          return (
-            <div key={ad.id} className="classified-ad-card">
-              <div className="classified-ad-image" style={{ background: visual.gradient }}>
-                <span className="classified-ad-icon">{visual.icon}</span>
-                <span className="classified-ad-badge">{ad.category_label}</span>
-              </div>
-              <div className="classified-ad-body">
-                <div className="flex justify-between gap-2">
-                  <h3 className="font-bold text-lg">
-                    <Link to={`/classifieds/${ad.id}`} className="hover:underline">{ad.title}</Link>
-                  </h3>
-                  {ad.price != null && (
-                    <span className="text-amber-700 font-semibold shrink-0">{ad.price} {ad.price_unit || "₽"}</span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{ad.author_name}</p>
-                <p className="text-sm mt-2">{ad.description}</p>
-                <p className="text-sm mt-3">
-                  📞 <a href={`tel:${ad.phone.replace(/\s/g, "")}`} className="clickable-phone">{ad.phone}</a>
-                  {ad.address && ` · 📍 ${ad.address}`}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className="literary-classified-list">
+        {ads.map((ad) => (
+          <LiteraryClassifiedCard key={ad.id} ad={ad} />
+        ))}
         {!loading && ads.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">Объявлений пока нет. Будьте первым!</p>
+          <LiteraryEmptyState {...EMPTY_STATES.classifieds}>
+            <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
+              + Подать объявление
+            </button>
+          </LiteraryEmptyState>
         )}
-        {loading && <p className="text-center text-muted-foreground py-6">Загрузка…</p>}
+        {loading && <p className="landing-muted text-center py-6">Загрузка…</p>}
         {ads.length > 0 && ads.length < total && (
           <div className="text-center pt-4">
-            <Button type="button" variant="outline" disabled={loading} onClick={() => load(page + 1, true)}>
+            <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>
               Ещё объявления ({ads.length} из {total})
-            </Button>
+            </button>
           </div>
         )}
       </div>
+
+      <p className="landing-section-verse text-center mt-8" aria-hidden>{LITERARY_VERSES.classifieds}</p>
     </div>
   );
 }
