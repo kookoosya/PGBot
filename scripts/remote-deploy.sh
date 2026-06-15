@@ -34,6 +34,9 @@ bash scripts/setup-russia-mirror.sh
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
 docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
+bash scripts/install-vps-cron.sh /opt/pgbot
+bash scripts/vps-sync-events.sh cinema 2>/dev/null || true
+bash scripts/smoke-public.sh https://192-210-213-135.sslip.io
 echo Deploy OK: https://192-210-213-135.sslip.io"
 
 export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"

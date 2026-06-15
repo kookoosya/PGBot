@@ -113,12 +113,18 @@ bash scripts/smoke-public.sh https://pushkinskie-gory.ru
 | `/register` | Literary hub |
 | `/events` → фильм | Постер, жанр, сеансы |
 
-### 4. Синхронизация афиши (если кино-блок пуст)
+### 4. Синхронизация афиши
 
+Автоматически: cron каждые 8 ч (`scripts/vps-sync-events.sh cinema`).
+
+Вручную:
 ```bash
-docker compose -f docker-compose.prod.yml exec -T backend python scripts/enrich_events.py
-# или источники kinopskov/mirage/silver по cron
+bash scripts/vps-sync-events.sh cinema   # Kinopskov, Mirage, Silver, Orbilet
+bash scripts/vps-sync-events.sh all      # все источники
+docker compose -f docker-compose.prod.yml exec -T backend python scripts/sync_all_events.py --mode cinema
 ```
+
+Лог cron: `/var/log/pgbot-sync.log`
 
 ---
 
