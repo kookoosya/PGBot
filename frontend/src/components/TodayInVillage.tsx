@@ -1,29 +1,29 @@
 import { Link } from "react-router-dom";
+import { LiterarySectionHead } from "@/components/literary";
 import { formatTemperature } from "@/hooks/useWeather";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
+import { LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { formatDate } from "@/lib/utils";
+
+const copy = LANDING_SECTIONS.today;
 
 export function TodayInVillage() {
   const { data, loading, error } = useToday();
 
   if (loading && !data) {
     return (
-      <section className="today-panel" aria-busy="true">
-        <div className="today-panel-head">
-          <h2>Сегодня в посёлке</h2>
-        </div>
-        <p className="today-muted">Собираем актуальную информацию…</p>
+      <section className="page-panel page-panel--gold landing-block" aria-busy="true">
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <p className="landing-muted">Собираем актуальную информацию…</p>
       </section>
     );
   }
 
   if (error && !data) {
     return (
-      <section className="today-panel">
-        <div className="today-panel-head">
-          <h2>Сегодня в посёлке</h2>
-        </div>
-        <p className="today-muted">Сводка временно недоступна.</p>
+      <section className="page-panel page-panel--gold landing-block">
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <p className="landing-muted">Сводка временно недоступна.</p>
       </section>
     );
   }
@@ -34,14 +34,13 @@ export function TodayInVillage() {
   const ad = data.latest_classified;
 
   return (
-    <section className="today-panel page-panel page-panel--gold" aria-label="Сегодня в Пушкиногорье">
-      <div className="today-panel-head">
-        <div>
-          <p className="today-kicker">🪶 Актуально сейчас</p>
-          <h2>Сегодня в Пушкиногорье</h2>
-        </div>
-        <p className="today-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>
-      </div>
+    <section className="page-panel page-panel--gold landing-block" aria-label="Сегодня в Пушкиногорье">
+      <LiterarySectionHead
+        kicker={copy.kicker}
+        title={copy.title}
+        lead={copy.lead}
+        meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
+      />
 
       <div className="today-grid">
         <article className="today-card today-card-weather">
@@ -71,7 +70,7 @@ export function TodayInVillage() {
               )}
             </>
           ) : (
-            <p className="today-muted">Прогноз временно недоступен</p>
+            <p className="landing-muted">Прогноз временно недоступен</p>
           )}
         </article>
 
@@ -86,7 +85,7 @@ export function TodayInVillage() {
               <p className="today-ad-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
-            <p className="today-muted">Пока нет новых объявлений</p>
+            <p className="landing-muted">Пока нет новых объявлений</p>
           )}
           <Link to="/classifieds" className="today-card-action">
             Все объявления →

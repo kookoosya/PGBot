@@ -59,6 +59,14 @@
     color: hsl(var(--gold));
     text-decoration: underline;
   }
+  .literary-section-head-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    text-align: right;
+  }
 
   /* === Альбомные карточки === */
   .literary-card {
@@ -206,6 +214,42 @@
     color: hsl(var(--gold));
     opacity: 0.9;
   }
+  .literary-empty--compact {
+    padding: 1.5rem 1.25rem;
+  }
+  .literary-empty--compact .literary-empty-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .literary-empty--compact .literary-empty-title {
+    font-size: 1.0625rem;
+  }
+  .literary-empty--compact .literary-empty-text {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+  .literary-empty--compact .literary-empty-verse {
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .literary-section-head--light .literary-kicker {
+    color: hsl(43 89% 62%);
+    text-shadow: 0 1px 8px hsl(var(--burgundy) / 0.5);
+  }
+  .literary-section-head--light .literary-title {
+    color: hsl(var(--parchment));
+    text-shadow: 0 2px 12px hsl(30 14% 8% / 0.4);
+  }
+  .literary-section-head--light .literary-lead {
+    color: hsl(40 33% 95% / 0.78);
+  }
+  .literary-section-head--light .literary-section-link {
+    color: hsl(43 89% 68%);
+  }
+  .literary-section-head--light .literary-section-link:hover {
+    color: hsl(var(--parchment));
+  }
 
   /* === Карточки событий === */
   .event-card {
@@ -311,6 +355,130 @@
   }
 
   /* === Лендинг: альбомные блоки === */
+  .landing-album {
+    background:
+      linear-gradient(180deg, hsl(var(--parchment) / 0.55) 0%, hsl(var(--parchment)) 8%, hsl(var(--parchment)) 100%);
+    border-top: 1px solid hsl(var(--border) / 0.5);
+  }
+  .landing-album-inner {
+    padding: 2rem 0 3rem;
+  }
+  .landing-album-section {
+    padding: 0;
+  }
+  .landing-album-section--divider {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid hsl(var(--border) / 0.7);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--gold) / 0.12) 20%,
+      hsl(var(--gold) / 0.12) 80%,
+      transparent
+    );
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
+  .landing-stack {
+    display: grid;
+    gap: 1rem;
+  }
+  .landing-block {
+    margin: 0;
+  }
+  .landing-block .literary-section-head {
+    margin-bottom: 1.15rem;
+  }
+  .landing-block-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px dashed hsl(var(--border) / 0.8);
+  }
+  .landing-verse {
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-size: 0.8125rem;
+    color: hsl(var(--gold) / 0.85);
+    text-align: right;
+    max-width: 20rem;
+  }
+  .landing-muted,
+  .landing-updated {
+    margin: 0;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .landing-updated {
+    flex-shrink: 0;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .landing-inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+  }
+  .landing-jobs-grid {
+    display: grid;
+    gap: 0.85rem;
+  }
+  @media (min-width: 640px) {
+    .landing-jobs-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .landing-jobs-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .landing-events {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .landing-vk-panel {
+    text-align: center;
+  }
+  .landing-vk-panel .literary-section-head {
+    justify-content: center;
+    text-align: center;
+  }
+  .landing-vk-panel .literary-lead {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .seasonal-tip--literary {
+    border-color: hsl(var(--forest) / 0.15);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.98) 0%,
+      hsl(var(--parchment) / 0.85) 100%
+    );
+    box-shadow: 0 8px 24px hsl(var(--forest) / 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .seasonal-tip--literary::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, hsl(var(--gold)), hsl(var(--forest)));
+  }
+
   .literary-album-section {
     padding: 2.5rem 0;
   }
@@ -462,6 +630,37 @@
   .cinema-spotlight .events-grid {
     gap: 1rem;
   }
+  .cinema-spotlight--featured {
+    padding: 2rem 1.65rem 2.1rem;
+    border-width: 1.5px;
+    border-color: hsl(var(--gold) / 0.38);
+    box-shadow:
+      0 28px 72px hsl(var(--burgundy) / 0.42),
+      0 0 0 1px hsl(var(--gold) / 0.08),
+      inset 0 1px 0 hsl(var(--gold) / 0.15);
+  }
+  .cinema-spotlight-glow {
+    position: absolute;
+    top: -40%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 60%;
+    background: radial-gradient(ellipse, hsl(var(--gold) / 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .events-grid--cinema-landing {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px) {
+    .events-grid--cinema-landing {
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: stretch;
+    }
+    .event-card-landing-featured {
+      grid-row: span 1;
+    }
+  }
   @media (min-width: 768px) {
     .cinema-spotlight .events-grid--cinema {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -560,6 +759,20 @@
   }
   .event-card--cinema-featured .event-card-title {
     font-size: 1.125rem;
+  }
+  .event-card-landing-featured .event-card--cinema-featured {
+    grid-template-columns: 7rem 1fr;
+  }
+  @media (min-width: 768px) {
+    .event-card-landing-featured .event-card--cinema-featured {
+      grid-template-columns: 8.5rem 1fr;
+    }
+    .event-card-landing-featured .event-card-poster {
+      min-height: 9rem;
+    }
+    .event-card-landing-featured .event-card-title {
+      font-size: 1.2rem;
+    }
   }
   .event-card--pushkin .event-card-title {
     color: hsl(var(--forest));

@@ -6,13 +6,13 @@ export function SeasonalTip() {
   if (!tip) return null;
 
   return (
-    <aside className="seasonal-tip" aria-label="Сезонная подсказка">
+    <aside className="seasonal-tip seasonal-tip--literary" aria-label="Сезонная подсказка">
       <span className="seasonal-tip-icon" aria-hidden>{tip.icon}</span>
       <div className="seasonal-tip-body">
         <p className="seasonal-tip-title">{tip.title}</p>
         <p className="seasonal-tip-text">{tip.text}</p>
         {tip.link && tip.linkLabel && (
-          <Link to={tip.link} className="seasonal-tip-link">{tip.linkLabel} →</Link>
+          <Link to={tip.link} className="literary-link text-sm">{tip.linkLabel} →</Link>
         )}
       </div>
     </aside>
