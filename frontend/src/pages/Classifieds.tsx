@@ -172,7 +172,7 @@ export function Classifieds() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow">
+        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow literary-form-comfort">
           <LiterarySectionHead
             kicker="✍️ Новое объявление"
             title="Подать на модерацию"

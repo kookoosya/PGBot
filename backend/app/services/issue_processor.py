@@ -20,9 +20,9 @@ from app.models.user import Role, User
 from app.schemas.analysis_result import AnalysisResult
 from app.services.gemini import GeminiAnalysisError, request_gemini_analysis
 from app.services.issue_utils import issue_display_summary
-from app.services.notifications import notify_owner
+from app.constants.portal_copy import ISSUE_ACCEPTED_VK, LINK_COMPLAINTS
+from app.services.notifications import notify_owner, notify_vk_user_with_links
 from app.services.telegram import notify_about_issue
-from app.services.vk import send_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -477,12 +477,14 @@ async def process_incoming_message(
         ),
     )
 
-    await send_message(
+    await notify_vk_user_with_links(
         peer_id,
-        f"✅ Обращение #{issue.id} принято!\n"
-        f"📋 {analysis.summary_or('')}\n"
-        f"📁 Категория: {category}\n"
-        f"Статус: на рассмотрении",
+        ISSUE_ACCEPTED_VK.format(
+            id=issue.id,
+            summary=analysis.summary_or(""),
+            category=category or "—",
+        ),
+        (LINK_COMPLAINTS, f"/complaints?issue={issue.id}"),
     )
     return issue
 

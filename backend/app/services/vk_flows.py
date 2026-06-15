@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.constants.portal_copy import CLASSIFIED_SUBMITTED_VK, LINK_CLASSIFIEDS
 from app.services.site_urls import public_site_url
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
@@ -33,6 +34,7 @@ from app.services.classified_antifraud import (
 )
 from app.services.map_routes import get_map_routes
 from app.services.notifications import notify_owner
+from app.services.vk import get_inline_links_keyboard, send_message
 from app.services.vk_messages import box
 
 logger = logging.getLogger(__name__)
@@ -308,11 +310,15 @@ async def handle_flow_message(
                 f"👤 {name}\n📞 {data['phone']}\n\n"
                 f"Модерация: {public_site_url()}/admin/classifieds"
             )
-            return box(
-                "Принято!",
-                "Объявление на модерации — появится на портале и в VK после проверки.\n\n"
-                f"Статус: {public_site_url()}/classifieds",
+            msg = box("Принято!", CLASSIFIED_SUBMITTED_VK)
+            await send_message(
+                peer_id,
+                msg,
+                keyboard=get_inline_links_keyboard([
+                    (LINK_CLASSIFIEDS, f"{public_site_url()}/classifieds"),
+                ]),
             )
+            return None
 
     if kind == "map_report":
         data = flow["data"]

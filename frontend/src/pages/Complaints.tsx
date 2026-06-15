@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
@@ -8,12 +8,15 @@ import { Input } from "@/components/ui/input";
 import { api, Issue } from "@/lib/api";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
-import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { formatDate, issueStatusHint, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
 const copy = PAGE_SECTIONS.complaints;
 
 export function Complaints() {
   const { user } = useUserAuth();
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("issue");
+  const highlightRef = useRef<HTMLDivElement | null>(null);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [showForm, setShowForm] = useState(true);
@@ -42,6 +45,13 @@ export function Complaints() {
       .then((r) => setMyIssues(r.items))
       .catch(() => setMyIssues([]));
   }, [user]);
+
+  useEffect(() => {
+    if (!highlightId || myIssues.length === 0) return;
+    const el = highlightRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightId, myIssues]);
 
   useEffect(() => {
     if (user) {
@@ -99,7 +109,7 @@ export function Complaints() {
           </div>
 
           {showForm && (
-            <form onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow">
+            <form onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow literary-form-comfort">
               {!user && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -211,7 +221,11 @@ export function Complaints() {
               ) : (
                 <div className="space-y-3">
                   {myIssues.map((issue) => (
-                    <article key={issue.id} className="literary-issue-card literary-issue-card--static">
+                    <article
+                      key={issue.id}
+                      ref={highlightId === String(issue.id) ? highlightRef : undefined}
+                      className={`literary-issue-card literary-issue-card--static${highlightId === String(issue.id) ? " literary-issue-card--highlight" : ""}`}
+                    >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -226,6 +240,9 @@ export function Complaints() {
                           <p className="literary-issue-summary mt-2">
                             {issue.ai_analysis?.summary || issue.description}
                           </p>
+                          {issueStatusHint(issue.status) && (
+                            <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
+                          )}
                           {issue.address && (
                             <p className="literary-issue-address">📍 {issue.address}</p>
                           )}

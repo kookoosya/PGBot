@@ -20,6 +20,12 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.constants.portal_copy import (
+    CLASSIFIED_APPROVED_VK,
+    CLASSIFIED_REJECTED_VK,
+    LINK_CLASSIFIED,
+    LINK_CLASSIFIEDS,
+)
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     CLASSIFIED_LABELS,
@@ -39,6 +45,7 @@ from app.services.classified_antifraud import (
 )
 from app.services.ip_abuse import contains_suspicious_link
 from app.services.notify_utils import safe_notify_owner
+from app.services.notifications import notify_vk_user_with_links
 from app.services.pagination_utils import normalize_pagination
 from app.services.site_urls import public_site_url
 from app.services.service_errors import ServiceError
@@ -613,10 +620,11 @@ async def _safe_notify_vk(
     message: str,
     *,
     context: str,
+    links: tuple[tuple[str, str], ...] = (),
 ) -> bool:
     """Send VK message to ad author; return ``True`` on success."""
     try:
-        await notify_vk_user(ad.contact_vk or ad.vk_id, message)
+        await notify_vk_user_with_links(ad.contact_vk or ad.vk_id, message, *links)
         return True
     except Exception:
         logger.exception(
@@ -719,14 +727,13 @@ async def moderate_classified_ad(
         ad.is_active = True
         ad.payment_status = ClassifiedPaymentStatus.APPROVED
         cat_label = CLASSIFIED_LABELS.get(ad.category, ad.category)
-        vk_msg = (
-            f"✅ Ваше объявление опубликовано!\n\n"
-            f"«{ad.title}»\n"
-            f"Категория: {cat_label}\n"
-            f"Срок: {settings.CLASSIFIED_PERIOD_DAYS} дней\n\n"
-            "Жители посёлка уже видят его на портале. Удачных сделок!"
+        vk_msg = CLASSIFIED_APPROVED_VK.format(title=ad.title, category=cat_label)
+        vk_notified = await _safe_notify_vk(
+            ad,
+            vk_msg,
+            context="approve",
+            links=((LINK_CLASSIFIED, f"/classifieds/{ad.id}"),),
         )
-        vk_notified = await _safe_notify_vk(ad, vk_msg, context="approve")
 
         subscribers_notified = 0
         try:
@@ -766,9 +773,9 @@ async def moderate_classified_ad(
     ad.payment_status = ClassifiedPaymentStatus.REJECTED
     vk_notified = await _safe_notify_vk(
         ad,
-        f"❌ Объявление «{ad.title}» не прошло модерацию.\n"
-        "Проверьте оплату и текст. Можно подать заново.",
+        CLASSIFIED_REJECTED_VK.format(title=ad.title),
         context="reject",
+        links=((LINK_CLASSIFIEDS, "/classifieds"),),
     )
 
     audit_logged = await _safe_classified_audit(

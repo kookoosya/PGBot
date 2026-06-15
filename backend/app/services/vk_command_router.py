@@ -25,6 +25,7 @@ from app.services.ai_chat import (
 from app.services.issue_processor import process_incoming_message
 from app.services.issue_utils import issue_display_summary
 from app.services.site_urls import public_site_url
+from app.constants.portal_copy import COMPLAINTS_INFO_VK, LINK_COMPLAINTS, LINK_EVENTS, LINK_CLASSIFIEDS
 from app.services.vk import (
     get_ai_keyboard,
     get_inline_links_keyboard,
@@ -270,7 +271,12 @@ async def handle_welcome(ctx: VkRouteContext) -> None:
 
 async def handle_classifieds(ctx: VkRouteContext) -> None:
     msg = await format_ads_message(ctx.db)
-    await _send_welcome(ctx, msg)
+    await _send_with_site_links(
+        ctx.peer_id,
+        msg,
+        ("📋 Все объявления", "/classifieds"),
+        ("💼 Вакансии", "/jobs"),
+    )
 
 
 async def handle_services(ctx: VkRouteContext) -> None:
@@ -386,14 +392,21 @@ async def handle_taxi(ctx: VkRouteContext) -> None:
 
 
 async def handle_complaints_info(ctx: VkRouteContext) -> None:
-    await _send_welcome(
-        ctx,
+    await _send_with_site_links(
+        ctx.peer_id,
+        box("Обращения жителей", COMPLAINTS_INFO_VK),
+        (LINK_COMPLAINTS, "/complaints"),
+    )
+
+
+async def handle_events(ctx: VkRouteContext) -> None:
+    await _send_with_site_links(
+        ctx.peer_id,
         box(
-            "Жалобы жителей",
-            f"Форма на сайте: {public_site_url()}/complaints\n\n"
-            "Или опишите проблему прямо здесь — примем заявку.\n"
-            "«Мои обращения» — статус ваших заявок.",
+            "Афиша Пушкиногорья",
+            "Концерты в посёлке, праздники и кино в Пскове — на одной странице.",
         ),
+        (LINK_EVENTS, "/events"),
     )
 
 
@@ -439,14 +452,18 @@ async def handle_my_issues(ctx: VkRouteContext) -> None:
     )
     issues = result.scalars().all()
     if not issues:
-        await _send_welcome(ctx, "📋 Обращений пока нет. Опишите проблему — приму заявку!")
+        await _send_with_site_links(
+            ctx.peer_id,
+            "📋 Обращений пока нет.\n\nОпишите проблему — примем заявку!",
+            (LINK_COMPLAINTS, "/complaints"),
+        )
         return
 
     lines = ["📋 Ваши обращения:\n"]
     for issue in issues:
         emoji = ISSUE_STATUS_EMOJI.get(issue.status, "📋")
         lines.append(f"{emoji} #{issue.id} — {issue_display_summary(issue, max_len=50)}")
-    await _send_welcome(ctx, "\n".join(lines))
+    await _send_with_site_links(ctx.peer_id, "\n".join(lines), (LINK_COMPLAINTS, "/complaints"))
 
 
 async def handle_help(ctx: VkRouteContext) -> None:
@@ -498,6 +515,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "site": handle_site,
     "map": handle_map,
     "my_issues": handle_my_issues,
+    "events": handle_events,
     "weather": handle_weather,
     "help": handle_help,
 }
@@ -593,6 +611,12 @@ COMMAND_ALIASES: dict[str, str] = {
     "почасовой прогноз": "weather",
     "📋 мои обращения": "my_issues",
     "мои обращения": "my_issues",
+    "📅 афиша": "events",
+    "афиша": "events",
+    "события": "events",
+    "событие": "events",
+    "кино": "events",
+    "мероприятия": "events",
     "ℹ️ помощь": "help",
     "помощь": "help",
 }

@@ -6,7 +6,7 @@ import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
-import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { formatDate, issueStatusHint, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
 const STATUS_LABELS_VERIFY: Record<string, { text: string; tone: string }> = {
   pending: { text: "На проверке — мы свяжемся с вами", tone: "text-amber-700 bg-amber-50 border-amber-200" },
@@ -92,19 +92,22 @@ export function UserCabinet() {
             <Link to="/complaints" className="literary-link text-sm">Все →</Link>
           </div>
           {recentIssues.map((issue) => (
-            <div key={issue.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
+            <div key={issue.id} className="border-t border-border pt-3 first:border-0 first:pt-0 literary-cabinet-issue">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm">#{issue.id}</span>
+                <span className="font-semibold text-base">#{issue.id}</span>
                 <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
                 <span className="text-xs text-muted-foreground ml-auto">{formatDate(issue.created_at)}</span>
               </div>
-              <p className="text-sm mt-1 line-clamp-2">{issue.ai_analysis?.summary || issue.description}</p>
+              <p className="text-base mt-1 line-clamp-2">{issue.ai_analysis?.summary || issue.description}</p>
+              {issueStatusHint(issue.status) && (
+                <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      <div className="literary-cabinet-nav">
+      <div className="literary-cabinet-nav literary-cabinet-nav--comfort">
         <Link to="/classifieds" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
           <span className="literary-useful-icon">📋</span>
           <div>

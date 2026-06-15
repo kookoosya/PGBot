@@ -1,6 +1,11 @@
 """Тексты и форматирование сообщений VK-бота."""
 
 from app.config import get_settings
+from app.constants.portal_copy import (
+    BRAND_TAGLINE,
+    VK_HELP_BODY,
+    VK_WELCOME_BODY,
+)
 from app.services.site_urls import public_site_url
 
 settings = get_settings()
@@ -14,12 +19,8 @@ def box(title: str, body: str) -> str:
 
 def welcome_text() -> str:
     return box(
-        "Пушкинские Горы",
-        "Портал посёлка в VK — как на сайте.\n\n"
-        "🗺 Карта · 💼 Работа · 📋 Объявления\n"
-        "🌤 Погода · ➕ Подать объявление без регистрации\n"
-        "🛤 Маршруты · ⚠️ Жалобы · 🤖 ИИ\n\n"
-        "✨ Объявления и жалобы — бесплатно\n"
+        BRAND_TAGLINE,
+        f"{VK_WELCOME_BODY}\n\n"
         f"💬 ИИ — {settings.AI_VK_DAILY_LIMIT} сообщений/день\n\n"
         f"🌐 {public_site_url()}",
     )
@@ -56,20 +57,7 @@ def ai_reply_footer(remaining: int) -> str:
 def help_text() -> str:
     return box(
         "Справка",
-        "🗺 Карта — «аптека», «магазин», «музей»\n"
-        "🗺 Ошибка карты — неверный телефон или адрес\n"
-        "💼 Работа — вакансии соседей\n"
-        "➕ Объявление — подать без регистрации (4 шага)\n"
-        "📋 Объявления — свежие на доске\n"
-        "🛤 Маршруты — куда сходить туристу\n"
-        "🌤 Погода — сейчас и по часам\n"
-        "🛠 Услуги — мастера, огород, дрова\n"
-        "⚠️ Жалобы — опишите проблему или фото\n"
-        "💡 Пожелания — идеи для портала (в чате)\n"
-        "🚕 Такси — телефоны\n"
-        "🤖 ИИ — вопросы, тексты\n"
-        "🔔 Подписаться / отписаться\n"
-        "   «подписка работа», «подписка дрова», «подписка сосед»\n\n"
+        f"{VK_HELP_BODY}\n\n"
         f"🌐 {public_site_url()}",
     )
 
