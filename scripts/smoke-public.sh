@@ -74,9 +74,13 @@ check "Вход в кабинет" "$BASE/cabinet/login" "root"
 check "Обращения" "$BASE/complaints" "root"
 check "Кабинет" "$BASE/cabinet" "root"
 check "ИИ-помощник" "$BASE/ai" "root"
+check "Подать объявление (deep link)" "$BASE/classifieds?new=1" "root"
+check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 
 # API
+check "Health" "${BASE%/}/health" "ok"
 check "API today" "$API/public/today" "upcoming_events"
+check "API public info" "$API/public/info" "site_url"
 check "API events" "$API/public/events" "items"
 check "API classifieds" "$API/classifieds" "items"
 check "API classifieds categories" "$API/classifieds/categories" "value"

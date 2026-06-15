@@ -20,6 +20,7 @@ export function Complaints() {
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [showForm, setShowForm] = useState(true);
+  const [showExtras, setShowExtras] = useState(false);
   const [form, setForm] = useState({
     description: "",
     address: "",
@@ -133,39 +134,52 @@ export function Complaints() {
               )}
 
               <div>
-                <label className="event-detail-label">Категория</label>
-                <select
-                  className="pushkin-select w-full"
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                >
-                  <option value="">Авто (ИИ определит)</option>
-                  {categories.map((c) => (
-                    <option key={c.value} value={c.label}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="event-detail-label">Адрес / место</label>
-                <Input
-                  value={form.address}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                  placeholder="ул. Ленина, 5"
-                />
-              </div>
-
-              <div>
-                <label className="event-detail-label">Опишите проблему</label>
+                <label className="event-detail-label">Что случилось?</label>
                 <textarea
-                  className="literary-textarea w-full min-h-[120px]"
+                  className="literary-textarea w-full min-h-[140px]"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Например: не работает уличное освещение на перекрёстке..."
                   required
                   minLength={5}
                 />
+                <p className="text-sm text-muted-foreground mt-1 m-0">Достаточно пары предложений — категорию подскажет ИИ.</p>
               </div>
+
+              <button
+                type="button"
+                className="literary-btn literary-btn--ghost text-sm w-full"
+                onClick={() => setShowExtras(!showExtras)}
+              >
+                {showExtras ? "Скрыть дополнительно" : "Адрес и категория (необязательно)"}
+              </button>
+
+              {showExtras && (
+                <>
+                  <div>
+                    <label className="event-detail-label">Категория</label>
+                    <select
+                      className="pushkin-select w-full"
+                      value={form.category}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    >
+                      <option value="">Авто (ИИ определит)</option>
+                      {categories.map((c) => (
+                        <option key={c.value} value={c.label}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="event-detail-label">Адрес / место</label>
+                    <Input
+                      value={form.address}
+                      onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                      placeholder="ул. Ленина, 5"
+                    />
+                  </div>
+                </>
+              )}
 
               <input
                 type="text"
@@ -208,6 +222,18 @@ export function Complaints() {
               <Link to="/cabinet/login?next=/official" className="literary-btn literary-btn--ghost text-sm no-underline">Вход для служб</Link>
             </div>
           </section>
+
+          {highlightId && !user && (
+            <section className="page-panel page-panel--gold mb-4">
+              <p className="m-0 text-sm">
+                Чтобы увидеть обращение #{highlightId},{" "}
+                <Link to={`/cabinet/login?next=/complaints?issue=${highlightId}`} className="literary-link">
+                  войдите в кабинет
+                </Link>
+                {" "}или напишите боту «Мои обращения».
+              </p>
+            </section>
+          )}
 
           {user && (
             <section>

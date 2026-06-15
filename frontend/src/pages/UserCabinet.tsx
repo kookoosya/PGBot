@@ -92,7 +92,11 @@ export function UserCabinet() {
             <Link to="/complaints" className="literary-link text-sm">Все →</Link>
           </div>
           {recentIssues.map((issue) => (
-            <div key={issue.id} className="border-t border-border pt-3 first:border-0 first:pt-0 literary-cabinet-issue">
+            <Link
+              key={issue.id}
+              to={`/complaints?issue=${issue.id}`}
+              className="block border-t border-border pt-3 first:border-0 first:pt-0 literary-cabinet-issue literary-cabinet-issue--link no-underline text-inherit"
+            >
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-base">#{issue.id}</span>
                 <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
@@ -102,7 +106,7 @@ export function UserCabinet() {
               {issueStatusHint(issue.status) && (
                 <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}
