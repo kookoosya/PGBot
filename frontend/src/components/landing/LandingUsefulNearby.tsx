@@ -3,12 +3,12 @@ import { LiterarySectionHead } from "@/components/literary";
 import { LANDING_SECTIONS } from "@/lib/literaryCopy";
 
 const usefulItems = [
-  { icon: "🗺", title: "Карта", desc: "Магазины, НКЦ, такси и маршруты", to: "/map", tone: "forest" as const },
-  { icon: "📋", title: "Объявления", desc: "Дрова, услуги, продажа — от соседей", to: "/classifieds", tone: "gold" as const },
-  { icon: "📅", title: "Афиша", desc: "События и кино в регионе", to: "/events", tone: "gold" as const },
-  { icon: "🤖", title: "ИИ-помощник", desc: "Тексты, идеи, ответы о посёлке", to: "/ai", tone: "forest" as const },
-  { icon: "🛠", title: "Услуги", desc: "Мастера, покос, дрова, ремонт", to: "/services", tone: "forest" as const },
-  { icon: "⚠️", title: "Обращения", desc: "Дороги, ЖКХ, освещение", to: "/complaints", tone: "gold" as const },
+  { icon: "🗺", title: "Карта", desc: "Магазины, НКЦ, такси и тропы усадьбы", to: "/map", tone: "forest" as const },
+  { icon: "📋", title: "Объявления", desc: "Дрова, покос, продажа — от соседей", to: "/classifieds", tone: "gold" as const },
+  { icon: "📅", title: "Афиша", desc: "Концерты, праздники и кино в крае", to: "/events", tone: "gold" as const },
+  { icon: "🤖", title: "ИИ-помощник", desc: "Тексты, идеи и ответы о посёлке", to: "/ai", tone: "forest" as const },
+  { icon: "🛠", title: "Услуги", desc: "Мастера, покос, дрова, мелкий ремонт", to: "/services", tone: "forest" as const },
+  { icon: "⚠️", title: "Обращения", desc: "Дороги, ЖКХ, освещение — в администрацию", to: "/complaints", tone: "gold" as const },
 ];
 
 export function LandingUsefulNearby() {

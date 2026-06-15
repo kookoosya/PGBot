@@ -14,7 +14,7 @@ export function TodayInVillage() {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
         <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
-        <p className="landing-muted">Собираем актуальную информацию…</p>
+        <p className="landing-muted">Собираем сводку дня…</p>
       </section>
     );
   }
@@ -23,7 +23,7 @@ export function TodayInVillage() {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel">
         <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
-        <p className="landing-muted">Сводка временно недоступна.</p>
+        <p className="landing-muted">Сводка дня временно недоступна — загляните чуть позже.</p>
       </section>
     );
   }
@@ -85,7 +85,7 @@ export function TodayInVillage() {
               <p className="today-ad-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
-            <p className="landing-muted">Пока нет новых объявлений</p>
+            <p className="landing-muted">Пока тихо на доске объявлений</p>
           )}
           <Link to="/classifieds" className="today-card-action">
             Все объявления →

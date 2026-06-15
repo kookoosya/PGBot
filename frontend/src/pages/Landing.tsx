@@ -12,50 +12,57 @@ import {
   LandingUsefulNearby,
 } from "@/components/landing";
 import { BRAND } from "@/lib/branding";
-import { LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { LANDING_HERO, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
 import { Link } from "react-router-dom";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
 const vkCopy = LANDING_SECTIONS.vk;
+const heroCopy = LANDING_HERO;
 
 export function Landing() {
   return (
     <div className="landing-epic">
-      <section className="epic-hero">
+      <section className="epic-hero epic-hero--literary">
         <div className="epic-hero-bg" aria-hidden>
           <picture>
             <source srcSet={heroPhoto.webp} type="image/webp" />
             <img src={heroPhoto.url} alt="" className="epic-hero-photo" />
           </picture>
           <div className="epic-hero-scrim" />
+          <div className="epic-hero-vignette" />
           <div className="epic-hero-mesh" />
         </div>
 
         <div className="epic-hero-inner epic-hero-inner-centered">
-          <div className="epic-hero-copy animate-hero">
-            <span className="epic-kicker">🪶 {BRAND.district}</span>
-            <blockquote className="epic-quote">{HERO_VERSE}</blockquote>
-            <h1 className="epic-title">
-              <span className="epic-title-line">{BRAND.name}</span>
-              <span className="epic-title-sub">{BRAND.tagline}</span>
-            </h1>
-            <p className="epic-lead">{BRAND.description}</p>
+          <div className="epic-hero-copy epic-hero-copy--literary animate-hero">
+            <div className="epic-hero-plate">
+              <span className="epic-kicker">🪶 {heroCopy.kicker}</span>
+              <blockquote className="epic-quote" cite="Пушкин">
+                {HERO_VERSE}
+              </blockquote>
+              <div className="epic-hero-ornament" aria-hidden />
+              <h1 className="epic-title">
+                <span className="epic-title-line">{BRAND.name}</span>
+                <span className="epic-title-sub">{heroCopy.tagline}</span>
+              </h1>
+              <p className="epic-lead">{heroCopy.lead}</p>
 
-            <div className="epic-weather-row">
-              <WeatherWidgetCompact variant="inline" />
-            </div>
+              <div className="epic-weather-row">
+                <WeatherWidgetCompact variant="inline" />
+              </div>
 
-            <div className="epic-cta-row">
-              <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
-                🗺 Открыть карту
-              </Link>
-              <Link to="/events" className="epic-btn epic-btn-glass epic-btn-lg">
-                📅 Афиша событий
-              </Link>
-              <Link to="/classifieds" className="epic-btn epic-btn-glass epic-btn-lg">
-                📋 Объявления
-              </Link>
+              <div className="epic-cta-row">
+                <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
+                  🗺 {heroCopy.ctaMap}
+                </Link>
+                <Link to="/events" className="epic-btn epic-btn-glass epic-btn-lg">
+                  📅 {heroCopy.ctaEvents}
+                </Link>
+                <Link to="/classifieds" className="epic-btn epic-btn-glass epic-btn-lg">
+                  📋 {heroCopy.ctaClassifieds}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
