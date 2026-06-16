@@ -110,7 +110,17 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
     )
 
 
-async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int = 35) -> list[FetchedEvent]:
+PUSHKIN_GORY_VK_POST_COUNT = 60
+DEFAULT_VK_POST_COUNT = 40
+
+
+def _post_count_for_preset(preset: VkGroupPreset) -> int:
+    if preset.region == EventRegion.PUSHKIN_GORY:
+        return PUSHKIN_GORY_VK_POST_COUNT
+    return DEFAULT_VK_POST_COUNT
+
+
+async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int | None = None) -> list[FetchedEvent]:
     """Fetch normalized events from configured VK groups."""
     if not _vk_token_configured():
         return []
@@ -122,7 +132,8 @@ async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int 
         group_id = id_map.get(preset.screen_name) or (preset.group_id if preset.group_id > 0 else None)
         if not group_id:
             continue
-        for post in await _fetch_wall_posts(group_id, count=post_count):
+        count = post_count if post_count is not None else _post_count_for_preset(preset)
+        for post in await _fetch_wall_posts(group_id, count=count):
             item = _post_to_fetched(post, preset=preset, group_id=group_id)
             if item:
                 events.append(item)
@@ -135,11 +146,12 @@ async def sync_vk_group(
     *,
     group_id: int,
     actor_id: int | None = None,
-    post_count: int = 35,
+    post_count: int | None = None,
 ) -> EventSyncResult:
     errors: list[str] = []
     created = updated = skipped = 0
-    posts = await _fetch_wall_posts(group_id, count=post_count)
+    effective_count = post_count if post_count is not None else _post_count_for_preset(preset)
+    posts = await _fetch_wall_posts(group_id, count=effective_count)
 
     for post in posts:
         try:
@@ -174,7 +186,7 @@ async def sync_events_from_vk(
     region: EventRegion,
     *,
     actor_id: int | None = None,
-    post_count: int = 35,
+    post_count: int | None = None,
 ) -> EventSyncResult:
     """Import from all VK groups in ``region``, aggregated into one result."""
     presets = [g for g in VK_EVENT_GROUPS if g.region == region]
@@ -199,7 +211,7 @@ async def sync_events_from_vk(
             preset,
             group_id=group_id,
             actor_id=actor_id,
-            post_count=post_count,
+            post_count=post_count if post_count is not None else _post_count_for_preset(preset),
         )
         merged = EventSyncResult(
             source="vk",
