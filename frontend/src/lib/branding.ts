@@ -1,9 +1,11 @@
 /** Единый брендинг портала посёлка */
+import { PORTAL_COPY_BRAND } from "./portalCopyShared";
+
 export const BRAND = {
   /** Главное имя — посёлок */
   name: "Пушкинские Горы",
   /** Подзаголовок в шапке */
-  tagline: "Портал посёлка",
+  tagline: PORTAL_COPY_BRAND.tagline,
   /** Полное название для title / SEO */
   fullTitle: "Пушкинские Горы — портал посёлка",
   /** Описание для meta */

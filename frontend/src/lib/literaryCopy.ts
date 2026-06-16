@@ -1,8 +1,12 @@
 /** Тексты интерфейса портала — единый деловой тон */
 
+import { PORTAL_COPY_BRAND } from "./portalCopyShared";
+
+export { ISSUE_STATUS_HINTS } from "./portalCopyShared";
+
 export const LANDING_HERO = {
-  kicker: "Пушкиногорский район · Псковская область",
-  tagline: "Портал посёлка",
+  kicker: PORTAL_COPY_BRAND.kicker,
+  tagline: PORTAL_COPY_BRAND.tagline,
   lead:
     "Афиша, объявления, карта, работа и обращения в администрацию — всё для жителей и гостей посёлка.",
   ctaMap: "Карта посёлка",
@@ -153,17 +157,6 @@ export const PAGE_SECTIONS = {
     lead: "Расписание, записи и занятые часы.",
   },
 } as const;
-
-/** Подсказки к статусам обращений (сайт + VK) */
-export const ISSUE_STATUS_HINTS: Record<string, string> = {
-  NEW: "Принято — ожидает рассмотрения",
-  UNDER_REVIEW: "На рассмотрении у службы",
-  ASSIGNED: "Назначен ответственный",
-  IN_PROGRESS: "Служба работает над проблемой",
-  RESOLVED: "Проблема решена",
-  REJECTED: "Обращение отклонено — уточните в службе",
-  ARCHIVED: "В архиве",
-};
 
 export const LANDING_SECTIONS = {
   today: {

@@ -6,10 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libpq-dev fonts-dejavu-core fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY backend/ .
+COPY shared/ /app/shared/
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1

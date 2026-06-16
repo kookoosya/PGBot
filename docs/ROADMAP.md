@@ -77,7 +77,7 @@ backend/app/services/vk/
 | 2.1 | Разбить `api.ts` (~1100 строк) | `lib/api/{auth,classifieds,issues,events,admin}.ts` |
 | 2.2 | Разбить `Map.tsx` (~850 строк) | `pages/map/*`, hooks |
 | 2.3 | URL сайта из `/public/info` | убрать хардкод в `siteUrl.ts` |
-| 2.4 | Синхронизация текстов | `portal_copy.py` ↔ `literaryCopy.ts` (JSON или codegen) |
+| 2.4 | Синхронизация текстов | ✅ `shared/portal_copy.json` |
 
 ---
 
