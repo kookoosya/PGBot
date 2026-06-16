@@ -6,7 +6,7 @@ Public API is unchanged; implementation lives in submodules.
 """
 
 from app.services.issue.access import can_view_issue
-from app.services.issue.comment import add_comment_for_user, add_issue_comment
+from app.services.issue.comment import add_comment_for_user, add_issue_comment, list_comments_for_user
 from app.services.issue.crud import (
     get_issue_details,
     get_issue_status_timeline,
@@ -66,6 +66,7 @@ __all__ = [
     "get_status_timelines_for_issues",
     "issue_to_my_response",
     "issue_to_response",
+    "list_comments_for_user",
     "reopen_issue",
     "require_issue_for_user",
     "resolve_issue",

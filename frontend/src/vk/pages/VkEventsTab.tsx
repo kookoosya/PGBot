@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { EventCard, LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { VkErrorState } from "@/vk/components/VkErrorState";
+import { VkSkeletonList } from "@/vk/components/VkSkeleton";
+import { useAsyncData } from "@/vk/hooks/useAsyncData";
 import { useVkNavigation } from "@/vk/VkNavigationContext";
-import { parseApiError } from "@/vk/lib/errors";
 
 const REGIONS: { id: "all" | EventRegion; label: string }[] = [
   { id: "all", label: "Все" },
@@ -13,35 +14,41 @@ const REGIONS: { id: "all" | EventRegion; label: string }[] = [
   { id: "pskov", label: "Псков" },
 ];
 
+const CATEGORIES = [
+  { id: "", label: "Все жанры" },
+  { id: "concert", label: "Концерты" },
+  { id: "cinema", label: "Кино" },
+  { id: "fair", label: "Ярмарки" },
+  { id: "exhibition", label: "Выставки" },
+  { id: "other", label: "Другое" },
+];
+
 export function VkEventsTab() {
   const { openEvent } = useVkNavigation();
-  const [events, setEvents] = useState<PublicEvent[]>([]);
   const [region, setRegion] = useState<"all" | EventRegion>("all");
+  const [category, setCategory] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  const load = useCallback(() => {
-    setLoading(true);
-    setError("");
-    api
-      .getPublicEvents({
-        region: region === "all" ? undefined : region,
-        search: search || undefined,
-        limit: "40",
-      })
-      .then((r) => setEvents(r.items))
-      .catch((err) => {
-        setEvents([]);
-        setError(parseApiError(err));
-      })
-      .finally(() => setLoading(false));
-  }, [region, search]);
+  const loader = useCallback(async () => {
+    const r = await api.getPublicEvents({
+      region: region === "all" ? undefined : region,
+      search: search || undefined,
+      limit: "40",
+    });
+    let items = r.items;
+    if (category) {
+      items = items.filter((e) => e.category === category);
+    }
+    return items;
+  }, [region, search, category]);
+
+  const { data: events, loading, error, reload } = useAsyncData<PublicEvent[]>(loader, [region, search, category]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const timer = window.setTimeout(() => setSearch(searchInput.trim()), 400);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   return (
     <section className="vk-tab-panel">
@@ -52,13 +59,9 @@ export function VkEventsTab() {
           placeholder="Поиск: концерт, кино…"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
           className="pushkin-select flex-1"
         />
-        <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
-          Найти
-        </button>
-        {(search || searchInput) && (
+        {searchInput && (
           <button
             type="button"
             className="literary-btn literary-btn--ghost shrink-0 text-sm"
@@ -85,11 +88,24 @@ export function VkEventsTab() {
         ))}
       </div>
 
+      <div className="vk-filter-row">
+        {CATEGORIES.map((item) => (
+          <button
+            key={item.id || "all"}
+            type="button"
+            className={`vk-filter-chip vk-filter-chip--sm${category === item.id ? " vk-filter-chip--active" : ""}`}
+            onClick={() => setCategory(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
-        <LiteraryInlineLoader label="Собираем афишу…" compact />
+        <VkSkeletonList count={4} />
       ) : error ? (
-        <VkErrorState message={error} onRetry={load} />
-      ) : events.length === 0 ? (
+        <VkErrorState message={error} onRetry={reload} />
+      ) : !events?.length ? (
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} compact />
       ) : (
         <ol className="vk-event-list">

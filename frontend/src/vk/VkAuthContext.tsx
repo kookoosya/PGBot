@@ -65,12 +65,23 @@ export function VkAuthProvider({ children }: { children: React.ReactNode }) {
     if (reauthInFlight.current) return reauthInFlight.current;
 
     const task = (async () => {
+      const maxAttempts = 2;
       try {
-        await exchangeSilentToken();
-        return true;
-      } catch {
-        clearSession();
-        setError("Сессия истекла. Нажмите «Войти снова» на вкладке «Заявки».");
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+          try {
+            await exchangeSilentToken();
+            setError(null);
+            return true;
+          } catch (err) {
+            if (attempt < maxAttempts - 1) {
+              await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
+              continue;
+            }
+            clearSession();
+            setError(vkAuthErrorMessage(err));
+            return false;
+          }
+        }
         return false;
       } finally {
         reauthInFlight.current = null;

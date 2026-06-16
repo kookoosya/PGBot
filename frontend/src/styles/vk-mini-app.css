@@ -198,3 +198,243 @@
     padding-right: 1.25rem;
   }
 }
+
+/* Header actions */
+.vk-mini-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vk-mini-header-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.vk-header-icon-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--forest));
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vk-header-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* Screen transitions */
+@keyframes vk-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vk-screen-enter {
+  animation: vk-screen-in 0.22s ease-out;
+}
+
+/* Skeleton loaders */
+.vk-skeleton-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vk-skeleton-card,
+.vk-skeleton-detail {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.85);
+  display: grid;
+  gap: 0.55rem;
+}
+
+@keyframes vk-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.vk-skeleton-line {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.35) 0%,
+    hsl(var(--muted) / 0.55) 50%,
+    hsl(var(--muted) / 0.35) 100%
+  );
+  background-size: 200% 100%;
+  animation: vk-shimmer 1.4s ease-in-out infinite;
+}
+
+.vk-skeleton-line--title {
+  height: 1rem;
+  width: 70%;
+}
+
+.vk-skeleton-line--short {
+  width: 45%;
+}
+
+.vk-skeleton-line--hero {
+  height: 7rem;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.vk-filter-chip--sm {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.65rem;
+}
+
+/* Profile */
+.vk-profile-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.vk-profile-facts dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground));
+}
+
+.vk-profile-facts dd {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.vk-profile-actions {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* FAQ */
+.vk-faq-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vk-faq-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 0.65rem 0.85rem;
+  background: hsl(var(--card) / 0.9);
+}
+
+.vk-faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: hsl(var(--forest));
+}
+
+.vk-faq-item p {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Comments */
+.vk-comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.vk-comment-item {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.85);
+}
+
+.vk-comment-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Mine ads */
+.vk-mine-ad-wrap {
+  position: relative;
+}
+
+.vk-mine-status {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  margin-bottom: 0.35rem;
+}
+
+.vk-mine-status--pending {
+  background: hsl(42 85% 88%);
+  color: hsl(42 90% 18%);
+}
+
+.vk-mine-status--approved {
+  background: hsl(145 45% 90%);
+  color: hsl(145 55% 22%);
+}
+
+.vk-mine-status--rejected {
+  background: hsl(0 55% 94%);
+  color: hsl(0 55% 32%);
+}
+
+/* Issue cards */
+.literary-issue-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.vk-issue-open-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--gold));
+}
+
+/* Error boundary */
+.vk-error-boundary {
+  align-items: center;
+  justify-content: center;
+}
+
+.vk-error-boundary-inner {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  max-width: 22rem;
+}
+

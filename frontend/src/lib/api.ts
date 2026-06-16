@@ -130,6 +130,17 @@ class ApiClient {
     return this.request<Issue>(`/issues/${id}`);
   }
 
+  getIssueComments(issueId: number) {
+    return this.request<IssueCommentListResponse>(`/issues/${issueId}/comments`);
+  }
+
+  addIssueComment(issueId: number, text: string) {
+    return this.request<IssueComment>(`/issues/${issueId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+  }
+
   updateIssueStatus(id: number, status: string, resolution_text?: string) {
     return this.request<Issue>(`/issues/${id}/status`, {
       method: "PATCH",
@@ -487,6 +498,11 @@ class ApiClient {
     return this.request<{ items: ClassifiedAd[]; total: number; page?: number }>(`/classifieds${q}`);
   }
 
+  getMyClassifieds(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<{ items: ClassifiedMineAd[]; total: number }>(`/classifieds/mine${q}`);
+  }
+
   getClassified(id: number) {
     return this.request<ClassifiedAd>(`/classifieds/${id}`);
   }
@@ -534,6 +550,20 @@ export interface User {
   position?: string | null;
   verification_status?: string | null;
   created_at: string;
+}
+
+export interface IssueComment {
+  id: number;
+  text: string;
+  is_internal: boolean;
+  author_id: number;
+  author_name?: string | null;
+  created_at: string;
+}
+
+export interface IssueCommentListResponse {
+  items: IssueComment[];
+  total: number;
 }
 
 export interface Issue {
@@ -890,6 +920,13 @@ export interface ClassifiedAd {
   author_name: string;
   address: string | null;
   created_at: string;
+}
+
+export interface ClassifiedMineAd extends ClassifiedAd {
+  payment_status: string;
+  is_active: boolean;
+  payment_reference?: string | null;
+  placement_fee?: number;
 }
 
 export interface ClassifiedPending extends ClassifiedAd {

@@ -27,6 +27,31 @@ def classified_to_response(ad: ClassifiedAd):
     )
 
 
+def classified_to_mine_response(ad: ClassifiedAd):
+    from app.schemas.classified import ClassifiedMineResponse
+
+    return ClassifiedMineResponse(
+        id=ad.id,
+        category=ad.category,
+        category_label=CLASSIFIED_LABELS.get(ad.category, ad.category),
+        title=ad.title,
+        description=ad.description,
+        price=ad.price,
+        price_unit=ad.price_unit,
+        phone=ad.phone,
+        author_name=ad.author_name,
+        address=ad.address,
+        contact_telegram=ad.contact_telegram,
+        views_count=ad.views_count,
+        created_at=ad.created_at.isoformat(),
+        payment_status=ad.payment_status,
+        payment_reference=ad.payment_reference,
+        placement_fee=ad.placement_fee,
+        contact_vk=ad.contact_vk,
+        is_active=ad.is_active,
+    )
+
+
 def classified_to_pending_response(ad: ClassifiedAd):
     from app.schemas.classified import ClassifiedPendingResponse
 

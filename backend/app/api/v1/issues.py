@@ -8,14 +8,16 @@ from app.core.deps import get_client_ip, get_current_user, get_optional_user, re
 from app.core.service_http import raise_http_for_service_error, raise_http_for_service_errors
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.models.enums import IssueStatus
+from app.models.enums import IssueStatus, UserRole
 from app.models.user import User
 from app.schemas.issue import (
     IssueCommentCreate,
+    IssueCommentListResponse,
     IssueCommentResponse,
     IssueCreate,
     IssueListResponse,
     IssueMyListResponse,
+    IssueMyResponse,
     IssueReopen,
     IssueResponse,
     IssueStatusUpdate,
@@ -33,7 +35,10 @@ from app.services.issue_service import (
     build_issue_list_response,
     build_my_issues_response,
     create_issue_from_web,
+    get_issue_status_timeline,
+    issue_to_my_response,
     issue_to_response,
+    list_comments_for_user,
     reopen_issue,
     require_issue_for_user,
     search_issues,
@@ -106,7 +111,7 @@ async def my_issues(
         raise_http_for_service_error(exc)
 
 
-@router.get("/{issue_id}", response_model=IssueResponse)
+@router.get("/{issue_id}", response_model=IssueMyResponse)
 async def get_issue(
     issue_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -116,7 +121,11 @@ async def get_issue(
         issue = await require_issue_for_user(db, issue_id, current_user)
     except _ISSUE_ACCESS_ERRORS as exc:
         raise_http_for_service_errors(exc, *_ISSUE_ACCESS_ERRORS)
-    return issue_to_response(issue)
+
+    if current_user.role.name == UserRole.RESIDENT and issue.resident_id == current_user.id:
+        timeline = await get_issue_status_timeline(db, issue)
+        return issue_to_my_response(issue, timeline)
+    return issue_to_my_response(issue, [])
 
 
 @router.patch("/{issue_id}", response_model=IssueResponse)
@@ -210,6 +219,31 @@ async def archive_issue_endpoint(
     return issue_to_response(issue)
 
 
+@router.get("/{issue_id}/comments", response_model=IssueCommentListResponse)
+async def list_comments(
+    issue_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        comments = await list_comments_for_user(db, issue_id, current_user)
+    except _ISSUE_ACCESS_ERRORS as exc:
+        raise_http_for_service_errors(exc, *_ISSUE_ACCESS_ERRORS)
+
+    items = [
+        IssueCommentResponse(
+            id=comment.id,
+            text=comment.text,
+            is_internal=comment.is_internal,
+            author_id=comment.author_id,
+            author_name=comment.author.full_name if comment.author else None,
+            created_at=comment.created_at,
+        )
+        for comment in comments
+    ]
+    return IssueCommentListResponse(items=items, total=len(items))
+
+
 @router.post("/{issue_id}/comments", response_model=IssueCommentResponse, status_code=201)
 async def add_comment(
     issue_id: int,
@@ -227,4 +261,11 @@ async def add_comment(
         )
     except _ISSUE_ACCESS_ERRORS as exc:
         raise_http_for_service_errors(exc, *_ISSUE_ACCESS_ERRORS)
-    return IssueCommentResponse.model_validate(comment)
+    return IssueCommentResponse(
+        id=comment.id,
+        text=comment.text,
+        is_internal=comment.is_internal,
+        author_id=comment.author_id,
+        author_name=current_user.full_name,
+        created_at=comment.created_at,
+    )

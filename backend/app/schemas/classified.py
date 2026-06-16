@@ -47,6 +47,17 @@ class ClassifiedPendingResponse(ClassifiedResponse):
     contact_vk: str | None = None
 
 
+class ClassifiedMineResponse(ClassifiedPendingResponse):
+    is_active: bool
+
+
+class ClassifiedMineListResponse(BaseModel):
+    items: list[ClassifiedMineResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 class ClassifiedListResponse(BaseModel):
     items: list[ClassifiedResponse]
     total: int

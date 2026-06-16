@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
-import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { useCallback, useState } from "react";
+import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES, STATUS_COLORS, STATUS_LABELS, formatDate } from "@/lib/utils";
 import { VkErrorState } from "@/vk/components/VkErrorState";
+import { VkSkeletonList } from "@/vk/components/VkSkeleton";
+import { useAsyncData } from "@/vk/hooks/useAsyncData";
 import { useVkAuth } from "@/vk/VkAuthContext";
+import { useVkNavigation } from "@/vk/VkNavigationContext";
 import { parseApiError } from "@/vk/lib/errors";
 
 type IssueFilter = "all" | "active" | "done";
 
 export function VkIssuesTab() {
   const { user, loading: authLoading, error: authError, refreshAuth } = useVkAuth();
-  const [issues, setIssues] = useState<Issue[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { openIssue } = useVkNavigation();
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("all");
   const [showForm, setShowForm] = useState(true);
   const [description, setDescription] = useState("");
@@ -22,22 +23,15 @@ export function VkIssuesTab() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
 
-  const load = useCallback(() => {
-    if (!user) return;
-    setLoading(true);
-    setError("");
-    api
-      .getMyIssues({ limit: "30" })
-      .then((r) => setIssues(r.items))
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setLoading(false));
+  const loader = useCallback(async () => {
+    if (!user) return [];
+    const r = await api.getMyIssues({ limit: "30" });
+    return r.items;
   }, [user]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: issues, loading, error, reload } = useAsyncData<Issue[]>(loader, [user?.id], { enabled: Boolean(user) });
 
-  const filteredIssues = issues.filter((issue) => {
+  const filteredIssues = (issues || []).filter((issue) => {
     if (issueFilter === "active") return ISSUE_ACTIVE_STATUSES.has(issue.status);
     if (issueFilter === "done") return ISSUE_DONE_STATUSES.has(issue.status);
     return true;
@@ -59,7 +53,7 @@ export function VkIssuesTab() {
       setMsg(`Обращение #${issue.id} принято. Мы сообщим о смене статуса.`);
       setDescription("");
       setShowForm(false);
-      load();
+      reload();
     } catch (err) {
       setMsgType("err");
       setMsg(parseApiError(err));
@@ -69,7 +63,7 @@ export function VkIssuesTab() {
   };
 
   if (authLoading) {
-    return <LiteraryInlineLoader label="Входим через VK…" compact />;
+    return <VkSkeletonList count={2} />;
   }
 
   if (authError || !user) {
@@ -111,7 +105,7 @@ export function VkIssuesTab() {
             required
             minLength={5}
           />
-          <p className="text-xs text-muted-foreground m-0">ИИ подскажет категорию. Ответ придёт в этом списке.</p>
+          <p className="text-xs text-muted-foreground m-0">ИИ подскажет категорию. Ответ и комментарии — в карточке обращения.</p>
           <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={submitting}>
             {submitting ? "Отправляем…" : "Отправить обращение"}
           </button>
@@ -120,36 +114,36 @@ export function VkIssuesTab() {
 
       {msg && <p className={`text-sm ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
 
-      {issues.length > 0 && (
+      {(issues?.length || 0) > 0 && (
         <div className="vk-filter-row">
           <button
             type="button"
             className={`vk-filter-chip${issueFilter === "all" ? " vk-filter-chip--active" : ""}`}
             onClick={() => setIssueFilter("all")}
           >
-            Все ({issues.length})
+            Все ({issues?.length || 0})
           </button>
           <button
             type="button"
             className={`vk-filter-chip${issueFilter === "active" ? " vk-filter-chip--active" : ""}`}
             onClick={() => setIssueFilter("active")}
           >
-            В работе ({issues.filter((i) => ISSUE_ACTIVE_STATUSES.has(i.status)).length})
+            В работе ({issues?.filter((i) => ISSUE_ACTIVE_STATUSES.has(i.status)).length || 0})
           </button>
           <button
             type="button"
             className={`vk-filter-chip${issueFilter === "done" ? " vk-filter-chip--active" : ""}`}
             onClick={() => setIssueFilter("done")}
           >
-            Завершённые ({issues.filter((i) => ISSUE_DONE_STATUSES.has(i.status)).length})
+            Завершённые ({issues?.filter((i) => ISSUE_DONE_STATUSES.has(i.status)).length || 0})
           </button>
         </div>
       )}
 
       {loading ? (
-        <LiteraryInlineLoader label="Загружаем обращения…" compact />
+        <VkSkeletonList count={3} />
       ) : error ? (
-        <VkErrorState message={error} onRetry={load} />
+        <VkErrorState message={error} onRetry={reload} />
       ) : filteredIssues.length === 0 ? (
         <LiteraryEmptyState
           {...(issueFilter === "all" ? EMPTY_STATES.complaintsMine : { icon: "🔍", title: "Нет по фильтру", text: "Попробуйте другой статус." })}
@@ -158,30 +152,29 @@ export function VkIssuesTab() {
       ) : (
         <div className="space-y-3">
           {filteredIssues.map((issue) => (
-            <article key={issue.id} className="literary-issue-card literary-issue-card--static">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-sm text-muted-foreground">#{issue.id}</span>
-                <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
-              </div>
-              <p className="m-0 text-sm leading-relaxed">{issue.description}</p>
-              {issue.created_at && (
-                <p className="text-xs text-muted-foreground mt-2 mb-0">Создано: {formatDate(issue.created_at)}</p>
-              )}
-              {issue.status_timeline && issue.status_timeline.length > 0 && (
-                <ul className="issue-status-timeline mt-3">
-                  {issue.status_timeline.map((step, idx) => (
-                    <li key={`${issue.id}-${step.status}-${idx}`}>
-                      <span className="issue-status-timeline-dot" aria-hidden />
-                      <div>
-                        <strong>{STATUS_LABELS[step.status as keyof typeof STATUS_LABELS] || step.label || step.status}</strong>
-                        {step.resolution && <p className="text-xs m-0 mt-0.5">{step.resolution}</p>}
-                        {step.at && <div className="text-xs text-muted-foreground">{formatDate(step.at)}</div>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </article>
+            <button
+              key={issue.id}
+              type="button"
+              className="vk-card-button"
+              onClick={() => openIssue(issue.id)}
+            >
+              <article className="literary-issue-card">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-sm text-muted-foreground">#{issue.id}</span>
+                  <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
+                </div>
+                <p className="m-0 text-sm leading-relaxed line-clamp-3">{issue.description}</p>
+                {issue.created_at && (
+                  <p className="text-xs text-muted-foreground mt-2 mb-0">Создано: {formatDate(issue.created_at)}</p>
+                )}
+                {issue.status_timeline && issue.status_timeline.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2 mb-0">
+                    Последний статус: {STATUS_LABELS[issue.status_timeline[issue.status_timeline.length - 1].status as keyof typeof STATUS_LABELS] || issue.status}
+                  </p>
+                )}
+                <span className="vk-issue-open-hint">Открыть →</span>
+              </article>
+            </button>
           ))}
         </div>
       )}

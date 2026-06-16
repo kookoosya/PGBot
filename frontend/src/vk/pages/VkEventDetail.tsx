@@ -1,53 +1,41 @@
-import { useEffect, useState } from "react";
-import { LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { useCallback } from "react";
+import { LiterarySectionHead } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
 import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass } from "@/lib/eventUtils";
 import { LITERARY_VERSES } from "@/lib/literaryCopy";
 import { VkBackBar } from "@/vk/components/VkBackBar";
 import { VkErrorState } from "@/vk/components/VkErrorState";
+import { VkSkeletonDetail } from "@/vk/components/VkSkeleton";
+import { useAsyncData } from "@/vk/hooks/useAsyncData";
 import { useVkNavigation } from "@/vk/VkNavigationContext";
-import { parseApiError } from "@/vk/lib/errors";
 
 interface VkEventDetailProps {
   eventId: number;
 }
 
+function yandexMapsUrl(location: string): string {
+  return `https://yandex.ru/maps/?text=${encodeURIComponent(location)}`;
+}
+
 export function VkEventDetail({ eventId }: VkEventDetailProps) {
   const { goBack } = useVkNavigation();
-  const [event, setEvent] = useState<PublicEvent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const load = () => {
-    setLoading(true);
-    setError("");
-    api
-      .getPublicEvent(eventId)
-      .then(setEvent)
-      .catch((err) => {
-        setEvent(null);
-        setError(parseApiError(err));
-      })
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    load();
-  }, [eventId]);
+  const loader = useCallback(() => api.getPublicEvent(eventId), [eventId]);
+  const { data: event, loading, error, reload } = useAsyncData<PublicEvent>(loader, [eventId]);
 
   if (loading) {
-    return <LiteraryInlineLoader label="Загружаем событие…" compact />;
+    return (
+      <section className="vk-tab-panel vk-screen-enter">
+        <VkBackBar title="Событие" onBack={goBack} />
+        <VkSkeletonDetail />
+      </section>
+    );
   }
 
   if (error || !event) {
     return (
       <section className="vk-tab-panel">
         <VkBackBar title="Событие" onBack={goBack} />
-        <VkErrorState
-          title="Событие недоступно"
-          message={error || "Событие не найдено"}
-          onRetry={load}
-        />
+        <VkErrorState title="Событие недоступно" message={error || "Событие не найдено"} onRetry={reload} />
       </section>
     );
   }
@@ -56,7 +44,7 @@ export function VkEventDetail({ eventId }: VkEventDetailProps) {
   const posterUrl = isDisplayablePoster(event.poster_url, event.category) ? event.poster_url : null;
 
   return (
-    <section className="vk-tab-panel">
+    <section className="vk-tab-panel vk-screen-enter">
       <VkBackBar title="Событие" onBack={goBack} />
 
       <article className={`page-panel event-detail-panel ${cinema ? "page-panel--burgundy" : "page-panel--gold"}`}>
@@ -95,7 +83,17 @@ export function VkEventDetail({ eventId }: VkEventDetailProps) {
           </div>
         )}
 
-        <div className="event-detail-actions mt-4">
+        <div className="event-detail-actions mt-4 space-y-2">
+          {event.location && (
+            <a
+              href={yandexMapsUrl(event.location)}
+              className="literary-btn literary-btn--ghost no-underline w-full text-center"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📍 Открыть на карте
+            </a>
+          )}
           {event.source_url ? (
             <a
               href={event.source_url}
