@@ -13,6 +13,7 @@ from app.services.classified_service import (
     moderate_classified_ad,
     search_classifieds,
 )
+from app.schemas.analysis_result import AnalysisResult
 from app.services.event_service import search_public_events
 from app.services.issue_service import IssueActorContext, apply_issue_status_update, build_my_issues_response
 from tests.helpers.db_factories import (
@@ -111,7 +112,7 @@ async def test_classified_create_approve_and_publish(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_service._safe_notify_status", new_callable=AsyncMock, return_value=True)
+@patch("app.services.issue.status.safe_notify_status", new_callable=AsyncMock, return_value=True)
 async def test_resident_sees_issue_status_after_official_update(
     _notify,
     db_session: AsyncSession,
@@ -194,3 +195,131 @@ async def test_resident_lists_own_issues_via_http(db_session: AsyncSession, api_
     assert response.status_code == 200
     assert response.json()["total"] >= 1
     assert any("скамейку" in item["description"] for item in response.json()["items"])
+
+
+@pytest.mark.asyncio
+@patch("app.services.issue.status.safe_notify_status", new_callable=AsyncMock, return_value=True)
+async def test_issue_timeline_via_http_after_status_change(
+    _notify,
+    db_session: AsyncSession,
+    api_client: AsyncClient,
+):
+    resident = await create_user(db_session, role_name=UserRole.RESIDENT, full_name="Житель")
+    official = await create_user(db_session, role_name=UserRole.ADMINISTRATION, full_name="Служба")
+    issue = await create_issue(db_session, resident=resident)
+
+    status_update = await api_client.patch(
+        f"/api/v1/issues/{issue.id}/status",
+        headers=auth_headers_for(official),
+        json={"status": "under_review"},
+    )
+    assert status_update.status_code == 200
+
+    resolved = await api_client.patch(
+        f"/api/v1/issues/{issue.id}/status",
+        headers=auth_headers_for(official),
+        json={"status": "resolved", "resolution_text": "Фонарь заменён"},
+    )
+    assert resolved.status_code == 200
+
+    mine = await api_client.get("/api/v1/issues/my", headers=auth_headers_for(resident))
+    assert mine.status_code == 200
+    item = next(row for row in mine.json()["items"] if row["id"] == issue.id)
+    assert item["status"] == "resolved"
+    assert item["status_timeline"]
+    assert item["status_timeline"][-1]["status"] == "resolved"
+
+
+@pytest.mark.asyncio
+@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+async def test_register_login_create_issue_e2e(
+    mock_gemini,
+    _notify_owner,
+    api_client: AsyncClient,
+):
+    username = unique_username("issue_author")
+    password = TEST_PASSWORD
+
+    register = await api_client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": username,
+            "password": password,
+            "full_name": "Автор обращения",
+            "phone": "+79009998877",
+        },
+    )
+    assert register.status_code == 201
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": password},
+    )
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    mock_gemini.return_value = AnalysisResult(
+        is_valid=True,
+        category="roads",
+        summary="Сломан фонарь",
+        duplicate_probability=0.0,
+    )
+
+    created = await api_client.post(
+        "/api/v1/issues",
+        headers=headers,
+        json={"description": "Сломан фонарь на улице Ленина, темно по вечерам"},
+    )
+    assert created.status_code == 201
+    issue_id = created.json()["id"]
+
+    mine = await api_client.get("/api/v1/issues/my", headers=headers)
+    assert mine.status_code == 200
+    assert any(item["id"] == issue_id for item in mine.json()["items"])
+
+
+@pytest.mark.asyncio
+@patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
+async def test_register_login_create_classified_e2e(
+    _notify_subs,
+    _notify_owner,
+    api_client: AsyncClient,
+):
+    username = unique_username("seller")
+    password = TEST_PASSWORD
+
+    register = await api_client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": username,
+            "password": password,
+            "full_name": "Продавец",
+            "phone": "+79006665544",
+        },
+    )
+    assert register.status_code == 201
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": password},
+    )
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    created = await api_client.post(
+        "/api/v1/classifieds",
+        headers=headers,
+        json={
+            "category": "firewood",
+            "title": "Дрова для бани",
+            "description": "Сухие берёзовые дрова, самовывоз без предоплаты",
+            "phone": "+79006665544",
+            "author_name": "Продавец",
+            "agree_rules": True,
+        },
+    )
+    assert created.status_code == 201
+    assert created.json()["id"] > 0
+    assert created.json()["message"]

@@ -52,6 +52,8 @@ def pytest_configure(config):
         "markers",
         "postgres: requires PostgreSQL (skipped locally without DB)",
     )
+    if os.environ.get("GITHUB_ACTIONS") == "true" and not postgres_available():
+        raise pytest.UsageError("PostgreSQL is required in CI but is not reachable")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -60,8 +62,6 @@ def pytest_collection_modifyitems(config, items):
     skip_db = pytest.mark.skip(reason="PostgreSQL is not available")
     for item in items:
         if item.get_closest_marker("postgres"):
-            item.add_marker(skip_db)
-        elif "test_public_api" in item.nodeid:
             item.add_marker(skip_db)
 
 

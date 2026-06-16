@@ -131,6 +131,15 @@ export function EventsPage() {
                 {cat}
               </button>
             ))}
+            {categoryFilter && (
+              <button
+                type="button"
+                className="filter-chip classified-quick-btn--reset"
+                onClick={() => setCategoryFilter("")}
+              >
+                ✕ Сбросить
+              </button>
+            )}
           </div>
         )}
       </section>

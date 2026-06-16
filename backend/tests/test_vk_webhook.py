@@ -202,3 +202,43 @@ async def test_vk_short_message_skips_complaint_route(
     )
     assert response.status_code == 200
     mock_process.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_vk_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=True)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_ai_question_routes_to_ai_handler(
+    mock_mod, _send, _flow, mock_ai, _free, _vk_msg, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="какие мероприятия будут на выходных в пушкинских горах?"),
+    )
+    assert response.status_code == 200
+    mock_ai.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_help_command(mock_mod, mock_send, _flow, _ai, _free, vk_client: AsyncClient):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="помощь"),
+    )
+    assert response.status_code == 200
+    mock_send.assert_awaited()
+    assert "справка" in mock_send.await_args.args[1].lower()

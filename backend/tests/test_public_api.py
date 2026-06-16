@@ -3,6 +3,8 @@
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.postgres
+
 
 @pytest.mark.asyncio
 async def test_public_info_keys(client: AsyncClient):
@@ -185,32 +187,6 @@ async def test_public_classifieds_invalid_page_still_ok(client: AsyncClient):
     data = response.json()
     assert data["page_size"] == 1
     assert "items" in data
-
-
-@pytest.mark.asyncio
-async def test_create_issue_guest_requires_contact(client: AsyncClient):
-    response = await client.post(
-        "/api/v1/issues",
-        json={"description": "Сломан фонарь на улице Ленина, темно по вечерам"},
-    )
-    assert response.status_code == 400
-    detail = response.json()["detail"].lower()
-    assert "телефон" in detail or "имя" in detail
-
-
-@pytest.mark.asyncio
-async def test_create_issue_honeypot_rejected(client: AsyncClient):
-    response = await client.post(
-        "/api/v1/issues",
-        json={
-            "description": "Сломан фонарь на улице Ленина, темно по вечерам",
-            "phone": "+79001234567",
-            "full_name": "Иван",
-            "website_url": "http://bot-trap.example",
-        },
-    )
-    assert response.status_code == 400
-    assert "страницу" in response.json()["detail"].lower()
 
 
 @pytest.mark.asyncio

@@ -199,6 +199,14 @@
     outline: none;
     box-shadow: 0 0 0 2px hsl(var(--gold) / 0.35);
   }
+  .literary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .literary-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
   .literary-link {
     color: hsl(var(--forest));
     font-weight: 600;

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -112,16 +113,21 @@ async def create_event(
     *,
     title: str,
     region: EventRegion = EventRegion.PUSHKIN_GORY,
+    source: str = "vk",
+    starts_at: datetime | None = None,
+    poster_url: str | None = None,
 ) -> Event:
-    from datetime import datetime, timedelta, timezone
+    from datetime import timedelta, timezone
 
     event = Event(
         title=title,
         description="Тестовое событие",
-        starts_at=datetime.now(timezone.utc) + timedelta(days=3),
+        starts_at=starts_at or datetime.now(timezone.utc) + timedelta(days=3),
         location="Пушкиногорье",
         region=region.value,
         category="culture",
+        source=source,
+        poster_url=poster_url,
         is_published=True,
     )
     db.add(event)
