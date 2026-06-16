@@ -39,6 +39,31 @@ async def test_create_issue_validation(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_create_issue_guest_requires_contact(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/issues",
+        json={"description": "Сломан фонарь на улице Ленина, темно по вечерам"},
+    )
+    assert response.status_code == 400
+    assert "телефон" in response.json()["detail"].lower() or "имя" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_create_issue_honeypot_rejected(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/issues",
+        json={
+            "description": "Сломан фонарь на улице Ленина, темно по вечерам",
+            "phone": "+79001234567",
+            "full_name": "Иван",
+            "website_url": "http://bot-trap.example",
+        },
+    )
+    assert response.status_code == 400
+    assert "страницу" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_public_info(client: AsyncClient):
     response = await client.get("/api/v1/public/info")
     assert response.status_code == 200

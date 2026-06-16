@@ -1,4 +1,4 @@
-"""Unit tests for issue lifecycle rules (no database)."""
+"""Unit tests for issue lifecycle business rules (no database)."""
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -8,14 +8,10 @@ import pytest
 
 from app.models.enums import IssueStatus, UserRole
 from app.models.issue import Issue
-from app.services.issue_service import (
-    IssueActorContext,
-    IssueValidationError,
-    can_view_issue,
-    create_issue_from_web,
-    reopen_issue,
-    update_issue_status,
-)
+from app.services.issue.access import can_view_issue
+from app.services.issue.schemas import IssueActorContext, IssueValidationError
+from app.services.issue.status import change_issue_status, reopen_issue
+from app.services.issue.validation import create_issue_from_web
 
 
 def _user(role_name: UserRole, *, user_id: int = 1, department_id: int | None = None):
@@ -51,7 +47,7 @@ def test_resident_cannot_view_others_issue():
 def test_super_admin_owner_can_view_any_issue():
     user = _user(UserRole.SUPER_ADMIN)
     issue = _issue(resident_id=99)
-    with patch("app.services.issue_service.is_owner_user", return_value=True):
+    with patch("app.services.issue.access.is_owner_user", return_value=True):
         assert can_view_issue(user, issue) is True
 
 
@@ -67,20 +63,20 @@ async def test_reopen_rejects_invalid_target_status():
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_service._safe_notify_status", new_callable=AsyncMock, return_value=True)
-@patch("app.services.issue_service._safe_audit", new_callable=AsyncMock, return_value=True)
+@patch("app.services.issue.status.safe_notify_status", new_callable=AsyncMock, return_value=True)
+@patch("app.services.issue.status.safe_audit", new_callable=AsyncMock, return_value=True)
 async def test_status_change_skips_when_unchanged(mock_audit, mock_notify):
     db = AsyncMock()
     issue = _issue()
     issue.status = IssueStatus.UNDER_REVIEW
     actor = IssueActorContext(actor_id=1)
 
-    result = await update_issue_status(
+    result = await change_issue_status(
         db,
         issue,
         status=IssueStatus.UNDER_REVIEW,
-        resolution_text=None,
         actor=actor,
+        audit_action="status_change",
     )
 
     assert result is issue

@@ -42,6 +42,7 @@ def _message_new_payload(*, text: str, peer_id: int = 1001, from_id: int = 42) -
         },
     }
 
+
 @pytest.mark.asyncio
 async def test_vk_confirmation(client: AsyncClient):
     settings = get_settings()

@@ -33,7 +33,7 @@ async def issue_context(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_service._safe_notify_status", new_callable=AsyncMock, return_value=True)
+@patch("app.services.issue.status.safe_notify_status", new_callable=AsyncMock, return_value=True)
 async def test_issue_full_lifecycle(mock_notify, db_session: AsyncSession, issue_context):
     """Create → review → resolve → comment → reopen → archive."""
     issue = issue_context["issue"]
