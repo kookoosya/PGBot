@@ -1,0 +1,440 @@
+.vk-mini-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: hsl(var(--parchment));
+  color: hsl(var(--foreground));
+}
+
+.vk-mini-header {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
+}
+
+.vk-mini-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--gold));
+  font-weight: 700;
+}
+
+.vk-mini-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.vk-mini-user {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.vk-mini-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.85rem 0.85rem 5.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vk-mini-main--detail {
+  padding-bottom: 1rem;
+}
+
+.vk-offline-banner {
+  padding: 0.45rem 0.85rem;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: hsl(42 90% 18%);
+  background: hsl(42 85% 88%);
+  border-bottom: 1px solid hsl(42 55% 72%);
+}
+
+.vk-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.vk-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+.vk-back-btn {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--forest));
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vk-back-title {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Playfair Display", Georgia, serif;
+  color: hsl(var(--forest));
+}
+
+.vk-card-button {
+  display: block;
+  width: 100%;
+  text-align: inherit;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.vk-detail-facts {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: hsl(var(--background) / 0.7);
+  border: 1px solid hsl(var(--border));
+}
+
+.vk-tab-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.vk-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.vk-filter-chip {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.9);
+  color: hsl(var(--forest));
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.vk-filter-chip--active {
+  background: hsl(var(--forest));
+  border-color: hsl(var(--forest));
+  color: hsl(var(--parchment));
+}
+
+.vk-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vk-mini-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom));
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(40 55% 99% / 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.vk-mini-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.25rem;
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.vk-mini-nav-btn span:first-child,
+.vk-mini-nav-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.vk-mini-nav-btn--active {
+  color: hsl(var(--forest));
+  background: hsl(var(--gold) / 0.12);
+  box-shadow: inset 0 0 0 1px hsl(var(--gold) / 0.2);
+}
+
+.vk-mini-nav-btn:active {
+  transform: scale(0.98);
+}
+
+.vk-mini-nav-btn:focus-visible {
+  outline: 2px solid hsl(var(--gold) / 0.45);
+  outline-offset: 1px;
+}
+
+@media (min-width: 480px) {
+  .vk-mini-main {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+/* Header actions */
+.vk-mini-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vk-mini-header-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.vk-header-icon-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--forest));
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vk-header-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* Screen transitions */
+@keyframes vk-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vk-screen-enter {
+  animation: vk-screen-in 0.22s ease-out;
+}
+
+/* Skeleton loaders */
+.vk-skeleton-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vk-skeleton-card,
+.vk-skeleton-detail {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.85);
+  display: grid;
+  gap: 0.55rem;
+}
+
+@keyframes vk-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.vk-skeleton-line {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.35) 0%,
+    hsl(var(--muted) / 0.55) 50%,
+    hsl(var(--muted) / 0.35) 100%
+  );
+  background-size: 200% 100%;
+  animation: vk-shimmer 1.4s ease-in-out infinite;
+}
+
+.vk-skeleton-line--title {
+  height: 1rem;
+  width: 70%;
+}
+
+.vk-skeleton-line--short {
+  width: 45%;
+}
+
+.vk-skeleton-line--hero {
+  height: 7rem;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.vk-filter-chip--sm {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.65rem;
+}
+
+/* Profile */
+.vk-profile-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.vk-profile-facts dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground));
+}
+
+.vk-profile-facts dd {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.vk-profile-actions {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* FAQ */
+.vk-faq-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vk-faq-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 0.65rem 0.85rem;
+  background: hsl(var(--card) / 0.9);
+}
+
+.vk-faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: hsl(var(--forest));
+}
+
+.vk-faq-item p {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Comments */
+.vk-comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.vk-comment-item {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.85);
+}
+
+.vk-comment-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Mine ads */
+.vk-mine-ad-wrap {
+  position: relative;
+}
+
+.vk-mine-status {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  margin-bottom: 0.35rem;
+}
+
+.vk-mine-status--pending {
+  background: hsl(42 85% 88%);
+  color: hsl(42 90% 18%);
+}
+
+.vk-mine-status--approved {
+  background: hsl(145 45% 90%);
+  color: hsl(145 55% 22%);
+}
+
+.vk-mine-status--rejected {
+  background: hsl(0 55% 94%);
+  color: hsl(0 55% 32%);
+}
+
+/* Issue cards */
+.literary-issue-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.vk-issue-open-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--gold));
+}
+
+/* Error boundary */
+.vk-error-boundary {
+  align-items: center;
+  justify-content: center;
+}
+
+.vk-error-boundary-inner {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  max-width: 22rem;
+}
+

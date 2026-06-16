@@ -52,13 +52,22 @@ jobs:
       - name: Cinema smoke logic (fixture)
         run: python3 scripts/smoke_check_cinema.py /dev/null --fixture scripts/fixtures/smoke_today_ok.json
 
-      - name: Backend tests
+      - name: Backend unit tests
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
           DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
           DEBUG: "true"
-        run: pytest -q
+        run: pytest -q -m "not postgres"
+
+      - name: Postgres integration tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/test_db
+          DEBUG: "true"
+          GITHUB_ACTIONS: "true"
+        run: pytest -q -m postgres --tb=short
 
   frontend:
     runs-on: ubuntu-latest

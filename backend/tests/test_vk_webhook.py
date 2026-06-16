@@ -59,11 +59,11 @@ async def test_vk_unknown_event_ok(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
 @patch("app.services.vk.ai_history.clear_ai_history", new_callable=AsyncMock)
 @patch("app.services.vk.flow_store.clear_flow", new_callable=AsyncMock)
 @patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
-async def test_vk_menu_welcome(mock_mod, _clear_flow, _clear_ai, mock_send, vk_client: AsyncClient):
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+async def test_vk_menu_welcome(mock_send, mock_mod, _clear_flow, _clear_ai, vk_client: AsyncClient):
     from app.services.vk.moderation import ModerationCheckResult
 
     mock_mod.return_value = ModerationCheckResult(allowed=True)
@@ -92,3 +92,153 @@ async def test_vk_moderation_blocks_message(mock_mod, mock_send, vk_client: Asyn
     )
     assert response.status_code == 200
     mock_send.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.services.vk.helpers.subscribe_peer", new_callable=AsyncMock, return_value="Подписка оформлена")
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_subscribe_command(
+    mock_mod, mock_subscribe, mock_send, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="подписаться"),
+    )
+    assert response.status_code == 200
+    mock_subscribe.assert_awaited_once()
+    mock_send.assert_awaited()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_classified_flow_handles_message(
+    mock_mod, mock_flow, mock_send, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    mock_flow.return_value = "Шаг 2/5: опишите объявление"
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="продаю велосипед в хорошем состоянии"),
+    )
+    assert response.status_code == 200
+    mock_flow.assert_awaited_once()
+    mock_send.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.services.vk.message_handler.process_incoming_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_complaint_routes_to_issue_processor(
+    mock_mod, mock_process, _send, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    complaint = "не работает фонарь на улице Ленина, уже неделю темно"
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text=complaint, peer_id=2002, from_id=55),
+    )
+    assert response.status_code == 200
+    mock_process.assert_awaited_once()
+    assert mock_process.await_args.kwargs["vk_id"] == 55
+    assert "фонарь" in mock_process.await_args.kwargs["text"]
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.services.vk.commands.unsubscribe_peer", new_callable=AsyncMock, return_value="Вы отписаны")
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_unsubscribe_command(
+    mock_mod, mock_unsub, _send, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="отписаться"),
+    )
+    assert response.status_code == 200
+    mock_unsub.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.services.vk.message_handler.process_incoming_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_short_message_skips_complaint_route(
+    mock_mod, mock_process, _send, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="спасибо"),
+    )
+    assert response.status_code == 200
+    mock_process.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_vk_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=True)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_ai_question_routes_to_ai_handler(
+    mock_mod, _send, _flow, mock_ai, _free, _vk_msg, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="какие мероприятия будут на выходных в пушкинских горах?"),
+    )
+    assert response.status_code == 200
+    mock_ai.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_help_command(mock_mod, mock_send, _flow, _ai, _free, vk_client: AsyncClient):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="помощь"),
+    )
+    assert response.status_code == 200
+    mock_send.assert_awaited()
+    assert "справка" in mock_send.await_args.args[1].lower()

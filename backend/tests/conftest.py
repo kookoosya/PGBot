@@ -47,13 +47,22 @@ def postgres_available() -> bool:
     return _DB_OK
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "postgres: requires PostgreSQL (skipped locally without DB)",
+    )
+    if os.environ.get("GITHUB_ACTIONS") == "true" and not postgres_available():
+        raise pytest.UsageError("PostgreSQL is required in CI but is not reachable")
+
+
 def pytest_collection_modifyitems(config, items):
     if postgres_available():
         return
-    skip = pytest.mark.skip(reason="PostgreSQL is not available")
+    skip_db = pytest.mark.skip(reason="PostgreSQL is not available")
     for item in items:
-        if "test_public_api" in item.nodeid:
-            item.add_marker(skip)
+        if item.get_closest_marker("postgres"):
+            item.add_marker(skip_db)
 
 
 @pytest.fixture
@@ -61,3 +70,31 @@ async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def db_session():
+    """Transactional DB session rolled back after each test."""
+    if not postgres_available():
+        pytest.skip("PostgreSQL is not available")
+
+    from app.database import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as session:
+        yield session
+        await session.rollback()
+
+
+@pytest.fixture
+async def api_client(db_session):
+    """HTTP client with shared transactional DB session."""
+    from app.database import get_db
+
+    async def _override_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_db
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.pop(get_db, None)

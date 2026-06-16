@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, ai_chat, auth, catalog, categories, classifieds, departments, feedback, issues, places, public_info, services, statistics, users, verification, visits, vk_webhook, weather
+from app.api.v1 import admin, ai_chat, auth, catalog, categories, classifieds, departments, feedback, issues, places, public_info, services, statistics, users, verification, visits, vk_auth, vk_webhook, weather
 
 api_router = APIRouter()
 
@@ -22,3 +22,4 @@ api_router.include_router(visits.router, prefix="/visits", tags=["visits"])
 api_router.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(vk_webhook.router, prefix="/vk", tags=["vk"])
+api_router.include_router(vk_auth.router, prefix="/vk", tags=["vk"])

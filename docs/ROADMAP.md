@@ -58,13 +58,17 @@ backend/app/services/vk/
 | Файл | Строк | Разбить на |
 |------|-------|------------|
 | `classified_service.py` | ~900 | ✅ split → `classified/` package |
-| `place_service.py` | ~900 | crud, map, reviews, sync |
-| `issue_service.py` | ~800 | search, status, comments, official |
-| `issue_processor.py` | ~540 | оставить ingest; lifecycle в issue_service |
+| `place_service.py` | ~900 | ✅ split → `place/` package |
+| `issue_service.py` | ~800 | ✅ split → `issue/` package |
+| `issue_processor.py` | ~540 | оставить ingest; lifecycle в issue/ |
 
 ### 1.3 API и тесты
 
 - Покрыть: auth, classifieds create/moderate, issue lifecycle, VK webhook (mock)
+- ✅ Расширены: `test_issue_lifecycle*`, `test_place_lifecycle`, `test_vk_webhook`, `test_public_api`, `test_vk_digest`, `test_classified_quota`
+- ✅ E2E сценарии: `test_scenarios_e2e` (auth, classified moderation, issues, events)
+- ✅ Фасады: `test_issue_facade`, `test_place_facade`
+- Общая фикстура `db_session` + маркер `@pytest.mark.postgres` для CI/локального skip
 - Цель: **50+** интеграционных тестов на критические пути
 - Frontend: **0 тестов сейчас** → Vitest на `eventUtils`, `literaryCopy`, API hooks (фаза 1b)
 

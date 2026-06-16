@@ -3,6 +3,7 @@ const API_BASE = "/api/v1";
 class ApiClient {
   private token: string | null = null;
   private userToken: string | null = null;
+  private onUnauthorized: (() => Promise<boolean>) | null = null;
 
   setToken(token: string | null) {
     this.token = token;
@@ -12,11 +13,30 @@ class ApiClient {
     this.userToken = token;
   }
 
+  setUnauthorizedHandler(handler: (() => Promise<boolean>) | null) {
+    this.onUnauthorized = handler;
+  }
+
   private authHeader(): string | null {
     return this.token || this.userToken;
   }
 
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  private formatErrorDetail(detail: unknown): string {
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item && typeof item === "object" && "msg" in item) return String((item as { msg: string }).msg);
+          return "";
+        })
+        .filter(Boolean)
+        .join(". ");
+    }
+    return "Request failed";
+  }
+
+  private async request<T>(path: string, options: RequestInit = {}, allowRetry = true): Promise<T> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
@@ -26,11 +46,23 @@ class ApiClient {
       headers["Authorization"] = `Bearer ${auth}`;
     }
 
-    const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    } catch {
+      throw new TypeError("Network request failed");
+    }
+
+    if (response.status === 401 && allowRetry && this.userToken && this.onUnauthorized) {
+      const refreshed = await this.onUnauthorized();
+      if (refreshed) {
+        return this.request<T>(path, options, false);
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: "Request failed" }));
-      throw new Error(error.detail || `HTTP ${response.status}`);
+      throw new Error(this.formatErrorDetail(error.detail) || `HTTP ${response.status}`);
     }
 
     if (response.status === 204) return {} as T;
@@ -42,6 +74,22 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
+  }
+
+  vkAuth(data: { silent_token: string; uuid: string }) {
+    return this.request<{ access_token: string; token_type: string; user: User }>(
+      "/vk/auth",
+      { method: "POST", body: JSON.stringify(data) },
+      false,
+    );
+  }
+
+  vkRefresh(data: { silent_token: string; uuid: string }) {
+    return this.request<{ access_token: string; token_type: string; user: User }>(
+      "/vk/refresh",
+      { method: "POST", body: JSON.stringify(data) },
+      false,
+    );
   }
 
   getMe() {
@@ -80,6 +128,17 @@ class ApiClient {
 
   getIssue(id: number) {
     return this.request<Issue>(`/issues/${id}`);
+  }
+
+  getIssueComments(issueId: number) {
+    return this.request<IssueCommentListResponse>(`/issues/${issueId}/comments`);
+  }
+
+  addIssueComment(issueId: number, text: string) {
+    return this.request<IssueComment>(`/issues/${issueId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
   }
 
   updateIssueStatus(id: number, status: string, resolution_text?: string) {
@@ -439,6 +498,11 @@ class ApiClient {
     return this.request<{ items: ClassifiedAd[]; total: number; page?: number }>(`/classifieds${q}`);
   }
 
+  getMyClassifieds(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<{ items: ClassifiedMineAd[]; total: number }>(`/classifieds/mine${q}`);
+  }
+
   getClassified(id: number) {
     return this.request<ClassifiedAd>(`/classifieds/${id}`);
   }
@@ -486,6 +550,20 @@ export interface User {
   position?: string | null;
   verification_status?: string | null;
   created_at: string;
+}
+
+export interface IssueComment {
+  id: number;
+  text: string;
+  is_internal: boolean;
+  author_id: number;
+  author_name?: string | null;
+  created_at: string;
+}
+
+export interface IssueCommentListResponse {
+  items: IssueComment[];
+  total: number;
 }
 
 export interface Issue {
@@ -842,6 +920,13 @@ export interface ClassifiedAd {
   author_name: string;
   address: string | null;
   created_at: string;
+}
+
+export interface ClassifiedMineAd extends ClassifiedAd {
+  payment_status: string;
+  is_active: boolean;
+  payment_reference?: string | null;
+  placement_fee?: number;
 }
 
 export interface ClassifiedPending extends ClassifiedAd {

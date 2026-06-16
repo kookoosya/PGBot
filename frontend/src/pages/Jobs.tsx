@@ -15,7 +15,7 @@ export function Jobs() {
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [sector, setSector] = useState("");
   const [search, setSearch] = useState("");
@@ -144,6 +144,19 @@ export function Jobs() {
           <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
             Найти
           </button>
+          {(search || sector) && (
+            <button
+              type="button"
+              className="literary-btn literary-btn--ghost shrink-0 text-sm classified-quick-btn--reset"
+              onClick={() => {
+                setSearch("");
+                setSearchInput("");
+                setSector("");
+              }}
+            >
+              Сбросить
+            </button>
+          )}
         </div>
       </section>
 
@@ -171,7 +184,7 @@ export function Jobs() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow">
+        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow literary-form-comfort">
           <LiterarySectionHead
             kicker={copy.form.kicker}
             title={copy.form.title}
@@ -245,28 +258,32 @@ export function Jobs() {
       {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
 
       <div className="literary-jobs-list">
-        {ads.map((ad) => {
-          const visual = getCategoryVisual(ad.category);
-          return (
-            <Link key={ad.id} to={`/classifieds/${ad.id}`} className="literary-job-card no-underline text-inherit">
-              <div className="literary-job-icon" style={{ background: visual.gradient }}>
-                {visual.icon}
-              </div>
-              <div className="literary-job-body">
-                <span className="literary-job-badge">{ad.category_label}</span>
-                <h3 className="literary-job-title">{ad.title}</h3>
-                <p className="literary-job-desc">{ad.description}</p>
-                {ad.price != null && (
-                  <p className="literary-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
-                )}
-                <p className="literary-job-contact">
-                  📞 <span className="clickable-phone">{ad.phone}</span>
-                  {ad.address && ` · 📍 ${ad.address}`}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+        {loading && ads.length === 0 ? (
+          <LiteraryInlineLoader label="Ищем вакансии в округе…" />
+        ) : (
+          ads.map((ad) => {
+            const visual = getCategoryVisual(ad.category);
+            return (
+              <Link key={ad.id} to={`/classifieds/${ad.id}`} className="literary-job-card no-underline text-inherit">
+                <div className="literary-job-icon" style={{ background: visual.gradient }}>
+                  {visual.icon}
+                </div>
+                <div className="literary-job-body">
+                  <span className="literary-job-badge">{ad.category_label}</span>
+                  <h3 className="literary-job-title">{ad.title}</h3>
+                  <p className="literary-job-desc">{ad.description}</p>
+                  {ad.price != null && (
+                    <p className="literary-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
+                  )}
+                  <p className="literary-job-contact">
+                    📞 <span className="clickable-phone">{ad.phone}</span>
+                    {ad.address && ` · 📍 ${ad.address}`}
+                  </p>
+                </div>
+              </Link>
+            );
+          })
+        )}
         {!loading && ads.length === 0 && (
           <LiteraryEmptyState {...EMPTY_STATES.jobs}>
             <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
@@ -274,7 +291,7 @@ export function Jobs() {
             </button>
           </LiteraryEmptyState>
         )}
-        {loading && <LiteraryInlineLoader label="Ищем вакансии в округе…" />}
+        {loading && ads.length > 0 && <LiteraryInlineLoader label="Обновляем список…" />}
         {ads.length > 0 && ads.length < total && (
           <div className="text-center pt-4">
             <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>

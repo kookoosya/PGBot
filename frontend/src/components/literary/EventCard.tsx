@@ -16,6 +16,8 @@ interface EventCardProps {
   className?: string;
   /** Крупный кинематографичный вид внутри cinema-spotlight */
   spotlight?: boolean;
+  /** VK Mini App: открыть без react-router */
+  onOpen?: () => void;
 }
 
 export function EventCard({
@@ -24,6 +26,7 @@ export function EventCard({
   showReadMore = true,
   className = "",
   spotlight = false,
+  onOpen,
 }: EventCardProps) {
   const cinema = isRealCinemaEvent(event);
   const isPskov = event.region_label === "Псков";
@@ -61,9 +64,8 @@ export function EventCard({
     .filter(Boolean)
     .join(" ");
 
-  return (
-    <li className={cardClass}>
-      <Link to={`/events/${event.id}`} className={innerClass}>
+  const cardBody = (
+    <>
         {cinema && (
           <div className="event-card-poster-wrap">
             {posterUrl ? (
@@ -106,7 +108,20 @@ export function EventCard({
             </span>
           )}
         </div>
-      </Link>
+    </>
+  );
+
+  return (
+    <li className={cardClass}>
+      {onOpen ? (
+        <button type="button" className={`${innerClass} w-full text-left border-0 bg-transparent p-0`} onClick={onOpen}>
+          {cardBody}
+        </button>
+      ) : (
+        <Link to={`/events/${event.id}`} className={innerClass}>
+          {cardBody}
+        </Link>
+      )}
     </li>
   );
 }

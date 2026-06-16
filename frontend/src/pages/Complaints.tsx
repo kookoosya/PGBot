@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ export function Complaints() {
   const [categoriesError, setCategoriesError] = useState(false);
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("all");
   const [issuesError, setIssuesError] = useState(false);
+  const [issuesLoading, setIssuesLoading] = useState(false);
 
   useEffect(() => {
     api.getCategories()
@@ -61,12 +62,14 @@ export function Complaints() {
       return;
     }
     setIssuesError(false);
+    setIssuesLoading(true);
     api.getMyIssues({ limit: "10" })
       .then((r) => setMyIssues(r.items))
       .catch(() => {
         setMyIssues([]);
         setIssuesError(true);
-      });
+      })
+      .finally(() => setIssuesLoading(false));
   }, [user]);
 
   useEffect(() => {
@@ -318,14 +321,29 @@ export function Complaints() {
                   </button>
                 </div>
               )}
-              {issuesError ? (
+              {issuesLoading ? (
+                <LiteraryInlineLoader label="Загружаем ваши обращения…" compact />
+              ) : issuesError ? (
                 <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                   Не удалось загрузить обращения. Обновите страницу чуть позже.
                 </p>
               ) : myIssues.length === 0 ? (
                 <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact />
               ) : filteredIssues.length === 0 ? (
-                <p className="text-sm text-muted-foreground">По этому фильтру обращений нет.</p>
+                <LiteraryEmptyState
+                  icon="🔍"
+                  title="Нет обращений по фильтру"
+                  text="Попробуйте другой статус или сбросьте фильтр."
+                  compact
+                >
+                  <button
+                    type="button"
+                    className="literary-btn literary-btn--ghost text-sm mt-2"
+                    onClick={() => setIssueFilter("all")}
+                  >
+                    Показать все
+                  </button>
+                </LiteraryEmptyState>
               ) : (
                 <div className="space-y-3">
                   {filteredIssues.map((issue) => (

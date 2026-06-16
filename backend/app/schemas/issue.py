@@ -36,7 +36,13 @@ class IssueCommentResponse(BaseModel):
     text: str
     is_internal: bool
     author_id: int
+    author_name: str | None = None
     created_at: datetime
+
+
+class IssueCommentListResponse(BaseModel):
+    items: list[IssueCommentResponse]
+    total: int
 
 
 class IssueCreate(BaseModel):

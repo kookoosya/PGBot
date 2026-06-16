@@ -7,14 +7,15 @@ interface LiteraryClassifiedCardProps {
   ad: ClassifiedAd;
   /** Компактный вид — меньше текста */
   compact?: boolean;
+  onOpen?: () => void;
 }
 
 /** Карточка объявления в стиле «Пушкиногорский альбом» */
-export function LiteraryClassifiedCard({ ad, compact = false }: LiteraryClassifiedCardProps) {
+export function LiteraryClassifiedCard({ ad, compact = false, onOpen }: LiteraryClassifiedCardProps) {
   const visual = getCategoryVisual(ad.category);
 
-  return (
-    <Link to={`/classifieds/${ad.id}`} className="literary-classified-card no-underline text-inherit">
+  const body = (
+    <>
       <div className="literary-classified-icon" style={{ background: visual.gradient }}>
         {visual.icon}
       </div>
@@ -42,6 +43,20 @@ export function LiteraryClassifiedCard({ ad, compact = false }: LiteraryClassifi
           </p>
         )}
       </div>
+    </>
+  );
+
+  if (onOpen) {
+    return (
+      <button type="button" className="literary-classified-card vk-card-button" onClick={onOpen}>
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={`/classifieds/${ad.id}`} className="literary-classified-card no-underline text-inherit">
+      {body}
     </Link>
   );
 }
