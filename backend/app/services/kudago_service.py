@@ -218,6 +218,7 @@ async def sync_events_from_kudago(
             errors.append(str(exc))
 
     return EventSyncResult(
+        source="kudago",
         region=region.value,
         fetched=len(items),
         created=created,
@@ -239,6 +240,7 @@ async def sync_all_kudago_sources(
             results.append(await sync_events_from_kudago(db, region, actor_id=actor_id))
         except EventValidationError as exc:
             results.append(EventSyncResult(
+                source="kudago",
                 region=region.value,
                 fetched=0,
                 created=0,
