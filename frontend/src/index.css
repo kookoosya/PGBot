@@ -821,6 +821,24 @@
     color: hsl(var(--forest));
   }
 
+  .cabinet-section-skeleton-line {
+    height: 0.85rem;
+    border-radius: 0.35rem;
+    background: linear-gradient(
+      90deg,
+      hsl(42 35% 90%) 0%,
+      hsl(42 45% 96%) 50%,
+      hsl(42 35% 90%) 100%
+    );
+    background-size: 200% 100%;
+    animation: cabinet-skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes cabinet-skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+  }
+
   .landing-compact-note {
     text-align: center;
   }

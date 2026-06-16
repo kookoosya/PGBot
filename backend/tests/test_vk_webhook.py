@@ -264,6 +264,28 @@ async def test_vk_help_command(mock_mod, mock_send, _flow, _ai, _free, vk_client
 
 
 @pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.api.v1.vk_webhook.route_complaint", new_callable=AsyncMock, return_value=False)
+@patch("app.services.vk.message_handler.dispatch_command", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_my_issues_command(
+    mock_mod, mock_dispatch, _complaint, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="мои обращения", peer_id=4004, from_id=88),
+    )
+    assert response.status_code == 200
+    mock_dispatch.assert_awaited_once()
+    assert mock_dispatch.await_args.args[1] == "my_issues"
+
+
+@pytest.mark.asyncio
 @patch("app.api.v1.vk_webhook.transcribe_audio_url", new_callable=AsyncMock, return_value="сделайте карту лучше")
 @patch("app.api.v1.vk_webhook.extract_audio_url", return_value="https://audio.test/file.ogg")
 @patch("app.api.v1.vk_webhook.route_welcome", new_callable=AsyncMock, return_value=False)

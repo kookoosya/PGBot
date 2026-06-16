@@ -297,6 +297,12 @@ export const EMPTY_STATES = {
     text: "Подайте первое — администрация и ЖКХ увидят его и ответят по мере рассмотрения.",
     verse: LITERARY_VERSES.complaints,
   },
+  classifiedsMine: {
+    icon: "📋",
+    title: "Объявлений пока нет",
+    text: "Разместите первое — соседи увидят его после быстрой модерации.",
+    verse: LITERARY_VERSES.classifieds,
+  },
   servicesCatalog: {
     icon: "📍",
     title: "Справочник пуст",

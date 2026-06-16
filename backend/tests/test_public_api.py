@@ -46,6 +46,32 @@ async def test_my_issues_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_classifieds_mine_requires_auth(client: AsyncClient):
+    response = await client.get("/api/v1/classifieds/mine")
+    assert response.status_code in (401, 403)
+
+
+@pytest.mark.asyncio
+async def test_public_info_portal_links_shape(client: AsyncClient):
+    response = await client.get("/api/v1/public/info")
+    assert response.status_code == 200
+    links = response.json()["portal_links"]
+    for key in (
+        "home",
+        "complaints",
+        "complaints_new",
+        "classifieds",
+        "classifieds_new",
+        "events",
+        "cabinet",
+        "map",
+        "jobs",
+    ):
+        assert key in links
+        assert links[key].startswith("http")
+
+
+@pytest.mark.asyncio
 async def test_public_info(client: AsyncClient):
     response = await client.get("/api/v1/public/info")
     assert response.status_code == 200

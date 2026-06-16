@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryInlineLoader } from "@/components/literary";
+import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
@@ -62,8 +62,9 @@ export function UserCabinet() {
   const status = user.verification_status ? STATUS_LABELS_VERIFY[user.verification_status] : null;
   const isOrg = !!user.organization;
   const activeIssues = recentIssues.filter((i) => ISSUE_ACTIVE_STATUSES.has(i.status)).length;
-  const hasOnlyIssues = issuesLoaded && recentIssues.length > 0 && adsLoaded && myAds.length === 0;
-  const hasOnlyAds = adsLoaded && myAds.length > 0 && issuesLoaded && recentIssues.length === 0;
+  const bothEmpty = issuesLoaded && recentIssues.length === 0 && adsLoaded && myAds.length === 0;
+  const showIssuesEmpty = issuesLoaded && recentIssues.length === 0 && !bothEmpty;
+  const showAdsEmpty = adsLoaded && myAds.length === 0 && !bothEmpty;
 
   return (
     <div className="literary-page page-section max-w-2xl mx-auto">
@@ -123,10 +124,8 @@ export function UserCabinet() {
         )}
       </div>
 
-      {issuesLoaded && recentIssues.length === 0 && adsLoaded && myAds.length === 0 && (
-        <div className="literary-card literary-card--gold p-6 mb-6 text-center space-y-3">
-          <p className="literary-title text-lg m-0">{EMPTY_STATES.complaintsMine.title}</p>
-          <p className="text-sm text-muted-foreground m-0">{EMPTY_STATES.complaintsMine.text}</p>
+      {bothEmpty && (
+        <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} className="mb-6">
           <div className="flex flex-wrap justify-center gap-2">
             <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline">
               Подать обращение
@@ -135,29 +134,17 @@ export function UserCabinet() {
               Подать объявление
             </Link>
           </div>
-        </div>
+        </LiteraryEmptyState>
       )}
 
-      {hasOnlyIssues && (
-        <div className="literary-card p-4 mb-6 text-center space-y-2">
-          <p className="m-0 text-sm text-muted-foreground">
-            Объявлений пока нет. Хотите быстро разместить новое?
-          </p>
-          <Link to="/classifieds?new=1" className="literary-link text-sm font-medium">
-            Перейти к подаче объявления →
-          </Link>
-        </div>
-      )}
+      {!issuesLoaded && <CabinetSectionSkeleton title="Мои обращения" />}
 
-      {hasOnlyAds && (
-        <div className="literary-card p-4 mb-6 text-center space-y-2">
-          <p className="m-0 text-sm text-muted-foreground">
-            Обращений пока нет. Если нужна помощь служб — отправьте первое обращение.
-          </p>
-          <Link to="/complaints?new=1" className="literary-link text-sm font-medium">
-            Подать обращение →
+      {showIssuesEmpty && (
+        <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact className="mb-6">
+          <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline mt-2">
+            Подать обращение
           </Link>
-        </div>
+        </LiteraryEmptyState>
       )}
 
       {recentIssues.length > 0 && (
@@ -197,6 +184,16 @@ export function UserCabinet() {
             </Link>
           ))}
         </div>
+      )}
+
+      {!adsLoaded && <CabinetSectionSkeleton title="Мои объявления" lines={2} />}
+
+      {showAdsEmpty && (
+        <LiteraryEmptyState {...EMPTY_STATES.classifiedsMine} compact className="mb-6">
+          <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline mt-2">
+            Подать объявление
+          </Link>
+        </LiteraryEmptyState>
       )}
 
       {adsLoaded && myAds.length > 0 && (

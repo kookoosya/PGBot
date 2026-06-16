@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
+import { LiteraryEmptyState, LiterarySectionHead, PostSubmitPanel } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -116,7 +116,7 @@ export function Complaints() {
       });
       setMsgType("ok");
       setSubmittedId(issue.id);
-      setMsg(`Обращение #${issue.id} принято! Статус: на рассмотрении.`);
+      setMsg("Статус: на рассмотрении. Мы передадим обращение в службу.");
       setForm((f) => ({ ...f, description: "", address: "" }));
       clearDraft();
       if (user) {
@@ -263,30 +263,33 @@ export function Complaints() {
               )}
 
               {msg && (
-                <div className={msgType === "ok" ? "alert-success space-y-3 post-submit-panel" : "alert-error"}>
-                  {msgType === "ok" && submittedId && (
-                    <p className="post-submit-hero m-0">✓ Обращение #{submittedId} принято</p>
-                  )}
-                  <p className="m-0">{msg}</p>
-                  {msgType === "ok" && submittedId && (
-                    <p className="text-sm text-muted-foreground m-0">
-                      Статус появится в списке справа. Уведомление придёт и в VK-бот — напишите «Мои обращения».
-                    </p>
-                  )}
-                  {msgType === "ok" && submittedId && user && (
-                    <Link to={`/complaints?issue=${submittedId}`} className="literary-link text-sm font-medium">
-                      Посмотреть статус обращения →
-                    </Link>
-                  )}
-                  {msgType === "ok" && submittedId && !user && (
-                    <Link
-                      to={`/cabinet/login?next=/complaints?issue=${submittedId}`}
-                      className="literary-link text-sm font-medium"
-                    >
-                      Войти, чтобы отслеживать статус →
-                    </Link>
-                  )}
-                </div>
+                <PostSubmitPanel
+                  tone={msgType}
+                  message={msg}
+                  entityId={submittedId}
+                  entityNoun="Обращение"
+                  hint={
+                    msgType === "ok" && submittedId
+                      ? "Статус появится в списке справа. Уведомление придёт и в VK-бот — напишите «Мои обращения»."
+                      : undefined
+                  }
+                  actions={
+                    msgType === "ok" && submittedId ? (
+                      user ? (
+                        <Link to={`/complaints?issue=${submittedId}`} className="literary-link text-sm font-medium">
+                          Посмотреть статус обращения →
+                        </Link>
+                      ) : (
+                        <Link
+                          to={`/cabinet/login?next=/complaints?issue=${submittedId}`}
+                          className="literary-link text-sm font-medium"
+                        >
+                          Войти, чтобы отслеживать статус →
+                        </Link>
+                      )
+                    ) : undefined
+                  }
+                />
               )}
 
               <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>

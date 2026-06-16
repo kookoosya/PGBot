@@ -372,3 +372,77 @@ async def test_resident_reads_own_classifieds_in_cabinet(
     mine = await api_client.get("/api/v1/classifieds/mine", headers=headers)
     assert mine.status_code == 200
     assert any(item["id"] == created_id for item in mine.json()["items"])
+
+
+@pytest.mark.asyncio
+@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+@patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
+async def test_full_cabinet_journey_issues_and_classifieds(
+    _notify_subs,
+    _notify_owner,
+    mock_gemini,
+    _notify_issue_owner,
+    api_client: AsyncClient,
+):
+    username = unique_username("cabinet_full")
+    password = TEST_PASSWORD
+
+    register = await api_client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": username,
+            "password": password,
+            "full_name": "Полный кабинет",
+            "phone": "+79005553322",
+        },
+    )
+    assert register.status_code == 201
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": password},
+    )
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    mock_gemini.return_value = AnalysisResult(
+        is_valid=True,
+        category="roads",
+        summary="Яма на дороге",
+        duplicate_probability=0.0,
+    )
+
+    issue = await api_client.post(
+        "/api/v1/issues",
+        headers=headers,
+        json={"description": "На улице Мира большая яма, опасно для машин"},
+    )
+    assert issue.status_code == 201
+    issue_id = issue.json()["id"]
+
+    classified = await api_client.post(
+        "/api/v1/classifieds",
+        headers=headers,
+        json={
+            "category": "sale",
+            "title": "Детский велосипед",
+            "description": "Велосипед в хорошем состоянии, самовывоз",
+            "phone": "+79005553322",
+            "author_name": "Полный кабинет",
+            "agree_rules": True,
+        },
+    )
+    assert classified.status_code == 201
+    classified_id = classified.json()["id"]
+
+    my_issues = await api_client.get("/api/v1/issues/my", headers=headers)
+    assert my_issues.status_code == 200
+    assert any(item["id"] == issue_id for item in my_issues.json()["items"])
+
+    my_ads = await api_client.get("/api/v1/classifieds/mine", headers=headers)
+    assert my_ads.status_code == 200
+    ad_row = next(item for item in my_ads.json()["items"] if item["id"] == classified_id)
+    assert ad_row["payment_status"] == "pending"
+    assert ad_row["title"] == "Детский велосипед"

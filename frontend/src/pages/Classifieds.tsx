@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryClassifiedCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import {
+  LiteraryClassifiedCard,
+  LiteraryEmptyState,
+  LiteraryInlineLoader,
+  LiterarySectionHead,
+  PostSubmitPanel,
+} from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
@@ -320,29 +326,33 @@ export function Classifieds() {
       )}
 
       {msg && (
-        <div
-          ref={successRef}
-          className={`mb-6 page-panel space-y-2 ${msgType === "ok" ? "page-panel--gold" : "alert-error"}`}
-        >
-          {msgType === "ok" && submittedId && <p className="post-submit-hero m-0">✓ Объявление #{submittedId} принято</p>}
-          <p className="m-0 font-medium">{msg}</p>
-          {msgType === "ok" && submittedId && (
-            <>
-              <p className="text-sm text-muted-foreground m-0">
-                Обычно проверяем до суток. После публикации объявление появится на доске.
-                {submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение, когда опубликуем."}
-              </p>
-              <div className="flex flex-wrap gap-3">
+        <PostSubmitPanel
+          panelRef={successRef}
+          tone={msgType}
+          message={msg}
+          entityId={submittedId}
+          entityNoun="Объявление"
+          variant="gold-panel"
+          hint={
+            msgType === "ok" && submittedId
+              ? `Обычно проверяем до суток. После публикации объявление появится на доске.${
+                  submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение, когда опубликуем."
+                }`
+              : undefined
+          }
+          actions={
+            msgType === "ok" && submittedId ? (
+              <>
                 <Link to="/classifieds" className="literary-link text-sm font-medium">
                   Вернуться к доске →
                 </Link>
                 <button type="button" className="literary-link text-sm font-medium" onClick={() => setShowForm(true)}>
                   Подать ещё одно →
                 </button>
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            ) : undefined
+          }
+        />
       )}
 
       <div className="mb-8">
