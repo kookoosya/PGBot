@@ -61,13 +61,21 @@ def _strip_tags(value: str) -> str:
     return _normalize_text(html.unescape(re.sub(r"<[^>]+>", " ", value)))
 
 
+def _clean_title(title: str) -> str:
+    cleaned = _normalize_text(title)
+    cleaned = re.sub(r"([»\"])\s*\.\s*", r"\1. ", cleaned)
+    cleaned = re.sub(r"\s+\.\s+", " — ", cleaned)
+    cleaned = re.sub(r"^\.\s+", "", cleaned)
+    return cleaned.strip(" .")
+
+
 def _extract_title_and_url(body: str) -> tuple[str, str | None]:
     link_match = _LINK_RE.search(body)
     source_url = None
     if link_match:
         href = link_match.group(1)
         source_url = href if href.startswith("http") else f"{PUSHKINLAND_BASE_URL}{href}"
-    title = _strip_tags(body)
+    title = _clean_title(_strip_tags(body))
     return title[:300], source_url
 
 

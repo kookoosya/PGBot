@@ -126,6 +126,11 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P19 — ИнформПсков RSS ✅ (2026-06-16)
+1. ✅ Источник `informpskov` — RSS culture/news с датами и региональным фильтром
+2. ✅ Полировка заголовков pushkinland (убраны артефакты ` . `)
+3. ✅ 134 backend-теста
+
 ### P18 — календарь Пушкинского заповедника ✅ (2026-06-16)
 1. ✅ Источник `pushkinland` — pushkinland.ru/2018/calend (официальный календарь Михайловского)
 2. ✅ «Бугровский гарнец» 19–20 июня из календаря; фильтр длинных выставок

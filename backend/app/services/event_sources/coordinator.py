@@ -10,6 +10,7 @@ from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
 from app.services.event_sources.drampush_source import DrampushEventSource
+from app.services.event_sources.informpskov_source import InformpskovEventSource
 from app.services.event_sources.kdc_source import KdcEventSource
 from app.services.event_sources.kinopskov_source import KinopskovEventSource
 from app.services.event_sources.mirage_source import MirageEventSource
@@ -42,6 +43,7 @@ _SOURCES: dict[str, EventSource] = {
     "kudago": KudaGoEventSource(),
     "kdc": KdcEventSource(),
     "pushkinland": PushkinlandEventSource(),
+    "informpskov": InformpskovEventSource(),
     "drampush": DrampushEventSource(),
 }
 
@@ -146,7 +148,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "pushkinland", "timepad", "kdc", "drampush", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
+    for name in ("vk", "pushkinland", "informpskov", "timepad", "kdc", "drampush", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue

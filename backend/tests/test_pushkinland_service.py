@@ -41,6 +41,7 @@ def test_parse_garnect_festival():
     assert len(events) == 1
     event = events[0]
     assert "гарнец" in event.title.lower()
+    assert " . " not in event.title
     assert event.starts_at.day == 19
     assert event.ends_at is not None
     assert event.ends_at.day == 20
