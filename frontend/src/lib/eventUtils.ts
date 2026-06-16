@@ -34,6 +34,7 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   silver: "Silver Cinema",
   proculture: "PRO.Культура",
   kdc: "КДЦ Пушкиногорье",
+  drampush: "Театр драмы",
   manual: "Организатор",
 };
 

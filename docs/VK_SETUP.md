@@ -94,6 +94,27 @@
 
 ---
 
+## Шаг 8. Токен для импорта афиши (VK_EVENTS_TOKEN)
+
+`VK_GROUP_TOKEN` читает только стену **своего** сообщества бота. Для импорта афиши из музея, КДЦ, театра и др. нужен **user token**:
+
+1. [vk.com/dev](https://vk.com/dev) → приложение типа **Standalone**
+2. Права: `groups`, `offline`
+3. Получите user access token (OAuth)
+4. Добавьте в `.env` на VPS:
+
+```
+VK_EVENTS_TOKEN=vk1.a.ваш_user_token
+```
+
+5. Синхронизация: `bash scripts/vps-sync-events.sh all`
+
+Проверка: `GET /health` → `"event_sources": {"vk_wall": "ready"}`.
+
+`VK_GROUP_ID` — numeric ID сообщества бота (уже может быть в `.env`). С group token без `VK_EVENTS_TOKEN` подтянется только стена этого сообщества.
+
+---
+
 ## Ссылка на бота
 
 После настройки дайте жителям ссылку:

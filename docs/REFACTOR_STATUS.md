@@ -126,6 +126,13 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P17 — источники без косяков ✅ (2026-06-16)
+1. ✅ VK: исправлены screen_name (drampush, gkcpskov, kultyrnipskov, vestnik); fallback `group_id`
+2. ✅ Новый источник `drampush` — афиша drampush.ru (театр, без VK token)
+3. ✅ KDC: приоритет анонсов с датой в заголовке меню
+4. ✅ `/health` → `event_sources.vk_wall`; `scripts/check-event-sources.sh`
+5. ✅ `VK_SETUP.md` — инструкция `VK_EVENTS_TOKEN`; sync в `.deploy.env`
+
 ### P16 — VK events token ✅ (2026-06-16)
 1. ✅ `VK_EVENTS_TOKEN` — user token для `wall.get` из нескольких сообществ
 2. ✅ `VK_GROUP_ID` — fallback: group token только для своей стены

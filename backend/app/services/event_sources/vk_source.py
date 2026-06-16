@@ -114,7 +114,7 @@ async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int 
     id_map = await resolve_vk_group_ids([preset.screen_name for preset in presets])
     events: list[FetchedEvent] = []
     for preset in presets:
-        group_id = id_map.get(preset.screen_name)
+        group_id = id_map.get(preset.screen_name) or (preset.group_id if preset.group_id > 0 else None)
         if not group_id:
             continue
         for post in await _fetch_wall_posts(group_id, count=post_count):
@@ -185,7 +185,7 @@ async def sync_events_from_vk(
     merged = EventSyncResult(source="vk", region=region.value, fetched=0, created=0, updated=0, skipped=0)
     errors: list[str] = []
     for preset in presets:
-        group_id = id_map.get(preset.screen_name)
+        group_id = id_map.get(preset.screen_name) or (preset.group_id if preset.group_id > 0 else None)
         if not group_id:
             errors.append(f"Группа VK «{preset.label}» ({preset.screen_name}) не найдена")
             continue

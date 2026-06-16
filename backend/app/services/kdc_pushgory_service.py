@@ -58,13 +58,16 @@ def _strip_tags(value: str) -> str:
     return html.unescape(re.sub(r"<[^>]+>", " ", value)).strip()
 
 
-def _extract_item_ids(page: str) -> dict[str, str]:
-    """Map item id -> short title from homepage news and events menu."""
-    items: dict[str, str] = {}
+def _extract_item_ids(page: str) -> list[tuple[str, str, datetime | None]]:
+    """Map item id -> (title, optional date from title) from homepage and events menu."""
+    now = datetime.now(MOSCOW_TZ)
+    items: dict[str, tuple[str, datetime | None]] = {}
 
     for match in _NEWS_TILE_RE.finditer(page):
         item_id, teaser, title = match.groups()
-        items[item_id] = _strip_tags(title) or _strip_tags(teaser)
+        clean = _strip_tags(title) or _strip_tags(teaser)
+        hint = parse_event_date_range(f"{clean}. {_strip_tags(teaser)}", fallback=now)[0]
+        items[item_id] = (clean, hint)
 
     menu_match = _EVENTS_MENU_RE.search(page)
     if menu_match:
@@ -72,12 +75,28 @@ def _extract_item_ids(page: str) -> dict[str, str]:
         for item_id, title in re.findall(r'href="/item/(\d+)"[^>]*>([^<]{4,200})</a>', menu_html):
             if item_id in _SKIP_MENU_IDS:
                 continue
-            items.setdefault(item_id, _strip_tags(title))
+            clean = _strip_tags(title)
+            hint = parse_event_date_range(clean, fallback=now)[0]
+            if item_id not in items or hint:
+                items[item_id] = (clean, hint)
 
-    return items
+    ranked = sorted(
+        items.items(),
+        key=lambda pair: (
+            0 if pair[1][1] and pair[1][1] >= now - timedelta(days=1) else 1,
+            pair[1][1] or now,
+        ),
+    )
+    return [(item_id, title, hint) for item_id, (title, hint) in ranked]
 
 
-def _parse_item_page(item_id: str, page: str, *, fallback_title: str) -> KdcEvent | None:
+def _parse_item_page(
+    item_id: str,
+    page: str,
+    *,
+    fallback_title: str,
+    title_date_hint: datetime | None = None,
+) -> KdcEvent | None:
     title_match = _TITLE_RE.search(page)
     title = _strip_tags(title_match.group(1)) if title_match else fallback_title
     if not title or len(title) < 4:
@@ -96,6 +115,8 @@ def _parse_item_page(item_id: str, page: str, *, fallback_title: str) -> KdcEven
             pass
 
     starts_at, ends_at = parse_event_date_range(combined, fallback=fallback_dt)
+    if not starts_at and title_date_hint:
+        starts_at = title_date_hint
     if not starts_at:
         starts_at = fallback_dt.replace(hour=12, minute=0, second=0, microsecond=0)
 
@@ -168,7 +189,7 @@ def _parse_homepage(page: str) -> list[KdcEvent]:
     return events
 
 
-async def fetch_kdc_events(*, item_limit: int = 30) -> list[KdcEvent]:
+async def fetch_kdc_events(*, item_limit: int = 40) -> list[KdcEvent]:
     """Scrape recent events from kdc-pushgory.ru."""
     headers = {"User-Agent": "PGBot-Events/1.0 (+https://192-210-213-135.sslip.io/events)"}
     events: list[KdcEvent] = []
@@ -180,14 +201,19 @@ async def fetch_kdc_events(*, item_limit: int = 30) -> list[KdcEvent]:
             home_resp.raise_for_status()
             item_map = _extract_item_ids(home_resp.text)
 
-            for item_id, fallback_title in list(item_map.items())[:item_limit]:
+            for item_id, fallback_title, title_hint in item_map[:item_limit]:
                 if item_id in seen:
                     continue
                 seen.add(item_id)
                 try:
                     detail_resp = await client.get(f"{KDC_BASE_URL}/item/{item_id}")
                     detail_resp.raise_for_status()
-                    parsed = _parse_item_page(item_id, detail_resp.text, fallback_title=fallback_title)
+                    parsed = _parse_item_page(
+                        item_id,
+                        detail_resp.text,
+                        fallback_title=fallback_title,
+                        title_date_hint=title_hint,
+                    )
                     if parsed:
                         events.append(parsed)
                 except Exception:

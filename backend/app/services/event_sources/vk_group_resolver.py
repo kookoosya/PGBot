@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.constants.event_config import VK_EVENT_GROUPS
 from app.services.event_sources.vk_token_policy import vk_events_access_token
 from app.services.vk import vk_api_call
 
@@ -79,8 +80,11 @@ async def resolve_vk_group_ids(screen_names: list[str]) -> dict[str, int]:
         index.update(_index_groups(extract_groups_from_response(response)))
 
     resolved: dict[str, int] = {}
+    fallbacks = {g.screen_name: g.group_id for g in VK_EVENT_GROUPS if g.group_id > 0}
     for screen_name, identifier in identifiers.items():
         gid = index.get(identifier) or index.get(identifier.lower())
+        if not gid and screen_name in fallbacks:
+            gid = fallbacks[screen_name]
         if gid:
             resolved[screen_name] = gid
         else:

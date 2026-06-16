@@ -32,6 +32,16 @@ def test_extract_groups_api_5199_object():
 
 
 @pytest.mark.asyncio
+async def test_resolve_vk_group_ids_uses_fallback_id():
+    with patch(
+        "app.services.event_sources.vk_group_resolver.vk_events_access_token",
+        return_value=None,
+    ):
+        resolved = await resolve_vk_group_ids(["pushkinogorie"])
+    assert resolved["pushkinogorie"] == 958262
+
+
+@pytest.mark.asyncio
 async def test_resolve_vk_group_ids_batch():
     mock_response = {
         "groups": [

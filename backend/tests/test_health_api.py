@@ -12,9 +12,9 @@ async def test_health_ok(client: AsyncClient):
     assert data["status"] == "ok"
     assert "Пушкин" in data["app"]
     # Local test env has no REDIS_URL — field omitted unless configured
-    from app.core.config import settings
+    from app.config import get_settings
 
-    if not settings.REDIS_URL.strip():
+    if not get_settings().REDIS_URL.strip():
         assert "redis" not in data
 
 
