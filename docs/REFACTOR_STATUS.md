@@ -126,6 +126,11 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P15 — VK groups.getById (API 5.199) ✅ (2026-06-16)
+1. ✅ Парсинг нового формата `{groups, profiles}` вместо массива
+2. ✅ `group_ids` (batch) вместо `group_id`; нормализация `club123` → `123`
+3. ✅ Тесты `test_vk_group_resolver`
+
 ### P14 — источники событий ✅ (2026-06-16)
 1. ✅ VK: +3 группы (Администрация ПМО, КДЦ, PLN Pskov с региональным фильтром)
 2. ✅ Парсинг дат: «19 и 20 июня», имена месяцев, диапазоны; `ends_at` для многодневных

@@ -13,9 +13,10 @@ from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventCategory, EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
-from app.services.event_sources.text_utils import parse_event_date_range, parse_event_datetime
+from app.services.event_sources.text_utils import parse_event_date_range
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.services.event_enrichment_service import resolve_cinema_location_from_text
+from app.services.event_sources.vk_group_resolver import resolve_vk_group_ids
 from app.services.event_sources.vk_parsing import is_relevant_vk_event_post, parse_vk_post
 from app.services.poster_service import extract_vk_poster_url
 from app.services.vk import vk_api_call
@@ -25,19 +26,9 @@ settings = get_settings()
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
-async def _resolve_group_id(screen_name: str) -> int | None:
+def _vk_token_configured() -> bool:
     token = (settings.VK_GROUP_TOKEN or "").strip()
-    if not token or token.startswith("your-"):
-        return None
-    try:
-        response = await vk_api_call("groups.getById", {"group_id": screen_name})
-        if isinstance(response, list) and response:
-            return int(response[0]["id"])
-        if isinstance(response, dict) and "id" in response:
-            return int(response["id"])
-    except Exception:
-        logger.warning("Failed to resolve VK group %s", screen_name, exc_info=True)
-    return None
+    return bool(token) and not token.startswith("your-")
 
 
 async def _fetch_wall_posts(group_id: int, *, count: int = 35) -> list[dict]:
@@ -98,10 +89,14 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
 
 async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int = 35) -> list[FetchedEvent]:
     """Fetch normalized events from configured VK groups."""
-    groups = [g for g in VK_EVENT_GROUPS if region is None or g.region == region]
+    if not _vk_token_configured():
+        return []
+
+    presets = [g for g in VK_EVENT_GROUPS if region is None or g.region == region]
+    id_map = await resolve_vk_group_ids([preset.screen_name for preset in presets])
     events: list[FetchedEvent] = []
-    for preset in groups:
-        group_id = await _resolve_group_id(preset.screen_name)
+    for preset in presets:
+        group_id = id_map.get(preset.screen_name)
         if not group_id:
             continue
         for post in await _fetch_wall_posts(group_id, count=post_count):
@@ -115,21 +110,10 @@ async def sync_vk_group(
     db: AsyncSession,
     preset: VkGroupPreset,
     *,
+    group_id: int,
     actor_id: int | None = None,
     post_count: int = 35,
 ) -> EventSyncResult:
-    group_id = await _resolve_group_id(preset.screen_name)
-    if not group_id:
-        return EventSyncResult(
-            source="vk",
-            region=preset.region.value,
-            fetched=0,
-            created=0,
-            updated=0,
-            skipped=0,
-            errors=[f"Группа VK «{preset.label}» ({preset.screen_name}) не найдена"],
-        )
-
     errors: list[str] = []
     created = updated = skipped = 0
     posts = await _fetch_wall_posts(group_id, count=post_count)
@@ -174,13 +158,24 @@ async def sync_events_from_vk(
     if not presets:
         raise EventValidationError(f"Регион {region.value} не настроен для VK")
 
-    if not (settings.VK_GROUP_TOKEN or "").strip() or settings.VK_GROUP_TOKEN.startswith("your-"):
+    if not _vk_token_configured():
         raise EventValidationError("VK API недоступен. Проверьте VK_GROUP_TOKEN.")
 
+    id_map = await resolve_vk_group_ids([preset.screen_name for preset in presets])
     merged = EventSyncResult(source="vk", region=region.value, fetched=0, created=0, updated=0, skipped=0)
     errors: list[str] = []
     for preset in presets:
-        result = await sync_vk_group(db, preset, actor_id=actor_id, post_count=post_count)
+        group_id = id_map.get(preset.screen_name)
+        if not group_id:
+            errors.append(f"Группа VK «{preset.label}» ({preset.screen_name}) не найдена")
+            continue
+        result = await sync_vk_group(
+            db,
+            preset,
+            group_id=group_id,
+            actor_id=actor_id,
+            post_count=post_count,
+        )
         merged = EventSyncResult(
             source="vk",
             region=region.value,
