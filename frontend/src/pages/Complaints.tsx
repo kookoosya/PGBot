@@ -359,21 +359,21 @@ export function Complaints() {
                 <div className="literary-filter-bar mb-4">
                   <button
                     type="button"
-                    className={`classified-quick-btn ${issueFilter === "all" ? "classified-quick-btn-active" : ""}`}
+                    className={`filter-chip${issueFilter === "all" ? " filter-chip-active" : ""}`}
                     onClick={() => setIssueFilter("all")}
                   >
                     Все ({myIssues.length})
                   </button>
                   <button
                     type="button"
-                    className={`classified-quick-btn ${issueFilter === "active" ? "classified-quick-btn-active" : ""}`}
+                    className={`filter-chip${issueFilter === "active" ? " filter-chip-active" : ""}`}
                     onClick={() => setIssueFilter("active")}
                   >
                     В работе ({myIssues.filter((i) => ISSUE_FILTER_ACTIVE.has(i.status)).length})
                   </button>
                   <button
                     type="button"
-                    className={`classified-quick-btn ${issueFilter === "done" ? "classified-quick-btn-active" : ""}`}
+                    className={`filter-chip${issueFilter === "done" ? " filter-chip-active" : ""}`}
                     onClick={() => setIssueFilter("done")}
                   >
                     Завершённые ({myIssues.filter((i) => ISSUE_FILTER_DONE.has(i.status)).length})

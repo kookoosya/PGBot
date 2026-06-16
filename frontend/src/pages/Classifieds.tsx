@@ -207,7 +207,7 @@ export function Classifieds() {
       <div className="literary-filter-bar mb-6">
         <button
           type="button"
-          className={`classified-quick-btn ${!filter ? "classified-quick-btn-active" : ""}`}
+          className={`filter-chip${!filter ? " filter-chip-active" : ""}`}
           onClick={() => setFilter("")}
         >
           🪶 Все {total > 0 && `(${total})`}
@@ -218,7 +218,7 @@ export function Classifieds() {
             <button
               key={c.value}
               type="button"
-              className={`classified-quick-btn ${filter === c.value ? "classified-quick-btn-active" : ""}`}
+              className={`filter-chip${filter === c.value ? " filter-chip-active" : ""}`}
               onClick={() => setFilter(c.value)}
             >
               {visual.icon} {c.label}

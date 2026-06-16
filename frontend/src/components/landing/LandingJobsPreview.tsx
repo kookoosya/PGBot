@@ -68,7 +68,7 @@ export function LandingJobsPreview() {
                     {visual.icon}
                   </div>
                   <div className="literary-job-body">
-                    <span className="literary-job-badge">{ad.category_label}</span>
+                    <span className="literary-card-kicker">{ad.category_label}</span>
                     <h3 className="literary-job-title">{ad.title}</h3>
                     <p className="literary-job-desc">{ad.description}</p>
                     {ad.price != null && (

@@ -14,12 +14,12 @@ export function LiteraryClassifiedCard({ ad, compact = false }: LiteraryClassifi
   const visual = getCategoryVisual(ad.category);
 
   return (
-    <Link to={`/classifieds/${ad.id}`} className="literary-classified-card no-underline text-inherit">
+    <Link to={`/classifieds/${ad.id}`} className="literary-classified-card literary-card literary-card--gold no-underline text-inherit">
       <div className="literary-classified-icon" style={{ background: visual.gradient }}>
         {visual.icon}
       </div>
       <div className="literary-classified-body">
-        <span className="literary-job-badge">{ad.category_label}</span>
+        <span className="literary-card-kicker">{ad.category_label}</span>
         <h3 className="literary-classified-title">{ad.title}</h3>
         {!compact && <p className="literary-classified-desc">{ad.description}</p>}
         <div className="literary-classified-meta">

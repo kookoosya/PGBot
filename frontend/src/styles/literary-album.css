@@ -1649,12 +1649,15 @@
     font-size: 1.5rem;
     flex-shrink: 0;
   }
-  .literary-job-badge {
+  .literary-card-kicker,
+  .literary-job-badge,
+  .literary-service-category {
+    margin: 0;
     font-family: "Source Sans 3", system-ui, sans-serif;
     font-size: 0.6875rem;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: hsl(var(--gold));
   }
   .literary-job-title {
@@ -1864,34 +1867,6 @@
     grid-template-columns: auto 1fr;
     gap: 1rem;
     padding: 1.15rem 1.25rem 1.15rem 1.4rem;
-    border-radius: calc(var(--radius) + 0.125rem);
-    border: 1px solid hsl(var(--border));
-    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.78));
-    box-shadow: 0 8px 28px hsl(var(--forest) / 0.06);
-    position: relative;
-    overflow: hidden;
-    transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
-  }
-  .literary-classified-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: hsl(var(--gold));
-  }
-  .literary-classified-card:hover {
-    border-color: hsl(var(--gold) / 0.4);
-    box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
-    transform: translateY(-2px);
-  }
-  .literary-classified-card:focus-within {
-    outline: none;
-    border-color: hsl(var(--gold) / 0.45);
-    box-shadow:
-      0 14px 40px hsl(var(--forest) / 0.1),
-      0 0 0 2px hsl(var(--gold) / 0.18);
   }
   .literary-classified-card:hover .literary-classified-title {
     color: hsl(var(--gold));
@@ -2360,14 +2335,6 @@
     transition: color 0.15s ease;
   }
   .literary-service-card:hover .literary-service-title {
-    color: hsl(var(--gold));
-  }
-  .literary-service-category {
-    margin: 0.15rem 0 0;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: hsl(var(--gold));
   }
   .literary-service-desc {

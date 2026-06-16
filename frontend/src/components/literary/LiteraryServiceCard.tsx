@@ -9,12 +9,12 @@ interface LiteraryServiceCardProps {
 /** Карточка услуги из справочника в стиле «Пушкиногорский альбом» */
 export function LiteraryServiceCard({ item, icon }: LiteraryServiceCardProps) {
   return (
-    <article className="literary-service-card literary-card literary-card--forest">
+    <article className="literary-service-card literary-card literary-card--gold">
       <div className="literary-service-card-inner">
         <span className="literary-service-icon" aria-hidden>{icon}</span>
         <div className="literary-service-body">
           <h3 className="literary-service-title">{item.name}</h3>
-          <p className="literary-service-category">{item.category_label}</p>
+          <p className="literary-card-kicker">{item.category_label}</p>
           {item.description && <p className="literary-service-desc">{item.description}</p>}
           {item.price_hint && <p className="literary-service-price">{item.price_hint}</p>}
           {item.address && <p className="literary-service-address">📍 {item.address}</p>}

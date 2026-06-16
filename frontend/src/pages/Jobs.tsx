@@ -149,7 +149,7 @@ export function Jobs() {
       <div className="literary-filter-bar mb-6">
         <button
           type="button"
-          className={`classified-quick-btn ${!sector ? "classified-quick-btn-active" : ""}`}
+          className={`filter-chip${!sector ? " filter-chip-active" : ""}`}
           onClick={() => setSector("")}
         >
           🪶 Все {total > 0 && `(${total})`}
@@ -160,7 +160,7 @@ export function Jobs() {
             <button
               key={c.value}
               type="button"
-              className={`classified-quick-btn ${sector === c.value ? "classified-quick-btn-active" : ""}`}
+              className={`filter-chip${sector === c.value ? " filter-chip-active" : ""}`}
               onClick={() => setSector(c.value)}
             >
               {visual.icon} {c.label}
@@ -252,7 +252,7 @@ export function Jobs() {
                 {visual.icon}
               </div>
               <div className="literary-job-body">
-                <span className="literary-job-badge">{ad.category_label}</span>
+                <span className="literary-card-kicker">{ad.category_label}</span>
                 <h3 className="literary-job-title">{ad.title}</h3>
                 <p className="literary-job-desc">{ad.description}</p>
                 {ad.price != null && (
