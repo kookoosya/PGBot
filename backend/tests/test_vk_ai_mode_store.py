@@ -7,16 +7,7 @@ from app.services.ai_mode import enter_ai_mode, exit_ai_mode, is_ai_mode
 from app.services.vk_ai_mode_store import get_active_ai_peers
 from tests.conftest import postgres_available
 
-pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")
-
-
-@pytest.fixture
-async def db_session():
-    from app.database import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
+pytestmark = pytest.mark.postgres
 
 
 async def _cleanup_peer(db: AsyncSession, peer_id: int) -> None:

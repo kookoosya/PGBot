@@ -24,7 +24,7 @@ export function Classifieds() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(openNew);
@@ -195,6 +195,19 @@ export function Classifieds() {
             </button>
           );
         })}
+        {(filter || search) && (
+          <button
+            type="button"
+            className="classified-quick-btn classified-quick-btn--reset"
+            onClick={() => {
+              setFilter("");
+              setSearch("");
+              setSearchInput("");
+            }}
+          >
+            ✕ Сбросить
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -302,9 +315,13 @@ export function Classifieds() {
       </div>
 
       <div className="literary-classified-list">
-        {ads.map((ad) => (
-          <LiteraryClassifiedCard key={ad.id} ad={ad} />
-        ))}
+        {loading && ads.length === 0 ? (
+          <LiteraryInlineLoader label="Загружаем объявления…" />
+        ) : (
+          ads.map((ad) => (
+            <LiteraryClassifiedCard key={ad.id} ad={ad} />
+          ))
+        )}
         {!loading && ads.length === 0 && (
           <LiteraryEmptyState {...EMPTY_STATES.classifieds}>
             <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
@@ -312,7 +329,7 @@ export function Classifieds() {
             </button>
           </LiteraryEmptyState>
         )}
-        {loading && <LiteraryInlineLoader label="Ищем объявления соседей…" />}
+        {loading && ads.length > 0 && <LiteraryInlineLoader label="Ищем объявления соседей…" />}
         {ads.length > 0 && ads.length < total && (
           <div className="text-center pt-4">
             <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={() => load(page + 1, true)}>

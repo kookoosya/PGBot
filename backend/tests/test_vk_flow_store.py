@@ -1,5 +1,7 @@
 """Tests for VK flow persistence in PostgreSQL."""
 
+import os
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -8,16 +10,7 @@ from app.services.vk_flow_store import clear_flow, get_active_flows, get_flow, s
 from app.services.vk_flows import handle_flow_message, start_classified_flow, start_wish_flow
 from tests.conftest import postgres_available
 
-pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")
-
-
-@pytest.fixture
-async def db_session():
-    from app.database import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
+pytestmark = pytest.mark.postgres
 
 
 async def _cleanup_peer(db: AsyncSession, peer_id: int) -> None:
