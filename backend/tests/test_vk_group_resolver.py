@@ -40,10 +40,16 @@ async def test_resolve_vk_group_ids_batch():
         ],
         "profiles": [],
     }
-    with patch(
-        "app.services.event_sources.vk_group_resolver.vk_api_call",
-        new_callable=AsyncMock,
-        return_value=mock_response,
+    with (
+        patch(
+            "app.services.event_sources.vk_group_resolver.vk_events_access_token",
+            return_value="test-token",
+        ),
+        patch(
+            "app.services.event_sources.vk_group_resolver.vk_api_call",
+            new_callable=AsyncMock,
+            return_value=mock_response,
+        ),
     ):
         resolved = await resolve_vk_group_ids(["pushkinogorie", "club166260004"])
 

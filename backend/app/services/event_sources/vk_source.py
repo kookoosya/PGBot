@@ -17,6 +17,7 @@ from app.services.event_sources.text_utils import parse_event_date_range
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.services.event_enrichment_service import resolve_cinema_location_from_text
 from app.services.event_sources.vk_group_resolver import resolve_vk_group_ids
+from app.services.event_sources.vk_token_policy import vk_events_access_token, vk_wall_access_token
 from app.services.event_sources.vk_parsing import is_relevant_vk_event_post, parse_vk_post
 from app.services.poster_service import extract_vk_poster_url
 from app.services.vk import vk_api_call
@@ -27,16 +28,33 @@ MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
 def _vk_token_configured() -> bool:
-    token = (settings.VK_GROUP_TOKEN or "").strip()
-    return bool(token) and not token.startswith("your-")
+    return vk_events_access_token() is not None
 
 
 async def _fetch_wall_posts(group_id: int, *, count: int = 35) -> list[dict]:
-    response = await vk_api_call("wall.get", {
-        "owner_id": -group_id,
-        "count": count,
-        "filter": "owner",
-    })
+    token = vk_wall_access_token(group_id=group_id)
+    if not token:
+        logger.warning(
+            "Skip VK wall for group %s: set VK_EVENTS_TOKEN (user) or VK_GROUP_ID for group token",
+            group_id,
+        )
+        return []
+    try:
+        response = await vk_api_call(
+            "wall.get",
+            {
+                "owner_id": -group_id,
+                "count": count,
+                "filter": "owner",
+            },
+            token=token,
+        )
+    except RuntimeError as exc:
+        message = str(exc).lower()
+        if "group authorization failed" in message or "method is unavailable with group auth" in message:
+            logger.warning("VK wall.get denied for group %s: %s", group_id, exc)
+            return []
+        raise
     return list(response.get("items", []))
 
 
@@ -159,7 +177,9 @@ async def sync_events_from_vk(
         raise EventValidationError(f"Регион {region.value} не настроен для VK")
 
     if not _vk_token_configured():
-        raise EventValidationError("VK API недоступен. Проверьте VK_GROUP_TOKEN.")
+        raise EventValidationError(
+            "VK API недоступен. Укажите VK_EVENTS_TOKEN (user) или VK_GROUP_TOKEN."
+        )
 
     id_map = await resolve_vk_group_ids([preset.screen_name for preset in presets])
     merged = EventSyncResult(source="vk", region=region.value, fetched=0, created=0, updated=0, skipped=0)

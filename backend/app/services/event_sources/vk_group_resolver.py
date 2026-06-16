@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.services.event_sources.vk_token_policy import vk_events_access_token
 from app.services.vk import vk_api_call
 
 logger = logging.getLogger(__name__)
@@ -62,10 +63,15 @@ async def resolve_vk_group_ids(screen_names: list[str]) -> dict[str, int]:
 
     for offset in range(0, len(unique_identifiers), _BATCH_SIZE):
         chunk = unique_identifiers[offset : offset + _BATCH_SIZE]
+        token = vk_events_access_token()
+        if not token:
+            logger.warning("VK events token not configured")
+            break
         try:
             response = await vk_api_call(
                 "groups.getById",
                 {"group_ids": ",".join(chunk)},
+                token=vk_events_access_token(),
             )
         except Exception:
             logger.warning("VK groups.getById failed for chunk", exc_info=True)

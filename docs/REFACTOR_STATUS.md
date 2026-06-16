@@ -126,6 +126,11 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P16 — VK events token ✅ (2026-06-16)
+1. ✅ `VK_EVENTS_TOKEN` — user token для `wall.get` из нескольких сообществ
+2. ✅ `VK_GROUP_ID` — fallback: group token только для своей стены
+3. ✅ Ошибки `wall.get` не роняют весь sync; тесты `test_vk_token_policy`
+
 ### P15 — VK groups.getById (API 5.199) ✅ (2026-06-16)
 1. ✅ Парсинг нового формата `{groups, profiles}` вместо массива
 2. ✅ `group_ids` (batch) вместо `group_id`; нормализация `club123` → `123`

@@ -16,8 +16,11 @@ settings = get_settings()
 VK_API_URL = "https://api.vk.com/method"
 
 
-async def vk_api_call(method: str, params: dict[str, Any]) -> dict:
-    params["access_token"] = settings.VK_GROUP_TOKEN
+async def vk_api_call(method: str, params: dict[str, Any], *, token: str | None = None) -> dict:
+    access_token = (token or settings.VK_GROUP_TOKEN or "").strip()
+    if not access_token:
+        raise RuntimeError("VK access token is not configured")
+    params["access_token"] = access_token
     params["v"] = settings.VK_API_VERSION
 
     async with httpx.AsyncClient(timeout=30) as client:

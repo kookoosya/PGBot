@@ -39,6 +39,8 @@ class Settings(BaseSettings):
 
     # VK
     VK_GROUP_TOKEN: str = ""
+    VK_EVENTS_TOKEN: str = ""  # user token — чтение стен нескольких сообществ (афиша)
+    VK_GROUP_ID: int = 0  # numeric ID сообщества бота (fallback для group token)
     VK_CONFIRMATION_CODE: str = ""
     VK_SECRET_KEY: str = ""
     VK_API_VERSION: str = "5.199"
