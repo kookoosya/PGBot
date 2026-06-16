@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import CLASSIFIED_LABELS, EventRegion
 from app.schemas.today import TodayResponse
 from app.services.classified_service import ClassifiedSearchParams, search_classifieds
-from app.services.datetime_utils import format_event_datetime
+from app.utils.datetime import format_event_datetime
 from app.services.event_service import event_category_label, event_region_label, get_upcoming_events
 from app.services.place_service import get_map_stats
 from app.services.weather_service import WeatherFetchError, WeatherSnapshot, get_weather

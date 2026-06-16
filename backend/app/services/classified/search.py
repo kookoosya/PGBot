@@ -22,7 +22,7 @@ from app.services.classified.schemas import (
     ClassifiedSortOrder,
     _SORT_COLUMNS,
 )
-from app.services.pagination_utils import normalize_pagination
+from app.utils.pagination import normalize_pagination
 
 
 def normalize_classified_pagination(

@@ -7,7 +7,7 @@ from typing import Optional
 
 from app.models.enums import IssueStatus
 from app.models.issue import Issue
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 _REOPEN_TARGET_STATUSES = frozenset({IssueStatus.NEW, IssueStatus.UNDER_REVIEW})
 

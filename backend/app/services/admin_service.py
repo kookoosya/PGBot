@@ -13,7 +13,7 @@ from app.config import get_settings
 from app.models.audit_log import AuditLog
 from app.models.enums import NotificationStatus
 from app.models.notification import Notification
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

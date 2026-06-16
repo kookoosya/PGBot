@@ -16,7 +16,7 @@ from app.models.issue import Issue
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.notifications import issue_status_label
-from app.services.pagination_utils import normalize_pagination
+from app.utils.pagination import normalize_pagination
 
 from .access import apply_issue_access_filter, can_view_issue
 from .schemas import (

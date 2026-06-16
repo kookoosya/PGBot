@@ -7,7 +7,7 @@ from typing import TypeVar
 
 from fastapi import HTTPException
 
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 T = TypeVar("T")
 

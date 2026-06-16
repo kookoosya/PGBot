@@ -18,7 +18,7 @@ from app.services.classified.schemas import (
     ClassifiedValidationError,
 )
 from app.services.classified.validation import validate_create_input
-from app.services.notify_utils import safe_notify_owner
+from app.utils.notify import safe_notify_owner
 from app.services.notifications import parse_vk_id
 from app.services.site_urls import public_site_url
 

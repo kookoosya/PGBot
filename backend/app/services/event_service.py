@@ -27,8 +27,8 @@ from app.services.event_dedupe_service import dedupe_display_events, group_event
 from app.services.event_title_utils import normalize_event_title
 from app.services.event_enrichment_service import enrich_event_fields, resolve_cinema_location_from_text
 from app.services.poster_service import resolve_event_poster
-from app.services.datetime_utils import format_event_datetime
-from app.services.service_errors import ServiceError
+from app.utils.datetime import format_event_datetime
+from app.utils.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 

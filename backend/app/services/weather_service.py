@@ -26,7 +26,7 @@ from app.schemas.weather import (
     WeatherHourlyItem,
     WeatherResponse,
 )
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

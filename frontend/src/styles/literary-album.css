@@ -685,44 +685,6 @@
     color: hsl(var(--forest) / 0.65);
   }
 
-  /* Сезонная подсказка на главной */
-  .seasonal-tip--literary {
-    border-color: hsl(var(--forest) / 0.12);
-    background: linear-gradient(
-      128deg,
-      hsl(var(--card) / 0.98) 0%,
-      hsl(var(--parchment) / 0.88) 55%,
-      hsl(var(--forest) / 0.03) 100%
-    );
-    box-shadow: 0 6px 20px hsl(var(--forest) / 0.05);
-    position: relative;
-    overflow: hidden;
-  }
-  .seasonal-tip--literary::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, hsl(var(--gold)), hsl(var(--forest)));
-  }
-  .seasonal-tip--landing {
-    padding: 0.9rem 1.15rem 0.9rem 1.35rem;
-    border-radius: calc(var(--radius) + 0.125rem);
-    margin: 0;
-  }
-  .seasonal-tip--landing .seasonal-tip-icon {
-    font-size: 1.5rem;
-  }
-  .seasonal-tip--landing .seasonal-tip-title {
-    font-size: 0.9375rem;
-  }
-  .seasonal-tip--landing .seasonal-tip-text {
-    font-size: 0.8125rem;
-    margin-top: 0.25rem;
-  }
-
   /* Компактный заголовок секции */
   .literary-section-head--compact {
     margin-bottom: 0.85rem;
@@ -2630,90 +2592,22 @@
     margin-bottom: 1.25rem;
   }
 
-  .literary-gallery-section {
-    padding: 3rem 0 4rem;
-    background: linear-gradient(
-      180deg,
-      hsl(var(--parchment) / 0.35) 0%,
-      hsl(var(--cream) / 0.5) 50%,
-      hsl(var(--background)) 100%
-    );
-    border-top: 1px dashed hsl(var(--gold) / 0.2);
-  }
-  .literary-gallery-card {
-    border-radius: calc(var(--radius) + 0.125rem);
-    border: 1px solid hsl(var(--border));
-    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.82));
-    box-shadow: 0 8px 28px hsl(var(--forest) / 0.06);
-    overflow: hidden;
-    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  }
-  .literary-gallery-card:hover {
-    border-color: hsl(var(--gold) / 0.38);
-    box-shadow: 0 14px 40px hsl(var(--forest) / 0.1);
-    transform: translateY(-2px);
-  }
-  .literary-gallery-photo {
-    position: relative;
-  }
-  .literary-gallery-scrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 55%, hsl(30 14% 8% / 0.35) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .literary-gallery-card:hover .literary-gallery-scrim {
-    opacity: 1;
-  }
-  .literary-gallery-caption {
-    padding: 1rem 1.15rem 1.2rem;
-  }
-  .literary-gallery-title {
-    font-family: "Playfair Display", Georgia, serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 0 0 0.35rem;
-    color: hsl(var(--walnut));
-  }
-  .literary-gallery-sub {
-    font-size: 0.8125rem;
-    color: hsl(var(--muted-foreground));
-    margin: 0;
-    line-height: 1.45;
-  }
-  .literary-gallery-verse {
-    margin: 0.65rem 0 0;
-    padding-top: 0.55rem;
-    border-top: 1px dashed hsl(var(--gold) / 0.22);
-    font-family: "Playfair Display", Georgia, serif;
-    font-style: italic;
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: hsl(var(--gold) / 0.85);
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .literary-card,
     .literary-classified-card,
-    .literary-gallery-card,
     .literary-job-card,
     .literary-issue-card,
     .literary-btn,
     .literary-provider-card,
-    .classified-quick-btn,
     .filter-chip,
     .events-region-filter {
       transition: none !important;
     }
-    .literary-gallery-card:hover,
     .literary-card:hover,
     .literary-classified-card:hover,
     .literary-job-card:hover,
     .literary-issue-card:hover,
     .literary-btn:hover,
-    .classified-quick-btn:hover,
     .filter-chip:hover {
       transform: none !important;
     }

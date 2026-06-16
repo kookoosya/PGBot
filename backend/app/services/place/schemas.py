@@ -13,7 +13,7 @@ from app.models.place import Place, PlaceComplaint, PlaceReview
 from app.models.issue import Issue
 from app.schemas.place import MapStatsResponse, PlaceDetailResponse
 from app.models.user import User
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 PlaceSortField = Literal["rating", "name"]
 

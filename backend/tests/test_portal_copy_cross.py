@@ -1,0 +1,31 @@
+"""Cross-check shared/portal_copy.json between backend and frontend."""
+
+import json
+from pathlib import Path
+
+from app.constants import portal_copy as pc
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SHARED_JSON = REPO_ROOT / "shared" / "portal_copy.json"
+
+
+def test_shared_json_exists():
+    assert SHARED_JSON.is_file()
+
+
+def test_backend_matches_shared_json_brand():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert pc.BRAND_KICKER == data["brand"]["kicker"]
+    assert pc.BRAND_TAGLINE == data["brand"]["tagline"]
+
+
+def test_backend_matches_shared_json_issue_hints():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert pc.ISSUE_STATUS_HINTS == data["issue_status_hints"]
+    assert pc.ISSUE_STATUS_EMOJI == data["issue_status_emoji"]
+
+
+def test_shared_json_links_and_vk_nonempty():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert data["links"]["map"]
+    assert data["vk"]["welcome"]

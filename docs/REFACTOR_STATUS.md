@@ -103,17 +103,19 @@
 
 ## 🔜 Куда двигаться (приоритет)
 
-### P0 — быстрая чистка (1 итерация)
-1. Удалить мёртвые компоненты и VK shims без импортов
-2. Webhook/admin → импорты из `services/vk/` напрямую
-3. Общий `eventRegionFilters.ts` для афиши
-4. Обновить ROADMAP + этот файл после каждого деплоя
+### P0 — быстрая чистка ✅ (2026-06-16)
+1. ✅ Удалены мёртвые компоненты и VK shims без импортов
+2. ✅ Webhook/admin/background_tasks → `services/vk/` напрямую
+3. ✅ Общий `eventRegionFilters.ts` для афиши
+4. ✅ Удалены utils-shims (`pagination_utils` → `app.utils`)
+5. ✅ Удалены оставшиеся VK re-export shims (7 файлов)
+6. ✅ Мёртвый CSS: quick-nav, hero-orbs, verses, seasonal-tip, gallery
 
-### P1 — качество и тесты
-1. Backend: тесты auth, classified create/moderate, provider booking
-2. Frontend: Vitest на `useSiteInfo`, `useToday`, API client mock
-3. Cross-test: frontend `portalCopyShared` ↔ backend `portal_copy.py`
-4. Расширить `portal_copy.json` — EMPTY_STATES, nav labels (опционально)
+### P1 — качество и тесты ✅ (2026-06-16)
+1. ✅ Backend: `test_auth_api.py`, `test_classified_api_db.py`, `test_provider_booking_db.py`
+2. ✅ Frontend: Vitest `useSiteInfo`, `useToday`, `portalCopyCross`
+3. ✅ Cross-test: `test_portal_copy_cross.py` + `portalCopyCross.test.ts`
+4. ⏭ Расширить `portal_copy.json` — EMPTY_STATES (опционально, P3)
 
 ### P2 — разбиение оставшихся god files
 1. `provider_service.py` → package
@@ -143,11 +145,11 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~99 | 50+ критических (✅) → 120+ |
-| Vitest | 13 | 40+ |
+| pytest | ~115 | 120+ |
+| Vitest | 22 | 40+ |
 | God files ≥400 строк | 4 | 0 |
-| Мёртвые компоненты | 9 | 0 |
-| VK shim files | 10 | 0 |
+| Мёртвые компоненты | 0 | 0 |
+| VK shim files | 0 | 0 |
 
 ---
 

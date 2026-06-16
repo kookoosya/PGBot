@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.place import Place
-from app.services.pagination_utils import normalize_pagination
+from app.utils.pagination import normalize_pagination
 
 from .schemas import (
     EFFECTIVE_RATING,

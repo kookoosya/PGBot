@@ -7,7 +7,7 @@ from typing import Any, Literal, Optional
 
 from app.models.classified import ClassifiedAd
 from app.models.enums import ClassifiedCategory, ClassifiedPaymentStatus
-from app.services.service_errors import ServiceError
+from app.utils.errors import ServiceError
 
 ModerationAction = Literal["approve", "reject"]
 ClassifiedSortField = Literal["created_at", "views_count", "title"]

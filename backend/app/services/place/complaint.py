@@ -18,7 +18,7 @@ from app.models.enums import (
 from app.models.issue import Issue
 from app.models.place import PlaceComplaint
 from app.models.user import User
-from app.services.notify_utils import safe_notify_owner
+from app.utils.notify import safe_notify_owner
 
 from .details import load_place
 from .schemas import (
