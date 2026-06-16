@@ -11,12 +11,12 @@
 | Область | Готово | В работе / осталось |
 |---------|--------|---------------------|
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
-| Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/` | — |
+| Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
 | Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
 | Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
 | Frontend Map | split `pages/map/*` | — |
 | Frontend UI | literary album, unified issue/ad components | — |
-| Frontend тесты | Vitest 13 (eventUtils, literaryCopy) | компоненты, API hooks |
+| Frontend тесты | Vitest **47** | компоненты, API hooks |
 | Тексты | `shared/portal_copy.json` brand + issue hints | bulk UI copy только во frontend |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
@@ -85,13 +85,13 @@
 ### Backend — «боги» (ещё не разбиты)
 | Файл | Строк | Рекомендация |
 |------|------:|--------------|
-| `models/enums.py` | ~286 | split по доменам |
+| `models/enums.py` | ~286 | ✅ split → `models/enums/` |
 
 ### Прочее лишнее
 - Черновые PR #20–#28 — устарели, закрыть
 - `navigation.ts` — `QUICK_NAV_*` без CSS и без потребителей
-- `portalCopyShared` — `PORTAL_COPY_LINKS`, `PORTAL_COPY_VK`, `ISSUE_STATUS_EMOJI` не используются во frontend
-- `Signup.tsx` — хардкод вместо `literaryCopy`
+- `portalCopyShared` — `PORTAL_COPY_LINKS`, `PORTAL_COPY_VK` покрыты Vitest
+- ~~`Signup.tsx` — хардкод вместо `literaryCopy`~~ → `PAGE_SECTIONS.signup`
 
 ---
 
@@ -132,10 +132,15 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
-### P5 — продукт
-- PWA / офлайн-карта
-- Redis rate limit (PR #20)
-- VK Pay (если монетизация)
+### P5 — продукт (без VK Mini App)
+- ✅ Исправлен cross-test `portal_copy` (`welcome_body`)
+- ✅ `models/enums.py` → package `models/enums/` (user, catalog, classified, issue, place, event)
+- ✅ `Signup.tsx` → `PAGE_SECTIONS.signup`
+- ✅ PWA: manifest shortcuts, SW shell cache v8, синхрон тайл-кэша, UX кнопки офлайн-карты
+- ✅ Vitest **47** (цель 40+)
+- ⏭ Redis rate limit (нужен redis в compose)
+- ⏭ VK Pay (если монетизация)
+- ⏭ VK Mini App — **не трогаем** (App ID, `/vk/*`)
 
 ---
 
@@ -144,8 +149,8 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~133 | 120+ |
-| Vitest | 26 | 40+ |
+| pytest | ~136 | 120+ |
+| Vitest | **47** | 40+ |
 | God files ≥400 строк | 0 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |

@@ -22,4 +22,10 @@ describe("literaryCopy", () => {
   it("syncs brand kicker with shared portal copy", () => {
     expect(PORTAL_COPY_BRAND.kicker).toMatch(/Пушкин/i);
   });
+
+  it("defines signup copy for resident registration", () => {
+    expect(PAGE_SECTIONS.signup.title).toContain("жител");
+    expect(PAGE_SECTIONS.signup.submitIdle).toBeTruthy();
+    expect(PAGE_SECTIONS.signup.backLabel).toContain("вариант");
+  });
 });

@@ -1,16 +1,38 @@
 {
   "name": "Пушкинские Горы — портал посёлка",
   "short_name": "Пушкинские Горы",
-  "description": "Карта, проживание, объявления посёлка",
+  "description": "Карта, афиша, объявления и обращения посёлка",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#f5f0e6",
   "theme_color": "#1a4d3a",
+  "categories": ["navigation", "lifestyle"],
   "icons": [
     {
       "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪶</text></svg>",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Карта посёлка",
+      "short_name": "Карта",
+      "description": "Справочник и офлайн-карта",
+      "url": "/map"
+    },
+    {
+      "name": "Афиша",
+      "short_name": "Афиша",
+      "url": "/events"
+    },
+    {
+      "name": "Объявления",
+      "short_name": "Объявления",
+      "url": "/classifieds"
     }
   ]
 }

@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
+
+const copy = PAGE_SECTIONS.signup;
 
 export function Signup() {
   const [form, setForm] = useState({
@@ -36,11 +39,11 @@ export function Signup() {
   return (
     <div className="literary-page page-section max-w-md mx-auto">
       <LiterarySectionHead
-        kicker="🏠 Житель"
-        title="Регистрация жителя"
-        lead="Простая форма — имя, контакты и пароль. Сразу откроется личный кабинет."
+        kicker={copy.kicker}
+        title={copy.title}
+        lead={copy.lead}
         linkTo="/register"
-        linkLabel="← Все варианты"
+        linkLabel={copy.backLabel}
       />
 
       <form onSubmit={submit} className="page-panel page-panel--gold literary-auth-panel space-y-4 mt-6">
@@ -83,7 +86,7 @@ export function Signup() {
         />
         {error && <p className="text-sm text-destructive m-0">{error}</p>}
         <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
-          {loading ? "Создаём кабинет…" : "Зарегистрироваться"}
+          {loading ? copy.submitLoading : copy.submitIdle}
         </button>
       </form>
     </div>

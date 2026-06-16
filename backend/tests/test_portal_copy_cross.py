@@ -28,4 +28,4 @@ def test_backend_matches_shared_json_issue_hints():
 def test_shared_json_links_and_vk_nonempty():
     data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
     assert data["links"]["map"]
-    assert data["vk"]["welcome"]
+    assert data["vk"]["welcome_body"]

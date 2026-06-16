@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import portalCopy from "../../../shared/portal_copy.json";
-import { ISSUE_STATUS_HINTS, PORTAL_COPY_BRAND } from "./portalCopyShared";
+import {
+  ISSUE_STATUS_EMOJI,
+  ISSUE_STATUS_HINTS,
+  PORTAL_COPY_BRAND,
+  PORTAL_COPY_LINKS,
+  PORTAL_COPY_VK,
+} from "./portalCopyShared";
 
 describe("portalCopyShared ↔ shared/portal_copy.json", () => {
   it("syncs brand fields", () => {
@@ -10,5 +16,19 @@ describe("portalCopyShared ↔ shared/portal_copy.json", () => {
 
   it("syncs issue status hints", () => {
     expect(ISSUE_STATUS_HINTS).toEqual(portalCopy.issue_status_hints);
+  });
+
+  it("syncs issue status emoji", () => {
+    expect(ISSUE_STATUS_EMOJI).toEqual(portalCopy.issue_status_emoji);
+  });
+
+  it("exposes portal links including map", () => {
+    expect(PORTAL_COPY_LINKS.map).toBe(portalCopy.links.map);
+    expect(PORTAL_COPY_LINKS.events).toBeTruthy();
+  });
+
+  it("exposes vk welcome body", () => {
+    expect(PORTAL_COPY_VK.welcome_body).toBe(portalCopy.vk.welcome_body);
+    expect(PORTAL_COPY_VK.welcome_body.length).toBeGreaterThan(20);
   });
 });

@@ -4,6 +4,7 @@ import { osmTileUrl } from "./mapTiles";
 const CACHE_KEY = "pgbot_map_offline_v1";
 const CACHE_TS_KEY = "pgbot_map_offline_ts";
 const READY_KEY = "pgbot_map_offline_ready";
+export const OFFLINE_TILE_CACHE = "pgbot-map-tiles-v8";
 
 /** Район Пушкиногорья для кэша тайлов */
 const DISTRICT_BOUNDS = {
@@ -84,7 +85,7 @@ export async function prefetchMapTiles(
   zoomLevels = [12, 13, 14, 15],
 ): Promise<number> {
   if (!("caches" in window)) return 0;
-  const cache = await caches.open("pgbot-map-tiles-v1");
+  const cache = await caches.open(OFFLINE_TILE_CACHE);
   let count = 0;
   for (const z of zoomLevels) {
     const tiles = tileUrlsForBounds(south, west, north, east, z);
@@ -150,7 +151,7 @@ export async function clearStaleServiceWorkers(): Promise<void> {
 }
 
 export function registerServiceWorker(): void {
-  if ("serviceWorker" in navigator) {
+  if (typeof navigator !== "undefined" && navigator.serviceWorker?.register) {
     navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
   }
 }

@@ -149,9 +149,10 @@ export function MapPage() {
                 className="map-offline-btn"
                 onClick={map.handleOfflineDownload}
                 disabled={map.offlineBusy}
-                title="Скачать карту для офлайн"
+                title={map.offlineReady ? "Офлайн-карта сохранена — обновить" : "Скачать карту и точки для офлайн"}
+                aria-label={map.offlineReady ? "Обновить офлайн-карту" : "Скачать офлайн-карту"}
               >
-                {map.offlineBusy ? "…" : map.offlineReady ? "📥" : "📥 Офлайн"}
+                {map.offlineBusy ? "…" : map.offlineReady ? "📥 Обновить" : "📥 Офлайн"}
               </button>
             </div>
             {map.offlineMsg ? <p className="text-xs text-muted-foreground">{map.offlineMsg}</p> : null}
