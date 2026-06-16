@@ -439,6 +439,11 @@ class ApiClient {
     return this.request<{ items: ClassifiedAd[]; total: number; page?: number }>(`/classifieds${q}`);
   }
 
+  getMyClassifieds(params?: Record<string, string>) {
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
+    return this.request<{ items: ClassifiedMineAd[]; total: number }>(`/classifieds/mine${q}`);
+  }
+
   getClassified(id: number) {
     return this.request<ClassifiedAd>(`/classifieds/${id}`);
   }
@@ -566,6 +571,17 @@ export interface PublicInfo {
   vk_bot_hint?: string;
   map_url: string;
   yandex_maps_add_org: string;
+  portal_links?: {
+    home: string;
+    complaints: string;
+    complaints_new: string;
+    classifieds: string;
+    classifieds_new: string;
+    events: string;
+    cabinet: string;
+    map: string;
+    jobs: string;
+  };
 }
 
 export interface VisitStats {
@@ -842,6 +858,11 @@ export interface ClassifiedAd {
   author_name: string;
   address: string | null;
   created_at: string;
+}
+
+export interface ClassifiedMineAd extends ClassifiedAd {
+  payment_status: string;
+  is_active: boolean;
 }
 
 export interface ClassifiedPending extends ClassifiedAd {

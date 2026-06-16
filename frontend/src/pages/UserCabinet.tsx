@@ -5,7 +5,7 @@ import { LiteraryInlineLoader } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
-import { api, Issue } from "@/lib/api";
+import { api, ClassifiedMineAd, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
 import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
@@ -15,20 +15,40 @@ const STATUS_LABELS_VERIFY: Record<string, { text: string; tone: string }> = {
   rejected: { text: "Заявка отклонена — напишите нам", tone: "text-red-700 bg-red-50 border-red-200" },
 };
 
+const CLASSIFIED_STATUS: Record<string, string> = {
+  pending: "На модерации",
+  approved: "Опубликовано",
+  rejected: "Отклонено",
+};
+
+function classifiedStatusLabel(ad: ClassifiedMineAd): string {
+  if (ad.payment_status === "approved" && ad.is_active) return "Опубликовано";
+  if (ad.payment_status === "rejected") return "Отклонено";
+  return CLASSIFIED_STATUS[ad.payment_status] || ad.payment_status;
+}
+
 export function UserCabinet() {
   const { user, loading, logout } = useUserAuth();
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
+  const [myAds, setMyAds] = useState<ClassifiedMineAd[]>([]);
   const [issuesLoaded, setIssuesLoaded] = useState(false);
+  const [adsLoaded, setAdsLoaded] = useState(false);
 
   useEffect(() => {
     if (!user || isOfficialUser(user)) {
       setIssuesLoaded(true);
+      setAdsLoaded(true);
       return;
     }
     api.getMyIssues({ limit: "5" })
       .then((r) => setRecentIssues(r.items))
       .catch(() => setRecentIssues([]))
       .finally(() => setIssuesLoaded(true));
+
+    api.getMyClassifieds({ page_size: "5" })
+      .then((r) => setMyAds(r.items))
+      .catch(() => setMyAds([]))
+      .finally(() => setAdsLoaded(true));
   }, [user]);
 
   if (loading) {
@@ -98,13 +118,18 @@ export function UserCabinet() {
         )}
       </div>
 
-      {issuesLoaded && recentIssues.length === 0 && (
+      {issuesLoaded && recentIssues.length === 0 && adsLoaded && myAds.length === 0 && (
         <div className="literary-card literary-card--gold p-6 mb-6 text-center space-y-3">
           <p className="literary-title text-lg m-0">{EMPTY_STATES.complaintsMine.title}</p>
           <p className="text-sm text-muted-foreground m-0">{EMPTY_STATES.complaintsMine.text}</p>
-          <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline inline-block">
-            Подать обращение
-          </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link to="/complaints?new=1" className="literary-btn literary-btn--primary text-sm no-underline">
+              Подать обращение
+            </Link>
+            <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">
+              Подать объявление
+            </Link>
+          </div>
         </div>
       )}
 
@@ -143,6 +168,26 @@ export function UserCabinet() {
                 </p>
               )}
             </Link>
+          ))}
+        </div>
+      )}
+
+      {adsLoaded && myAds.length > 0 && (
+        <div className="literary-card literary-card--forest p-6 mb-6 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="literary-title text-lg m-0">Мои объявления</h2>
+            <Link to="/classifieds?new=1" className="literary-link text-sm">+ Новое</Link>
+          </div>
+          {myAds.map((ad) => (
+            <div key={ad.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-base">{ad.title}</span>
+                <span className={`cabinet-ad-status cabinet-ad-status--${ad.payment_status}`}>
+                  {classifiedStatusLabel(ad)}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 m-0">{ad.description}</p>
+            </div>
           ))}
         </div>
       )}

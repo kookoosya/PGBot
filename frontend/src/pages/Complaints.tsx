@@ -173,7 +173,13 @@ export function Complaints() {
                   required
                   minLength={5}
                 />
-                <p className="text-sm text-muted-foreground mt-1 m-0">Достаточно пары предложений — категорию подскажет ИИ.</p>
+                <p className="text-sm text-muted-foreground mt-1 m-0">
+                  Достаточно пары предложений — категорию подскажет ИИ.
+                  <span className={`form-char-count${form.description.trim().length < 5 ? " form-char-count--warn" : ""}`}>
+                    {" "}
+                    {form.description.trim().length} симв. (мин. 5)
+                  </span>
+                </p>
               </div>
 
               <button
@@ -229,8 +235,16 @@ export function Complaints() {
               )}
 
               {msg && (
-                <div className={msgType === "ok" ? "alert-success space-y-2" : "alert-error"}>
+                <div className={msgType === "ok" ? "alert-success space-y-3 post-submit-panel" : "alert-error"}>
+                  {msgType === "ok" && submittedId && (
+                    <p className="post-submit-hero m-0">✓ Обращение #{submittedId} принято</p>
+                  )}
                   <p className="m-0">{msg}</p>
+                  {msgType === "ok" && submittedId && (
+                    <p className="text-sm text-muted-foreground m-0">
+                      Статус появится в списке справа. Уведомление придёт и в VK-бот — напишите «Мои обращения».
+                    </p>
+                  )}
                   {msgType === "ok" && submittedId && user && (
                     <Link to={`/complaints?issue=${submittedId}`} className="literary-link text-sm font-medium">
                       Посмотреть статус обращения →

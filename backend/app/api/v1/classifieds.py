@@ -4,13 +4,19 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.core.deps import get_client_ip, get_optional_user, require_owner
+from app.core.deps import get_client_ip, get_current_user, get_optional_user, require_owner
 from app.core.service_http import raise_http_for_service_error
 from app.core.rate_limit import limiter
 from app.database import get_db
 from app.models.enums import ClassifiedCategory, ClassifiedPaymentStatus
 from app.models.user import User
-from app.schemas.classified import ClassifiedCreate, ClassifiedListResponse, ClassifiedPendingResponse, ClassifiedResponse
+from app.schemas.classified import (
+    ClassifiedCreate,
+    ClassifiedListResponse,
+    ClassifiedMineListResponse,
+    ClassifiedPendingResponse,
+    ClassifiedResponse,
+)
 from app.services.classified_service import (
     ClassifiedActorContext,
     ClassifiedSearchParams,
@@ -19,6 +25,7 @@ from app.services.classified_service import (
     ClassifiedValidationError,
     build_classified_list_response,
     build_marketing_stats,
+    classified_to_mine_response,
     classified_to_pending_response,
     classified_to_response,
     create_classified_ad,
@@ -91,6 +98,31 @@ async def list_ads(
         ),
     )
     return build_classified_list_response(result)
+
+
+@router.get("/mine", response_model=ClassifiedMineListResponse)
+async def my_ads(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    result = await search_classifieds(
+        db,
+        ClassifiedSearchParams(
+            user_id=current_user.id,
+            payment_status=None,
+            is_active=None,
+            page=page,
+            page_size=page_size,
+        ),
+    )
+    return ClassifiedMineListResponse(
+        items=[classified_to_mine_response(ad) for ad in result.items],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+    )
 
 
 @router.get("/pending", response_model=list[ClassifiedPendingResponse])

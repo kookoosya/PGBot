@@ -9,7 +9,7 @@ async def test_public_info_keys(client: AsyncClient):
     response = await client.get("/api/v1/public/info")
     assert response.status_code == 200
     data = response.json()
-    for key in ("site_url", "vk_url", "map_url"):
+    for key in ("site_url", "vk_url", "map_url", "portal_links"):
         assert key in data
 
 
@@ -24,6 +24,7 @@ async def test_public_today_schema(client: AsyncClient):
     assert "total_places" in data["map"]
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_events_search(client: AsyncClient):
     response = await client.get("/api/v1/public/events", params={"search": "концерт"})
@@ -46,6 +47,7 @@ async def test_public_info(client: AsyncClient):
     assert isinstance(data, dict)
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_events_region_filter(client: AsyncClient):
     response = await client.get("/api/v1/public/events", params={"region": "pushkin_gory"})
@@ -71,6 +73,7 @@ async def test_public_today_shape(client: AsyncClient):
     assert isinstance(data["upcoming_events"], list)
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_events_list(client: AsyncClient):
     response = await client.get("/api/v1/public/events")
@@ -81,6 +84,7 @@ async def test_public_events_list(client: AsyncClient):
     assert isinstance(data["items"], list)
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_classifieds_list(client: AsyncClient):
     response = await client.get("/api/v1/classifieds")
@@ -99,6 +103,7 @@ async def test_public_classifieds_categories(client: AsyncClient):
     assert len(data) > 0
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_classifieds_neighbor_filter(client: AsyncClient):
     response = await client.get("/api/v1/classifieds", params={"neighbor_only": "true"})
@@ -107,6 +112,7 @@ async def test_public_classifieds_neighbor_filter(client: AsyncClient):
     assert "items" in data
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_events_limit(client: AsyncClient):
     response = await client.get("/api/v1/public/events", params={"limit": 5})
@@ -115,6 +121,7 @@ async def test_public_events_limit(client: AsyncClient):
     assert len(data["items"]) <= 5
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_classifieds_pagination(client: AsyncClient):
     response = await client.get("/api/v1/classifieds", params={"page": 1, "page_size": 5})
@@ -126,6 +133,7 @@ async def test_public_classifieds_pagination(client: AsyncClient):
     assert "has_prev" in data
 
 
+@pytest.mark.postgres
 @pytest.mark.asyncio
 async def test_public_event_not_found(client: AsyncClient):
     response = await client.get("/api/v1/public/events/999999999")

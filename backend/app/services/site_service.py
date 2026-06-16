@@ -35,4 +35,15 @@ def build_public_info() -> dict:
         ),
         "map_url": f"{site}/map",
         "yandex_maps_add_org": "https://yandex.ru/sprav/add",
+        "portal_links": {
+            "home": site,
+            "complaints": f"{site}/complaints",
+            "complaints_new": f"{site}/complaints?new=1",
+            "classifieds": f"{site}/classifieds",
+            "classifieds_new": f"{site}/classifieds?new=1",
+            "events": f"{site}/events",
+            "cabinet": f"{site}/cabinet",
+            "map": f"{site}/map",
+            "jobs": f"{site}/jobs",
+        },
     }

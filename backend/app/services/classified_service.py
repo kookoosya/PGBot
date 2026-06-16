@@ -11,6 +11,7 @@ from app.services.classified.moderation import moderate_classified_ad
 from app.services.classified.quota import get_classified_quota
 from app.services.classified.responses import (
     build_classified_list_response,
+    classified_to_mine_response,
     classified_to_pending_response,
     classified_to_response,
     list_classified_category_options,
@@ -48,6 +49,7 @@ __all__ = [
     "ModerationResult",
     "build_classified_list_response",
     "build_marketing_stats",
+    "classified_to_mine_response",
     "classified_to_pending_response",
     "classified_to_response",
     "create_classified_ad",
