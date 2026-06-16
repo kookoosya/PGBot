@@ -1,27 +1,20 @@
-"""Village events — thin facade over ``app.services.event`` package.
+"""Village events — upcoming list and admin CRUD."""
 
-Public API is unchanged; implementation lives in submodules.
-"""
-
-from app.services.event import (
-    EventCreateInput,
-    EventNotFoundError,
-    EventUpdateInput,
-    EventValidationError,
+from .admin import create_event, get_event_by_id, list_events_admin, update_event
+from .mappers import (
     build_event_list_response,
-    create_event,
     event_category_label,
     event_region_label,
     event_to_public_response,
     event_to_response,
-    get_event_by_id,
+)
+from .public import (
     get_public_event_by_id,
     get_related_event_sessions,
     get_upcoming_events,
-    list_events_admin,
     search_public_events,
-    update_event,
 )
+from .schemas import EventCreateInput, EventNotFoundError, EventUpdateInput, EventValidationError
 
 __all__ = [
     "EventCreateInput",

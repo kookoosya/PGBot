@@ -231,8 +231,8 @@ async def test_issue_timeline_via_http_after_status_change(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
-@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+@patch("app.services.issue.ingest.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue.gemini_analysis.run_gemini_with_retry", new_callable=AsyncMock)
 async def test_register_login_create_issue_e2e(
     mock_gemini,
     _notify_owner,
@@ -375,8 +375,8 @@ async def test_resident_reads_own_classifieds_in_cabinet(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
-@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+@patch("app.services.issue.ingest.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue.gemini_analysis.run_gemini_with_retry", new_callable=AsyncMock)
 @patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
 @patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
 async def test_full_cabinet_journey_issues_and_classifieds(

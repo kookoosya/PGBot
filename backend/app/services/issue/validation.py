@@ -17,7 +17,7 @@ async def create_issue_from_web(
     user: User | None,
 ):
     """Validate web form input, create issue and reject spam."""
-    from app.services.issue_processor import process_web_complaint
+    from app.services.issue.ingest import process_web_complaint
 
     if data.website_url:
         raise IssueValidationError("Не удалось отправить форму. Обновите страницу.")

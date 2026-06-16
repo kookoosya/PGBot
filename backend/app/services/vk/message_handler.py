@@ -2,7 +2,7 @@
 
 import logging
 
-from app.services.issue_processor import process_incoming_message
+from app.services.issue.ingest import process_incoming_message
 from app.services.vk.ai_mode import exit_ai_mode
 from app.services.vk.commands import (
     AI_PRESERVE_MODE,
@@ -15,7 +15,7 @@ from app.services.vk.commands import (
 )
 from app.services.vk.context import VkRouteContext
 from app.services.vk.helpers import send_welcome, try_map_keywords
-from app.services.vk_messages import box, looks_like_complaint
+from app.services.vk.messages import box, looks_like_complaint
 
 logger = logging.getLogger(__name__)
 

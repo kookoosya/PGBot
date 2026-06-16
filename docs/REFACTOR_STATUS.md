@@ -11,7 +11,7 @@
 | Область | Готово | В работе / осталось |
 |---------|--------|---------------------|
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
-| Backend домены | `issue/`, `place/`, `classified/`, `vk/` | `provider_service`, `issue_processor`, `event_service` |
+| Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `vk/` | `vk/commands.py`, `weather_service.py` |
 | Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
 | Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
 | Frontend Map | split `pages/map/*` | — |
@@ -86,9 +86,6 @@
 ### Backend — «боги» (ещё не разбиты)
 | Файл | Строк | Рекомендация |
 |------|------:|--------------|
-| `provider_service.py` | ~505 | → `provider/` (register, booking, schedule, cabinet) |
-| `issue_processor.py` | ~476 | ingest оставить; вынести AI/dedup/notify |
-| `event_service.py` | ~420 | → `event/` (crud, public, admin) |
 | `vk/commands.py` | ~394 | разбить по доменам меню |
 | `weather_service.py` | ~334 | fetch + format отдельно |
 | `models/enums.py` | ~286 | split по доменам |
@@ -117,11 +114,11 @@
 3. ✅ Cross-test: `test_portal_copy_cross.py` + `portalCopyCross.test.ts`
 4. ⏭ Расширить `portal_copy.json` — EMPTY_STATES (опционально, P3)
 
-### P2 — разбиение оставшихся god files
+### P2 — разбиение оставшихся god files ✅ (2026-06-16)
 1. ✅ `provider_service.py` → package `provider/`
-2. `issue_processor.py` → `issue/ingest.py`
-3. `event_service.py` → package
-4. `vk_messages.py` → `vk/messages.py`
+2. ✅ `issue_processor.py` → `issue/ingest.py` (+ gemini, dedup, residents)
+3. ✅ `event_service.py` → package `event/`
+4. ✅ `vk_messages.py` → `vk/messages.py`
 
 ### P3 — UX consolidation
 1. Единый компонент списка обращений (public / official / admin variants)
@@ -145,9 +142,9 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~115 | 120+ |
+| pytest | ~125 | 120+ |
 | Vitest | 22 | 40+ |
-| God files ≥400 строк | 4 | 0 |
+| God files ≥400 строк | 2 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
 

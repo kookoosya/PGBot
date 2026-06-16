@@ -21,8 +21,8 @@ _VALID_ANALYSIS = AnalysisResult(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
-@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+@patch("app.services.issue.ingest.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue.gemini_analysis.run_gemini_with_retry", new_callable=AsyncMock)
 async def test_issue_dedupe_links_to_existing_open_issue(
     mock_gemini,
     _notify_owner,
@@ -54,8 +54,8 @@ async def test_issue_dedupe_links_to_existing_open_issue(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_processor.notify_owner", new_callable=AsyncMock)
-@patch("app.services.issue_processor._run_gemini_with_retry", new_callable=AsyncMock)
+@patch("app.services.issue.ingest.notify_owner", new_callable=AsyncMock)
+@patch("app.services.issue.gemini_analysis.run_gemini_with_retry", new_callable=AsyncMock)
 async def test_issue_dedupe_creates_new_when_probability_low(
     mock_gemini,
     _notify_owner,

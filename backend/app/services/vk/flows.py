@@ -33,7 +33,7 @@ from app.services.vk.client import get_inline_links_keyboard, send_message
 from app.services.vk.flow_store import clear_flow as clear_flow_state
 from app.services.vk.flow_store import get_flow as get_flow_state
 from app.services.vk.flow_store import save_flow
-from app.services.vk_messages import box
+from app.services.vk.messages import box
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

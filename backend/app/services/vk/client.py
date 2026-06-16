@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
-from app.services.vk_messages import welcome_text
+from app.services.vk.messages import welcome_text
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

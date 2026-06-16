@@ -1,6 +1,6 @@
 """Issue lifecycle operations — thin facade over ``app.services.issue`` package.
 
-Creation and AI analysis live in ``issue_processor``.
+Creation and AI analysis live in ``issue.ingest`` (facade ``issue_processor``).
 
 Public API is unchanged; implementation lives in submodules.
 """
