@@ -77,6 +77,18 @@ VK_EVENT_GROUPS: tuple[VkGroupPreset, ...] = (
         default_location="Пушкинские Горы",
     ),
     VkGroupPreset(
+        screen_name="club220027661",
+        label="Туристско-информационный центр | Пушкинские Горы",
+        region=EventRegion.PUSHKIN_GORY,
+        default_location="Пушкинские Горы",
+    ),
+    VkGroupPreset(
+        screen_name="club50667602",
+        label="Пушкинский Заповедник",
+        region=EventRegion.PUSHKIN_GORY,
+        default_location="Пушкинские Горы",
+    ),
+    VkGroupPreset(
         screen_name="informpskov",
         label="ИнформПсков",
         region=EventRegion.PSKOV,
