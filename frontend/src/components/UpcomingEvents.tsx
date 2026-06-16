@@ -20,6 +20,7 @@ const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
 
 const LANDING_LIMITS = {
   pushkin: 3,
+  pskov: 2,
 } as const;
 
 interface UpcomingEventsProps {
@@ -73,7 +74,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
   const displayPushkin = isLanding ? pushkinEvents.slice(0, LANDING_LIMITS.pushkin) : pushkinEvents;
   const displayCinema = isLanding ? [] : cinemaEvents;
-  const displayPskov = isLanding ? [] : otherPskovEvents;
+  const displayPskov = isLanding ? otherPskovEvents.slice(0, LANDING_LIMITS.pskov) : otherPskovEvents;
 
   const eventsCopy = LANDING_SECTIONS.events;
   const pskovCopy = LANDING_SECTIONS.pskov;
@@ -207,7 +208,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         </CinemaSpotlight>
       )}
 
-      {showSplit && !isLanding && displayPskov.length > 0 && (
+      {showSplit && displayPskov.length > 0 && (
         <section className="page-panel page-panel--gold landing-block" aria-label="События в Пскове">
           <LiterarySectionHead
             kicker={pskovCopy.kicker}
