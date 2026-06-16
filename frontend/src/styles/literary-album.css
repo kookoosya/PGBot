@@ -590,38 +590,6 @@
     gap: 0.65rem;
     justify-content: center;
   }
-  .landing-jobs-grid {
-    display: grid;
-    gap: 0.9rem;
-    align-items: stretch;
-  }
-  .landing-jobs-grid--count-1 {
-    grid-template-columns: 1fr;
-    max-width: 22rem;
-    margin-inline: auto;
-    width: 100%;
-  }
-  .landing-jobs-grid--count-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 640px) {
-    .landing-jobs-grid:not(.landing-jobs-grid--count-1):not(.landing-jobs-grid--count-2) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .landing-jobs-grid--count-1 {
-      max-width: 26rem;
-    }
-  }
-  @media (min-width: 1024px) {
-    .landing-jobs-grid:not(.landing-jobs-grid--count-1):not(.landing-jobs-grid--count-2) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .landing-jobs-grid--count-2 {
-      max-width: 44rem;
-      margin-inline: auto;
-      width: 100%;
-    }
-  }
   .landing-events {
     display: grid;
     gap: var(--landing-inner-gap);
@@ -670,19 +638,6 @@
   .landing-vk-panel .literary-lead {
     margin-left: auto;
     margin-right: auto;
-  }
-
-  .landing-album-closing-verse {
-    margin: 2rem auto 0;
-    max-width: 28rem;
-    padding-top: 1rem;
-    border-top: 1px dashed hsl(var(--gold) / 0.2);
-    text-align: center;
-    font-family: "Source Serif 4", Georgia, serif;
-    font-style: italic;
-    font-size: 0.9375rem;
-    line-height: 1.55;
-    color: hsl(var(--forest) / 0.65);
   }
 
   /* Компактный заголовок секции */
@@ -993,8 +948,7 @@
     }
   }
   .events-grid--landing > li,
-  .events-grid--landing-pskov > li,
-  .landing-jobs-grid > a {
+  .events-grid--landing-pskov > li {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -1011,41 +965,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-  }
-
-  /* Полезное рядом — landing */
-  .literary-useful-grid--landing {
-    gap: 0.8rem;
-    align-items: stretch;
-  }
-  .literary-useful-grid--landing .literary-useful-card {
-    min-height: 8.25rem;
-    padding: 1.05rem 1.1rem 1.05rem 1.25rem;
-    background: linear-gradient(165deg, hsl(var(--card) / 0.98), hsl(var(--parchment) / 0.72));
-    box-shadow: inset 0 1px 0 hsl(40 100% 100% / 0.45);
-  }
-  @media (max-width: 479px) {
-    .literary-useful-grid--landing {
-      grid-template-columns: 1fr;
-    }
-    .literary-useful-grid--landing .literary-useful-card {
-      min-height: auto;
-    }
-  }
-  .literary-useful-grid--landing .literary-useful-card:hover {
-    border-color: hsl(var(--gold) / 0.45);
-    box-shadow: 0 12px 32px hsl(var(--forest) / 0.09);
-    transform: translateY(-2px);
-  }
-  .literary-useful-grid--landing .literary-useful-card:hover .literary-useful-title {
-    color: hsl(var(--gold));
-  }
-  .literary-useful-grid--landing .literary-useful-card:hover .literary-useful-go {
-    color: hsl(var(--forest));
-  }
-  .literary-useful-grid--landing .literary-useful-title,
-  .literary-useful-grid--landing .literary-useful-go {
-    transition: color 0.15s ease;
   }
 
   /* Вакансии — landing карточки */
@@ -1115,16 +1034,6 @@
   .events-city-pskov {
     margin: 0;
     height: 100%;
-  }
-  .literary-useful-grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 768px) {
-    .literary-useful-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
   .literary-useful-card {
     display: flex;
@@ -1365,11 +1274,6 @@
       grid-template-columns: 1fr;
       max-width: none;
     }
-    .landing-jobs-grid,
-    .landing-jobs-grid--count-2 {
-      grid-template-columns: 1fr;
-      max-width: none;
-    }
     .cinema-spotlight--featured {
       padding: 1.65rem 1.25rem 1.75rem;
     }
@@ -1380,11 +1284,6 @@
     .landing-block .literary-section-head-aside {
       flex-wrap: wrap;
       gap: 0.5rem;
-    }
-  }
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .literary-useful-grid--landing {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   @media (min-width: 768px) {

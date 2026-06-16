@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     )
 
     # Rate limiting
+    REDIS_URL: str = ""
     RATE_LIMIT: str = "120/minute"
     ISSUE_RATE_LIMIT: str = "6/hour"
     CLASSIFIED_RATE_LIMIT: str = "12/hour"

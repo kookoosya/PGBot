@@ -13,7 +13,7 @@
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
 | Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
 | Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
-| Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
+| Frontend API | split `lib/api/*` + `types/` | — |
 | Frontend Map | split `pages/map/*` | — |
 | Frontend UI | literary album, unified issue/ad components | — |
 | Frontend тесты | Vitest **47** | компоненты, API hooks |
@@ -71,21 +71,13 @@
 - ~~`Complaints` + `OfficialIssues` + admin `Issues` — три UI обращений~~ → `LiteraryIssueCard` + `IssuesWorkbench`
 - ~~`Jobs` ≈ `Classifieds` — форма дублируется~~ → `ClassifiedAdForm`
 
-### Backend — shim-файлы (re-export, можно убрать после миграции импортов)
-| Shim | Канонический путь | Импортёров |
-|------|-------------------|------------|
-| `vk_command_router.py` | `vk.command_router` | webhook |
-| `vk_moderation_service.py` | `vk.moderation` | webhook, admin |
-| `vk_flows.py`, `vk_flow_store.py` | `vk.flows`, `vk.flow_store` | webhook, tests |
-| `vk_digest.py` | `vk.digest` | background_tasks |
-| `ai_mode.py`, `vk_ai_mode_store.py` | `vk.ai_mode` | webhook, tests |
-| `vk_bot.py`, `vk_subscription.py`, `vk_voice.py`, `vk_ai_history.py` | `vk/*` | **0 — удалить** |
-| `pagination_utils`, `notify_utils`, `datetime_utils`, `service_errors` | `app/utils/*` | ~15 |
+### Backend — shim-файлы
+- ✅ Все VK/utils re-export shims удалены (P0–P6)
+- ✅ `vk_messages.py` удалён — канон: `vk/messages.py`
 
-### Backend — «боги» (ещё не разбиты)
-| Файл | Строк | Рекомендация |
-|------|------:|--------------|
-| `models/enums.py` | ~286 | ✅ split → `models/enums/` |
+### Backend — «боги»
+- ✅ `models/enums.py` → `models/enums/` (P5)
+- ✅ `lib/api/types.ts` → `lib/api/types/` (P6)
 
 ### Прочее лишнее
 - Черновые PR #20–#28 — устарели, закрыть
@@ -132,7 +124,14 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
-### P5 — продукт (без VK Mini App)
+### P6 — инфра и чистка (без VK Mini App) ✅ (2026-06-16)
+1. ✅ Redis rate limit: `redis` в `docker-compose.prod.yml`, `REDIS_URL`, slowapi storage
+2. ✅ Исправлен `test_vk_unsubscribe_command` (mock → `commands.handlers`)
+3. ✅ `lib/api/types.ts` → `lib/api/types/` (auth, issues, places, …)
+4. ✅ Удалён мёртвый CSS: `landing-jobs-grid`, `literary-useful-grid--landing`, closing verse
+5. ✅ Удалён shim `vk_messages.py`
+
+### P5 — продукт (без VK Mini App) ✅
 - ✅ Исправлен cross-test `portal_copy` (`welcome_body`)
 - ✅ `models/enums.py` → package `models/enums/` (user, catalog, classified, issue, place, event)
 - ✅ `Signup.tsx` → `PAGE_SECTIONS.signup`
@@ -149,9 +148,9 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~136 | 120+ |
+| pytest | ~139 | 120+ |
 | Vitest | **47** | 40+ |
-| God files ≥400 строк | 0 | 0 |
+| God files ≥400 строк (py/ts) | 0 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
 
