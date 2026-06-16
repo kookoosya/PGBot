@@ -23,23 +23,26 @@ async def find_existing_event(
     region: str | None = None,
     location: str | None = None,
 ) -> Event | None:
-    """Find duplicate by ``source_url`` or same show (title + minute + region + venue)."""
-    if source_url:
-        by_url = await db.execute(
-            select(Event)
-            .where(Event.source_url == source_url)
-            .order_by(Event.id.asc())
-            .limit(1)
-        )
-        existing = by_url.scalars().first()
-        if existing:
-            return existing
-
+    """Find duplicate by ``source_url`` + show identity, or same title/time/region/venue."""
     normalized = normalize_event_title(title)
     if len(normalized) < 4:
         return None
 
     starts_moscow = starts_at.astimezone(MOSCOW_TZ).replace(second=0, microsecond=0)
+
+    if source_url:
+        by_url = await db.execute(
+            select(Event)
+            .where(Event.source_url == source_url)
+            .order_by(Event.id.asc())
+        )
+        for existing in by_url.scalars().all():
+            cand_title = normalize_event_title(existing.title)
+            if cand_title == normalized or _titles_similar(normalized, cand_title):
+                ex_start = existing.starts_at.astimezone(MOSCOW_TZ).replace(second=0, microsecond=0)
+                if ex_start == starts_moscow:
+                    return existing
+
     window_start = starts_moscow - timedelta(minutes=5)
     window_end = starts_moscow + timedelta(minutes=5)
     loc_key = " ".join((location or "").lower().split())
