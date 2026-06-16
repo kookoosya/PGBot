@@ -9,6 +9,7 @@ import { api, Issue } from "@/lib/api";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 const ISSUE_FILTER_ACTIVE = ISSUE_ACTIVE_STATUSES;
 const ISSUE_FILTER_DONE = ISSUE_DONE_STATUSES;
@@ -21,6 +22,7 @@ const COMPLAINT_TEMPLATES = [
 type IssueFilter = "all" | "active" | "done";
 
 const copy = PAGE_SECTIONS.complaints;
+const COMPLAINTS_DRAFT_KEY = "complaints_form_draft_v1";
 
 export function Complaints() {
   const { user } = useUserAuth();
@@ -34,14 +36,15 @@ export function Complaints() {
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [showExtras, setShowExtras] = useState(false);
-  const [form, setForm] = useState({
+  const initialForm = {
     description: "",
     address: "",
     category: "",
     full_name: "",
     phone: "",
     website_url: "",
-  });
+  };
+  const { value: form, setValue: setForm, clearDraft } = useFormDraft(COMPLAINTS_DRAFT_KEY, initialForm);
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [loading, setLoading] = useState(false);
@@ -115,6 +118,7 @@ export function Complaints() {
       setSubmittedId(issue.id);
       setMsg(`Обращение #${issue.id} принято! Статус: на рассмотрении.`);
       setForm((f) => ({ ...f, description: "", address: "" }));
+      clearDraft();
       if (user) {
         const r = await api.getMyIssues({ limit: "10" });
         setMyIssues(r.items);
@@ -288,6 +292,7 @@ export function Complaints() {
               <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
                 {loading ? "Отправляем…" : "Отправить обращение"}
               </button>
+              <p className="text-xs text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
               {!loading && (
                 <button
                   type="button"

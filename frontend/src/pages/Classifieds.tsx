@@ -8,12 +8,14 @@ import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 const CLASSIFIED_TEMPLATES = [
   "Продам: в хорошем состоянии, самовывоз.",
   "Услуга: аккуратно и в срок, без предоплаты.",
   "Соседская помощь: могу помочь в выходные.",
 ];
+const CLASSIFIEDS_DRAFT_KEY = "classifieds_form_draft_v1";
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
@@ -35,7 +37,7 @@ export function Classifieds() {
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(openNew);
   const [showExtras, setShowExtras] = useState(false);
-  const [form, setForm] = useState({
+  const initialForm = {
     category: "firewood",
     title: "",
     description: "",
@@ -47,7 +49,8 @@ export function Classifieds() {
     contact_vk: "",
     website_url: "",
     agree_rules: false,
-  });
+  };
+  const { value: form, setValue: setForm, clearDraft } = useFormDraft(CLASSIFIEDS_DRAFT_KEY, initialForm);
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [submittedId, setSubmittedId] = useState<number | null>(null);
@@ -129,6 +132,7 @@ export function Classifieds() {
         website_url: "",
         agree_rules: false,
       }));
+      clearDraft();
       load(1, false);
     } catch (err) {
       setMsgType("err");
@@ -311,6 +315,7 @@ export function Classifieds() {
           <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={submitting}>
             {submitting ? "Отправляем…" : "🆓 Отправить на модерацию"}
           </button>
+          <p className="text-xs text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
         </form>
       )}
 
