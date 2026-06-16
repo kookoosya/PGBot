@@ -9,6 +9,12 @@ from app.services.event_sources.base import FetchedEvent
 from app.services.event_sources.dedup import find_existing_event
 
 
+def _normalize_ends_at(starts_at, ends_at):
+    if ends_at is not None and ends_at < starts_at:
+        return None
+    return ends_at
+
+
 async def upsert_fetched_event(
     db: AsyncSession,
     item: FetchedEvent,
@@ -28,7 +34,7 @@ async def upsert_fetched_event(
         title=item.title,
         description=item.description,
         starts_at=item.starts_at,
-        ends_at=item.ends_at,
+        ends_at=_normalize_ends_at(item.starts_at, item.ends_at),
         location=item.location,
         region=item.region,
         category=item.category,
