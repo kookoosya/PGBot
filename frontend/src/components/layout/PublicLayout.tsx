@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { PageBackdrop } from "@/components/PageBackdrop";
-import { PushkinBanner } from "@/components/PushkinBanner";
 import { FooterNav } from "@/components/FooterNav";
 import { VkBotLink } from "@/components/VkBotLink";
 import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
@@ -55,8 +54,6 @@ export function PublicLayout() {
         <TabNav variant="top" />
       </header>
 
-      {!isHome && <PushkinBanner />}
-
       <main className="flex-1 w-full pushkin-main page-fade-wrap" key={location.pathname}>
         <Outlet />
       </main>
@@ -65,7 +62,7 @@ export function PublicLayout() {
         <div className="pushkin-footer-inner">
           <FooterNav />
           <p className="pushkin-footer-line">
-            {BRAND.name} · {BRAND.district} · {BRAND.programName} · {new Date().getFullYear()}
+            {BRAND.name} · {BRAND.district} · {new Date().getFullYear()}
           </p>
         </div>
       </footer>

@@ -158,7 +158,6 @@ export function Classifieds() {
         <button type="button" className="literary-btn literary-btn--primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Подать объявление"}
         </button>
-        <span className="free-badge">🆓 Бесплатно</span>
       </PageHeader>
 
       <div className="literary-page-note mb-6">

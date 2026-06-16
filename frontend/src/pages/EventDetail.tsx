@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
+import { CTA } from "@/lib/cta";
 import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
-import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 export function EventDetail() {
   const { id } = useParams();
@@ -56,7 +57,7 @@ export function EventDetail() {
   return (
     <div className="literary-page page-section max-w-3xl">
       <PageHeader icon={cinema ? "🎬" : "📅"} title={event.title} subtitle={event.category_label}>
-        <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">← Вся афиша</Link>
+        <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">← {CTA.allEvents}</Link>
         <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={share}>
           Поделиться
         </button>
@@ -137,10 +138,6 @@ export function EventDetail() {
             </button>
           )}
         </div>
-
-        <p className="literary-page-verse event-detail-verse" aria-hidden>
-          {cinema ? LITERARY_VERSES.cinema : LITERARY_VERSES.events}
-        </p>
       </article>
     </div>
   );

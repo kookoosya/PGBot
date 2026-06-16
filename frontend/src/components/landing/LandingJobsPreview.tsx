@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, type ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
-import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { ctaArrow } from "@/lib/cta";
 import { landingGridCountClass } from "@/lib/landingLayout";
 
 const PREVIEW_LIMIT = 3;
@@ -29,7 +30,7 @@ export function LandingJobsPreview() {
         title={copy.title}
         lead={copy.lead}
         linkTo="/jobs"
-        linkLabel="Все вакансии →"
+        linkLabel={ctaArrow("Все вакансии")}
       />
 
       {loading ? (
@@ -84,7 +85,6 @@ export function LandingJobsPreview() {
             <Link to="/services" className="literary-link text-sm">
               Мастера и помощь соседей →
             </Link>
-            <p className="landing-verse">{LITERARY_VERSES.jobs}</p>
           </div>
         </>
       )}

@@ -23,16 +23,23 @@ export type NavSection = {
   end?: boolean;
 };
 
-/** Основные разделы портала — единый список для табов и подвала */
+/** Основные разделы портала — единый список для табов, подвала и сетки */
 export const MAIN_SECTIONS: NavSection[] = [
   { to: "/", label: "Главная", icon: "🏠", end: true },
   { to: "/map", label: "Карта", icon: "🗺" },
+  { to: "/events", label: "Афиша", icon: "📅" },
   { to: "/classifieds", label: "Объявления", icon: "📋" },
   { to: "/jobs", label: "Работа", icon: "💼" },
   { to: "/services", label: "Услуги", icon: "🛠" },
-  { to: "/complaints", label: "Жалобы", icon: "⚠️" },
+  { to: "/complaints", label: "Обращения", icon: "⚠️" },
   { to: "/wishes", label: "Пожелания", icon: "💡" },
   { to: "/ai", label: "ИИ", icon: "🤖" },
+];
+
+/** Быстрая сетка разделов (без главной, с кабинетом) */
+export const PORTAL_NAV_ITEMS: NavSection[] = [
+  ...MAIN_SECTIONS.filter((section) => section.to !== "/"),
+  { to: "/cabinet", label: "Кабинет", icon: "👤" },
 ];
 
 export type QuickNavItem = NavSection & {
@@ -43,6 +50,7 @@ export type QuickNavItem = NavSection & {
 /** Быстрые карточки на главной — расширение MAIN_SECTIONS без дублирования путей */
 const QUICK_NAV_META: Record<string, { desc: string; color: string; icon?: string }> = {
   "/map": { desc: "Магазины и службы", color: "quick-nav-map" },
+  "/events": { desc: "События и кино", color: "quick-nav-events", icon: "📅" },
   "/classifieds": { desc: "От жителей", color: "quick-nav-ads" },
   "/services": { desc: "Мастера", color: "quick-nav-svc", icon: "💇" },
   "/ai": { desc: "Помощник", color: "quick-nav-ai" },

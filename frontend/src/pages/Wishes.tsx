@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { api } from "@/lib/api";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 
 const copy = PAGE_SECTIONS.wishes;
@@ -10,7 +10,7 @@ const copy = PAGE_SECTIONS.wishes;
 const ideas = [
   "Добавить расписание автобусов",
   "Уведомления о новых объявлениях",
-  "Фотоотчёты по жалобам",
+  "Фотоотчёты по обращениям",
   "Календарь мероприятий посёлка",
   "Раздел для туристов",
 ];
@@ -109,16 +109,10 @@ export function Wishes() {
               </div>
             </div>
             <p className="literary-page-note text-sm text-muted-foreground p-4 rounded-lg border border-border/60">
-              Пожелания помогают развивать портал для жителей и гостей Пушкинских Гор — про дизайн, карту, объявления, жалобы и VK-бота.
+              Пожелания помогают развивать портал — про дизайн, карту, объявления, обращения и VK-бота.
             </p>
           </aside>
         </div>
-      )}
-
-      {!sent && (
-        <p className="literary-page-verse mt-10" aria-hidden>
-          {LITERARY_VERSES.wishes}
-        </p>
       )}
     </div>
   );

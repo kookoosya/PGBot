@@ -6,7 +6,7 @@ import "leaflet.markercluster";
 
 import { PageHeader } from "@/components/PageHeader";
 import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
-import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 import { MAP_CENTER } from "./map/constants";
 import { ClusterLayer, FlyToPlace, MapEvents, RouteStopsLayer } from "./map/MapLayers";
@@ -189,7 +189,6 @@ export function MapPage() {
         </div>
       </div>
 
-      <p className="literary-page-verse page-section text-center pb-6" aria-hidden>{LITERARY_VERSES.map}</p>
     </div>
   );
 }
