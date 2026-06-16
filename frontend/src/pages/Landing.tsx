@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PushkinVersesSection } from "@/components/PushkinVersesSection";
 import { SeasonalTip } from "@/components/SeasonalTip";
 import { TodayInVillage } from "@/components/TodayInVillage";
@@ -21,6 +22,8 @@ const vkCopy = LANDING_SECTIONS.vk;
 const heroCopy = LANDING_HERO;
 
 export function Landing() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="landing-epic">
       <section className="epic-hero epic-hero--literary">
@@ -81,12 +84,27 @@ export function Landing() {
             <UpcomingEvents variant="landing" />
           </LandingAlbumSection>
 
-          <LandingAlbumSection divider>
-            <LandingJobsPreview />
-          </LandingAlbumSection>
+          {!expanded && (
+            <LandingAlbumSection divider>
+              <div className="page-panel page-panel--gold landing-block landing-compact-note">
+                <p className="m-0 text-sm">
+                  Показаны главные блоки дня. Нажмите «Показать больше», чтобы увидеть вакансии, дополнительную навигацию и фотогалерею.
+                </p>
+                <button type="button" className="literary-btn literary-btn--ghost mt-3" onClick={() => setExpanded(true)}>
+                  Показать больше разделов
+                </button>
+              </div>
+            </LandingAlbumSection>
+          )}
+
+          {expanded && (
+            <LandingAlbumSection divider>
+              <LandingJobsPreview />
+            </LandingAlbumSection>
+          )}
 
           <LandingAlbumSection divider>
-            <LandingUsefulNearby />
+            <LandingUsefulNearby compact={!expanded} />
           </LandingAlbumSection>
 
           <LandingAlbumSection divider id="vk">
@@ -103,11 +121,23 @@ export function Landing() {
           <p className="landing-album-closing-verse" aria-hidden>
             {LITERARY_VERSES.landing}
           </p>
+
+          {expanded && (
+            <div className="text-center">
+              <button type="button" className="literary-btn literary-btn--ghost" onClick={() => setExpanded(false)}>
+                Свернуть до главного
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <PushkinVersesSection />
-      <VillageGallery />
+      {expanded && (
+        <>
+          <PushkinVersesSection />
+          <VillageGallery />
+        </>
+      )}
     </div>
   );
 }

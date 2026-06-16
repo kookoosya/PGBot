@@ -11,8 +11,9 @@ const usefulItems = [
   { icon: "⚠️", title: "Обращения", desc: "Дороги, ЖКХ, освещение — в администрацию", to: "/complaints", tone: "gold" as const },
 ];
 
-export function LandingUsefulNearby() {
+export function LandingUsefulNearby({ compact = false }: { compact?: boolean }) {
   const copy = LANDING_SECTIONS.useful;
+  const items = compact ? usefulItems.slice(0, 4) : usefulItems;
 
   return (
     <div className="page-panel page-panel--gold landing-block">
@@ -22,7 +23,7 @@ export function LandingUsefulNearby() {
         lead={copy.lead}
       />
       <div className="literary-useful-grid literary-useful-grid--landing">
-        {usefulItems.map((item) => (
+        {items.map((item) => (
           <Link
             key={item.to}
             to={item.to}
@@ -35,6 +36,11 @@ export function LandingUsefulNearby() {
           </Link>
         ))}
       </div>
+      {compact && (
+        <p className="landing-muted text-sm m-0 mt-3">
+          В компактном режиме показываем только основные разделы.
+        </p>
+      )}
     </div>
   );
 }

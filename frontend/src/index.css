@@ -821,6 +821,10 @@
     color: hsl(var(--forest));
   }
 
+  .landing-compact-note {
+    text-align: center;
+  }
+
   .literary-btn[disabled] {
     opacity: 0.72;
     cursor: not-allowed;

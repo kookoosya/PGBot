@@ -12,6 +12,11 @@ import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES
 
 const ISSUE_FILTER_ACTIVE = ISSUE_ACTIVE_STATUSES;
 const ISSUE_FILTER_DONE = ISSUE_DONE_STATUSES;
+const COMPLAINT_TEMPLATES = [
+  "Не работает уличное освещение возле дома.",
+  "На дороге ямы, сложно проехать после дождя.",
+  "Переполнены контейнеры, нужен вывоз мусора.",
+];
 
 type IssueFilter = "all" | "active" | "done";
 
@@ -165,6 +170,18 @@ export function Complaints() {
 
               <div>
                 <label className="event-detail-label">Что случилось?</label>
+                <div className="suggest-chips mb-2">
+                  {COMPLAINT_TEMPLATES.map((template) => (
+                    <button
+                      key={template}
+                      type="button"
+                      className="suggest-chip"
+                      onClick={() => setForm((f) => ({ ...f, description: template }))}
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   className="literary-textarea w-full min-h-[140px]"
                   value={form.description}

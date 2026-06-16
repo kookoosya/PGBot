@@ -9,6 +9,12 @@ import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
+const CLASSIFIED_TEMPLATES = [
+  "Продам: в хорошем состоянии, самовывоз.",
+  "Услуга: аккуратно и в срок, без предоплаты.",
+  "Соседская помощь: могу помочь в выходные.",
+];
+
 export function Classifieds() {
   const [searchParams] = useSearchParams();
   const neighborMode = searchParams.get("neighbor") === "1";
@@ -230,6 +236,18 @@ export function Classifieds() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             required
           />
+          <div className="suggest-chips">
+            {CLASSIFIED_TEMPLATES.map((template) => (
+              <button
+                key={template}
+                type="button"
+                className="suggest-chip"
+                onClick={() => setForm((f) => ({ ...f, description: template }))}
+              >
+                {template}
+              </button>
+            ))}
+          </div>
           <p className="text-sm text-muted-foreground m-0 -mt-2">
             Чем проще и короче текст, тем быстрее отклик.
             <span className={`form-char-count${form.description.trim().length < 10 ? " form-char-count--warn" : ""}`}>
