@@ -776,6 +776,11 @@
     border-color: hsl(var(--gold) / 0.35);
   }
 
+  .vk-portal-chip:focus-visible {
+    outline: 2px solid hsl(var(--gold) / 0.65);
+    outline-offset: 2px;
+  }
+
   .cabinet-ad-status {
     font-size: 0.68rem;
     font-weight: 700;
@@ -814,6 +819,11 @@
     font-size: 1.1rem;
     font-weight: 700;
     color: hsl(var(--forest));
+  }
+
+  .literary-btn[disabled] {
+    opacity: 0.72;
+    cursor: not-allowed;
   }
 
   .footer-nav {

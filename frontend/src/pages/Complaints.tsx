@@ -264,6 +264,22 @@ export function Complaints() {
               <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
                 {loading ? "Отправляем…" : "Отправить обращение"}
               </button>
+              {!loading && (
+                <button
+                  type="button"
+                  className="literary-btn literary-btn--ghost w-full text-sm"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      description: "",
+                      address: "",
+                      category: "",
+                    }))
+                  }
+                >
+                  Очистить форму
+                </button>
+              )}
 
               {!user && (
                 <p className="landing-muted text-xs text-center m-0">

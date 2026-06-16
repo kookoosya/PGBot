@@ -46,6 +46,7 @@ export function Classifieds() {
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [submittedId, setSubmittedId] = useState<number | null>(null);
   const [submittedNotifyVk, setSubmittedNotifyVk] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const successRef = useRef<HTMLDivElement | null>(null);
 
   const adCategories = categories.filter((c) => !JOB_CATEGORY_IDS.has(c.value));
@@ -94,6 +95,8 @@ export function Classifieds() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setMsg("");
     try {
       const res = await api.createClassified({
         ...form,
@@ -117,6 +120,8 @@ export function Classifieds() {
     } catch (err) {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -225,6 +230,13 @@ export function Classifieds() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             required
           />
+          <p className="text-sm text-muted-foreground m-0 -mt-2">
+            Чем проще и короче текст, тем быстрее отклик.
+            <span className={`form-char-count${form.description.trim().length < 10 ? " form-char-count--warn" : ""}`}>
+              {" "}
+              {form.description.trim().length} симв. (рекомендуем от 10)
+            </span>
+          </p>
           <Input placeholder="Телефон +7…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
           <Input placeholder="Ваше имя" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
 
@@ -271,8 +283,8 @@ export function Classifieds() {
             />
             <span>Объявление честное: без предоплаты и переводов незнакомцам.</span>
           </label>
-          <button type="submit" className="literary-btn literary-btn--primary w-full">
-            🆓 Отправить на модерацию
+          <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={submitting}>
+            {submitting ? "Отправляем…" : "🆓 Отправить на модерацию"}
           </button>
         </form>
       )}
@@ -282,6 +294,7 @@ export function Classifieds() {
           ref={successRef}
           className={`mb-6 page-panel space-y-2 ${msgType === "ok" ? "page-panel--gold" : "alert-error"}`}
         >
+          {msgType === "ok" && submittedId && <p className="post-submit-hero m-0">✓ Объявление #{submittedId} принято</p>}
           <p className="m-0 font-medium">{msg}</p>
           {msgType === "ok" && submittedId && (
             <>
@@ -289,9 +302,14 @@ export function Classifieds() {
                 Обычно проверяем до суток. После публикации объявление появится на доске.
                 {submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение, когда опубликуем."}
               </p>
-              <Link to="/classifieds" className="literary-link text-sm font-medium">
-                Вернуться к доске →
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/classifieds" className="literary-link text-sm font-medium">
+                  Вернуться к доске →
+                </Link>
+                <button type="button" className="literary-link text-sm font-medium" onClick={() => setShowForm(true)}>
+                  Подать ещё одно →
+                </button>
+              </div>
             </>
           )}
         </div>

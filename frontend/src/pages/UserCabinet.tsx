@@ -80,6 +80,9 @@ export function UserCabinet() {
         <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">📋 Объявление</Link>
         <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">📅 Афиша</Link>
       </div>
+      <p className="text-center text-sm text-muted-foreground mt-[-0.75rem] mb-5">
+        Быстрый совет: сохраняйте короткое описание проблемы и номер телефона — так службе проще помочь быстрее.
+      </p>
 
       <div className="literary-card literary-card--forest p-6 space-y-4 mb-6">
         <h2 className="literary-title text-lg m-0">Профиль</h2>
@@ -189,6 +192,9 @@ export function UserCabinet() {
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2 m-0">{ad.description}</p>
             </div>
           ))}
+          <p className="text-xs text-muted-foreground m-0 pt-2 border-t border-border/60">
+            Статус «На модерации» обычно меняется в течение суток.
+          </p>
         </div>
       )}
 
