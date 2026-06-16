@@ -184,6 +184,7 @@ async def sync_events_from_kudago(
                 exc.response.text[:200],
             )
             return EventSyncResult(
+                source="kudago",
                 region=region.value,
                 fetched=0,
                 created=0,
