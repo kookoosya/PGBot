@@ -18,6 +18,7 @@ class VkGroupPreset:
     label: str
     region: EventRegion
     default_location: str
+    require_region_keywords: tuple[str, ...] = ()
 
 
 # Multiple VK communities per region (resolved via groups.getById).
@@ -106,6 +107,28 @@ VK_EVENT_GROUPS: tuple[VkGroupPreset, ...] = (
         region=EventRegion.PSKOV,
         default_location="Псков",
     ),
+    VkGroupPreset(
+        screen_name="club166260004",
+        label="Администрация Пушкиногорского МО",
+        region=EventRegion.PUSHKIN_GORY,
+        default_location="Пушкинские Горы",
+    ),
+    VkGroupPreset(
+        screen_name="club218787339",
+        label="КДЦ Пушкиногорский",
+        region=EventRegion.PUSHKIN_GORY,
+        default_location="Пушкинские Горы, КДЦ",
+    ),
+    VkGroupPreset(
+        screen_name="plnpsk",
+        label="Псковская Лента Новостей",
+        region=EventRegion.PSKOV,
+        default_location="Псков",
+        require_region_keywords=(
+            "псков", "псковск", "пушкин", "пушкиногор", "михайловск",
+            "бугров", "петергоф", "остров", "порхов", "печоры", "изборск",
+        ),
+    ),
 )
 
 # Legacy single-group map (kept for backward-compatible imports).
@@ -159,8 +182,8 @@ KUDAGO_CATEGORY_MAP: dict[str, str] = {
 
 EVENT_CATEGORY_KEYWORDS: dict[str, tuple[str, ...]] = {
     "cinema": ("кино", "фильм", "сеанс", "кинотеатр"),
-    "holiday": ("праздник", "фестиваль", "ярмарка", "юбилей"),
-    "culture": ("концерт", "выставк", "театр", "музей", "лекци"),
+    "holiday": ("праздник", "фестиваль", "ярмарка", "юбилей", "гарнец"),
+    "culture": ("концерт", "выставк", "театр", "музей", "лекци", "спектакл", "фольклор", "театральн"),
     "sport": ("спорт", "турнир", "забег", "марафон"),
     "education": ("мастер-класс", "семинар", "обучен"),
     "tourism": ("экскурс", "маршрут", "турист"),

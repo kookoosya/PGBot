@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
+from app.services.event_sources.kdc_source import KdcEventSource
 from app.services.event_sources.kinopskov_source import KinopskovEventSource
 from app.services.event_sources.mirage_source import MirageEventSource
 from app.services.event_sources.silver_source import SilverEventSource
@@ -37,6 +38,7 @@ _SOURCES: dict[str, EventSource] = {
     "silver": SilverEventSource(),
     "proculture": ProCultureEventSource(),
     "kudago": KudaGoEventSource(),
+    "kdc": KdcEventSource(),
 }
 
 
@@ -140,7 +142,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "timepad", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
+    for name in ("vk", "timepad", "kdc", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue

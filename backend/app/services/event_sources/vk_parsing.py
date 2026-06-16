@@ -14,6 +14,10 @@ from app.services.event_sources.text_utils import (
     parse_event_datetime,
 )
 
+_CINEMA_HINT_RE = re.compile(
+    r"(?<![а-яёa-z])(?:кино|фильм|сеанс|кинотеатр)(?![а-яёa-z])",
+    re.IGNORECASE,
+)
 _QUOTED_TITLE_RE = re.compile(
     r"[«\"']([^»\"'\n]{3,120})[»\"']",
 )
@@ -51,6 +55,7 @@ _EVENT_SIGNALS = (
     "билет", "бесплатн", "участие", "программа", "экскурс", "концерт",
     "спектакл", "выставк", "фестиваль", "ярмарк", "праздник", "кино", "фильм",
     "сеанс", "лекци", "мастер-класс", "турнир", "марафон",
+    "гарнец", "бугров", "михайловск", "театральн", "фольклор", "гончар",
 )
 
 
@@ -84,13 +89,21 @@ def is_likely_spam_post(text: str) -> bool:
     return False
 
 
-def is_relevant_vk_event_post(text: str, *, parsed_date) -> bool:
+def is_relevant_vk_event_post(
+    text: str,
+    *,
+    parsed_date,
+    region_keywords: tuple[str, ...] = (),
+) -> bool:
     """Stricter relevance check for VK wall posts."""
     cleaned = clean_post_text(text)
     lower = cleaned.lower()
     if len(lower) < 20:
         return False
     if is_likely_spam_post(cleaned):
+        return False
+
+    if region_keywords and not any(keyword in lower for keyword in region_keywords):
         return False
 
     has_signal = any(signal in lower for signal in _EVENT_SIGNALS)
@@ -226,9 +239,7 @@ def parse_vk_post(text: str) -> VkParsedPost:
     cleaned = clean_post_text(text)
     category = infer_category_from_text(cleaned)
 
-    if category == EventCategory.CINEMA or any(
-        word in cleaned.lower() for word in ("кино", "фильм", "сеанс", "кинотеатр")
-    ):
+    if category == EventCategory.CINEMA or _CINEMA_HINT_RE.search(cleaned):
         category = EventCategory.CINEMA
         title = extract_cinema_title(cleaned)
         if not title:

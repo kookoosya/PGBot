@@ -13,7 +13,7 @@ from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventCategory, EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
-from app.services.event_sources.text_utils import parse_event_datetime
+from app.services.event_sources.text_utils import parse_event_date_range, parse_event_datetime
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.services.event_enrichment_service import resolve_cinema_location_from_text
 from app.services.event_sources.vk_parsing import is_relevant_vk_event_post, parse_vk_post
@@ -40,7 +40,7 @@ async def _resolve_group_id(screen_name: str) -> int | None:
     return None
 
 
-async def _fetch_wall_posts(group_id: int, *, count: int = 20) -> list[dict]:
+async def _fetch_wall_posts(group_id: int, *, count: int = 35) -> list[dict]:
     response = await vk_api_call("wall.get", {
         "owner_id": -group_id,
         "count": count,
@@ -56,10 +56,16 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
 
     text = (post.get("text") or "").strip()
     post_date = datetime.fromtimestamp(post.get("date", 0), tz=timezone.utc)
-    parsed_date = parse_event_datetime(text, fallback=post_date)
-    starts_at = parsed_date or post_date.astimezone(MOSCOW_TZ)
+    parsed_start, parsed_end = parse_event_date_range(text, fallback=post_date)
+    parsed_date = parsed_start
+    starts_at = parsed_start or post_date.astimezone(MOSCOW_TZ)
+    ends_at = parsed_end
 
-    if not is_relevant_vk_event_post(text, parsed_date=parsed_date):
+    if not is_relevant_vk_event_post(
+        text,
+        parsed_date=parsed_date,
+        region_keywords=preset.require_region_keywords,
+    ):
         return None
     if starts_at < datetime.now(MOSCOW_TZ) - timedelta(days=2):
         return None
@@ -79,7 +85,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
         title=parsed.title,
         description=parsed.body or text[:2000],
         starts_at=starts_at,
-        ends_at=None,
+        ends_at=ends_at,
         location=location,
         region=preset.region,
         category=parsed.category,
@@ -90,7 +96,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
     )
 
 
-async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int = 20) -> list[FetchedEvent]:
+async def fetch_vk_events(region: EventRegion | None = None, *, post_count: int = 35) -> list[FetchedEvent]:
     """Fetch normalized events from configured VK groups."""
     groups = [g for g in VK_EVENT_GROUPS if region is None or g.region == region]
     events: list[FetchedEvent] = []
@@ -110,7 +116,7 @@ async def sync_vk_group(
     preset: VkGroupPreset,
     *,
     actor_id: int | None = None,
-    post_count: int = 20,
+    post_count: int = 35,
 ) -> EventSyncResult:
     group_id = await _resolve_group_id(preset.screen_name)
     if not group_id:
@@ -161,7 +167,7 @@ async def sync_events_from_vk(
     region: EventRegion,
     *,
     actor_id: int | None = None,
-    post_count: int = 20,
+    post_count: int = 35,
 ) -> EventSyncResult:
     """Import from all VK groups in ``region``, aggregated into one result."""
     presets = [g for g in VK_EVENT_GROUPS if g.region == region]

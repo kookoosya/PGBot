@@ -33,6 +33,7 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   mirage: "Мираж Синема",
   silver: "Silver Cinema",
   proculture: "PRO.Культура",
+  kdc: "КДЦ Пушкиногорье",
   manual: "Организатор",
 };
 

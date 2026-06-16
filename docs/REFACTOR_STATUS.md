@@ -33,7 +33,7 @@
 - **`services/place/`** — crud, map, reviews, sync; facade `place_service.py`
 - **`services/classified/`** — create, search, moderate; facade `classified_service.py`
 - **`services/vk/`** — bot, flows, moderation, digest, AI, voice (17 модулей)
-- **`services/event_sources/`** — адаптеры Kudago, VK, Orbilet, Kinopskov и др.
+- **`services/event_sources/`** — адаптеры Kudago, VK, KDC, Orbilet, Kinopskov и др.
 - VK объявления → `create_classified_ad_from_vk()` (единая валидация)
 - `shared/portal_copy.json` ↔ backend `portal_copy.py`
 
@@ -126,6 +126,13 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P14 — источники событий ✅ (2026-06-16)
+1. ✅ VK: +3 группы (Администрация ПМО, КДЦ, PLN Pskov с региональным фильтром)
+2. ✅ Парсинг дат: «19 и 20 июня», имена месяцев, диапазоны; `ends_at` для многодневных
+3. ✅ VK post_count 20 → 35; фикс ложного «кино» в «пушкиногорья»
+4. ✅ Новый источник `kdc` — kdc-pushgory.ru (КДЦ Пушкиногорье)
+5. ✅ Тесты: `test_event_text_utils`, `test_vk_parsing`, `test_kdc_pushgory_service`
+
 ### P13 — разметка афиши (кино + Псков) ✅ (2026-06-16)
 1. ✅ `events-city-row`: split с 1024px, в колонках — 1 карточка в ряд
 2. ✅ Карточки: `overflow: visible`, `min-width: 0`, перенос заголовков
@@ -192,7 +199,7 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~175 | 120+ |
+| pytest | ~183 | 120+ |
 | Vitest | **78** | 40+ |
 | God CSS | portal + literary-album split ✅ | — |
 | Мёртвые компоненты | 0 | 0 |
