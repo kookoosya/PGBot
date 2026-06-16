@@ -40,6 +40,12 @@ async def test_create_issue_validation(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_my_issues_requires_auth(client: AsyncClient):
+    response = await client.get("/api/v1/issues/my")
+    assert response.status_code in (401, 403)
+
+
+@pytest.mark.asyncio
 async def test_public_info(client: AsyncClient):
     response = await client.get("/api/v1/public/info")
     assert response.status_code == 200
@@ -119,6 +125,12 @@ async def test_public_events_limit(client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert len(data["items"]) <= 5
+
+
+@pytest.mark.asyncio
+async def test_public_events_limit_validation(client: AsyncClient):
+    response = await client.get("/api/v1/public/events", params={"limit": 999})
+    assert response.status_code == 422
 
 
 @pytest.mark.postgres

@@ -54,6 +54,7 @@ export function Classifieds() {
   const [submittedNotifyVk, setSubmittedNotifyVk] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const successRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const adCategories = categories.filter((c) => !JOB_CATEGORY_IDS.has(c.value));
 
@@ -101,6 +102,12 @@ export function Classifieds() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formRef.current?.checkValidity()) {
+      const firstInvalid = formRef.current?.querySelector<HTMLElement>(":invalid");
+      firstInvalid?.focus();
+      formRef.current?.reportValidity();
+      return;
+    }
     setSubmitting(true);
     setMsg("");
     try {
@@ -209,7 +216,7 @@ export function Classifieds() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow literary-form-comfort">
+        <form ref={formRef} onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow literary-form-comfort">
           <LiterarySectionHead
             kicker="✍️ Новое объявление"
             title="Подать на модерацию"

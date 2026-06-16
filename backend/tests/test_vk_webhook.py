@@ -59,6 +59,25 @@ async def test_vk_unknown_event_ok(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_welcome", new_callable=AsyncMock, return_value=True)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_secret_mismatch_is_ignored(_mock_mod, _welcome, vk_client: AsyncClient):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    _mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json={
+            "type": "message_new",
+            "secret": "invalid",
+            "object": {"message": {"text": "меню", "from_id": 1, "peer_id": 1, "id": 1, "attachments": []}},
+        },
+    )
+    assert response.status_code == 200
+    assert response.text == "ok"
+
+
+@pytest.mark.asyncio
 @patch("app.services.vk.ai_history.clear_ai_history", new_callable=AsyncMock)
 @patch("app.services.vk.flow_store.clear_flow", new_callable=AsyncMock)
 @patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
@@ -242,3 +261,42 @@ async def test_vk_help_command(mock_mod, mock_send, _flow, _ai, _free, vk_client
     assert response.status_code == 200
     mock_send.assert_awaited()
     assert "справка" in mock_send.await_args.args[1].lower()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.transcribe_audio_url", new_callable=AsyncMock, return_value="сделайте карту лучше")
+@patch("app.api.v1.vk_webhook.extract_audio_url", return_value="https://audio.test/file.ogg")
+@patch("app.api.v1.vk_webhook.route_welcome", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.api.v1.vk_webhook.route_vk_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_complaint", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.send_fallback_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.send_message", new_callable=AsyncMock)
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_voice_message_transcribe_path(
+    mock_mod,
+    mock_send,
+    mock_fallback,
+    _free,
+    _complaint,
+    _ai,
+    _vk,
+    _flow,
+    _welcome,
+    _extract,
+    _transcribe,
+    vk_client: AsyncClient,
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="", peer_id=3003, from_id=77),
+    )
+    assert response.status_code == 200
+    mock_send.assert_awaited()
+    assert "Распознано" in mock_send.await_args.args[1]
+    mock_fallback.assert_awaited_once()

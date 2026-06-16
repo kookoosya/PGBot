@@ -29,6 +29,7 @@ export function Complaints() {
   const openNew = searchParams.get("new") === "1";
   const highlightRef = useRef<HTMLDivElement | null>(null);
   const issuesSectionRef = useRef<HTMLElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [showForm, setShowForm] = useState(true);
@@ -93,6 +94,12 @@ export function Complaints() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formRef.current?.checkValidity()) {
+      const firstInvalid = formRef.current?.querySelector<HTMLElement>(":invalid");
+      firstInvalid?.focus();
+      formRef.current?.reportValidity();
+      return;
+    }
     setLoading(true);
     setMsg("");
     try {
@@ -145,7 +152,7 @@ export function Complaints() {
           </div>
 
           {showForm && (
-            <form onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow literary-form-comfort">
+            <form ref={formRef} onSubmit={submit} className="page-panel page-panel--forest space-y-4 form-glow literary-form-comfort">
               {!user && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

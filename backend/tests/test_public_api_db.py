@@ -31,6 +31,27 @@ async def test_public_today_includes_seeded_event(db_session: AsyncSession, api_
 
 
 @pytest.mark.asyncio
+async def test_public_today_respects_region_filter(db_session: AsyncSession, api_client: AsyncClient):
+    pushkin_event = await create_event(
+        db_session,
+        title="Танцы в Пушкинских Горах",
+        region=EventRegion.PUSHKIN_GORY,
+    )
+    await create_event(
+        db_session,
+        title="Лекция в Пскове",
+        region=EventRegion.PSKOV,
+    )
+
+    response = await api_client.get("/api/v1/public/today", params={"region": "pushkin_gory"})
+    assert response.status_code == 200
+    items = response.json()["upcoming_events"]
+    titles = {item["title"] for item in items}
+    assert pushkin_event.title in titles
+    assert "Лекция в Пскове" not in titles
+
+
+@pytest.mark.asyncio
 async def test_public_events_dedupes_same_title(db_session: AsyncSession, api_client: AsyncClient):
     starts = datetime.now(timezone.utc) + timedelta(days=5)
     await create_event(

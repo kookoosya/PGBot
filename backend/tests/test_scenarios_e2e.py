@@ -323,3 +323,52 @@ async def test_register_login_create_classified_e2e(
     assert created.status_code == 201
     assert created.json()["id"] > 0
     assert created.json()["message"]
+
+
+@pytest.mark.asyncio
+@patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
+async def test_resident_reads_own_classifieds_in_cabinet(
+    _notify_subs,
+    _notify_owner,
+    api_client: AsyncClient,
+):
+    username = unique_username("cabinet_seller")
+    password = TEST_PASSWORD
+
+    register = await api_client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": username,
+            "password": password,
+            "full_name": "Житель-продавец",
+            "phone": "+79001239876",
+        },
+    )
+    assert register.status_code == 201
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": password},
+    )
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    created = await api_client.post(
+        "/api/v1/classifieds",
+        headers=headers,
+        json={
+            "category": "sale",
+            "title": "Тумбочка деревянная",
+            "description": "Тумбочка в хорошем состоянии",
+            "phone": "+79001239876",
+            "author_name": "Житель-продавец",
+            "agree_rules": True,
+        },
+    )
+    assert created.status_code == 201
+    created_id = created.json()["id"]
+
+    mine = await api_client.get("/api/v1/classifieds/mine", headers=headers)
+    assert mine.status_code == 200
+    assert any(item["id"] == created_id for item in mine.json()["items"])

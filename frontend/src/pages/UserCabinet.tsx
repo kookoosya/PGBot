@@ -62,6 +62,8 @@ export function UserCabinet() {
   const status = user.verification_status ? STATUS_LABELS_VERIFY[user.verification_status] : null;
   const isOrg = !!user.organization;
   const activeIssues = recentIssues.filter((i) => ISSUE_ACTIVE_STATUSES.has(i.status)).length;
+  const hasOnlyIssues = issuesLoaded && recentIssues.length > 0 && adsLoaded && myAds.length === 0;
+  const hasOnlyAds = adsLoaded && myAds.length > 0 && issuesLoaded && recentIssues.length === 0;
 
   return (
     <div className="literary-page page-section max-w-2xl mx-auto">
@@ -133,6 +135,28 @@ export function UserCabinet() {
               Подать объявление
             </Link>
           </div>
+        </div>
+      )}
+
+      {hasOnlyIssues && (
+        <div className="literary-card p-4 mb-6 text-center space-y-2">
+          <p className="m-0 text-sm text-muted-foreground">
+            Объявлений пока нет. Хотите быстро разместить новое?
+          </p>
+          <Link to="/classifieds?new=1" className="literary-link text-sm font-medium">
+            Перейти к подаче объявления →
+          </Link>
+        </div>
+      )}
+
+      {hasOnlyAds && (
+        <div className="literary-card p-4 mb-6 text-center space-y-2">
+          <p className="m-0 text-sm text-muted-foreground">
+            Обращений пока нет. Если нужна помощь служб — отправьте первое обращение.
+          </p>
+          <Link to="/complaints?new=1" className="literary-link text-sm font-medium">
+            Подать обращение →
+          </Link>
         </div>
       )}
 
