@@ -6,6 +6,7 @@ Public API: ``build_public_info``.
 from __future__ import annotations
 
 from app.config import get_settings
+from app.canonical_site import CANONICAL_SITE_URL
 
 settings = get_settings()
 
@@ -21,7 +22,7 @@ def vk_bot_ready() -> bool:
 
 def build_public_info() -> dict:
     """Return public site URLs and VK bot readiness for the frontend."""
-    site = settings.PUBLIC_SITE_URL.rstrip("/")
+    site = (settings.PUBLIC_SITE_URL or CANONICAL_SITE_URL).rstrip("/")
     vk_url = settings.VK_GROUP_URL.rstrip("/") if settings.VK_GROUP_URL else "https://vk.com"
     ready = vk_bot_ready()
     return {

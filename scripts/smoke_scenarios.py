@@ -9,6 +9,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+CANONICAL_SITE_URL = "https://192-210-213-135.sslip.io"
+CANONICAL_SITE_HOST = "192-210-213-135.sslip.io"
+
 
 def _fetch(url: str, *, method: str = "GET", data: dict | None = None, timeout: float = 20.0) -> tuple[int, dict | str]:
     headers = {"Accept": "application/json"}
@@ -75,6 +78,12 @@ def run_checks(api_base: str) -> list[str]:
         for key in ("site_url", "vk_url", "map_url"):
             if key not in info:
                 errors.append(f"public/info missing {key}")
+        if CANONICAL_SITE_HOST in api:
+            if info.get("site_url") != CANONICAL_SITE_URL:
+                errors.append(f"site_url must be {CANONICAL_SITE_URL}, got {info.get('site_url')}")
+            links = info.get("portal_links") or {}
+            if links.get("home") != CANONICAL_SITE_URL:
+                errors.append(f"portal_links.home must be {CANONICAL_SITE_URL}")
 
     return errors
 

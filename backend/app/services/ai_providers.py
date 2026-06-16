@@ -8,6 +8,7 @@ from urllib.parse import quote
 import httpx
 
 from app.config import get_settings
+from app.canonical_site import CANONICAL_SITE_URL
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -191,7 +192,7 @@ def _openrouter_headers() -> dict[str, str]:
     return {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": settings.PUBLIC_SITE_URL or "https://192-210-213-135.sslip.io",
+        "HTTP-Referer": settings.PUBLIC_SITE_URL or CANONICAL_SITE_URL,
         "X-Title": "Pushkinskie Gory Portal",
     }
 

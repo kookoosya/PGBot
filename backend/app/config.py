@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.canonical_site import CANONICAL_SITE_URL
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
@@ -42,16 +44,15 @@ class Settings(BaseSettings):
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
     VK_ADMIN_PEER_ID: str = ""
-    PUBLIC_SITE_URL: str = "https://192-210-213-135.sslip.io"
+    PUBLIC_SITE_URL: str = CANONICAL_SITE_URL
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_ADMIN_CHAT_ID: str = ""
 
-    # CORS
+    # CORS (прод только sslip.io; .ru добавим при смене домена)
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://localhost,"
-        "https://pushkinskie-gory.ru,https://www.pushkinskie-gory.ru,"
         "https://192-210-213-135.sslip.io"
     )
 

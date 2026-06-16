@@ -2,14 +2,19 @@
 # Smoke-тест публичных URL после деплоя или локально.
 # Использование: bash scripts/smoke-public.sh [BASE_URL]
 #
+# Прод по умолчанию: https://192-210-213-135.sslip.io (см. scripts/canonical-site.sh)
+#
 # Переменные:
 #   SMOKE_SKIP_CINEMA=1  — не проверять блок кино (для staging без данных)
 #   SMOKE_MIN_CINEMA=N   — минимум фильмов (по умолчанию 1)
 set -euo pipefail
 
-BASE="${1:-${SMOKE_BASE_URL:-http://localhost:5173}}"
-API="${BASE%/}/api/v1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=canonical-site.sh
+source "$SCRIPT_DIR/canonical-site.sh"
+
+BASE="${1:-${SMOKE_BASE_URL:-$CANONICAL_SITE_URL}}"
+API="${BASE%/}/api/v1"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -82,6 +87,26 @@ check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 check "Health" "${BASE%/}/health" "ok"
 check "API today" "$API/public/today" "upcoming_events"
 check "API public info" "$API/public/info" "site_url"
+
+# На проде API должен отдавать тот же канонический URL
+if [[ "$BASE" == *"$CANONICAL_SITE_HOST"* ]]; then
+  site_url=$(curl -sS --max-time 20 "$API/public/info" | python3 -c "import sys,json; print(json.load(sys.stdin).get('site_url',''))")
+  if [[ "$site_url" != "$CANONICAL_SITE_URL" ]]; then
+    echo -e "${RED}FAIL${NC} API site_url=$site_url (ожидался $CANONICAL_SITE_URL)"
+    fail=$((fail + 1))
+  else
+    echo -e "${GREEN}OK${NC}   API site_url canonical"
+    pass=$((pass + 1))
+  fi
+  portal_complaints=$(curl -sS --max-time 20 "$API/public/info" | python3 -c "import sys,json; print(json.load(sys.stdin).get('portal_links',{}).get('complaints',''))")
+  if [[ "$portal_complaints" != "$CANONICAL_SITE_URL/complaints" ]]; then
+    echo -e "${RED}FAIL${NC} portal_links.complaints=$portal_complaints"
+    fail=$((fail + 1))
+  else
+    echo -e "${GREEN}OK${NC}   portal_links use sslip.io"
+    pass=$((pass + 1))
+  fi
+fi
 check "API events" "$API/public/events" "items"
 check "API classifieds" "$API/classifieds" "items"
 check "API classifieds categories" "$API/classifieds/categories" "value"
