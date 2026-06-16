@@ -16,6 +16,8 @@ interface EventCardProps {
   className?: string;
   /** Крупный кинематографичный вид внутри cinema-spotlight */
   spotlight?: boolean;
+  /** Компактный вид на главной — без описания */
+  compact?: boolean;
 }
 
 export function EventCard({
@@ -24,6 +26,7 @@ export function EventCard({
   showReadMore = true,
   className = "",
   spotlight = false,
+  compact = false,
 }: EventCardProps) {
   const cinema = isRealCinemaEvent(event);
   const isPskov = event.region_label === "Псков";
@@ -35,7 +38,7 @@ export function EventCard({
     ? (event as { poster_url?: string | null }).poster_url
     : null;
   const extraSessions = (event as GroupedPublicEvent).extraSessions;
-  const teaser = eventTeaser(event, descLimit);
+  const teaser = compact ? "" : eventTeaser(event, descLimit);
 
   const cardClass = [
     "literary-card",

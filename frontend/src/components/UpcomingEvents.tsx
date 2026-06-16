@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { type EventRegion } from "@/lib/api";
 import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
-import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,6 @@ const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
 
 const LANDING_LIMITS = {
   pushkin: 3,
-  cinema: 2,
-  pskov: 2,
 } as const;
 
 interface UpcomingEventsProps {
@@ -73,12 +71,12 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const showSplit = isLanding || (regionFilter === "all" && !searchInput.trim());
 
   const displayPushkin = isLanding ? pushkinEvents.slice(0, LANDING_LIMITS.pushkin) : pushkinEvents;
-  const displayCinema = isLanding ? cinemaEvents.slice(0, LANDING_LIMITS.cinema) : cinemaEvents;
-  const displayPskov = isLanding ? otherPskovEvents.slice(0, LANDING_LIMITS.pskov) : otherPskovEvents;
+  const displayCinema = isLanding ? [] : cinemaEvents;
+  const displayPskov = isLanding ? [] : otherPskovEvents;
 
   const eventsCopy = LANDING_SECTIONS.events;
   const pskovCopy = LANDING_SECTIONS.pskov;
-  const showCinemaBlock = showSplit && (displayCinema.length > 0 || isLanding);
+  const showCinemaBlock = showSplit && !isLanding && (displayCinema.length > 0 || false);
   const cinemaSingle = isLanding && displayCinema.length === 1;
 
   return (
@@ -89,9 +87,10 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
           title={isLanding ? eventsCopy.title : "Ближайшее в посёлке"}
           lead={
             isLanding
-              ? eventsCopy.lead
+              ? undefined
               : "Концерты у НКЦ, праздники на площади, встречи музея-заповедника — жизнь рп. Пушкинские Горы."
           }
+          compact={isLanding}
           linkTo="/events"
           linkLabel="Вся афиша →"
         />
@@ -142,7 +141,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
                 .join(" ")}
             >
               {displayPushkin.map((event) => (
-                <EventCard key={event.id} event={event} descLimit={isLanding ? 100 : 120} />
+                <EventCard key={event.id} event={event} compact={isLanding} descLimit={isLanding ? 80 : 120} />
               ))}
             </ol>
           )
@@ -156,12 +155,16 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
           </ol>
         )}
 
-        {isLanding && displayPushkin.length > 0 && (
-          <p className="landing-section-verse" aria-hidden>{LITERARY_VERSES.events}</p>
+        {isLanding && (
+          <p className="landing-events-more m-0 mt-3">
+            <Link to="/events" className="literary-link">🎬 Кино в Пскове</Link>
+            <span className="landing-events-more-sep" aria-hidden> · </span>
+            <Link to="/events?region=pskov" className="literary-link">События в городе</Link>
+          </p>
         )}
       </section>
 
-      {showCinemaBlock && (
+      {showCinemaBlock && displayCinema.length > 0 && (
         <CinemaSpotlight featured={isLanding} empty={isLanding && displayCinema.length === 0}>
           {displayCinema.length > 0 ? (
             <ol
@@ -203,7 +206,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         </CinemaSpotlight>
       )}
 
-      {showSplit && displayPskov.length > 0 && (
+      {showSplit && !isLanding && displayPskov.length > 0 && (
         <section className="page-panel page-panel--gold landing-block" aria-label="События в Пскове">
           <LiterarySectionHead
             kicker={pskovCopy.kicker}

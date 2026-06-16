@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { LiterarySectionHead, LiteraryInlineLoader } from "@/components/literary";
-import { formatTemperature } from "@/hooks/useWeather";
+import { LandingCard } from "@/components/landing/LandingCard";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
-import { EMPTY_STATES, LANDING_SECTIONS, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { formatDate } from "@/lib/utils";
 
 const copy = LANDING_SECTIONS.today;
@@ -13,7 +13,7 @@ export function TodayInVillage() {
   if (loading && !data) {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
-        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} compact />
         <LiteraryInlineLoader label="Собираем сводку дня…" compact />
       </section>
     );
@@ -22,7 +22,7 @@ export function TodayInVillage() {
   if (error && !data) {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel">
-        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        <LiterarySectionHead kicker={copy.kicker} title={copy.title} compact />
         <p className="landing-muted">Сводка дня временно недоступна — загляните чуть позже.</p>
       </section>
     );
@@ -30,7 +30,6 @@ export function TodayInVillage() {
 
   if (!data) return null;
 
-  const weather = data.weather?.current;
   const ad = data.latest_classified;
 
   return (
@@ -38,66 +37,38 @@ export function TodayInVillage() {
       <LiterarySectionHead
         kicker={copy.kicker}
         title={copy.title}
-        lead={copy.lead}
+        compact
         meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
       />
 
-      <div className="today-grid today-grid--landing">
-        <article className="today-card today-card--literary today-card-weather">
-          <h3 className="today-card-title">Погода</h3>
-          {weather ? (
-            <>
-              <div className="today-weather-main">
-                <span className="today-weather-icon" aria-hidden>{weather.icon}</span>
-                <div>
-                  <p className="today-weather-temp">{formatTemperature(weather.temperature)}</p>
-                  <p className="today-weather-desc">{weather.description}</p>
-                </div>
-              </div>
-              <ul className="today-weather-meta">
-                <li>Ощущается {formatTemperature(weather.apparent_temperature)}</li>
-                <li>Влажность {weather.humidity}%</li>
-                <li>Ветер {weather.wind_speed.toFixed(1)} м/с</li>
-              </ul>
-              {data.weather && data.weather.hourly.length > 0 && (
-                <div className="today-hourly-mini">
-                  {data.weather.hourly.slice(0, 6).map((hour) => (
-                    <span key={hour.time} className="today-hour-chip">
-                      {hour.hour_label} {hour.icon} {formatTemperature(hour.temperature)}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="landing-muted">Прогноз временно недоступен</p>
-          )}
-        </article>
-
-        <article className="today-card today-card--literary today-card-ad">
-          <h3 className="today-card-title">Свежее объявление</h3>
+      <div className="landing-today-grid">
+        <LandingCard
+          title="Свежее объявление"
+          action={{ label: "Все объявления →", to: "/classifieds" }}
+          className="landing-card--ad"
+        >
           {ad ? (
             <>
-              <p className="today-ad-category">{ad.category_label}</p>
-              <Link to={`/classifieds/${ad.id}`} className="today-ad-link">
+              <p className="landing-card-meta">{ad.category_label}</p>
+              <Link to={`/classifieds/${ad.id}`} className="landing-card-link">
                 {ad.title}
               </Link>
-              <p className="today-ad-date">{formatDate(ad.created_at)}</p>
+              <p className="landing-card-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
             <p className="landing-muted m-0">
               {EMPTY_STATES.todayNoAd.text}{" "}
-              <Link to="/classifieds" className="literary-link">Подать объявление →</Link>
+              <Link to="/classifieds" className="literary-link">Подать →</Link>
             </p>
           )}
-          <Link to="/classifieds" className="today-card-action">
-            Все объявления →
-          </Link>
-        </article>
+        </LandingCard>
 
-        <article className="today-card today-card--literary today-card-map">
-          <h3 className="today-card-title">Карта посёлка</h3>
-          <dl className="today-map-stats">
+        <LandingCard
+          title="Справочник на карте"
+          action={{ label: "Открыть карту →", to: "/map" }}
+          className="landing-card--map"
+        >
+          <dl className="landing-stat-grid">
             <div>
               <dt>Организаций</dt>
               <dd>{data.map.total_places}</dd>
@@ -115,14 +86,8 @@ export function TodayInVillage() {
               <dd>{data.map.route_count}</dd>
             </div>
           </dl>
-          <Link to="/map" className="today-card-action">
-            Открыть карту →
-          </Link>
-        </article>
+        </LandingCard>
       </div>
-      <p className="landing-section-verse landing-section-verse--today" aria-hidden>
-        {LITERARY_VERSES.today}
-      </p>
     </section>
   );
 }

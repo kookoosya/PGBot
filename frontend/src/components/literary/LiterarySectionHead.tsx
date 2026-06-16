@@ -12,6 +12,8 @@ interface LiterarySectionHeadProps {
   children?: ReactNode;
   /** Светлые заголовки на тёмном фоне (кино-блок) */
   light?: boolean;
+  /** Короткий заголовок без lead — для плотных блоков главной */
+  compact?: boolean;
   className?: string;
 }
 
@@ -24,14 +26,15 @@ export function LiterarySectionHead({
   meta,
   children,
   light = false,
+  compact = false,
   className = "",
 }: LiterarySectionHeadProps) {
   return (
-    <div className={`literary-section-head${light ? " literary-section-head--light" : ""} ${className}`.trim()}>
+    <div className={`literary-section-head${light ? " literary-section-head--light" : ""}${compact ? " literary-section-head--compact" : ""} ${className}`.trim()}>
       <div>
         {kicker && <p className="literary-kicker">{kicker}</p>}
         <h2 className="literary-title">{title}</h2>
-        {lead && <p className="literary-lead">{lead}</p>}
+        {lead && !compact && <p className="literary-lead">{lead}</p>}
       </div>
       {(meta || (linkTo && linkLabel)) && (
         <div className="literary-section-head-aside">

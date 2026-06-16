@@ -43,7 +43,7 @@ export function VkBotLink() {
   return <VkBotBanner compact />;
 }
 
-export function VkBotBanner({ compact = false }: { compact?: boolean }) {
+export function VkBotBanner({ compact = false, hidePortalChips = false }: { compact?: boolean; hidePortalChips?: boolean }) {
   const [info, setInfo] = useState<VkInfo | null>(null);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export function VkBotBanner({ compact = false }: { compact?: boolean }) {
         <span className="vk-cta-arrow">→</span>
       </a>
 
-      {info.portal_links && (
+      {info.portal_links && !hidePortalChips && (
         <div className="vk-portal-chips" aria-label="Разделы портала">
           <p className="vk-portal-chips-label">На сайте то же самое:</p>
           <div className="vk-portal-chips-row">

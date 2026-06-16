@@ -44,6 +44,7 @@ const Wishes = lazy(() => import("./pages/Wishes").then((m) => ({ default: m.Wis
 const AdminFeedback = lazy(() => import("./pages/AdminFeedback").then((m) => ({ default: m.AdminFeedback })));
 const AuditLogs = lazy(() => import("./pages/AuditLogs").then((m) => ({ default: m.AuditLogs })));
 const Settings = lazy(() => import("./pages/Settings").then((m) => ({ default: m.Settings })));
+const VkMiniAppPage = lazy(() => import("./pages/VkMiniApp").then((m) => ({ default: m.VkMiniAppPage })));
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isOwner, loading } = useAuth();
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
         <Route path="events" element={<Lazy><EventsPage /></Lazy>} />
         <Route path="events/:id" element={<Lazy><EventDetail /></Lazy>} />
+        <Route path="vk" element={<Lazy><VkMiniAppPage /></Lazy>} />
         <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
         <Route path="signup" element={<Lazy><Signup /></Lazy>} />
