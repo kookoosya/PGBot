@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   eventSourceLabel,
   eventTeaser,
+  extractEventTimeLabel,
   formatExtraSessions,
   formatFestivalDateRange,
   groupEventsByShow,
+  groupFestivalPerformancesByDay,
   isDisplayablePoster,
   isRealCinemaEvent,
   isFestivalImminent,
@@ -12,6 +14,7 @@ import {
   pluralPerformances,
   regionChipClass,
   regionLabelFromFilter,
+  shortenFestivalPerformanceTitle,
 } from "./eventUtils";
 
 const cinemaOrbilet = {
@@ -158,6 +161,38 @@ describe("isFestivalImminent", () => {
   it("returns false for distant festival", () => {
     const later = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     expect(isFestivalImminent([{ starts_at: later, starts_at_label: "позже" }])).toBe(false);
+  });
+});
+
+describe("groupFestivalPerformancesByDay", () => {
+  it("groups performances by calendar day and sorts by time", () => {
+    const groups = groupFestivalPerformancesByDay([
+      {
+        id: 2,
+        title: "Вечерний",
+        starts_at: "2026-06-20T18:00:00+03:00",
+        starts_at_label: "20.06.2026 · 18:00",
+      },
+      {
+        id: 1,
+        title: "Утренний",
+        starts_at: "2026-06-19T10:15:00+03:00",
+        starts_at_label: "19.06.2026 · 10:15",
+      },
+    ]);
+    expect(groups).toHaveLength(2);
+    expect(groups[0].items[0].id).toBe(1);
+    expect(groups[1].items[0].id).toBe(2);
+  });
+});
+
+describe("festival schedule helpers", () => {
+  it("extracts time from starts_at_label", () => {
+    expect(extractEventTimeLabel({ starts_at_label: "19.06.2026 · 10:15" })).toBe("10:15");
+  });
+
+  it("shortens garnet suffix in title", () => {
+    expect(shortenFestivalPerformanceTitle("«Пиратские анекдоты» — Бугровский гарнец")).toBe("«Пиратские анекдоты»");
   });
 });
 

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { EventCardEvent } from "@/lib/eventUtils";
-import { formatFestivalDateRange, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
+import { formatFestivalDateRange, FESTIVAL_COMPACT_LIST_THRESHOLD, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
 import { EventCard } from "./EventCard";
+import { FestivalProgramSchedule } from "./FestivalProgramSchedule";
 
 interface FestivalProgramBlockProps {
   events: EventCardEvent[];
@@ -28,6 +29,8 @@ export function FestivalProgramBlock({
   }, [isImminent]);
 
   if (events.length < 2) return null;
+
+  const useCompactList = events.length >= FESTIVAL_COMPACT_LIST_THRESHOLD;
 
   return (
     <details
@@ -59,11 +62,17 @@ export function FestivalProgramBlock({
         </div>
         <span className="events-festival-program__toggle" aria-hidden />
       </summary>
-      <ol className="events-grid events-grid--festival">
-        {events.map((event) => (
-          <EventCard key={event.id} event={event} compact descLimit={90} />
-        ))}
-      </ol>
+      {useCompactList ? (
+        <div className="events-festival-program__body">
+          <FestivalProgramSchedule events={events} />
+        </div>
+      ) : (
+        <ol className="events-grid events-grid--festival">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} compact descLimit={90} />
+          ))}
+        </ol>
+      )}
     </details>
   );
 }

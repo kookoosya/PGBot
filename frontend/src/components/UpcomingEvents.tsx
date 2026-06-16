@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { ctaArrow, CTA } from "@/lib/cta";
-import { api, type PublicEvent } from "@/lib/api";
+import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
 import { isRealCinemaEvent, groupEventsByShow, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
@@ -25,29 +25,11 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const isLanding = variant === "landing";
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
-  const [landingPushkin, setLandingPushkin] = useState<PublicEvent[] | null>(null);
+  const { program: landingGarnect, rest: landingPushkinRest, loading: landingGarnectLoading } =
+    usePushkinGarnectProgram(isLanding);
   const apiRegion = regionFilter === "all" ? undefined : regionFilter;
   const { data, loading } = useToday(apiRegion);
   const events = data?.upcoming_events ?? [];
-
-  useEffect(() => {
-    if (!isLanding) {
-      setLandingPushkin(null);
-      return;
-    }
-    let cancelled = false;
-    api
-      .getPublicEvents({ region: "pushkin_gory", limit: "80" })
-      .then((response) => {
-        if (!cancelled) setLandingPushkin(response.items);
-      })
-      .catch(() => {
-        if (!cancelled) setLandingPushkin(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isLanding]);
 
   const filteredEvents = useMemo(() => {
     let list = events;
@@ -68,13 +50,13 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   }, [events, regionFilter, searchInput]);
 
   const pushkinEvents = useMemo(() => {
-    if (isLanding && landingPushkin) {
-      return landingPushkin.filter((event) => !isRealCinemaEvent(event));
+    if (isLanding) {
+      return [...landingGarnect, ...landingPushkinRest];
     }
     return filteredEvents.filter(
       (event) => event.region_label === "Пушкинские Горы" && !isRealCinemaEvent(event),
     );
-  }, [filteredEvents, isLanding, landingPushkin]);
+  }, [filteredEvents, isLanding, landingGarnect, landingPushkinRest]);
 
   const { program: garnectProgram, rest: pushkinOtherEvents } = useMemo(
     () => partitionGarnectProgram(pushkinEvents),
@@ -145,7 +127,9 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         </div>
       )}
 
-      {loading && !data ? (
+      {loading && !data && !isLanding ? (
+        <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
+      ) : isLanding && landingGarnectLoading && garnectProgram.length === 0 && displayPushkin.length === 0 ? (
         <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
       ) : showSplit ? (
         garnectProgram.length === 0 && displayPushkin.length === 0 ? (

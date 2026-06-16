@@ -1,3 +1,4 @@
+import { FestivalHeroBanner } from "@/components/FestivalHeroBanner";
 import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { VkBotBanner } from "@/components/VkBotLink";
@@ -49,6 +50,7 @@ export function Landing() {
                   📅 {heroCopy.ctaEvents}
                 </Link>
               </div>
+              <FestivalHeroBanner />
               <p className="epic-hero-more">
                 <Link to="/classifieds" className="epic-hero-more-link">
                   📋 {heroCopy.ctaClassifieds} →

@@ -244,6 +244,55 @@ export function isFestivalImminent(
   return false;
 }
 
+export function extractEventTimeLabel(event: Pick<ShowGroupable, "starts_at" | "starts_at_label">): string {
+  if (event.starts_at_label.includes("·")) {
+    return event.starts_at_label.split("·").pop()?.trim() || event.starts_at_label;
+  }
+  if (event.starts_at) {
+    const date = new Date(event.starts_at);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    }
+  }
+  return event.starts_at_label;
+}
+
+export function shortenFestivalPerformanceTitle(title: string): string {
+  return title.replace(/\s*—\s*Бугровский гарнец\s*$/i, "").trim();
+}
+
+export type FestivalDayGroup<T extends ShowGroupable & { id: number }> = {
+  dayKey: string;
+  dayLabel: string;
+  items: T[];
+};
+
+export function groupFestivalPerformancesByDay<T extends ShowGroupable & { id: number }>(
+  events: T[],
+): FestivalDayGroup<T>[] {
+  const buckets = new Map<string, T[]>();
+
+  for (const event of events) {
+    const dayKey = event.starts_at?.slice(0, 10) || event.starts_at_label.split("·")[0]?.trim() || "unknown";
+    const list = buckets.get(dayKey) ?? [];
+    list.push(event);
+    buckets.set(dayKey, list);
+  }
+
+  return [...buckets.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dayKey, items]) => {
+      items.sort((a, b) => (a.starts_at || a.starts_at_label).localeCompare(b.starts_at || b.starts_at_label));
+      const sample = items[0]?.starts_at;
+      const dayLabel = sample
+        ? new Date(sample).toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "long" })
+        : dayKey;
+      return { dayKey, dayLabel, items };
+    });
+}
+
+export const FESTIVAL_COMPACT_LIST_THRESHOLD = 5;
+
 export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
   const buckets = new Map<string, T[]>();
   for (const event of events) {
