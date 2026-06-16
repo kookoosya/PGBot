@@ -55,6 +55,9 @@ ISSUE_STATUS_CHANGED_VK = _vk("issue_status_changed")
 
 ISSUE_STATUS_HINTS: dict[str, str] = dict(_data["issue_status_hints"])
 ISSUE_STATUS_EMOJI: dict[str, str] = dict(_data["issue_status_emoji"])
+EMPTY_STATES: dict[str, dict[str, str]] = {
+    key: dict(value) for key, value in _data["empty_states"].items()
+}
 
 # Deep link button labels
 LINK_EVENTS = _link("events")

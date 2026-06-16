@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import portalCopy from "../../../shared/portal_copy.json";
 import {
+  EMPTY_STATES,
   ISSUE_STATUS_EMOJI,
   ISSUE_STATUS_HINTS,
   PORTAL_COPY_BRAND,
@@ -30,5 +31,11 @@ describe("portalCopyShared ↔ shared/portal_copy.json", () => {
   it("exposes vk welcome body", () => {
     expect(PORTAL_COPY_VK.welcome_body).toBe(portalCopy.vk.welcome_body);
     expect(PORTAL_COPY_VK.welcome_body.length).toBeGreaterThan(20);
+  });
+
+  it("syncs empty states for key flows", () => {
+    expect(EMPTY_STATES.events).toEqual(portalCopy.empty_states.events);
+    expect(EMPTY_STATES.classifieds.title).toBeTruthy();
+    expect(EMPTY_STATES.notFound.icon).toBe("🔍");
   });
 });

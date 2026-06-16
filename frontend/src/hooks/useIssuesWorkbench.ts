@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, Issue } from "@/lib/api";
-import { ISSUE_WORKBENCH_PAGE_SIZE } from "@/lib/issueWorkbench";
+import { ISSUE_WORKBENCH_PAGE_SIZE, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
 
 export function useIssuesWorkbench() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -49,7 +49,7 @@ export function useIssuesWorkbench() {
     }
   };
 
-  const totalPages = Math.ceil(total / ISSUE_WORKBENCH_PAGE_SIZE) || 1;
+  const totalPages = issueWorkbenchTotalPages(total);
 
   return {
     issues,

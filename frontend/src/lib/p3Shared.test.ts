@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ISSUE_WORKBENCH_PAGE_SIZE, ISSUE_WORKBENCH_STATUSES } from "@/lib/issueWorkbench";
+import { ISSUE_WORKBENCH_PAGE_SIZE, ISSUE_WORKBENCH_STATUSES, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
 import {
   CLASSIFIED_FORM_INITIAL,
   CLASSIFIED_FORM_TEMPLATES,
@@ -17,6 +17,13 @@ describe("issueWorkbench", () => {
 
   it("excludes archived from workbench filters", () => {
     expect(ISSUE_WORKBENCH_STATUSES).not.toContain("ARCHIVED");
+  });
+
+  it("calculates total pages", () => {
+    expect(issueWorkbenchTotalPages(0)).toBe(1);
+    expect(issueWorkbenchTotalPages(1)).toBe(1);
+    expect(issueWorkbenchTotalPages(21)).toBe(2);
+    expect(issueWorkbenchTotalPages(40, ISSUE_WORKBENCH_PAGE_SIZE)).toBe(2);
   });
 });
 

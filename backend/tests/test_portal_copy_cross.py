@@ -25,6 +25,12 @@ def test_backend_matches_shared_json_issue_hints():
     assert pc.ISSUE_STATUS_EMOJI == data["issue_status_emoji"]
 
 
+def test_backend_matches_shared_json_empty_states():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert pc.EMPTY_STATES == data["empty_states"]
+    assert pc.EMPTY_STATES["classifieds"]["title"]
+
+
 def test_shared_json_links_and_vk_nonempty():
     data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
     assert data["links"]["map"]

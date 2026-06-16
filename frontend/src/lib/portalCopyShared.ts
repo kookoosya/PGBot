@@ -13,3 +13,11 @@ export const ISSUE_STATUS_EMOJI: Record<string, string> = copy.issue_status_emoj
 export const PORTAL_COPY_LINKS = copy.links;
 
 export const PORTAL_COPY_VK = copy.vk;
+
+export type EmptyStateCopy = {
+  icon: string;
+  title: string;
+  text: string;
+};
+
+export const EMPTY_STATES = copy.empty_states as Record<string, EmptyStateCopy>;

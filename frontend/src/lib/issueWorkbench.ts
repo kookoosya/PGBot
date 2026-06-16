@@ -10,3 +10,10 @@ export const ISSUE_WORKBENCH_STATUSES = [
 ] as const;
 
 export const ISSUE_WORKBENCH_PAGE_SIZE = 20;
+
+export function issueWorkbenchTotalPages(
+  total: number,
+  pageSize: number = ISSUE_WORKBENCH_PAGE_SIZE,
+): number {
+  return Math.ceil(total / pageSize) || 1;
+}
