@@ -12,11 +12,11 @@
 |---------|--------|---------------------|
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
 | Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
-| Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
+| Backend тесты | places, map meta, weather, health + postgres suite | admin, AI |
 | Frontend API | split `lib/api/*` + `types/` | — |
 | Frontend Map | split `pages/map/*` | — |
 | Frontend UI | literary album, unified issue/ad components | — |
-| Frontend тесты | Vitest **47** | компоненты, API hooks |
+| Frontend тесты | Vitest **55** | компоненты, renderHook |
 | Тексты | `shared/portal_copy.json` brand + issue hints | bulk UI copy только во frontend |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
@@ -124,6 +124,11 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P7 — тесты и утилиты (без VK Mini App) ✅ (2026-06-16)
+1. ✅ Backend: `test_places_api_db`, `test_map_meta_api`, `test_weather_api`, `test_health_api`
+2. ✅ Frontend: `formDraftStorage`, `mapTiles`, `siteUrl` — Vitest **55**
+3. ✅ `useFormDraft` → `formDraftStorage` helpers (тестируемые без renderHook)
+
 ### P6 — инфра и чистка (без VK Mini App) ✅ (2026-06-16)
 1. ✅ Redis rate limit: `redis` в `docker-compose.prod.yml`, `REDIS_URL`, slowapi storage
 2. ✅ Исправлен `test_vk_unsubscribe_command` (mock → `commands.handlers`)
@@ -148,8 +153,8 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~139 | 120+ |
-| Vitest | **47** | 40+ |
+| pytest | ~150 | 120+ |
+| Vitest | **55** | 40+ |
 | God files ≥400 строк (py/ts) | 0 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
