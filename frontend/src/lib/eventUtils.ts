@@ -36,6 +36,7 @@ export const EVENT_SOURCE_LABELS: Record<string, string> = {
   kdc: "КДЦ Пушкиногорье",
   pushkinland: "Пушкинский заповедник",
   informpskov: "ИнформПсков",
+  pln: "ПЛН Псков",
   drampush: "Театр драмы",
   manual: "Организатор",
 };

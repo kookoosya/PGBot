@@ -53,6 +53,7 @@ async def upsert_fetched_event(
                 description=payload.description,
                 starts_at=payload.starts_at,
                 ends_at=payload.ends_at,
+                sync_ends_at=True,
                 location=payload.location,
                 region=item.region,
                 category=payload.category,

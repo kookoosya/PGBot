@@ -58,3 +58,4 @@ class EventUpdateInput:
     genre: Optional[str] = None
     poster_url: Optional[str] = None
     is_published: Optional[bool] = None
+    sync_ends_at: bool = False

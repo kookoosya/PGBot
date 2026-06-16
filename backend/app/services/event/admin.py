@@ -136,7 +136,9 @@ async def update_event(
         event.poster_url = data.poster_url.strip() or None
     if data.starts_at is not None:
         event.starts_at = data.starts_at
-    if data.ends_at is not None:
+    if data.sync_ends_at:
+        event.ends_at = data.ends_at
+    elif data.ends_at is not None:
         event.ends_at = data.ends_at
     if data.location is not None:
         event.location = data.location.strip() or None
