@@ -24,6 +24,20 @@ export type GroupedPublicEvent = ShowGroupable & {
 
 export type EventCardEvent = PublicEvent | TodayEventSnippet | GroupedPublicEvent;
 
+/** Merge API lists without duplicate ids (first occurrence wins). */
+export function mergePublicEvents(...lists: PublicEvent[][]): PublicEvent[] {
+  const seen = new Set<number>();
+  const merged: PublicEvent[] = [];
+  for (const list of lists) {
+    for (const event of list) {
+      if (seen.has(event.id)) continue;
+      seen.add(event.id);
+      merged.push(event);
+    }
+  }
+  return merged;
+}
+
 export const EVENT_SOURCE_LABELS: Record<string, string> = {
   vk: "ВКонтакте",
   kudago: "KudaGo",

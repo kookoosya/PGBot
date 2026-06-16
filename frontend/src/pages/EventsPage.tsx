@@ -5,7 +5,7 @@ import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, L
 import { Input } from "@/components/ui/input";
 import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
-import { groupEventsByShow, isRealCinemaEvent } from "@/lib/eventUtils";
+import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const copy = PAGE_SECTIONS.events;
@@ -23,14 +23,19 @@ export function EventsPage() {
   useEffect(() => {
     setLoading(true);
     setLoadError(false);
-    api
-      .getPublicEvents({
-        // Для посёлка и «Все» грузим полную афишу — кино и Псков рядом сверху.
-        region: regionFilter === "pskov" ? "pskov" : undefined,
-        search: search || undefined,
-        limit: "40",
-      })
-      .then((r) => setEvents(r.items))
+
+    const base = { search: search || undefined, limit: "50" as const };
+
+    const load =
+      regionFilter === "pskov"
+        ? api.getPublicEvents({ ...base, region: "pskov" }).then((r) => r.items)
+        : Promise.all([
+            api.getPublicEvents({ ...base, region: "pushkin_gory" }),
+            api.getPublicEvents({ ...base, region: "pskov" }),
+          ]).then(([pushkin, pskov]) => mergePublicEvents(pskov.items, pushkin.items));
+
+    load
+      .then(setEvents)
       .catch(() => {
         setEvents([]);
         setLoadError(true);

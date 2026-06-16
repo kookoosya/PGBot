@@ -13,7 +13,12 @@ import type {
 
 export function createEventsApi(client: HttpClient) {
   return {
-    getPublicEvents(params?: { region?: EventRegion; search?: string; limit?: string }) {
+    getPublicEvents(params?: {
+      region?: EventRegion;
+      source?: string;
+      search?: string;
+      limit?: string;
+    }) {
       const query = params
         ? "?" +
           new URLSearchParams(
