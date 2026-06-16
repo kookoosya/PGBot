@@ -61,9 +61,6 @@ export function PublicLayout() {
       <footer className="pushkin-footer pushkin-footer-spacer">
         <div className="pushkin-footer-inner">
           <FooterNav />
-          <p className="pushkin-footer-line">
-            {BRAND.name} · {BRAND.district} · {new Date().getFullYear()}
-          </p>
         </div>
       </footer>
 

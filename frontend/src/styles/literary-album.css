@@ -756,6 +756,17 @@
     line-height: 1;
   }
 
+  /* Явная стилизация названия в карточках разделов */
+  .landing-quick-nav-label {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.875rem;
+    line-height: 1.15;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    color: hsl(var(--forest));
+    opacity: 1;
+  }
+
   /* Единые карточки блока «Сегодня» */
   .landing-today-grid {
     display: grid;

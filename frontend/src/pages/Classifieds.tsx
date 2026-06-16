@@ -8,7 +8,6 @@ import {
   LiterarySectionHead,
   PostSubmitPanel,
 } from "@/components/literary";
-import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
@@ -433,7 +432,6 @@ export function Classifieds() {
         )}
       </div>
 
-      <PagePortalNav title="Куда дальше" />
     </div>
   );
 }

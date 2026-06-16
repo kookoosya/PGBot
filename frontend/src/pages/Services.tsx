@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { PageHeader } from "@/components/PageHeader";
 import {
   LiteraryClassifiedCard,
@@ -179,8 +178,6 @@ export function Services() {
           </LiteraryEmptyState>
         )}
       </section>
-
-      <PagePortalNav title="Куда дальше" />
 
       {filter && nothingFound && (
         <LiteraryEmptyState {...EMPTY_STATES.servicesCatalog} compact />

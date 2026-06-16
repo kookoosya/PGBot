@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
@@ -194,7 +193,6 @@ export function EventsPage() {
         </div>
       )}
 
-      <PagePortalNav title="Куда дальше" />
     </div>
   );
 }
