@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ISSUE_WORKBENCH_PAGE_SIZE, ISSUE_WORKBENCH_STATUSES, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
 import {
-  CLASSIFIED_FORM_INITIAL,
-  CLASSIFIED_FORM_TEMPLATES,
-  CLASSIFIEDS_DRAFT_KEY,
-  JOBS_DRAFT_KEY,
-  JOBS_FORM_INITIAL,
-} from "@/lib/classifiedForm";
+  buildIssueWorkbenchQuery,
+  ISSUE_WORKBENCH_PAGE_SIZE,
+  ISSUE_WORKBENCH_STATUSES,
+  issueWorkbenchTotalPages,
+} from "@/lib/issueWorkbench";
 
 describe("issueWorkbench", () => {
   it("exports workbench statuses", () => {
@@ -25,25 +23,14 @@ describe("issueWorkbench", () => {
     expect(issueWorkbenchTotalPages(21)).toBe(2);
     expect(issueWorkbenchTotalPages(40, ISSUE_WORKBENCH_PAGE_SIZE)).toBe(2);
   });
-});
 
-describe("classifiedForm", () => {
-  it("jobs form defaults to job category", () => {
-    expect(JOBS_FORM_INITIAL.category).toMatch(/^job_/);
-    expect(CLASSIFIED_FORM_INITIAL.category).toBe("firewood");
-  });
-
-  it("uses distinct draft keys", () => {
-    expect(CLASSIFIEDS_DRAFT_KEY).not.toBe(JOBS_DRAFT_KEY);
-  });
-
-  it("provides starter templates", () => {
-    expect(CLASSIFIED_FORM_TEMPLATES.length).toBeGreaterThanOrEqual(2);
-    expect(CLASSIFIED_FORM_TEMPLATES[0]).toMatch(/Продам|Услуга|Сосед/i);
-  });
-
-  it("requires agree_rules default false", () => {
-    expect(CLASSIFIED_FORM_INITIAL.agree_rules).toBe(false);
-    expect(JOBS_FORM_INITIAL.agree_rules).toBe(false);
+  it("builds query params with filters", () => {
+    expect(buildIssueWorkbenchQuery(2, "", "")).toEqual({ page: "2", page_size: "20" });
+    expect(buildIssueWorkbenchQuery(1, "NEW", "фонарь")).toEqual({
+      page: "1",
+      page_size: "20",
+      status_filter: "NEW",
+      search: "фонарь",
+    });
   });
 });

@@ -4,6 +4,7 @@ import {
   EMPTY_STATES,
   ISSUE_STATUS_EMOJI,
   ISSUE_STATUS_HINTS,
+  LANDING_HERO_COPY,
   PORTAL_COPY_BRAND,
   PORTAL_COPY_LINKS,
   PORTAL_COPY_VK,
@@ -37,5 +38,10 @@ describe("portalCopyShared ↔ shared/portal_copy.json", () => {
     expect(EMPTY_STATES.events).toEqual(portalCopy.empty_states.events);
     expect(EMPTY_STATES.classifieds.title).toBeTruthy();
     expect(EMPTY_STATES.notFound.icon).toBe("🔍");
+  });
+
+  it("syncs landing hero copy", () => {
+    expect(LANDING_HERO_COPY.lead).toBe(portalCopy.landing_hero.lead);
+    expect(LANDING_HERO_COPY.cta_map).toBeTruthy();
   });
 });

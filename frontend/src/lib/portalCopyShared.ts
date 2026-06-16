@@ -6,6 +6,8 @@ import copy from "../../../shared/portal_copy.json";
 
 export const PORTAL_COPY_BRAND = copy.brand;
 
+export const LANDING_HERO_COPY = copy.landing_hero;
+
 export const ISSUE_STATUS_HINTS: Record<string, string> = copy.issue_status_hints;
 
 export const ISSUE_STATUS_EMOJI: Record<string, string> = copy.issue_status_emoji;

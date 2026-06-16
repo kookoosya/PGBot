@@ -33,6 +33,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    environmentMatchGlobs: [
+      ["src/hooks/**/*.test.ts", "jsdom"],
+      ["src/hooks/**/*.test.tsx", "jsdom"],
+    ],
   },
 });

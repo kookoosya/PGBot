@@ -37,6 +37,10 @@ _brand = _data["brand"]
 
 BRAND_KICKER = _brand["kicker"]
 BRAND_TAGLINE = _brand["tagline"]
+LANDING_HERO_LEAD = str(_data["landing_hero"]["lead"])
+LANDING_HERO_CTA_MAP = str(_data["landing_hero"]["cta_map"])
+LANDING_HERO_CTA_EVENTS = str(_data["landing_hero"]["cta_events"])
+LANDING_HERO_CTA_CLASSIFIEDS = str(_data["landing_hero"]["cta_classifieds"])
 
 # --- VK welcome / help ---
 VK_WELCOME_BODY = _vk("welcome_body")

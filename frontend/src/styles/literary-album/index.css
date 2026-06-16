@@ -1,0 +1,4 @@
+/* Пушкиногорский альбом — split modules */
+@import "./core.css";
+@import "./landing.css";
+@import "./pages.css";

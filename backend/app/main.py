@@ -44,7 +44,16 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 @app.get("/health")
 @limiter.limit("30/minute")
 async def health(request: Request):
-    return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+    payload = {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+    if settings.REDIS_URL.strip():
+        try:
+            import redis
+
+            redis.from_url(settings.REDIS_URL, socket_connect_timeout=1).ping()
+            payload["redis"] = "ok"
+        except Exception:
+            payload["redis"] = "error"
+    return payload
 
 
 @app.get("/")

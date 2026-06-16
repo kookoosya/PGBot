@@ -12,12 +12,10 @@
 |---------|--------|---------------------|
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
 | Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
-| Backend тесты | places, map meta, weather, health + postgres suite | admin, AI |
-| Frontend API | split `lib/api/*` + `types/` | — |
-| Frontend Map | split `pages/map/*` | — |
-| Frontend UI | literary album, unified issue/ad components | — |
-| Frontend тесты | Vitest **55** | компоненты, renderHook |
-| Тексты | `shared/portal_copy.json` brand + issue hints + **empty_states** | bulk PAGE_SECTIONS во frontend |
+| Backend тесты | places, admin, feedback, visits, AI + postgres suite | — |
+| Frontend CSS | `literary-album/` split (core, landing, pages) | `index.css` ~2800 строк |
+| Frontend тесты | Vitest **58** + renderHook | компоненты |
+| Тексты | `portal_copy.json`: brand, empty_states, **landing_hero** | PAGE_SECTIONS во frontend |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
 ---
@@ -63,7 +61,11 @@
 | `LandingJobsPreview.tsx`, `LandingUsefulNearby.tsx` | landing перестроен |
 | `WeatherWidgetDetailed.tsx` | не используется |
 
-### Frontend — CSS-сироты (после удаления компонентов)
+### Frontend — CSS
+- ✅ `literary-album.css` → `styles/literary-album/{core,landing,pages}.css` (P9)
+- ⏭ `index.css` ~2800 строк — следующий split
+
+### Frontend — CSS-сироты (устарело)
 - `index.css`: `.landing-page`, `.hero-orbs*`, `.quick-nav-*`
 - `literary-album.css`: `.epic-verses-*`, `.literary-gallery-*`, `.seasonal-tip*`
 
@@ -124,6 +126,13 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P9 — большой прогон ✅ (2026-06-16)
+1. ✅ CSS split: `literary-album/` → core + landing + pages
+2. ✅ `landing_hero` в `portal_copy.json` + cross-тесты
+3. ✅ Backend: `test_feedback_visits_api`, `test_ai_api`, health redis ping
+4. ✅ `buildIssueWorkbenchQuery`, `useIssuesWorkbench.test.ts` (@testing-library/react)
+5. ✅ Vitest **58**
+
 ### P8 — тексты и admin API (без VK Mini App) ✅ (2026-06-16)
 1. ✅ `EMPTY_STATES` → `shared/portal_copy.json` (frontend + backend sync)
 2. ✅ `test_admin_api_db` — statistics, audit-logs, notifications (owner-only)
@@ -158,9 +167,9 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~158 | 120+ |
-| Vitest | **57** | 40+ |
-| God files ≥400 строк (py/ts) | 0 | 0 |
+| pytest | ~175 | 120+ |
+| Vitest | **58** | 40+ |
+| God CSS | literary-album split ✅ | index.css |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
 

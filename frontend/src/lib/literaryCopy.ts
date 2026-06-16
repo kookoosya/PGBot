@@ -1,17 +1,16 @@
 /** Тексты интерфейса портала — единый деловой тон */
 
-import { PORTAL_COPY_BRAND } from "./portalCopyShared";
+import { LANDING_HERO_COPY, PORTAL_COPY_BRAND } from "./portalCopyShared";
 
 export { ISSUE_STATUS_HINTS, EMPTY_STATES } from "./portalCopyShared";
 
 export const LANDING_HERO = {
   kicker: PORTAL_COPY_BRAND.kicker,
   tagline: PORTAL_COPY_BRAND.tagline,
-  lead:
-    "Афиша, объявления, карта, работа и обращения в администрацию — всё для жителей и гостей посёлка.",
-  ctaMap: "Карта посёлка",
-  ctaEvents: "Афиша событий",
-  ctaClassifieds: "Объявления соседей",
+  lead: LANDING_HERO_COPY.lead,
+  ctaMap: LANDING_HERO_COPY.cta_map,
+  ctaEvents: LANDING_HERO_COPY.cta_events,
+  ctaClassifieds: LANDING_HERO_COPY.cta_classifieds,
 } as const;
 
 export const PAGE_SECTIONS = {

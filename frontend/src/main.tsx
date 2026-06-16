@@ -15,7 +15,7 @@ import "@fontsource/source-serif-4/400-italic.css";
 import "@fontsource/source-sans-3/400.css";
 import "@fontsource/source-sans-3/600.css";
 import "./index.css";
-import "./styles/literary-album.css";
+import "./styles/literary-album/index.css";
 
 clearStaleServiceWorkers();
 

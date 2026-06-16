@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_STATES, LANDING_SECTIONS, PAGE_SECTIONS } from "./literaryCopy";
+import { EMPTY_STATES, LANDING_HERO, LANDING_SECTIONS, PAGE_SECTIONS } from "./literaryCopy";
 import { PORTAL_COPY_BRAND } from "./portalCopyShared";
 
 describe("literaryCopy", () => {
@@ -27,5 +27,11 @@ describe("literaryCopy", () => {
     expect(PAGE_SECTIONS.signup.title).toContain("жител");
     expect(PAGE_SECTIONS.signup.submitIdle).toBeTruthy();
     expect(PAGE_SECTIONS.signup.backLabel).toContain("вариант");
+  });
+
+  it("syncs landing hero with shared portal copy", () => {
+    expect(LANDING_HERO.kicker).toBe(PORTAL_COPY_BRAND.kicker);
+    expect(LANDING_HERO.lead.length).toBeGreaterThan(20);
+    expect(LANDING_HERO.ctaMap).toBeTruthy();
   });
 });

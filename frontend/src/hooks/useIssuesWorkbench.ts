@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, Issue } from "@/lib/api";
-import { ISSUE_WORKBENCH_PAGE_SIZE, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
+import { buildIssueWorkbenchQuery, ISSUE_WORKBENCH_PAGE_SIZE, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
 
 export function useIssuesWorkbench() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -12,14 +12,8 @@ export function useIssuesWorkbench() {
   const [resolution, setResolution] = useState("");
 
   const loadIssues = () => {
-    const params: Record<string, string> = {
-      page: String(page),
-      page_size: String(ISSUE_WORKBENCH_PAGE_SIZE),
-    };
-    if (statusFilter) params.status_filter = statusFilter;
-    if (search) params.search = search;
     api
-      .getIssues(params)
+      .getIssues(buildIssueWorkbenchQuery(page, statusFilter, search))
       .then((r) => {
         setIssues(r.items);
         setTotal(r.total);

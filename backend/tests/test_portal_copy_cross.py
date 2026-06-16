@@ -17,6 +17,7 @@ def test_backend_matches_shared_json_brand():
     data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
     assert pc.BRAND_KICKER == data["brand"]["kicker"]
     assert pc.BRAND_TAGLINE == data["brand"]["tagline"]
+    assert pc.LANDING_HERO_LEAD == data["landing_hero"]["lead"]
 
 
 def test_backend_matches_shared_json_issue_hints():
