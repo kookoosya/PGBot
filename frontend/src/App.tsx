@@ -44,7 +44,8 @@ const Wishes = lazy(() => import("./pages/Wishes").then((m) => ({ default: m.Wis
 const AdminFeedback = lazy(() => import("./pages/AdminFeedback").then((m) => ({ default: m.AdminFeedback })));
 const AuditLogs = lazy(() => import("./pages/AuditLogs").then((m) => ({ default: m.AuditLogs })));
 const Settings = lazy(() => import("./pages/Settings").then((m) => ({ default: m.Settings })));
-const VkMiniAppPage = lazy(() => import("./pages/VkMiniApp").then((m) => ({ default: m.VkMiniAppPage })));
+const VkMiniAppLayout = lazy(() => import("./pages/vk/VkMiniAppLayout").then((m) => ({ default: m.VkMiniAppLayout })));
+const VkMiniAppHome = lazy(() => import("./pages/vk/VkMiniAppHome").then((m) => ({ default: m.VkMiniAppHome })));
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isOwner, loading } = useAuth();
@@ -88,7 +89,6 @@ export default function App() {
         <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
         <Route path="events" element={<Lazy><EventsPage /></Lazy>} />
         <Route path="events/:id" element={<Lazy><EventDetail /></Lazy>} />
-        <Route path="vk" element={<Lazy><VkMiniAppPage /></Lazy>} />
         <Route path="wishes" element={<Lazy><Wishes /></Lazy>} />
         <Route path="register" element={<RegisterHub />} />
         <Route path="signup" element={<Lazy><Signup /></Lazy>} />
@@ -112,6 +112,15 @@ export default function App() {
           }
         />
         <Route path="*" element={<NotFound />} />
+      </Route>
+
+      <Route path="vk" element={<Lazy><VkMiniAppLayout /></Lazy>}>
+        <Route index element={<Lazy><VkMiniAppHome /></Lazy>} />
+        <Route path="events" element={<Lazy><EventsPage /></Lazy>} />
+        <Route path="events/:id" element={<Lazy><EventDetail /></Lazy>} />
+        <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
+        <Route path="complaints" element={<Lazy><Complaints /></Lazy>} />
+        <Route path="cabinet" element={<Lazy><UserCabinet /></Lazy>} />
       </Route>
 
       <Route path="/admin/login" element={<Login />} />

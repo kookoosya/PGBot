@@ -12,6 +12,7 @@ import { createAdminApi, type AdminApi } from "./admin";
 import { createAiApi, type AiApi } from "./ai";
 import { createPublicApi, type PublicApi } from "./public";
 import { createEventsApi, type EventsApi } from "./events";
+import { createVkApi, type VkApi } from "./vk";
 
 export * from "./types";
 export { API_BASE } from "./client";
@@ -30,6 +31,7 @@ export type ApiClient = HttpClient &
   AiApi &
   PublicApi &
   EventsApi &
+  VkApi &
   CrossDomainApi;
 
 function createApiClient(): ApiClient {
@@ -47,6 +49,7 @@ function createApiClient(): ApiClient {
     createAiApi(client),
     createPublicApi(client),
     createEventsApi(client),
+    createVkApi(client),
     {
       getServiceClassifieds(params?: Record<string, string>) {
         return classifieds.getClassifieds({ ...params, services_only: "true", page_size: "50" });

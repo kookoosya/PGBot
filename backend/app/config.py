@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
     VK_ADMIN_PEER_ID: str = ""
+    VK_APP_ID: str = ""
+    VK_APP_SECRET: str = ""
+    VK_MINI_APP_DEV_AUTH: bool = False
     PUBLIC_SITE_URL: str = CANONICAL_SITE_URL
 
     # Telegram
@@ -53,7 +56,8 @@ class Settings(BaseSettings):
     # CORS (прод только sslip.io; .ru добавим при смене домена)
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://localhost,"
-        "https://192-210-213-135.sslip.io"
+        "https://192-210-213-135.sslip.io,"
+        "https://vk.com,https://m.vk.com,https://vk.ru,https://m.vk.ru"
     )
 
     # Rate limiting

@@ -88,6 +88,8 @@ export interface PublicInfo {
   site_url: string;
   vk_url: string;
   vk_bot_ready?: boolean;
+  vk_mini_app_ready?: boolean;
+  vk_app_id?: string | null;
   vk_bot_hint?: string;
   map_url: string;
   yandex_maps_add_org: string;

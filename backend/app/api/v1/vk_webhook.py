@@ -7,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.core.rate_limit import limiter
+from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
+from app.schemas.vk_mini_app import VkMiniAppAuthRequest, VkMiniAppAuthResponse
+from app.services.vk.mini_app_auth import VkMiniAppAuthError, authenticate_vk_mini_app
 from app.services.vk import get_welcome_keyboard, parse_vk_message, send_message
 from app.services.vk.ai_mode import exit_ai_mode
 from app.services.vk.command_router import (
@@ -26,6 +29,22 @@ from app.services.vk.voice import extract_audio_url, transcribe_audio_url
 logger = logging.getLogger(__name__)
 settings = get_settings()
 router = APIRouter()
+
+
+@router.post("/auth", response_model=VkMiniAppAuthResponse)
+@limiter.limit("30/minute")
+async def vk_mini_app_auth(
+    request: Request,
+    data: VkMiniAppAuthRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Exchange VK Mini App launch params for a portal JWT."""
+    try:
+        token, user = await authenticate_vk_mini_app(db, launch_params=data.launch_params)
+        await db.commit()
+        return VkMiniAppAuthResponse(access_token=token.access_token, user=user.model_dump())
+    except VkMiniAppAuthError as exc:
+        raise_http_for_service_error(exc)
 
 
 @router.post("/callback")

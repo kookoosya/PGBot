@@ -20,15 +20,26 @@ def vk_bot_ready() -> bool:
     return url not in ("", "https://vk.com", "http://vk.com")
 
 
+def vk_mini_app_ready() -> bool:
+    """Return whether VK Mini App credentials are configured."""
+    from app.services.vk.mini_app_auth import vk_mini_app_configured
+
+    return vk_mini_app_configured()
+
+
 def build_public_info() -> dict:
     """Return public site URLs and VK bot readiness for the frontend."""
     site = (settings.PUBLIC_SITE_URL or CANONICAL_SITE_URL).rstrip("/")
     vk_url = settings.VK_GROUP_URL.rstrip("/") if settings.VK_GROUP_URL else "https://vk.com"
     ready = vk_bot_ready()
+    mini_ready = vk_mini_app_ready()
+    app_id = (settings.VK_APP_ID or "").strip()
     return {
         "site_url": site,
         "vk_url": vk_url,
         "vk_bot_ready": ready,
+        "vk_mini_app_ready": mini_ready,
+        "vk_app_id": app_id or None,
         "vk_bot_hint": (
             "Напишите «Начать» в сообщениях сообщества — бот ответит кнопками: карта, такси, гостиницы."
             if ready

@@ -11,14 +11,14 @@
 | Область | Готово | В работе / осталось |
 |---------|--------|---------------------|
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
-| Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `vk/` | `vk/commands.py`, `weather_service.py` |
+| Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/` | — |
 | Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
 | Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
 | Frontend Map | split `pages/map/*` | — |
 | Frontend UI | literary album, unified issue/ad components | — |
 | Frontend тесты | Vitest 13 (eventUtils, literaryCopy) | компоненты, API hooks |
 | Тексты | `shared/portal_copy.json` brand + issue hints | bulk UI copy только во frontend |
-| VK Mini App | заглушка `/vk` | нужен App ID + auth + CSP |
+| VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
 ---
 
@@ -85,8 +85,6 @@
 ### Backend — «боги» (ещё не разбиты)
 | Файл | Строк | Рекомендация |
 |------|------:|--------------|
-| `vk/commands.py` | ~394 | разбить по доменам меню |
-| `weather_service.py` | ~334 | fetch + format отдельно |
 | `models/enums.py` | ~286 | split по доменам |
 
 ### Прочее лишнее
@@ -124,10 +122,15 @@
 2. ✅ `ClassifiedAdForm` + `useFormDraft` на Jobs; `LiteraryJobCard`
 3. ✅ Admin `Issues` → dedicated `issues-workbench` shell (без shadcn/literary mix)
 
-### P4 — VK Mini App (блокер: App ID)
-1. `VK_APP_ID`, CORS, `frame-ancestors`
-2. `POST /api/v1/vk/auth`
-3. Bridge + экраны: афиша, объявления, обращение, кабинет
+### P4 — VK Mini App ✅ foundation (2026-06-16)
+1. ✅ `VK_APP_ID`, `VK_APP_SECRET`, CORS vk.com, CSP `frame-ancestors` для `/vk`
+2. ✅ `POST /api/v1/vk/auth` — launch params → JWT
+3. ✅ Shell `/vk/*` — табы: афиша, объявления, обращения, кабинет
+4. ⏭ Прод: зарегистрировать App ID в VK, прописать секрет на VPS
+
+### P2b — god files ✅ (2026-06-16)
+1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
+2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
 ### P5 — продукт
 - PWA / офлайн-карта
@@ -141,9 +144,9 @@
 | Метрика | Сейчас | Цель ROADMAP |
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
-| pytest | ~125 | 120+ |
-| Vitest | 24 | 40+ |
-| God files ≥400 строк | 2 | 0 |
+| pytest | ~133 | 120+ |
+| Vitest | 26 | 40+ |
+| God files ≥400 строк | 0 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
 
