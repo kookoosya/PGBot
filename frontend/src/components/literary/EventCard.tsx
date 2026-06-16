@@ -4,6 +4,7 @@ import {
   formatExtraSessions,
   isDisplayablePoster,
   isRealCinemaEvent,
+  eventSourceLabel,
   regionChipClass,
   type EventCardEvent,
   type GroupedPublicEvent,
@@ -95,6 +96,7 @@ export function EventCard({
             ) : (
               <span className="events-category">{event.category_label}</span>
             )}
+            {event.source && <span className="event-card-source">{eventSourceLabel(event.source)}</span>}
           </div>
           <h3 className="event-card-title">{event.title}</h3>
           {event.location && <p className="event-card-location">📍 {event.location}</p>}
