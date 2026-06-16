@@ -53,11 +53,9 @@ async def health(request: Request):
             payload["redis"] = "ok"
         except Exception:
             payload["redis"] = "error"
-    from app.services.event_sources.vk_token_policy import vk_events_access_token
+    from app.services.event_sources.vk_token_policy import vk_wall_health_status
 
-    payload["event_sources"] = {
-        "vk_wall": "ready" if vk_events_access_token() else "needs_vk_events_token",
-    }
+    payload["event_sources"] = {"vk_wall": vk_wall_health_status()}
     return payload
 
 

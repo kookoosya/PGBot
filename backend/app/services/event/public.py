@@ -169,7 +169,7 @@ async def search_public_events(
 ) -> list[Event]:
     """Return upcoming published events for the public events page."""
     now = datetime.now(timezone.utc)
-    safe_limit = max(1, min(limit, 100 if category == EventCategory.CINEMA else 60))
+    safe_limit = max(1, min(limit, 100 if category == EventCategory.CINEMA else 80))
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),

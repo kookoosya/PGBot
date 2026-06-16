@@ -30,3 +30,12 @@ def vk_wall_access_token(*, group_id: int) -> str | None:
     if settings.VK_GROUP_ID and settings.VK_GROUP_ID == group_id:
         return group_token
     return None
+
+
+def vk_wall_health_status() -> str:
+    """Health label for VK wall import readiness."""
+    if _clean_token(settings.VK_EVENTS_TOKEN):
+        return "ready"
+    if _clean_token(settings.VK_GROUP_TOKEN):
+        return "group_token_only"
+    return "needs_token"

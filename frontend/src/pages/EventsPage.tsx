@@ -24,7 +24,7 @@ export function EventsPage() {
     setLoading(true);
     setLoadError(false);
 
-    const base = { search: search || undefined, limit: "50" as const };
+    const base = { search: search || undefined, limit: "80" as const };
 
     const load =
       regionFilter === "pskov"

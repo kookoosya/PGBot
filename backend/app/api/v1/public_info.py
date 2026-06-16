@@ -39,7 +39,7 @@ async def public_list_events(
     region: EventRegion | None = Query(None),
     source: str | None = Query(None, max_length=32, description="Filter by import source (vk, pushkinland, …)"),
     search: str | None = Query(None, max_length=100),
-    limit: int = Query(30, ge=1, le=50),
+    limit: int = Query(50, ge=1, le=80),
 ):
     """Upcoming published events with optional region and text search."""
     events = await search_public_events(db, region=region, source=source, search=search, limit=limit)
