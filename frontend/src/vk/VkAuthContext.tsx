@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, User } from "@/lib/api";
 import { initVkBridge, resolveSilentAuthPayload, setVkViewportHeight } from "@/lib/vkBridge";
+import { vkAuthErrorMessage } from "@/vk/lib/errors";
 
 const VK_TOKEN_KEY = "vk_mini_app_token";
 
@@ -10,6 +11,7 @@ interface VkAuthContextValue {
   loading: boolean;
   error: string | null;
   refreshAuth: () => Promise<void>;
+  ensureSession: () => Promise<boolean>;
   logout: () => void;
 }
 
@@ -20,6 +22,7 @@ export function VkAuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const reauthInFlight = useRef<Promise<boolean> | null>(null);
 
   const applySession = useCallback((accessToken: string, profile: User) => {
     sessionStorage.setItem(VK_TOKEN_KEY, accessToken);
@@ -36,22 +39,52 @@ export function VkAuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const exchangeSilentToken = useCallback(async (): Promise<boolean> => {
+    await initVkBridge();
+    setVkViewportHeight();
+    const payload = await resolveSilentAuthPayload();
+    const auth = await api.vkRefresh(payload);
+    applySession(auth.access_token, auth.user);
+    return true;
+  }, [applySession]);
+
   const refreshAuth = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      await initVkBridge();
-      setVkViewportHeight();
-      const payload = await resolveSilentAuthPayload();
-      const auth = await api.vkAuth(payload);
-      applySession(auth.access_token, auth.user);
+      await exchangeSilentToken();
     } catch (err) {
       clearSession();
-      setError(err instanceof Error ? err.message : "Не удалось войти через VK");
+      setError(vkAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [applySession, clearSession]);
+  }, [clearSession, exchangeSilentToken]);
+
+  const ensureSession = useCallback(async (): Promise<boolean> => {
+    if (reauthInFlight.current) return reauthInFlight.current;
+
+    const task = (async () => {
+      try {
+        await exchangeSilentToken();
+        return true;
+      } catch {
+        clearSession();
+        setError("Сессия истекла. Нажмите «Войти снова» на вкладке «Заявки».");
+        return false;
+      } finally {
+        reauthInFlight.current = null;
+      }
+    })();
+
+    reauthInFlight.current = task;
+    return task;
+  }, [clearSession, exchangeSilentToken]);
+
+  useEffect(() => {
+    api.setUnauthorizedHandler(ensureSession);
+    return () => api.setUnauthorizedHandler(null);
+  }, [ensureSession]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem(VK_TOKEN_KEY);
@@ -79,9 +112,10 @@ export function VkAuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       refreshAuth,
+      ensureSession,
       logout: clearSession,
     }),
-    [user, token, loading, error, refreshAuth, clearSession],
+    [user, token, loading, error, refreshAuth, ensureSession, clearSession],
   );
 
   return <VkAuthContext.Provider value={value}>{children}</VkAuthContext.Provider>;

@@ -38,6 +38,70 @@
   flex: 1;
   overflow-y: auto;
   padding: 0.85rem 0.85rem 5.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vk-mini-main--detail {
+  padding-bottom: 1rem;
+}
+
+.vk-offline-banner {
+  padding: 0.45rem 0.85rem;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: hsl(42 90% 18%);
+  background: hsl(42 85% 88%);
+  border-bottom: 1px solid hsl(42 55% 72%);
+}
+
+.vk-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.vk-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+.vk-back-btn {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--forest));
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vk-back-title {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Playfair Display", Georgia, serif;
+  color: hsl(var(--forest));
+}
+
+.vk-card-button {
+  display: block;
+  width: 100%;
+  text-align: inherit;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.vk-detail-facts {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: hsl(var(--background) / 0.7);
+  border: 1px solid hsl(var(--border));
 }
 
 .vk-tab-panel {
@@ -107,7 +171,8 @@
   cursor: pointer;
 }
 
-.vk-mini-nav-btn span:first-child {
+.vk-mini-nav-btn span:first-child,
+.vk-mini-nav-icon {
   font-size: 1.1rem;
   line-height: 1;
 }
@@ -115,6 +180,11 @@
 .vk-mini-nav-btn--active {
   color: hsl(var(--forest));
   background: hsl(var(--gold) / 0.12);
+  box-shadow: inset 0 0 0 1px hsl(var(--gold) / 0.2);
+}
+
+.vk-mini-nav-btn:active {
+  transform: scale(0.98);
 }
 
 .vk-mini-nav-btn:focus-visible {

@@ -39,7 +39,10 @@ export async function getDevSilentAuthPayload(vkUserId = 1001): Promise<{ silent
 }
 
 export async function resolveSilentAuthPayload(): Promise<{ silent_token: string; uuid: string }> {
-  if (isVkEnvironment() && VK_APP_ID) {
+  if (isVkEnvironment()) {
+    if (!VK_APP_ID) {
+      throw new Error("VITE_VK_APP_ID не задан — укажите ID мини-приложения");
+    }
     return getSilentAuthPayload();
   }
   if (import.meta.env.DEV) {

@@ -83,6 +83,38 @@ async def test_vk_auth_returns_jwt(mock_auth, vk_auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
+@patch("app.api.v1.vk_auth.authenticate_vk_mini_app", new_callable=AsyncMock)
+async def test_vk_refresh_returns_jwt(mock_auth, vk_auth_client: AsyncClient):
+    from datetime import datetime, timezone
+
+    from app.models.enums import UserRole
+    from app.schemas.auth import UserResponse
+
+    mock_auth.return_value = (
+        "jwt-refreshed",
+        UserResponse(
+            id=42,
+            username="vk_1001",
+            email=None,
+            full_name="Иван",
+            phone=None,
+            vk_id=1001,
+            role=UserRole.RESIDENT,
+            department_id=None,
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+        ),
+    )
+
+    response = await vk_auth_client.post(
+        "/api/v1/vk/refresh",
+        json={"silent_token": "silent", "uuid": "uuid-2"},
+    )
+    assert response.status_code == 200
+    assert response.json()["access_token"] == "jwt-refreshed"
+
+
+@pytest.mark.asyncio
 async def test_vk_auth_rejects_empty_token(vk_auth_client: AsyncClient):
     response = await vk_auth_client.post(
         "/api/v1/vk/auth",
