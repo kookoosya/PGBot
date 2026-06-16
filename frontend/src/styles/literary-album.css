@@ -318,6 +318,20 @@
     font-size: 0.75rem;
     color: hsl(var(--muted-foreground));
   }
+
+  .event-card-source {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border) / 0.6);
+    background: hsl(var(--card) / 0.75);
+    text-transform: none;
+  }
   .event-card-title {
     margin: 0;
     font-family: "Playfair Display", Georgia, serif;
