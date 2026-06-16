@@ -78,159 +78,173 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
   const eventsCopy = LANDING_SECTIONS.events;
   const pskovCopy = LANDING_SECTIONS.pskov;
-  const showCinemaBlock = showSplit && !isLanding && (displayCinema.length > 0 || false);
+  const showCityRow = !isLanding && showSplit && (displayCinema.length > 0 || displayPskov.length > 0);
   const cinemaSingle = isLanding && displayCinema.length === 1;
 
-  return (
-    <div className={isLanding ? "landing-events" : "literary-dashboard"}>
-      <section className="page-panel page-panel--forest landing-block" aria-label="Ближайшее в Пушкиногорье">
-        <LiterarySectionHead
-          kicker={isLanding ? eventsCopy.kicker : "🪶 Пушкиногорье"}
-          title={isLanding ? eventsCopy.title : "Ближайшее в посёлке"}
-          lead={
-            isLanding
-              ? undefined
-              : "Концерты у НКЦ, праздники на площади, встречи музея-заповедника — жизнь рп. Пушкинские Горы."
-          }
-          compact={isLanding}
-          linkTo="/events"
-          linkLabel={ctaArrow(CTA.allEvents)}
-        />
+  const pushkinSection = (
+    <section className="page-panel page-panel--forest landing-block" aria-label="Ближайшее в Пушкиногорье">
+      <LiterarySectionHead
+        kicker={isLanding ? eventsCopy.kicker : "🪶 Пушкиногорье"}
+        title={isLanding ? eventsCopy.title : "Ближайшее в посёлке"}
+        lead={
+          isLanding
+            ? undefined
+            : "Концерты у НКЦ, праздники на площади, встречи музея-заповедника — жизнь рп. Пушкинские Горы."
+        }
+        compact={isLanding}
+        linkTo="/events"
+        linkLabel={ctaArrow(CTA.allEvents)}
+      />
 
-        {!isLanding && (
-          <div className="events-toolbar mb-4">
-            <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
-              {REGION_FILTERS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
-                  onClick={() => setRegionFilter(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <div className="events-search-row">
-              <Input
-                placeholder="Поиск по афише…"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="events-search-input pushkin-select"
-              />
-              {searchInput && (
-                <Button type="button" variant="outline" size="sm" onClick={() => setSearchInput("")}>
-                  Сброс
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {loading && !data ? (
-          <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
-        ) : showSplit ? (
-          displayPushkin.length === 0 ? (
-            <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
-          ) : (
-            <ol
-              className={[
-                "events-grid",
-                isLanding ? "events-grid--landing" : "events-grid--wide",
-                isLanding ? landingGridCountClass(displayPushkin.length, "events-grid--landing") : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              {displayPushkin.map((event) => (
-                <EventCard key={event.id} event={event} compact={isLanding} descLimit={isLanding ? 80 : 120} />
-              ))}
-            </ol>
-          )
-        ) : filteredEvents.length === 0 ? (
-          <LiteraryEmptyState {...EMPTY_STATES.eventsSearch} />
-        ) : (
-          <ol className="events-grid events-grid--wide">
-            {filteredEvents.map((event) => (
-              <EventCard key={event.id} event={event} descLimit={120} spotlight={isRealCinemaEvent(event)} />
+      {!isLanding && (
+        <div className="events-toolbar mb-4">
+          <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
+            {REGION_FILTERS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
+                onClick={() => setRegionFilter(item.id)}
+              >
+                {item.label}
+              </button>
             ))}
-          </ol>
-        )}
-
-        {isLanding && (
-          <p className="landing-events-more m-0 mt-3">
-            <Link to="/events" className="literary-link">🎬 Кино в Пскове</Link>
-            <span className="landing-events-more-sep" aria-hidden> · </span>
-            <Link to="/events?region=pskov" className="literary-link">События в городе</Link>
-          </p>
-        )}
-      </section>
-
-      {showCinemaBlock && displayCinema.length > 0 && (
-        <CinemaSpotlight featured={isLanding} empty={isLanding && displayCinema.length === 0}>
-          {displayCinema.length > 0 ? (
-            <ol
-              className={[
-                "events-grid",
-                "events-grid--cinema",
-                isLanding ? "events-grid--cinema-landing" : "",
-                cinemaSingle ? "events-grid--cinema-single" : "",
-                isLanding && displayCinema.length === 2 ? "events-grid--cinema-pair" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              {displayCinema.map((event, index) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  descLimit={isLanding ? 90 : 100}
-                  spotlight
-                  className={
-                    isLanding && (index === 0 || cinemaSingle)
-                      ? "event-card-landing-featured"
-                      : isLanding && index === 1
-                        ? "event-card-landing-secondary"
-                        : ""
-                  }
-                />
-              ))}
-            </ol>
-          ) : (
-            <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark">
-              <div className="landing-inline-actions">
-                <Link to="/events" className="literary-btn literary-btn--gold no-underline">
-                  Смотреть афишу →
-                </Link>
-              </div>
-            </LiteraryEmptyState>
-          )}
-        </CinemaSpotlight>
+          </div>
+          <div className="events-search-row">
+            <Input
+              placeholder="Поиск по афише…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="events-search-input pushkin-select"
+            />
+            {searchInput && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setSearchInput("")}>
+                Сброс
+              </Button>
+            )}
+          </div>
+        </div>
       )}
 
-      {showSplit && displayPskov.length > 0 && (
-        <section className="page-panel page-panel--gold landing-block" aria-label="События в Пскове">
-          <LiterarySectionHead
-            kicker={pskovCopy.kicker}
-            title={pskovCopy.title}
-            lead={pskovCopy.lead}
-            linkTo="/events?region=pskov"
-            linkLabel="Афиша Пскова →"
-          />
+      {loading && !data ? (
+        <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
+      ) : showSplit ? (
+        displayPushkin.length === 0 ? (
+          <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
+        ) : (
           <ol
             className={[
               "events-grid",
-              isLanding ? "events-grid--landing-pskov" : "",
-              isLanding ? landingGridCountClass(displayPskov.length, "events-grid--landing-pskov") : "",
+              isLanding ? "events-grid--landing" : "events-grid--wide",
+              isLanding ? landingGridCountClass(displayPushkin.length, "events-grid--landing") : "",
             ]
               .filter(Boolean)
               .join(" ")}
           >
-            {displayPskov.map((event) => (
-              <EventCard key={event.id} event={event} descLimit={isLanding ? 90 : 100} />
+            {displayPushkin.map((event) => (
+              <EventCard key={event.id} event={event} compact={isLanding} descLimit={isLanding ? 80 : 120} />
             ))}
           </ol>
-        </section>
+        )
+      ) : filteredEvents.length === 0 ? (
+        <LiteraryEmptyState {...EMPTY_STATES.eventsSearch} />
+      ) : (
+        <ol className="events-grid events-grid--wide">
+          {filteredEvents.map((event) => (
+            <EventCard key={event.id} event={event} descLimit={120} spotlight={isRealCinemaEvent(event)} />
+          ))}
+        </ol>
+      )}
+
+      {isLanding && (
+        <p className="landing-events-more m-0 mt-3">
+          <Link to="/events" className="literary-link">🎬 Кино в Пскове</Link>
+          <span className="landing-events-more-sep" aria-hidden> · </span>
+          <Link to="/events?region=pskov" className="literary-link">События в городе</Link>
+        </p>
+      )}
+    </section>
+  );
+
+  const cinemaBlock = displayCinema.length > 0 && (
+    <CinemaSpotlight featured={isLanding} empty={isLanding && displayCinema.length === 0}>
+      <ol
+        className={[
+          "events-grid",
+          "events-grid--cinema",
+          isLanding ? "events-grid--cinema-landing" : "",
+          cinemaSingle ? "events-grid--cinema-single" : "",
+          isLanding && displayCinema.length === 2 ? "events-grid--cinema-pair" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {displayCinema.map((event, index) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            descLimit={isLanding ? 90 : 100}
+            spotlight
+            className={
+              isLanding && (index === 0 || cinemaSingle)
+                ? "event-card-landing-featured"
+                : isLanding && index === 1
+                  ? "event-card-landing-secondary"
+                  : ""
+            }
+          />
+        ))}
+      </ol>
+    </CinemaSpotlight>
+  );
+
+  const pskovSection = displayPskov.length > 0 && (
+    <section className="page-panel page-panel--gold landing-block events-city-pskov" aria-label="События в Пскове">
+      <LiterarySectionHead
+        kicker={pskovCopy.kicker}
+        title={pskovCopy.title}
+        lead={pskovCopy.lead}
+        linkTo="/events?region=pskov"
+        linkLabel="Афиша Пскова →"
+      />
+      <ol
+        className={[
+          "events-grid",
+          isLanding ? "events-grid--landing-pskov" : "",
+          isLanding ? landingGridCountClass(displayPskov.length, "events-grid--landing-pskov") : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {displayPskov.map((event) => (
+          <EventCard key={event.id} event={event} descLimit={isLanding ? 90 : 100} />
+        ))}
+      </ol>
+    </section>
+  );
+
+  return (
+    <div className={isLanding ? "landing-events" : "literary-dashboard"}>
+      {showCityRow && (
+        <div className="events-city-row">
+          {cinemaBlock}
+          {pskovSection}
+        </div>
+      )}
+
+      {isLanding ? (
+        <>
+          {pushkinSection}
+          {pskovSection}
+        </>
+      ) : showCityRow ? (
+        pushkinSection
+      ) : (
+        <>
+          {pushkinSection}
+          {cinemaBlock}
+          {pskovSection}
+        </>
       )}
     </div>
   );

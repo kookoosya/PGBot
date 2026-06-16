@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
@@ -16,12 +17,19 @@ const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
 
 const copy = PAGE_SECTIONS.events;
 
+function parseRegionParam(value: string | null): RegionFilter {
+  if (value === "pskov" || value === "pushkin_gory") return value;
+  if (value === "all") return "all";
+  return "pushkin_gory";
+}
+
 export function EventsPage() {
+  const [searchParams] = useSearchParams();
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  // По умолчанию показываем афишу посёлка (а не Псков).
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("pushkin_gory");
+  // По умолчанию — посёлок, но кино и Псков всё равно подтягиваем в верхний блок.
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => parseRegionParam(searchParams.get("region")));
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
@@ -30,7 +38,8 @@ export function EventsPage() {
     setLoadError(false);
     api
       .getPublicEvents({
-        region: regionFilter === "all" ? undefined : regionFilter,
+        // Для посёлка и «Все» грузим полную афишу — кино и Псков рядом сверху.
+        region: regionFilter === "pskov" ? "pskov" : undefined,
         search: search || undefined,
         limit: "40",
       })
@@ -84,7 +93,38 @@ export function EventsPage() {
     () => visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
     [visibleEvents],
   );
-  const showCinemaBlock = regionFilter !== "pushkin_gory";
+  const showPushkinBlock = pushkinEvents.length > 0 && regionFilter !== "pskov";
+  const showCityRow = regionFilter !== "pskov" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
+  const showPskovOnlyBlock = regionFilter === "pskov" && pskovEvents.length > 0;
+
+  const cinemaBlock = (
+    <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →" empty={cinemaEvents.length === 0}>
+      {cinemaEvents.length > 0 ? (
+        <ol className="events-grid events-grid--cinema">
+          {cinemaEvents.map((event) => (
+            <EventCard key={event.id} event={event} spotlight />
+          ))}
+        </ol>
+      ) : (
+        <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark" />
+      )}
+    </CinemaSpotlight>
+  );
+
+  const pskovBlock = (
+    <section className="page-panel page-panel--gold events-city-pskov">
+      <LiterarySectionHead
+        kicker={copy.pskov.kicker}
+        title={copy.pskov.title}
+        compact
+      />
+      <ol className="events-grid">
+        {pskovEvents.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
+      </ol>
+    </section>
+  );
 
   return (
     <div className="literary-page page-section max-w-5xl">
@@ -166,21 +206,18 @@ export function EventsPage() {
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (
         <div className="literary-dashboard">
-          {showCinemaBlock && (
-            <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →" empty={cinemaEvents.length === 0}>
-              {cinemaEvents.length > 0 ? (
-                <ol className="events-grid events-grid--cinema">
-                  {cinemaEvents.map((event) => (
-                    <EventCard key={event.id} event={event} spotlight />
-                  ))}
-                </ol>
-              ) : (
-                <LiteraryEmptyState {...EMPTY_STATES.cinema} compact tone="dark" />
-              )}
-            </CinemaSpotlight>
+          {showCityRow && (
+            <div className="events-city-row">
+              {cinemaBlock}
+              {pskovEvents.length > 0 && pskovBlock}
+            </div>
           )}
 
-          {pushkinEvents.length > 0 && regionFilter !== "pskov" && (
+          {regionFilter === "pskov" && cinemaBlock}
+
+          {showPskovOnlyBlock && pskovBlock}
+
+          {showPushkinBlock && (
             <section className="page-panel page-panel--forest">
               <LiterarySectionHead
                 kicker={copy.pushkin.kicker}
@@ -189,21 +226,6 @@ export function EventsPage() {
               />
               <ol className="events-grid events-grid--wide">
                 {pushkinEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </ol>
-            </section>
-          )}
-
-          {pskovEvents.length > 0 && regionFilter !== "pushkin_gory" && (
-            <section className="page-panel page-panel--gold">
-              <LiterarySectionHead
-                kicker={copy.pskov.kicker}
-                title={copy.pskov.title}
-                compact
-              />
-              <ol className="events-grid">
-                {pskovEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </ol>
