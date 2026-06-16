@@ -45,15 +45,7 @@ jobs:
             git fetch origin "$BRANCH"
             git checkout "$BRANCH"
             git pull origin "$BRANCH"
-            bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
-            bash scripts/setup-russia-mirror.sh
-            docker compose -f docker-compose.prod.yml up -d --build
-            docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \
-              || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
-            docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
-            bash scripts/install-vps-cron.sh /opt/pgbot
-            bash scripts/vps-sync-events.sh cinema || true
-            echo "Deploy OK: https://192-210-213-135.sslip.io"
+            bash scripts/vps-deploy.sh
 
       - uses: actions/checkout@v4
 
@@ -63,3 +55,4 @@ jobs:
         run: |
           sleep 15
           bash scripts/smoke-public.sh "$SMOKE_BASE_URL"
+          echo "Deploy OK: $SMOKE_BASE_URL"

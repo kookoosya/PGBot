@@ -5,6 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=canonical-site.sh
 source "$SCRIPT_DIR/canonical-site.sh"
+
 if [ -f "$SCRIPT_DIR/../.deploy.env" ]; then
   set -a
   # shellcheck source=/dev/null
@@ -23,7 +24,6 @@ elif [ -x /tmp/sshpass-extract/usr/bin/sshpass ]; then
   SSHPASS_BIN="/tmp/sshpass-extract/usr/bin/sshpass"
 fi
 
-# Синхронизируем API-ключи из .deploy.env до перезапуска контейнеров
 bash "$SCRIPT_DIR/sync-vps-env.sh" 2>/dev/null || true
 
 REMOTE="set -e
@@ -31,15 +31,7 @@ cd /opt/pgbot
 git fetch origin $BRANCH
 git checkout $BRANCH
 git pull origin $BRANCH
-bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
-bash scripts/setup-russia-mirror.sh
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
-docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
-bash scripts/install-vps-cron.sh /opt/pgbot
-bash scripts/vps-sync-events.sh cinema 2>/dev/null || true
-bash scripts/smoke-public.sh "$CANONICAL_SITE_URL"
-echo Deploy OK: $CANONICAL_SITE_URL"
+bash scripts/vps-deploy.sh"
 
 export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"
 
@@ -56,8 +48,7 @@ elif [ -n "${SSH_AUTH_SOCK:-}" ] && ssh-add -l >/dev/null 2>&1; then
   ssh -o StrictHostKeyChecking=no -o BatchMode=yes "$USER@$HOST" "$REMOTE"
 else
   echo "Нет доступа к VPS $USER@$HOST" >&2
-  echo "Добавьте секрет VPS_PASSWORD или SSHPASS в cursor.com/dashboard/cloud-agents" >&2
-  echo "или GitHub Secret VPS_PASSWORD для Actions → Deploy VPS" >&2
+  echo "Добавьте VPS_PASSWORD в GitHub Secrets или .deploy.env" >&2
   exit 1
 fi
 

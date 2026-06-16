@@ -40,24 +40,32 @@ export function UserLogin() {
     <div className="literary-page page-section max-w-md mx-auto">
       <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
 
-      <form onSubmit={submit} className="page-panel page-panel--forest literary-auth-panel space-y-4 mt-6">
-        <Input
-          placeholder="Логин"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          autoComplete="username"
-          className="pushkin-select"
-        />
-        <Input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-          className="pushkin-select"
-        />
+      <form onSubmit={submit} className="page-panel page-panel--forest literary-auth-panel literary-form-comfort space-y-4 mt-6">
+        <div>
+          <label htmlFor="login-username" className="event-detail-label">Логин</label>
+          <Input
+            id="login-username"
+            placeholder="Ваш логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            className="pushkin-select"
+          />
+        </div>
+        <div>
+          <label htmlFor="login-password" className="event-detail-label">Пароль</label>
+          <Input
+            id="login-password"
+            type="password"
+            placeholder="Ваш пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            className="pushkin-select"
+          />
+        </div>
         {error && <p className="text-sm text-destructive m-0">{error}</p>}
         <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
           {loading ? "Входим…" : "Войти"}
