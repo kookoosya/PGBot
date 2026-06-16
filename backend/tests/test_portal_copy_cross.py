@@ -36,3 +36,16 @@ def test_shared_json_links_and_vk_nonempty():
     data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
     assert data["links"]["map"]
     assert data["vk"]["welcome_body"]
+
+
+def test_backend_matches_shared_json_page_sections():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert pc.PAGE_SECTIONS == data["page_sections"]
+    assert pc.PAGE_SECTIONS["events"]["title"]
+    assert pc.PAGE_SECTIONS["signup"]["submitIdle"]
+
+
+def test_backend_matches_shared_json_landing_sections():
+    data = json.loads(SHARED_JSON.read_text(encoding="utf-8"))
+    assert pc.LANDING_SECTIONS == data["landing_sections"]
+    assert pc.LANDING_SECTIONS["pskov"]["title"] == pc.PAGE_SECTIONS["events"]["pskov"]["title"]

@@ -62,6 +62,8 @@ ISSUE_STATUS_EMOJI: dict[str, str] = dict(_data["issue_status_emoji"])
 EMPTY_STATES: dict[str, dict[str, str]] = {
     key: dict(value) for key, value in _data["empty_states"].items()
 }
+PAGE_SECTIONS: dict = dict(_data["page_sections"])
+LANDING_SECTIONS: dict = dict(_data["landing_sections"])
 
 # Deep link button labels
 LINK_EVENTS = _link("events")

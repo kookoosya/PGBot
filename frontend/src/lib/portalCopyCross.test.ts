@@ -5,6 +5,8 @@ import {
   ISSUE_STATUS_EMOJI,
   ISSUE_STATUS_HINTS,
   LANDING_HERO_COPY,
+  LANDING_SECTIONS_COPY,
+  PAGE_SECTIONS_COPY,
   PORTAL_COPY_BRAND,
   PORTAL_COPY_LINKS,
   PORTAL_COPY_VK,
@@ -43,5 +45,16 @@ describe("portalCopyShared ↔ shared/portal_copy.json", () => {
   it("syncs landing hero copy", () => {
     expect(LANDING_HERO_COPY.lead).toBe(portalCopy.landing_hero.lead);
     expect(LANDING_HERO_COPY.cta_map).toBeTruthy();
+  });
+
+  it("syncs page sections for key flows", () => {
+    expect(PAGE_SECTIONS_COPY.events).toEqual(portalCopy.page_sections.events);
+    expect(PAGE_SECTIONS_COPY.signup.submitIdle).toBe(portalCopy.page_sections.signup.submitIdle);
+    expect(PAGE_SECTIONS_COPY.cabinet.vkHint).toBeTruthy();
+  });
+
+  it("syncs landing sections with events pskov title", () => {
+    expect(LANDING_SECTIONS_COPY.pskov.title).toBe(portalCopy.landing_sections.pskov.title);
+    expect(LANDING_SECTIONS_COPY.pskov.title).toBe(PAGE_SECTIONS_COPY.events.pskov.title);
   });
 });

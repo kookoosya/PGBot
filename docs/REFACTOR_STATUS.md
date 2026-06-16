@@ -15,7 +15,7 @@
 | Backend тесты | places, admin, feedback, visits, AI + postgres suite | — |
 | Frontend CSS | `literary-album/` + `portal/` split (9 модулей) | — |
 | Frontend тесты | Vitest **58** + renderHook | компоненты |
-| Тексты | `portal_copy.json`: brand, empty_states, **landing_hero** | PAGE_SECTIONS во frontend |
+| Тексты | `portal_copy.json`: brand, empty_states, landing_hero, **page_sections**, **landing_sections** | — |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
 ---
@@ -126,6 +126,12 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P11 — тексты PAGE_SECTIONS ✅ (2026-06-16)
+1. ✅ `page_sections` + `landing_sections` в `portal_copy.json` (frontend + backend sync)
+2. ✅ `literaryCopy.ts` — реэкспорт из `portalCopyShared`
+3. ✅ Cross-тесты backend + frontend; `useFormDraft.test.ts`
+4. ✅ Vitest **65**
+
 ### P10 — CSS portal split ✅ (2026-06-16)
 1. ✅ `index.css` → `styles/portal/` (base, shell, layout, animations, map, epic-landing, widgets, content, admin)
 2. ✅ `portalStyles.test.ts` — проверка импортов модулей
@@ -174,7 +180,7 @@
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
 | pytest | ~175 | 120+ |
-| Vitest | **60** | 40+ |
+| Vitest | **65** | 40+ |
 | God CSS | portal + literary-album split ✅ | — |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
