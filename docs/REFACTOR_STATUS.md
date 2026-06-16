@@ -126,6 +126,13 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P21 — VK даты и чистка афиши ✅ (2026-06-16)
+1. ✅ `find_upcoming_event_range` — берёт ближайшую будущую дату из текста (не post_date)
+2. ✅ VK: без даты в тексте пост не импортируется
+3. ✅ `unpublish_past_external_events` — снятие прошедших vk/informpskov/pln/kdc
+4. ✅ Public API: фильтр `?source=`
+5. ✅ 139 backend-тестов
+
 ### P20 — VK upsert fix + PLN RSS ✅ (2026-06-16)
 1. ✅ `sync_ends_at` — сброс битого `ends_at` при upsert (чинит VK-импорт)
 2. ✅ Общий парсер `news_rss_service.py`; источник `pln` — pln-pskov.ru/rss.php

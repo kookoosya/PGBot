@@ -13,7 +13,7 @@ from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventCategory, EventRegion
 from app.services.event_service import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
-from app.services.event_sources.text_utils import parse_event_date_range
+from app.services.event_sources.text_utils import find_upcoming_event_range
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.services.event_enrichment_service import resolve_cinema_location_from_text
 from app.services.event_sources.vk_group_resolver import resolve_vk_group_ids
@@ -65,9 +65,14 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
 
     text = (post.get("text") or "").strip()
     post_date = datetime.fromtimestamp(post.get("date", 0), tz=timezone.utc)
-    parsed_start, parsed_end = parse_event_date_range(text, fallback=post_date)
+    now = datetime.now(MOSCOW_TZ)
+    fallback = post_date.astimezone(MOSCOW_TZ)
+    parsed_start, parsed_end = find_upcoming_event_range(text, fallback=fallback, now=now)
+    if not parsed_start:
+        return None
+
     parsed_date = parsed_start
-    starts_at = parsed_start or post_date.astimezone(MOSCOW_TZ)
+    starts_at = parsed_start
     ends_at = parsed_end
 
     if not is_relevant_vk_event_post(
@@ -76,7 +81,7 @@ def _post_to_fetched(post: dict, *, preset: VkGroupPreset, group_id: int) -> Fet
         region_keywords=preset.require_region_keywords,
     ):
         return None
-    if starts_at < datetime.now(MOSCOW_TZ) - timedelta(days=2):
+    if starts_at < now - timedelta(days=2):
         return None
 
     location = preset.default_location

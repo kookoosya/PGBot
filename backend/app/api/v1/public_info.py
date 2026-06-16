@@ -37,11 +37,12 @@ async def today_in_village(
 async def public_list_events(
     db: Annotated[AsyncSession, Depends(get_db)],
     region: EventRegion | None = Query(None),
+    source: str | None = Query(None, max_length=32, description="Filter by import source (vk, pushkinland, …)"),
     search: str | None = Query(None, max_length=100),
     limit: int = Query(30, ge=1, le=50),
 ):
     """Upcoming published events with optional region and text search."""
-    events = await search_public_events(db, region=region, search=search, limit=limit)
+    events = await search_public_events(db, region=region, source=source, search=search, limit=limit)
     return PublicEventListResponse(
         items=[PublicEventResponse(**event_to_public_response(e)) for e in events],
         total=len(events),

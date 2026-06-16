@@ -21,7 +21,7 @@ from app.services.event_sources.pln_source import PlnEventSource
 from app.services.event_sources.proculture_source import ProCultureEventSource
 from app.services.event_sources.pushkinland_source import PushkinlandEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
-from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_stale_demo_cinema
+from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_past_external_events, unpublish_stale_demo_cinema
 from app.services.event_enrichment_batch import (
     enrich_missing_posters,
     enrich_stale_events,
@@ -130,6 +130,7 @@ async def _post_sync_cleanup(db: AsyncSession, *, label: str) -> None:
     posters = await enrich_missing_posters(db)
     removed = await cleanup_duplicate_events(db)
     demos = await unpublish_stale_demo_cinema(db)
+    stale_external = await unpublish_past_external_events(db)
     if planetarium:
         logger.info("Post-sync planetarium recategorize (%s): %s events", label, planetarium)
     if theater:
@@ -140,8 +141,14 @@ async def _post_sync_cleanup(db: AsyncSession, *, label: str) -> None:
         logger.info("Post-sync event enrichment (%s): %s events updated", label, enriched)
     if posters:
         logger.info("Post-sync poster enrichment (%s): %s events updated", label, posters)
-    if removed or demos:
-        logger.info("Post-sync dedupe (%s): -%s dupes, -%s demo cinema", label, removed, demos)
+    if removed or demos or stale_external:
+        logger.info(
+            "Post-sync dedupe (%s): -%s dupes, -%s demo cinema, -%s past external",
+            label,
+            removed,
+            demos,
+            stale_external,
+        )
 
 
 async def sync_all_event_sources(

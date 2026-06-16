@@ -163,6 +163,7 @@ async def search_public_events(
     *,
     region: EventRegion | None = None,
     category: EventCategory | None = None,
+    source: str | None = None,
     search: str | None = None,
     limit: int = 30,
 ) -> list[Event]:
@@ -178,6 +179,8 @@ async def search_public_events(
         conditions.append(Event.region == region.value)
     if category is not None:
         conditions.append(Event.category == category.value)
+    if source and source.strip():
+        conditions.append(Event.source == source.strip().lower())
     if search and search.strip():
         term = f"%{search.strip()}%"
         conditions.append(

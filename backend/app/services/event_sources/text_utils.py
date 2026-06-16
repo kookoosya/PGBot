@@ -166,6 +166,91 @@ def parse_event_date_range(
     return _parse_single_event_datetime(text, fallback=fallback), None
 
 
+def _collect_event_date_candidates(
+    text: str,
+    *,
+    fallback: datetime,
+) -> list[tuple[datetime, datetime | None]]:
+    """Return all date/range candidates found in ``text``."""
+    candidates: list[tuple[datetime, datetime | None]] = []
+
+    for match in _DATE_RANGE_NAMED_RE.finditer(text):
+        month = _month_from_name(match.group("month"))
+        if not month:
+            continue
+        year = _resolve_year(
+            month,
+            int(match.group("day1")),
+            fallback=fallback,
+            year_raw=match.group("year"),
+        )
+        starts = _build_datetime(day=int(match.group("day1")), month=month, year=year)
+        ends = _build_datetime(day=int(match.group("day2")), month=month, year=year, hour=20)
+        if starts:
+            candidates.append((starts, ends))
+
+    for match in _DATE_RANGE_NUMERIC_RE.finditer(text):
+        month = int(match.group("month"))
+        year = _resolve_year(
+            month,
+            int(match.group("day1")),
+            fallback=fallback,
+            year_raw=match.group("year"),
+        )
+        starts = _build_datetime(day=int(match.group("day1")), month=month, year=year)
+        ends = _build_datetime(day=int(match.group("day2")), month=month, year=year, hour=20)
+        if starts:
+            candidates.append((starts, ends))
+
+    for match in _DATE_NAMED_RE.finditer(text):
+        month = _month_from_name(match.group("month"))
+        if not month:
+            continue
+        day = int(match.group("day"))
+        year = _resolve_year(month, day, fallback=fallback, year_raw=match.group("year"))
+        hour = int(match.group("hour")) if match.group("hour") else None
+        minute = int(match.group("minute")) if match.group("minute") else None
+        starts = _build_datetime(day=day, month=month, year=year, hour=hour, minute=minute)
+        if starts:
+            candidates.append((starts, None))
+
+    for match in _DATE_RE.finditer(text):
+        day = int(match.group("day"))
+        month = int(match.group("month"))
+        year = _resolve_year(month, day, fallback=fallback, year_raw=match.group("year"))
+        hour = int(match.group("hour") or 12)
+        minute = int(match.group("minute") or 0)
+        starts = _build_datetime(day=day, month=month, year=year, hour=hour, minute=minute)
+        if starts:
+            candidates.append((starts, None))
+
+    return candidates
+
+
+def find_upcoming_event_range(
+    text: str,
+    *,
+    fallback: datetime,
+    now: datetime | None = None,
+) -> tuple[datetime | None, datetime | None]:
+    """Pick the earliest still-relevant event date/range from ``text``."""
+    now = (now or fallback).astimezone(MOSCOW_TZ)
+    grace = timedelta(days=1)
+    upcoming: list[tuple[datetime, datetime | None]] = []
+
+    for starts, ends in _collect_event_date_candidates(text, fallback=fallback):
+        if ends and ends >= now - grace:
+            upcoming.append((starts, ends))
+        elif starts >= now - grace:
+            upcoming.append((starts, ends))
+
+    if not upcoming:
+        return None, None
+
+    upcoming.sort(key=lambda pair: pair[0])
+    return upcoming[0]
+
+
 def _parse_single_event_datetime(text: str, *, fallback: datetime) -> datetime | None:
     match = _DATE_RE.search(text)
     if match:

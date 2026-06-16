@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.event import Event
@@ -21,6 +21,10 @@ _SOURCE_PRIORITY = {
     "timepad": 4,
     "proculture": 4,
     "kudago": 3,
+    "pushkinland": 5,
+    "informpskov": 3,
+    "pln": 3,
+    "kdc": 3,
     "manual": 1,
 }
 
@@ -160,3 +164,26 @@ async def unpublish_stale_demo_cinema(db: AsyncSession) -> int:
         await db.flush()
         logger.info("Unpublished %s stale demo cinema events", count)
     return count
+
+
+_EXTERNAL_SOURCES = ("vk", "informpskov", "pln", "kdc")
+
+
+async def unpublish_past_external_events(db: AsyncSession) -> int:
+    """Hide imported events whose schedule has already ended."""
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        select(Event).where(
+            Event.is_published.is_(True),
+            Event.source.in_(_EXTERNAL_SOURCES),
+            Event.starts_at < now - timedelta(days=1),
+            or_(Event.ends_at.is_(None), Event.ends_at < now),
+        )
+    )
+    events = list(result.scalars().all())
+    for event in events:
+        event.is_published = False
+    if events:
+        await db.flush()
+        logger.info("Unpublished %s past external events", len(events))
+    return len(events)
