@@ -130,3 +130,75 @@ async def test_public_classifieds_pagination(client: AsyncClient):
 async def test_public_event_not_found(client: AsyncClient):
     response = await client.get("/api/v1/public/events/999999999")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_public_today_region_filter(client: AsyncClient):
+    response = await client.get("/api/v1/public/today", params={"region": "pushkin_gory"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "upcoming_events" in data
+    assert isinstance(data["upcoming_events"], list)
+
+
+@pytest.mark.asyncio
+async def test_public_events_empty_search_returns_list(client: AsyncClient):
+    response = await client.get(
+        "/api/v1/public/events",
+        params={"search": "zzzznonexistenttitle99999"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["items"] == []
+    assert data["total"] == 0
+
+
+@pytest.mark.asyncio
+async def test_public_classifieds_invalid_page_still_ok(client: AsyncClient):
+    response = await client.get("/api/v1/classifieds", params={"page": 1, "page_size": 1})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page_size"] == 1
+    assert "items" in data
+
+
+@pytest.mark.asyncio
+async def test_create_issue_guest_requires_contact(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/issues",
+        json={"description": "Сломан фонарь на улице Ленина, темно по вечерам"},
+    )
+    assert response.status_code == 400
+    detail = response.json()["detail"].lower()
+    assert "телефон" in detail or "имя" in detail
+
+
+@pytest.mark.asyncio
+async def test_create_issue_honeypot_rejected(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/issues",
+        json={
+            "description": "Сломан фонарь на улице Ленина, темно по вечерам",
+            "phone": "+79001234567",
+            "full_name": "Иван",
+            "website_url": "http://bot-trap.example",
+        },
+    )
+    assert response.status_code == 400
+    assert "страницу" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_places_list_returns_paginated_shape(client: AsyncClient):
+    response = await client.get("/api/v1/places", params={"page": 1, "page_size": 5})
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert isinstance(data["items"], list)
+
+
+@pytest.mark.asyncio
+async def test_places_not_found(client: AsyncClient):
+    response = await client.get("/api/v1/places/999999999")
+    assert response.status_code == 404
