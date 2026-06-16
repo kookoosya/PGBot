@@ -126,6 +126,12 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P13 — разметка афиши (кино + Псков) ✅ (2026-06-16)
+1. ✅ `events-city-row`: split с 1024px, в колонках — 1 карточка в ряд
+2. ✅ Карточки: `overflow: visible`, `min-width: 0`, перенос заголовков
+3. ✅ Афиша `max-w-6xl`; `page-panel.events-city-pskov` без clip
+4. ✅ Vitest **78**
+
 ### P12 — тесты компонентов + API (2026-06-16)
 1. ✅ `LiteraryIssueCard.test.tsx` — summary, timeline, link/selectable variants
 2. ✅ `ClassifiedAdForm.test.tsx` — classifieds/jobs, chips, extras, submit

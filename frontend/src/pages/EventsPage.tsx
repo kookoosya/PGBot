@@ -114,7 +114,7 @@ export function EventsPage() {
   );
 
   return (
-    <div className="literary-page page-section max-w-5xl">
+    <div className="literary-page page-section max-w-6xl events-page">
       <PageHeader icon="📅" title={copy.title} subtitle={copy.lead} />
 
       <section className="page-panel page-panel--gold mb-6">

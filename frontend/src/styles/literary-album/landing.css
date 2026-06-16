@@ -592,19 +592,65 @@
     gap: 1.35rem;
     align-items: start;
   }
-  @media (min-width: 900px) {
+  @media (min-width: 1024px) {
     .events-city-row {
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 1.5rem;
     }
     .events-city-row > .cinema-spotlight:only-child,
     .events-city-row > .events-city-pskov:only-child {
       grid-column: 1 / -1;
       max-width: 52rem;
     }
+    /* В колонке кино/Псков — одна карточка в ряд, иначе текст режется */
+    .events-city-row .cinema-spotlight .events-grid--cinema {
+      grid-template-columns: 1fr;
+    }
+    .events-city-row .events-city-pskov .events-grid {
+      grid-template-columns: 1fr;
+    }
   }
   .events-city-pskov {
     margin: 0;
-    height: 100%;
+    overflow: visible;
+  }
+  .events-city-row .cinema-spotlight {
+    min-width: 0;
+  }
+  .events-city-row .events-grid > li {
+    align-self: start;
+    min-width: 0;
+  }
+  .events-city-row .literary-card {
+    overflow: visible;
+    height: auto;
+  }
+  .events-city-row .event-card {
+    min-height: 0;
+  }
+  .events-city-row .event-card-body,
+  .events-city-row .event-card-body--stack {
+    min-width: 0;
+    min-height: auto;
+    flex: initial;
+  }
+  .events-city-row .event-card-meta {
+    row-gap: 0.25rem;
+  }
+  .events-city-row .event-card-title {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  .events-city-row .event-card--cinema,
+  .events-city-row .event-card--cinema-featured {
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  @media (min-width: 480px) {
+    .events-city-row .event-card--cinema,
+    .events-city-row .event-card--cinema-featured {
+      grid-template-columns: 5.75rem minmax(0, 1fr);
+    }
   }
   .literary-useful-card {
     display: flex;
@@ -664,6 +710,10 @@
     padding: 0;
     display: grid;
     gap: 0.85rem;
+    align-items: start;
+  }
+  .events-grid > li {
+    min-width: 0;
   }
   @media (min-width: 640px) {
     .events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

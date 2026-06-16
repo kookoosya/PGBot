@@ -152,6 +152,9 @@
   .page-panel--gold::before { background: hsl(var(--gold)); }
   .page-panel--forest::before { background: hsl(var(--forest)); }
   .page-panel--burgundy::before { background: hsl(var(--burgundy)); }
+  .page-panel.events-city-pskov {
+    overflow: visible;
+  }
 
   /* === Кнопки и ссылки === */
   .literary-btn {
@@ -317,6 +320,10 @@
     gap: 0.35rem 0.65rem;
     font-size: 0.75rem;
     color: hsl(var(--muted-foreground));
+    min-width: 0;
+  }
+  .event-card-meta > * {
+    max-width: 100%;
   }
 
   .event-card-source {
@@ -340,6 +347,7 @@
     line-height: 1.35;
     color: hsl(var(--forest));
     transition: color 0.15s ease;
+    overflow-wrap: anywhere;
   }
   .event-card:hover .event-card-title,
   a.event-card:hover .event-card-title {
