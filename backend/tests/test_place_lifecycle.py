@@ -35,8 +35,7 @@ def test_place_rating_meta_prefers_external_yandex():
 
 
 @pytest.mark.asyncio
-@patch("app.services.place_service._safe_notify_owner", new_callable=AsyncMock, return_value=True)
-async def test_add_place_review_updates_rating(mock_notify, db_session: AsyncSession):
+async def test_add_place_review_updates_rating(db_session: AsyncSession):
     place = await create_place(db_session, name="Магазин у дома")
 
     result = await add_place_review(
@@ -68,7 +67,7 @@ async def test_duplicate_review_rejected(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-@patch("app.services.place_service._safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.place.complaint.safe_notify_owner", new_callable=AsyncMock, return_value=True)
 async def test_create_place_complaint_links_issue(mock_notify, db_session: AsyncSession):
     place = await create_place(db_session, category=PlaceCategory.SHOP)
 
@@ -92,7 +91,7 @@ async def test_create_place_complaint_links_issue(mock_notify, db_session: Async
 
 
 @pytest.mark.asyncio
-@patch("app.services.place_service._safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.place.complaint.safe_notify_owner", new_callable=AsyncMock, return_value=True)
 async def test_duplicate_complaint_within_cooldown(mock_notify, db_session: AsyncSession):
     place = await create_place(db_session)
 
