@@ -20,7 +20,8 @@ export function EventsPage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
+  // По умолчанию показываем афишу посёлка (а не Псков).
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>("pushkin_gory");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
@@ -42,11 +43,29 @@ export function EventsPage() {
   }, [regionFilter, search]);
 
   const categoryFilters = useMemo(() => {
-    const cats = new Set(events.map((e) => e.category_label));
-    return Array.from(cats).sort();
+    const pushkinCats = new Set(
+      events
+        .filter((e) => e.region_label === "Пушкинские Горы")
+        .map((e) => e.category_label)
+        .filter(Boolean),
+    );
+    const allCats = new Set(events.map((e) => e.category_label).filter(Boolean));
+
+    // "Все категории" — начинаем с тех, что встречаются в Пушкинских Горах.
+    const pushkinOrdered = Array.from(pushkinCats).sort();
+    const remaining = Array.from(allCats)
+      .filter((c) => !pushkinCats.has(c))
+      .sort();
+    return [...pushkinOrdered, ...remaining];
   }, [events]);
 
   const [categoryFilter, setCategoryFilter] = useState("");
+
+  useEffect(() => {
+    if (categoryFilter && !categoryFilters.includes(categoryFilter)) {
+      setCategoryFilter("");
+    }
+  }, [categoryFilter, categoryFilters]);
 
   const visibleEvents = useMemo(() => {
     if (!categoryFilter) return events;
