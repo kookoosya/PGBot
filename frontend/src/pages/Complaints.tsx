@@ -295,7 +295,7 @@ export function Complaints() {
               <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={loading}>
                 {loading ? "Отправляем…" : "Отправить обращение"}
               </button>
-              <p className="text-xs text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
+              <p className="text-sm text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
               {!loading && (
                 <button
                   type="button"
@@ -314,7 +314,7 @@ export function Complaints() {
               )}
 
               {!user && (
-                <p className="landing-muted text-xs text-center m-0">
+                <p className="landing-muted text-sm text-center m-0">
                   <Link to="/cabinet/login" className="literary-link">Войдите</Link>
                   {" "}чтобы видеть историю обращений
                 </p>

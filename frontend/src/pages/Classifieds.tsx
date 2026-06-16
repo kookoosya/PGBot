@@ -179,26 +179,30 @@ export function Classifieds() {
           title="Найти объявление"
           lead="Введите слово из заголовка или описания."
         />
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            placeholder="Поиск по заголовку…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-            className="flex-1 pushkin-select"
-          />
-          {search && (
-            <button
-              type="button"
-              className="literary-btn literary-btn--ghost shrink-0 text-sm"
-              onClick={() => { setSearch(""); setSearchInput(""); }}
-            >
-              Сбросить
+        <div className="space-y-2">
+          <label htmlFor="classified-search-input" className="event-detail-label">Поиск по объявлениям</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              id="classified-search-input"
+              placeholder="Поиск по заголовку…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
+              className="flex-1 pushkin-select"
+            />
+            {search && (
+              <button
+                type="button"
+                className="literary-btn literary-btn--ghost shrink-0 text-sm"
+                onClick={() => { setSearch(""); setSearchInput(""); }}
+              >
+                Сбросить
+              </button>
+            )}
+            <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
+              Найти
             </button>
-          )}
-          <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
-            Найти
-          </button>
+          </div>
         </div>
       </section>
 
@@ -240,15 +244,30 @@ export function Classifieds() {
             </div>
           </div>
 
-          <select className="pushkin-select w-full" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+          <label htmlFor="classified-category" className="event-detail-label">Категория</label>
+          <select
+            id="classified-category"
+            className="pushkin-select w-full"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          >
             {adCategories.map((c) => (
               <option key={c.value} value={c.value}>{getCategoryVisual(c.value).icon} {c.label}</option>
             ))}
           </select>
-          <Input placeholder="Заголовок" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          <label htmlFor="classified-title" className="event-detail-label">Заголовок объявления</label>
+          <Input
+            id="classified-title"
+            placeholder="Например: Продам сухие дрова"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+          />
+          <label htmlFor="classified-description" className="event-detail-label">Описание</label>
           <textarea
+            id="classified-description"
             className="literary-textarea w-full min-h-[100px]"
-            placeholder="Описание"
+            placeholder="Что предлагаете, в каком состоянии, как связаться"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             required
@@ -272,8 +291,22 @@ export function Classifieds() {
               {form.description.trim().length} симв. (рекомендуем от 10)
             </span>
           </p>
-          <Input placeholder="Телефон +7…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-          <Input placeholder="Ваше имя" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
+          <label htmlFor="classified-phone" className="event-detail-label">Телефон для связи</label>
+          <Input
+            id="classified-phone"
+            placeholder="+7 9XX XXX-XX-XX"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            required
+          />
+          <label htmlFor="classified-author" className="event-detail-label">Ваше имя</label>
+          <Input
+            id="classified-author"
+            placeholder="Как к вам обращаться"
+            value={form.author_name}
+            onChange={(e) => setForm({ ...form, author_name: e.target.value })}
+            required
+          />
 
           <button
             type="button"
@@ -285,12 +318,37 @@ export function Classifieds() {
 
           {showExtras && (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                <Input type="number" placeholder="Ваша цена" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-                <Input placeholder="за что (смена, месяц…)" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label htmlFor="classified-price" className="event-detail-label">Цена</label>
+                  <Input
+                    id="classified-price"
+                    type="number"
+                    placeholder="Ваша цена"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="classified-price-unit" className="event-detail-label">За что цена</label>
+                  <Input
+                    id="classified-price-unit"
+                    placeholder="за смену, месяц, штуку"
+                    value={form.price_unit}
+                    onChange={(e) => setForm({ ...form, price_unit: e.target.value })}
+                  />
+                </div>
               </div>
-              <Input placeholder="Адрес / район" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              <label htmlFor="classified-address" className="event-detail-label">Адрес или район</label>
               <Input
+                id="classified-address"
+                placeholder="Где забрать или где оказать услугу"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+              />
+              <label htmlFor="classified-vk" className="event-detail-label">Контакт VK (необязательно)</label>
+              <Input
+                id="classified-vk"
                 placeholder="ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
                 value={form.contact_vk}
                 onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
@@ -321,7 +379,7 @@ export function Classifieds() {
           <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={submitting}>
             {submitting ? "Отправляем…" : "🆓 Отправить на модерацию"}
           </button>
-          <p className="text-xs text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
+          <p className="text-sm text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
         </form>
       )}
 

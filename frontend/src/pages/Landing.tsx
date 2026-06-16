@@ -87,11 +87,16 @@ export function Landing() {
           {!expanded && (
             <LandingAlbumSection divider>
               <div className="page-panel page-panel--gold landing-block landing-compact-note">
-                <p className="m-0 text-sm">
-                  Показаны главные блоки дня. Нажмите «Показать больше», чтобы увидеть вакансии, дополнительную навигацию и фотогалерею.
+                <p className="m-0 text-base">
+                  Сейчас открыт упрощённый вид. Нажмите «Показать все разделы», чтобы увидеть вакансии, дополнительную навигацию и фотогалерею.
                 </p>
-                <button type="button" className="literary-btn literary-btn--ghost mt-3" onClick={() => setExpanded(true)}>
-                  Показать больше разделов
+                <button
+                  type="button"
+                  className="literary-btn literary-btn--ghost mt-3"
+                  onClick={() => setExpanded(true)}
+                  aria-label="Открыть все разделы главной страницы"
+                >
+                  Показать все разделы
                 </button>
               </div>
             </LandingAlbumSection>
@@ -124,7 +129,12 @@ export function Landing() {
 
           {expanded && (
             <div className="text-center">
-              <button type="button" className="literary-btn literary-btn--ghost" onClick={() => setExpanded(false)}>
+              <button
+                type="button"
+                className="literary-btn literary-btn--ghost"
+                onClick={() => setExpanded(false)}
+                aria-label="Вернуться к упрощённому виду главной"
+              >
                 Свернуть до главного
               </button>
             </div>

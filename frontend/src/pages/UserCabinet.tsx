@@ -153,7 +153,7 @@ export function UserCabinet() {
             <h2 className="literary-title text-lg m-0">Мои обращения</h2>
             <div className="flex items-center gap-2">
               {activeIssues > 0 && (
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+                <span className="text-sm font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-800">
                   {activeIssues} в работе
                 </span>
               )}
@@ -169,7 +169,7 @@ export function UserCabinet() {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-base">#{issue.id}</span>
                 <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
-                <span className="text-xs text-muted-foreground ml-auto">{formatDate(issue.created_at)}</span>
+                <span className="text-sm text-muted-foreground ml-auto">{formatDate(issue.created_at)}</span>
               </div>
               <p className="text-base mt-1 line-clamp-2">{issue.ai_analysis?.summary || issue.description}</p>
               {issueStatusHint(issue.status) && (
@@ -213,7 +213,7 @@ export function UserCabinet() {
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2 m-0">{ad.description}</p>
             </div>
           ))}
-          <p className="text-xs text-muted-foreground m-0 pt-2 border-t border-border/60">
+          <p className="text-sm text-muted-foreground m-0 pt-2 border-t border-border/60">
             Статус «На модерации» обычно меняется в течение суток.
           </p>
         </div>
