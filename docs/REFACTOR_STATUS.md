@@ -14,7 +14,7 @@
 | Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
 | Backend тесты | places, admin, feedback, visits, AI + postgres suite | — |
 | Frontend CSS | `literary-album/` + `portal/` split (9 модулей) | — |
-| Frontend тесты | Vitest **58** + renderHook | компоненты |
+| Frontend тесты | Vitest **78** + component/hook render | — |
 | Тексты | `portal_copy.json`: brand, empty_states, landing_hero, **page_sections**, **landing_sections** | — |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
 
@@ -82,7 +82,7 @@
 - ✅ `lib/api/types.ts` → `lib/api/types/` (P6)
 
 ### Прочее лишнее
-- Черновые PR #20–#28 — устарели, закрыть
+- Черновые PR #20–#28 — закрыть вручную на GitHub (bot без прав close)
 - `navigation.ts` — `QUICK_NAV_*` без CSS и без потребителей
 - `portalCopyShared` — `PORTAL_COPY_LINKS`, `PORTAL_COPY_VK` покрыты Vitest
 - ~~`Signup.tsx` — хардкод вместо `literaryCopy`~~ → `PAGE_SECTIONS.signup`
@@ -125,6 +125,13 @@
 ### P2b — god files ✅ (2026-06-16)
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
+
+### P12 — тесты компонентов + API (2026-06-16)
+1. ✅ `LiteraryIssueCard.test.tsx` — summary, timeline, link/selectable variants
+2. ✅ `ClassifiedAdForm.test.tsx` — classifieds/jobs, chips, extras, submit
+3. ✅ Backend: `test_moderate_classified_reject`, `requires_owner`, `test_issue_api_db`
+4. ⏭ PR #20–#28 — закрыть вручную (нет прав у CI bot)
+5. ✅ Vitest **78**
 
 ### P11 — тексты PAGE_SECTIONS ✅ (2026-06-16)
 1. ✅ `page_sections` + `landing_sections` в `portal_copy.json` (frontend + backend sync)
@@ -180,7 +187,7 @@
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
 | pytest | ~175 | 120+ |
-| Vitest | **65** | 40+ |
+| Vitest | **78** | 40+ |
 | God CSS | portal + literary-album split ✅ | — |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |

@@ -37,6 +37,7 @@ export default defineConfig({
     environmentMatchGlobs: [
       ["src/hooks/**/*.test.ts", "jsdom"],
       ["src/hooks/**/*.test.tsx", "jsdom"],
+      ["src/components/**/*.test.tsx", "jsdom"],
     ],
   },
 });

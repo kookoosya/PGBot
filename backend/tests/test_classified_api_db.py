@@ -6,7 +6,8 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.helpers.db_factories import auth_headers_for, create_owner_user
+from app.models.enums import UserRole
+from tests.helpers.db_factories import auth_headers_for, create_owner_user, create_user
 
 pytestmark = pytest.mark.postgres
 
@@ -74,3 +75,71 @@ async def test_moderate_classified_approve_via_api(
     assert listed.status_code == 200
     ids = {item["id"] for item in listed.json()["items"]}
     assert ad_id in ids
+
+
+@pytest.mark.asyncio
+@patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
+async def test_moderate_classified_reject_via_api(
+    _notify_subs,
+    _notify_create,
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+):
+    owner = await create_owner_user(db_session)
+    create_resp = await api_client.post(
+        "/api/v1/classifieds",
+        json={
+            "category": "firewood",
+            "title": "Дрова сомнительные",
+            "description": "Описание для отклонения модератором",
+            "phone": "+79001112233",
+            "author_name": "Автор",
+            "agree_rules": True,
+        },
+    )
+    ad_id = create_resp.json()["id"]
+
+    reject = await api_client.post(
+        f"/api/v1/classifieds/{ad_id}/reject",
+        headers=auth_headers_for(owner),
+    )
+    assert reject.status_code == 200
+
+    listed = await api_client.get(
+        "/api/v1/classifieds",
+        params={"ads_only": "true", "page_size": 50},
+    )
+    assert listed.status_code == 200
+    ids = {item["id"] for item in listed.json()["items"]}
+    assert ad_id not in ids
+
+
+@pytest.mark.asyncio
+@patch("app.services.classified.create.safe_notify_owner", new_callable=AsyncMock, return_value=True)
+@patch("app.services.vk.bot.notify_subscribers_new_ad", new_callable=AsyncMock, return_value=0)
+async def test_moderate_classified_requires_owner(
+    _notify_subs,
+    _notify_create,
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+):
+    resident = await create_user(db_session, role_name=UserRole.RESIDENT)
+    create_resp = await api_client.post(
+        "/api/v1/classifieds",
+        json={
+            "category": "services",
+            "title": "Услуга для модерации",
+            "description": "Только владелец может одобрить",
+            "phone": "+79004445566",
+            "author_name": "Мастер",
+            "agree_rules": True,
+        },
+    )
+    ad_id = create_resp.json()["id"]
+
+    forbidden = await api_client.post(
+        f"/api/v1/classifieds/{ad_id}/approve",
+        headers=auth_headers_for(resident),
+    )
+    assert forbidden.status_code == 403
