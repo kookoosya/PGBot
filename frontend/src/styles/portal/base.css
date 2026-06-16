@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Пушкиногорский альбом */
+    --background: 40 33% 95%;
+    --foreground: 30 14% 15%;
+    --card: 40 100% 98%;
+    --card-foreground: 30 14% 15%;
+    --primary: 158 26% 23%;
+    --primary-foreground: 40 33% 95%;
+    --secondary: 40 28% 92%;
+    --secondary-foreground: 30 14% 15%;
+    --muted: 40 22% 90%;
+    --muted-foreground: 30 10% 38%;
+    --accent: 43 89% 38%;
+    --accent-foreground: 40 33% 95%;
+    --destructive: 347 50% 30%;
+    --destructive-foreground: 40 33% 95%;
+    --border: 40 22% 82%;
+    --input: 40 30% 88%;
+    --ring: 43 89% 38%;
+    --radius: 0.875rem;
+    --gold: 43 89% 38%;
+    --forest: 158 26% 23%;
+    --burgundy: 347 50% 30%;
+    --parchment: 40 33% 95%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply text-foreground antialiased;
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    background-color: hsl(var(--parchment));
+    background-image:
+      radial-gradient(ellipse 120% 80% at 50% -20%, hsl(42 55% 88% / 0.65), transparent),
+      radial-gradient(ellipse 80% 50% at 100% 50%, hsl(152 25% 88% / 0.35), transparent),
+      radial-gradient(ellipse 60% 40% at 0% 80%, hsl(350 30% 90% / 0.25), transparent);
+  }
+  h1, h2, h3, h4 {
+    font-family: "Playfair Display", Georgia, serif;
+    color: hsl(var(--forest));
+    letter-spacing: -0.01em;
+  }
+}

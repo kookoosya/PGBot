@@ -1,0 +1,10 @@
+/* Portal shell styles — split from index.css (P10) */
+@import "./base.css";
+@import "./shell.css";
+@import "./layout.css";
+@import "./animations.css";
+@import "./map.css";
+@import "./epic-landing.css";
+@import "./widgets.css";
+@import "./content.css";
+@import "./admin.css";

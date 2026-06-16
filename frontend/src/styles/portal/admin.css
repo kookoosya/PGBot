@@ -1,0 +1,193 @@
+@layer components {
+  /* Shared literary album panel */
+  .page-panel {
+    padding: 1.25rem 1.5rem;
+    border-radius: calc(var(--radius) + 0.25rem);
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
+    box-shadow: 0 12px 36px hsl(152 48% 12% / 0.06);
+  }
+  .page-panel--gold {
+    border-top: 3px solid hsl(var(--gold));
+  }
+  .page-panel--forest {
+    border-top: 3px solid hsl(var(--forest));
+  }
+
+  .pushkin-select {
+    height: 2.5rem;
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .pushkin-select:focus {
+    outline: none;
+    border-color: hsl(var(--gold) / 0.6);
+    box-shadow: 0 0 0 2px hsl(var(--gold) / 0.15);
+  }
+
+  .taxi-panel-active {
+    border: 1px solid hsl(var(--gold));
+    box-shadow: 0 8px 28px hsl(42 78% 46% / 0.15);
+  }
+
+  .issue-status-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 0.35rem;
+    display: grid;
+    gap: 0;
+    border-left: 2px solid hsl(var(--border));
+  }
+  .issue-status-timeline li {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.65rem;
+    align-items: start;
+    padding: 0.65rem 0 0.65rem 0.85rem;
+  }
+  .issue-status-timeline-dot {
+    position: absolute;
+    left: -0.45rem;
+    top: 0.95rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: hsl(var(--gold));
+    box-shadow: 0 0 0 3px hsl(var(--gold) / 0.2);
+  }
+  .issue-status-timeline-item--current .issue-status-timeline-dot {
+    background: hsl(var(--forest));
+    box-shadow: 0 0 0 3px hsl(var(--forest) / 0.2);
+  }
+  .issue-status-timeline-item--current .issue-status-timeline-label {
+    color: hsl(var(--forest));
+  }
+  .issue-status-timeline-label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .issue-status-timeline-prev {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  .issue-status-timeline-resolution {
+    margin: 0.35rem 0 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    background: hsl(var(--secondary) / 0.55);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+  .issue-status-timeline-date {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Admin issues workbench — dedicated shell, no literary/shadcn mix in page */
+  .issues-workbench-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .issues-workbench-muted {
+    color: hsl(var(--muted-foreground));
+  }
+  .issues-workbench-empty {
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    padding: 2rem 0;
+  }
+  .issues-workbench-select,
+  .issues-workbench-input {
+    height: 2.5rem;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    background: hsl(var(--background));
+  }
+  .issues-workbench-input {
+    flex: 1;
+    min-width: 12rem;
+  }
+  .issues-workbench-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+  .issues-workbench-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .issues-workbench-btn--primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+  .issues-workbench-btn--ghost:hover:not(:disabled) {
+    background: hsl(var(--muted));
+  }
+  .issues-workbench-detail {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    background: hsl(var(--card));
+  }
+  .issues-workbench-detail-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .issues-workbench-text {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+  }
+  .issues-workbench-note {
+    border-radius: calc(var(--radius) - 2px);
+    background: hsl(var(--muted));
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .issues-workbench-textarea {
+    width: 100%;
+    min-height: 60px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: hsl(var(--background));
+  }
+
+  .vk-mini-app {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .vk-mini-tabs {
+    box-shadow: 0 -4px 20px hsl(var(--foreground) / 0.06);
+  }
+  .vk-mini-tab {
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+  }
+  .vk-mini-tab--active {
+    color: hsl(var(--forest));
+    background: hsl(var(--secondary) / 0.65);
+    font-weight: 600;
+  }
+}

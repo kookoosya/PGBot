@@ -56,7 +56,7 @@
 ### Стиль «Пушкиногорский альбом»
 
 - **Тексты:** `frontend/src/lib/literaryCopy.ts` — стихи, заголовки секций, пустые состояния
-- **Стили:** `frontend/src/styles/literary-album.css` — карточки, панели, формы
+- **Стили:** `frontend/src/styles/portal/` — shell, map, landing epic, widgets; `styles/literary-album/` — карточки, панели, формы
 - **Компоненты:** `frontend/src/components/literary/` — `LiterarySectionHead`, `LiteraryEmptyState`, loaders
 - **Удобство:** класс `.literary-form-comfort` — крупные поля для пожилых пользователей
 

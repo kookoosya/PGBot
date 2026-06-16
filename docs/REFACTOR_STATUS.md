@@ -13,7 +13,7 @@
 | Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
 | Backend домены | `issue/`, `place/`, `classified/`, `provider/`, `event/`, `weather/`, `vk/`, `models/enums/` | — |
 | Backend тесты | places, admin, feedback, visits, AI + postgres suite | — |
-| Frontend CSS | `literary-album/` split (core, landing, pages) | `index.css` ~2800 строк |
+| Frontend CSS | `literary-album/` + `portal/` split (9 модулей) | — |
 | Frontend тесты | Vitest **58** + renderHook | компоненты |
 | Тексты | `portal_copy.json`: brand, empty_states, **landing_hero** | PAGE_SECTIONS во frontend |
 | VK Mini App | auth API, shell `/vk/*`, CSP frame-ancestors | прод App ID в VK |
@@ -63,7 +63,7 @@
 
 ### Frontend — CSS
 - ✅ `literary-album.css` → `styles/literary-album/{core,landing,pages}.css` (P9)
-- ⏭ `index.css` ~2800 строк — следующий split
+- ✅ `index.css` → `styles/portal/{base,shell,layout,map,…}.css` (P10)
 
 ### Frontend — CSS-сироты (устарело)
 - `index.css`: `.landing-page`, `.hero-orbs*`, `.quick-nav-*`
@@ -126,6 +126,12 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P10 — CSS portal split ✅ (2026-06-16)
+1. ✅ `index.css` → `styles/portal/` (base, shell, layout, animations, map, epic-landing, widgets, content, admin)
+2. ✅ `portalStyles.test.ts` — проверка импортов модулей
+3. ✅ `ARCHITECTURE.md` — актуальные пути стилей
+4. ✅ Vitest **60**
+
 ### P9 — большой прогон ✅ (2026-06-16)
 1. ✅ CSS split: `literary-album/` → core + landing + pages
 2. ✅ `landing_hero` в `portal_copy.json` + cross-тесты
@@ -168,8 +174,8 @@
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
 | pytest | ~175 | 120+ |
-| Vitest | **58** | 40+ |
-| God CSS | literary-album split ✅ | index.css |
+| Vitest | **60** | 40+ |
+| God CSS | portal + literary-album split ✅ | — |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |
 
