@@ -411,8 +411,6 @@
   }
   .page-header--literary .page-header-subtitle {
     font-family: "Source Serif 4", Georgia, serif;
-    font-style: italic;
-    opacity: 0.92;
   }
 
   /* === Лендинг: альбомные блоки === */
@@ -1764,6 +1762,19 @@
     padding: 1.15rem 1.35rem;
     border: 1px solid hsl(var(--border) / 0.85);
     box-shadow: 0 12px 36px hsl(var(--forest) / 0.08);
+    color: hsl(var(--foreground));
+  }
+  .literary-page .page-header-title {
+    color: hsl(var(--forest));
+  }
+  .literary-page .page-header-subtitle {
+    color: hsl(var(--muted-foreground));
+    font-style: normal;
+    opacity: 1;
+  }
+  .literary-page .page-header-icon {
+    background: hsl(var(--forest) / 0.06);
+    border-color: hsl(var(--border));
   }
   .literary-page .page-panel {
     background: linear-gradient(180deg, hsl(var(--card) / 0.97), hsl(var(--parchment) / 0.94));
