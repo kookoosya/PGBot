@@ -408,7 +408,7 @@
 
   .quick-nav-icon { @apply text-3xl mb-2; }
   .quick-nav-label { @apply font-bold text-sm md:text-base; font-family: "Playfair Display", Georgia, serif; }
-  .quick-nav-desc { @apply text-sm text-muted-foreground mt-1; }
+  .quick-nav-desc { @apply text-xs text-muted-foreground mt-1; }
   .quick-nav-arrow {
     @apply absolute top-3 right-3 text-amber-600 font-bold text-sm opacity-0 transition-all;
   }
@@ -874,7 +874,7 @@
     @apply flex flex-wrap gap-2 mb-3;
   }
   .suggest-chip {
-    @apply px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer transition;
+    @apply px-3 py-1.5 rounded-full text-sm font-medium border-2 cursor-pointer transition;
     background: hsl(42 50% 96%);
     border-color: hsl(42 45% 78%);
     color: hsl(152 35% 22%);
