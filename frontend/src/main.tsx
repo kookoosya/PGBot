@@ -16,6 +16,7 @@ import "@fontsource/source-sans-3/400.css";
 import "@fontsource/source-sans-3/600.css";
 import "./index.css";
 import "./styles/literary-album.css";
+import "./styles/vk-mini-app.css";
 
 clearStaleServiceWorkers();
 

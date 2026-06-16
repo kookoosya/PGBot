@@ -1,0 +1,130 @@
+.vk-mini-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: hsl(var(--parchment));
+  color: hsl(var(--foreground));
+}
+
+.vk-mini-header {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: linear-gradient(180deg, hsl(42 55% 99% / 0.98), hsl(var(--card) / 0.94));
+}
+
+.vk-mini-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--gold));
+  font-weight: 700;
+}
+
+.vk-mini-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.vk-mini-user {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.vk-mini-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.85rem 0.85rem 5.5rem;
+}
+
+.vk-tab-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.vk-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.vk-filter-chip {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.9);
+  color: hsl(var(--forest));
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.vk-filter-chip--active {
+  background: hsl(var(--forest));
+  border-color: hsl(var(--forest));
+  color: hsl(var(--parchment));
+}
+
+.vk-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vk-mini-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom));
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(40 55% 99% / 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.vk-mini-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.25rem;
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.vk-mini-nav-btn span:first-child {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.vk-mini-nav-btn--active {
+  color: hsl(var(--forest));
+  background: hsl(var(--gold) / 0.12);
+}
+
+.vk-mini-nav-btn:focus-visible {
+  outline: 2px solid hsl(var(--gold) / 0.45);
+  outline-offset: 1px;
+}
+
+@media (min-width: 480px) {
+  .vk-mini-main {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}

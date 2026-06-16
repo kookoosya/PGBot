@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     VK_API_VERSION: str = "5.199"
     VK_GROUP_URL: str = "https://vk.com"
     VK_ADMIN_PEER_ID: str = ""
+    VK_APP_ID: int = 0
+    VK_APP_SECRET: str = ""
+    VK_APP_SERVICE_TOKEN: str = ""
     PUBLIC_SITE_URL: str = "https://192-210-213-135.sslip.io"
 
     # Telegram
@@ -52,7 +55,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://localhost,"
         "https://pushkinskie-gory.ru,https://www.pushkinskie-gory.ru,"
-        "https://192-210-213-135.sslip.io"
+        "https://192-210-213-135.sslip.io,"
+        "https://vk.com,https://m.vk.com"
     )
 
     # Rate limiting

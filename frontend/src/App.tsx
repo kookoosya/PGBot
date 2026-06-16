@@ -11,6 +11,8 @@ import { Login } from "./pages/Login";
 import { RegisterHub } from "./pages/RegisterHub";
 import { UserLogin } from "./pages/UserLogin";
 import { NotFound } from "./pages/NotFound";
+import { VkApp } from "./vk/VkApp";
+import { VkAuthProvider } from "./vk/VkAuthContext";
 
 const MapPage = lazy(() => import("./pages/Map").then((m) => ({ default: m.MapPage })));
 const AIChat = lazy(() => import("./pages/AIChat").then((m) => ({ default: m.AIChat })));
@@ -140,6 +142,15 @@ export default function App() {
       </Route>
 
       <Route path="/login" element={<Navigate to="/cabinet/login" replace />} />
+
+      <Route
+        path="/vk/*"
+        element={
+          <VkAuthProvider>
+            <VkApp />
+          </VkAuthProvider>
+        }
+      />
     </Routes>
   );
 }

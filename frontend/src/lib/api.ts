@@ -44,6 +44,13 @@ class ApiClient {
     });
   }
 
+  vkAuth(data: { silent_token: string; uuid: string }) {
+    return this.request<{ access_token: string; token_type: string; user: User }>("/vk/auth", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   getMe() {
     return this.request<User>("/auth/me");
   }
