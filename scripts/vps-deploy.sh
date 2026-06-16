@@ -11,6 +11,7 @@ cd /opt/pgbot
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
 bash scripts/setup-russia-mirror.sh
 docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml restart nginx
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \
   || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
 docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
