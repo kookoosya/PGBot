@@ -3,9 +3,12 @@ import {
   eventSourceLabel,
   eventTeaser,
   formatExtraSessions,
+  formatFestivalDateRange,
   groupEventsByShow,
   isDisplayablePoster,
   isRealCinemaEvent,
+  partitionGarnectProgram,
+  pluralPerformances,
   regionChipClass,
   regionLabelFromFilter,
 } from "./eventUtils";
@@ -85,6 +88,63 @@ describe("region helpers", () => {
   it("maps filter id to label", () => {
     expect(regionLabelFromFilter("pskov")).toBe("Псков");
     expect(regionLabelFromFilter("pushkin_gory")).toBe("Пушкинские Горы");
+  });
+});
+
+describe("partitionGarnectProgram", () => {
+  const garnectA = {
+    id: 1,
+    title: "«Рассказы Девицы К. И. Т. » — Бугровский гарнец",
+    source: "pushkinland",
+    source_url: "https://pushkinland.ru/2018/news/news26/news57.php",
+    starts_at: "2026-06-19T10:15:00+03:00",
+    starts_at_label: "19.06.2026 · 10:15",
+  };
+  const garnectB = {
+    id: 2,
+    title: "«Пиратские анекдоты» — Бугровский гарнец",
+    source: "pushkinland",
+    source_url: "https://pushkinland.ru/2018/news/news26/news57.php",
+    starts_at: "2026-06-20T10:15:00+03:00",
+    starts_at_label: "20.06.2026 · 10:15",
+  };
+  const other = {
+    id: 3,
+    title: "День языков народов России",
+    source: "pushkinland",
+    starts_at: "2026-06-18T12:00:00+03:00",
+    starts_at_label: "18.06.2026 · 12:00",
+  };
+
+  it("groups garnet performances and leaves other pushkin events separate", () => {
+    const { program, rest } = partitionGarnectProgram([other, garnectB, garnectA]);
+    expect(program).toHaveLength(2);
+    expect(rest).toHaveLength(1);
+    expect(rest[0].id).toBe(3);
+  });
+
+  it("returns all events in rest when only one garnet performance", () => {
+    const { program, rest } = partitionGarnectProgram([garnectA, other]);
+    expect(program).toHaveLength(0);
+    expect(rest).toHaveLength(2);
+  });
+});
+
+describe("formatFestivalDateRange", () => {
+  it("formats multi-day range", () => {
+    const text = formatFestivalDateRange([
+      { starts_at: "2026-06-19T10:00:00+03:00", starts_at_label: "19.06.2026 · 10:00" },
+      { starts_at: "2026-06-20T11:00:00+03:00", starts_at_label: "20.06.2026 · 11:00" },
+    ]);
+    expect(text).toBe("19.06 – 20.06");
+  });
+});
+
+describe("pluralPerformances", () => {
+  it("uses russian plural forms", () => {
+    expect(pluralPerformances(1)).toBe("спектакль");
+    expect(pluralPerformances(3)).toBe("спектакля");
+    expect(pluralPerformances(14)).toBe("спектаклей");
   });
 });
 

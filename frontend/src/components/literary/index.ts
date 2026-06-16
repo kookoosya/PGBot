@@ -1,5 +1,6 @@
 export { CabinetSectionSkeleton } from "./CabinetSectionSkeleton";
 export { CinemaSpotlight } from "./CinemaSpotlight";
+export { FestivalProgramBlock } from "./FestivalProgramBlock";
 export { ClassifiedAdForm } from "./ClassifiedAdForm";
 export { EventCard } from "./EventCard";
 export { IssuesWorkbench } from "./IssuesWorkbench";

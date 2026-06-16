@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
-import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents } from "@/lib/eventUtils";
+import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const copy = PAGE_SECTIONS.events;
@@ -80,6 +80,10 @@ export function EventsPage() {
   const pushkinEvents = useMemo(
     () => visibleEvents.filter((e) => e.region_label === "Пушкинские Горы" && !isRealCinemaEvent(e)),
     [visibleEvents],
+  );
+  const { program: garnectProgram, rest: pushkinOtherEvents } = useMemo(
+    () => partitionGarnectProgram(pushkinEvents),
+    [pushkinEvents],
   );
   const pskovEvents = useMemo(
     () => visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
@@ -217,7 +221,12 @@ export function EventsPage() {
                 compact
               />
               <ol className="events-grid events-grid--wide">
-                {pushkinEvents.map((event) => (
+                {garnectProgram.length > 0 && (
+                  <li className="events-festival-program-wrap">
+                    <FestivalProgramBlock events={garnectProgram} />
+                  </li>
+                )}
+                {pushkinOtherEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </ol>

@@ -162,6 +162,8 @@ export function eventTeaser(event: EventCardEvent, maxLen = 120): string {
 
 const STOCK_GALLERY_PREFIX = "/images/gallery/";
 
+const GARNEC_PROGRAM_RE = /бугровский\s+гарнец|«бугровский\s+гарнец»/i;
+
 export function isDisplayablePoster(
   posterUrl: string | null | undefined,
   category?: string,
@@ -172,6 +174,53 @@ export function isDisplayablePoster(
   if (lower.includes("no-poster") || lower.includes("no_poster")) return false;
   if (category === "cinema" && posterUrl.startsWith("/images/")) return false;
   return true;
+}
+
+/** Performance from a multi-show festival program (e.g. Бугровский гарнец on pushkinland). */
+export function isGarnectProgramEvent(event: Pick<ShowGroupable, "title" | "source" | "source_url">): boolean {
+  if (event.source !== "pushkinland") return false;
+  const title = event.title.toLowerCase();
+  const url = (event.source_url || "").toLowerCase();
+  return GARNEC_PROGRAM_RE.test(title) || (title.includes("гарнец") && url.includes("/news/"));
+}
+
+export function partitionGarnectProgram<T extends ShowGroupable & { id: number }>(
+  events: T[],
+): { program: T[]; rest: T[] } {
+  const program = events.filter(isGarnectProgramEvent).sort((a, b) =>
+    (a.starts_at || a.starts_at_label).localeCompare(b.starts_at || b.starts_at_label),
+  );
+  if (program.length < 2) {
+    return { program: [], rest: events };
+  }
+  const programIds = new Set(program.map((event) => event.id));
+  return {
+    program,
+    rest: events.filter((event) => !programIds.has(event.id)),
+  };
+}
+
+function formatFestivalDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
+  if (!year || !month || !day) return isoDate;
+  return `${day}.${month}`;
+}
+
+export function formatFestivalDateRange(events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[]): string {
+  const days = [...new Set(events.map((event) => event.starts_at?.slice(0, 10)).filter(Boolean) as string[])].sort();
+  if (!days.length) {
+    return events[0]?.starts_at_label?.split("·")[0]?.trim() || "";
+  }
+  if (days.length === 1) return formatFestivalDay(days[0]);
+  return `${formatFestivalDay(days[0])} – ${formatFestivalDay(days[days.length - 1])}`;
+}
+
+export function pluralPerformances(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return "спектакль";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "спектакля";
+  return "спектаклей";
 }
 
 export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
