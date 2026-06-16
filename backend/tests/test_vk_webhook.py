@@ -166,6 +166,27 @@ async def test_vk_complaint_routes_to_issue_processor(
 @patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
 @patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
 @patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
+@patch("app.services.vk.commands.unsubscribe_peer", new_callable=AsyncMock, return_value="Вы отписаны")
+@patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
+async def test_vk_unsubscribe_command(
+    mock_mod, mock_unsub, _send, _flow, _ai, _free, vk_client: AsyncClient
+):
+    from app.services.vk.moderation import ModerationCheckResult
+
+    mock_mod.return_value = ModerationCheckResult(allowed=True)
+    response = await vk_client.post(
+        "/api/v1/vk/callback",
+        json=_message_new_payload(text="отписаться"),
+    )
+    assert response.status_code == 200
+    mock_unsub.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@patch("app.api.v1.vk_webhook.route_free_chat", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
+@patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
+@patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
 @patch("app.services.vk.message_handler.process_incoming_message", new_callable=AsyncMock)
 @patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
 async def test_vk_short_message_skips_complaint_route(

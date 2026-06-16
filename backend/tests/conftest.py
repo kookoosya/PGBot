@@ -83,3 +83,18 @@ async def db_session():
     async with AsyncSessionLocal() as session:
         yield session
         await session.rollback()
+
+
+@pytest.fixture
+async def api_client(db_session):
+    """HTTP client with shared transactional DB session."""
+    from app.database import get_db
+
+    async def _override_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_db
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.pop(get_db, None)

@@ -10,12 +10,14 @@ from sqlalchemy.orm import selectinload
 
 from app.config import get_settings
 from app.core.security import create_access_token, get_password_hash
-from app.models.enums import IssueStatus, PlaceCategory, Priority, UserRole
+from app.models.enums import EventRegion, IssueStatus, PlaceCategory, Priority, UserRole
+from app.models.event import Event
 from app.models.issue import Issue
 from app.models.place import Place
 from app.models.user import Role, User
 
 settings = get_settings()
+TEST_PASSWORD = "Testpass1234"
 
 
 def unique_username(prefix: str) -> str:
@@ -43,7 +45,7 @@ async def create_user(
     role = await get_or_create_role(db, role_name)
     user = User(
         username=username or unique_username(role_name.value),
-        hashed_password=get_password_hash("testpass123"),
+        hashed_password=get_password_hash(TEST_PASSWORD),
         full_name=full_name,
         phone=phone,
         role_id=role.id,
@@ -92,6 +94,39 @@ async def create_place(
     db.add(place)
     await db.flush()
     return place
+
+
+async def create_owner_user(db: AsyncSession) -> User:
+    """Site owner (super_admin with configured username)."""
+    username = next(iter(settings.owner_usernames))
+    return await create_user(
+        db,
+        role_name=UserRole.SUPER_ADMIN,
+        username=username,
+        full_name="Site Owner",
+    )
+
+
+async def create_event(
+    db: AsyncSession,
+    *,
+    title: str,
+    region: EventRegion = EventRegion.PUSHKIN_GORY,
+) -> Event:
+    from datetime import datetime, timedelta, timezone
+
+    event = Event(
+        title=title,
+        description="Тестовое событие",
+        starts_at=datetime.now(timezone.utc) + timedelta(days=3),
+        location="Пушкиногорье",
+        region=region.value,
+        category="culture",
+        is_published=True,
+    )
+    db.add(event)
+    await db.flush()
+    return event
 
 
 def auth_headers_for(user: User) -> dict[str, str]:

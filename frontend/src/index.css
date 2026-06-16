@@ -1988,7 +1988,27 @@
     background: hsl(152 40% 18%);
     border-color: hsl(152 40% 18%);
     color: hsl(42 90% 94%);
+    box-shadow: 0 2px 8px rgba(12, 40, 28, 0.12);
   }
+
+  .classified-quick-btn--reset {
+    margin-left: auto;
+    border-style: dashed;
+    opacity: 0.92;
+  }
+
+  .classified-quick-btn--reset:hover {
+    opacity: 1;
+    border-color: hsl(42 55% 55%);
+  }
+
+  .literary-form-comfort input:focus-visible,
+  .literary-form-comfort textarea:focus-visible,
+  .literary-form-comfort select:focus-visible {
+    outline: 2px solid hsl(var(--gold));
+    outline-offset: 2px;
+  }
+
   .classified-jobs-list { @apply mt-6; }
 
   .antifraud-note {

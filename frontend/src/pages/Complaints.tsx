@@ -325,7 +325,20 @@ export function Complaints() {
               ) : myIssues.length === 0 ? (
                 <LiteraryEmptyState {...EMPTY_STATES.complaintsMine} compact />
               ) : filteredIssues.length === 0 ? (
-                <p className="text-sm text-muted-foreground">По этому фильтру обращений нет.</p>
+                <LiteraryEmptyState
+                  icon="🔍"
+                  title="Нет обращений по фильтру"
+                  text="Попробуйте другой статус или сбросьте фильтр."
+                  compact
+                >
+                  <button
+                    type="button"
+                    className="literary-btn literary-btn--ghost text-sm mt-2"
+                    onClick={() => setIssueFilter("all")}
+                  >
+                    Показать все
+                  </button>
+                </LiteraryEmptyState>
               ) : (
                 <div className="space-y-3">
                   {filteredIssues.map((issue) => (

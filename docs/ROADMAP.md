@@ -66,6 +66,7 @@ backend/app/services/vk/
 
 - Покрыть: auth, classifieds create/moderate, issue lifecycle, VK webhook (mock)
 - ✅ Расширены: `test_issue_lifecycle*`, `test_place_lifecycle`, `test_vk_webhook`, `test_public_api`, `test_vk_digest`, `test_classified_quota`
+- ✅ E2E сценарии: `test_scenarios_e2e` (auth, classified moderation, issues, events)
 - Общая фикстура `db_session` + маркер `@pytest.mark.postgres` для CI/локального skip
 - Цель: **50+** интеграционных тестов на критические пути
 - Frontend: **0 тестов сейчас** → Vitest на `eventUtils`, `literaryCopy`, API hooks (фаза 1b)
