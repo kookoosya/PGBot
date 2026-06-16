@@ -2728,4 +2728,86 @@
     color: hsl(var(--muted-foreground));
     font-variant-numeric: tabular-nums;
   }
+
+  /* Admin issues workbench — dedicated shell, no literary/shadcn mix in page */
+  .issues-workbench-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .issues-workbench-muted {
+    color: hsl(var(--muted-foreground));
+  }
+  .issues-workbench-empty {
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    padding: 2rem 0;
+  }
+  .issues-workbench-select,
+  .issues-workbench-input {
+    height: 2.5rem;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    background: hsl(var(--background));
+  }
+  .issues-workbench-input {
+    flex: 1;
+    min-width: 12rem;
+  }
+  .issues-workbench-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+  .issues-workbench-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .issues-workbench-btn--primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+  .issues-workbench-btn--ghost:hover:not(:disabled) {
+    background: hsl(var(--muted));
+  }
+  .issues-workbench-detail {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    background: hsl(var(--card));
+  }
+  .issues-workbench-detail-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .issues-workbench-text {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+  }
+  .issues-workbench-note {
+    border-radius: calc(var(--radius) - 2px);
+    background: hsl(var(--muted));
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .issues-workbench-textarea {
+    width: 100%;
+    min-height: 60px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    background: hsl(var(--background));
+  }
 }

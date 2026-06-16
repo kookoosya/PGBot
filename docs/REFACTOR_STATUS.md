@@ -15,7 +15,7 @@
 | Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
 | Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
 | Frontend Map | split `pages/map/*` | — |
-| Frontend UI | literary album, nav dedup, events layout | 3 параллельных UI обращений |
+| Frontend UI | literary album, unified issue/ad components | — |
 | Frontend тесты | Vitest 13 (eventUtils, literaryCopy) | компоненты, API hooks |
 | Тексты | `shared/portal_copy.json` brand + issue hints | bulk UI copy только во frontend |
 | VK Mini App | заглушка `/vk` | нужен App ID + auth + CSP |
@@ -67,10 +67,9 @@
 - `index.css`: `.landing-page`, `.hero-orbs*`, `.quick-nav-*`
 - `literary-album.css`: `.epic-verses-*`, `.literary-gallery-*`, `.seasonal-tip*`
 
-### Frontend — дубли логики
-- `EventsPage` + `UpcomingEvents` — одинаковые REGION_FILTERS и split cinema/pskov
-- `Complaints` + `OfficialIssues` + admin `Issues` — три UI обращений
-- `Jobs` ≈ `Classifieds` с `jobs_only` — форма дублируется
+### Frontend — дубли логики (снято в P3)
+- ~~`Complaints` + `OfficialIssues` + admin `Issues` — три UI обращений~~ → `LiteraryIssueCard` + `IssuesWorkbench`
+- ~~`Jobs` ≈ `Classifieds` — форма дублируется~~ → `ClassifiedAdForm`
 
 ### Backend — shim-файлы (re-export, можно убрать после миграции импортов)
 | Shim | Канонический путь | Импортёров |
@@ -120,10 +119,10 @@
 3. ✅ `event_service.py` → package `event/`
 4. ✅ `vk_messages.py` → `vk/messages.py`
 
-### P3 — UX consolidation
-1. Единый компонент списка обращений (public / official / admin variants)
-2. Jobs форма → shared с Classifieds + `useFormDraft`
-3. Admin `Issues` → literary стиль или явный «admin shell» без смешения
+### P3 — UX consolidation ✅ (2026-06-16)
+1. ✅ `LiteraryIssueCard` + `IssuesWorkbench` — единый список (Complaints, Official, Admin, Cabinet)
+2. ✅ `ClassifiedAdForm` + `useFormDraft` на Jobs; `LiteraryJobCard`
+3. ✅ Admin `Issues` → dedicated `issues-workbench` shell (без shadcn/literary mix)
 
 ### P4 — VK Mini App (блокер: App ID)
 1. `VK_APP_ID`, CORS, `frame-ancestors`
@@ -143,7 +142,7 @@
 |---------|--------|--------------|
 | Smoke | 26 OK | 26+ |
 | pytest | ~125 | 120+ |
-| Vitest | 22 | 40+ |
+| Vitest | 24 | 40+ |
 | God files ≥400 строк | 2 | 0 |
 | Мёртвые компоненты | 0 | 0 |
 | VK shim files | 0 | 0 |

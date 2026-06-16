@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import {
+  ClassifiedAdForm,
+  LiteraryEmptyState,
+  LiteraryInlineLoader,
+  LiteraryJobCard,
+  LiterarySectionHead,
+  PostSubmitPanel,
+} from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { JOBS_DRAFT_KEY, JOBS_FORM_INITIAL, type ClassifiedAdFormState } from "@/lib/classifiedForm";
 import { JOB_CATEGORY_IDS, JOB_FORM_HINTS, LOCAL_EMPLOYERS } from "@/lib/jobs";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 const copy = PAGE_SECTIONS.jobs;
 
@@ -21,21 +30,12 @@ export function Jobs() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    category: "job_tourism",
-    title: "",
-    description: "",
-    price: "",
-    price_unit: "₽/мес",
-    phone: "",
-    author_name: "",
-    address: "",
-    contact_vk: "",
-    website_url: "",
-    agree_rules: false,
-  });
+  const { value: form, setValue: setForm, clearDraft } = useFormDraft<ClassifiedAdFormState>(JOBS_DRAFT_KEY, JOBS_FORM_INITIAL);
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
+  const [submittedId, setSubmittedId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const successRef = useRef<HTMLDivElement | null>(null);
 
   const jobCategories = categories.filter((c) => JOB_CATEGORY_IDS.has(c.value));
 
@@ -67,11 +67,20 @@ export function Jobs() {
     load(1, false);
   }, [sector, search]);
 
+  useEffect(() => {
+    if (submittedId && successRef.current) {
+      successRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [submittedId]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setMsg("");
     try {
       const res = await api.createClassified({ ...form, price: form.price ? +form.price : undefined });
       setMsgType("ok");
+      setSubmittedId(res.id);
       setMsg(res.message);
       setShowForm(false);
       setForm((f) => ({
@@ -83,10 +92,13 @@ export function Jobs() {
         website_url: "",
         agree_rules: false,
       }));
+      clearDraft();
       load(1, false);
     } catch (err) {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -170,102 +182,50 @@ export function Jobs() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow">
-          <LiterarySectionHead
-            kicker={copy.form.kicker}
-            title={copy.form.title}
-            lead={copy.form.lead}
-          />
-          <div className="free-banner">
-            <span className="text-lg">🆓</span>
-            <div>
-              <p className="font-bold m-0">Бесплатная вакансия</p>
-              <p className="text-sm text-muted-foreground m-0 mt-1">После модерации — на сайте и в VK-боте</p>
-            </div>
-          </div>
-          <ul className="literary-form-hints">
-            {JOB_FORM_HINTS.map((h) => (
-              <li key={h}>{h}</li>
-            ))}
-          </ul>
-          <select
-            className="pushkin-select w-full"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
-            {jobCategories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {getCategoryVisual(c.value).icon} {c.label}
-              </option>
-            ))}
-          </select>
-          <Input placeholder="Должность, напр. Продавец-кассир" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-          <textarea
-            className="literary-textarea w-full min-h-[120px]"
-            placeholder="Обязанности, график, требования, как связаться…"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <Input type="number" placeholder="Зарплата / ставка" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-            <Input placeholder="за смену, месяц, сезон…" value={form.price_unit} onChange={(e) => setForm({ ...form, price_unit: e.target.value })} />
-          </div>
-          <Input placeholder="Телефон работодателя +7…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-          <Input placeholder="Название организации или ФИО" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} required />
-          <Input placeholder="Адрес / посёлок" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <Input placeholder="VK — уведомим о публикации" value={form.contact_vk} onChange={(e) => setForm({ ...form, contact_vk: e.target.value })} />
-          <input
-            type="text"
-            name="website_url"
-            value={form.website_url}
-            onChange={(e) => setForm({ ...form, website_url: e.target.value })}
-            className="honeypot-field"
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden
-          />
-          <label className="flex items-start gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.agree_rules}
-              onChange={(e) => setForm({ ...form, agree_rules: e.target.checked })}
-              className="mt-1"
-              required
-            />
-            <span>Вакансия настоящая, без предоплаты соискателям</span>
-          </label>
-          <button type="submit" className="literary-btn literary-btn--primary w-full">
-            Отправить на модерацию
-          </button>
-        </form>
+        <ClassifiedAdForm
+          mode="jobs"
+          categories={jobCategories}
+          form={form}
+          setForm={setForm}
+          onSubmit={submit}
+          submitting={submitting}
+          showExtras
+          onToggleExtras={() => undefined}
+          hints={JOB_FORM_HINTS}
+          kicker={copy.form.kicker}
+          title={copy.form.title}
+          lead={copy.form.lead}
+          freeTitle="Бесплатная вакансия"
+          freeLead="После модерации — на сайте и в VK-боте"
+          agreeLabel="Вакансия настоящая, без предоплаты соискателям"
+          submitLabel="Отправить на модерацию"
+          showDraftNote
+        />
       )}
 
-      {msg && <p className={`mb-4 ${msgType === "ok" ? "alert-success" : "alert-error"}`}>{msg}</p>}
+      {msg && (
+        <PostSubmitPanel
+          panelRef={successRef}
+          tone={msgType}
+          message={msg}
+          entityId={submittedId}
+          entityNoun="Вакансия"
+          variant="gold-panel"
+          hint={msgType === "ok" && submittedId ? "Обычно проверяем до суток. После публикации вакансия появится на доске." : undefined}
+          actions={
+            msgType === "ok" && submittedId ? (
+              <button type="button" className="literary-link text-sm font-medium" onClick={() => setShowForm(true)}>
+                Разместить ещё одну →
+              </button>
+            ) : undefined
+          }
+        />
+      )}
 
       <div className="literary-jobs-list">
-        {ads.map((ad) => {
-          const visual = getCategoryVisual(ad.category);
-          return (
-            <Link key={ad.id} to={`/classifieds/${ad.id}`} className="literary-job-card no-underline text-inherit">
-              <div className="literary-job-icon" style={{ background: visual.gradient }}>
-                {visual.icon}
-              </div>
-              <div className="literary-job-body">
-                <span className="literary-card-kicker">{ad.category_label}</span>
-                <h3 className="literary-job-title">{ad.title}</h3>
-                <p className="literary-job-desc">{ad.description}</p>
-                {ad.price != null && (
-                  <p className="literary-job-pay">{ad.price} {ad.price_unit || "₽"}</p>
-                )}
-                <p className="literary-job-contact">
-                  📞 <span className="clickable-phone">{ad.phone}</span>
-                  {ad.address && ` · 📍 ${ad.address}`}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+        {ads.map((ad) => (
+          <LiteraryJobCard key={ad.id} ad={ad} />
+        ))}
         {!loading && ads.length === 0 && (
           <LiteraryEmptyState {...EMPTY_STATES.jobs}>
             <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>

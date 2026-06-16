@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ClassifiedAdForm,
   LiteraryClassifiedCard,
   LiteraryEmptyState,
   LiteraryInlineLoader,
@@ -11,16 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { CLASSIFIED_FORM_INITIAL, CLASSIFIEDS_DRAFT_KEY, type ClassifiedAdFormState } from "@/lib/classifiedForm";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useFormDraft } from "@/hooks/useFormDraft";
-
-const CLASSIFIED_TEMPLATES = [
-  "Продам: в хорошем состоянии, самовывоз.",
-  "Услуга: аккуратно и в срок, без предоплаты.",
-  "Соседская помощь: могу помочь в выходные.",
-];
-const CLASSIFIEDS_DRAFT_KEY = "classifieds_form_draft_v1";
 
 export function Classifieds() {
   const [searchParams] = useSearchParams();
@@ -42,20 +37,8 @@ export function Classifieds() {
   const [filter, setFilter] = useState("");
   const [showForm, setShowForm] = useState(openNew);
   const [showExtras, setShowExtras] = useState(false);
-  const initialForm = {
-    category: "firewood",
-    title: "",
-    description: "",
-    price: "",
-    price_unit: "₽",
-    phone: "",
-    author_name: "",
-    address: "",
-    contact_vk: "",
-    website_url: "",
-    agree_rules: false,
-  };
-  const { value: form, setValue: setForm, clearDraft } = useFormDraft(CLASSIFIEDS_DRAFT_KEY, initialForm);
+  const initialForm = CLASSIFIED_FORM_INITIAL;
+  const { value: form, setValue: setForm, clearDraft } = useFormDraft<ClassifiedAdFormState>(CLASSIFIEDS_DRAFT_KEY, initialForm);
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"ok" | "err">("ok");
   const [submittedId, setSubmittedId] = useState<number | null>(null);
@@ -228,157 +211,24 @@ export function Classifieds() {
       </div>
 
       {showForm && (
-        <form ref={formRef} onSubmit={submit} className="page-panel page-panel--forest mb-8 space-y-4 form-glow literary-form-comfort">
-          <LiterarySectionHead
-            kicker="✍️ Новое объявление"
-            title="Подать на модерацию"
-            compact
-          />
-          <div className="free-banner">
-            <span className="text-lg">🆓</span>
-            <div>
-              <p className="font-bold m-0">Бесплатное размещение</p>
-              <p className="text-sm text-muted-foreground m-0 mt-1">Честные объявления — без предоплаты и переводов незнакомцам.</p>
-            </div>
-          </div>
-
-          <label htmlFor="classified-category" className="event-detail-label">Категория</label>
-          <select
-            id="classified-category"
-            className="pushkin-select w-full"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
-            {adCategories.map((c) => (
-              <option key={c.value} value={c.value}>{getCategoryVisual(c.value).icon} {c.label}</option>
-            ))}
-          </select>
-          <label htmlFor="classified-title" className="event-detail-label">Заголовок объявления</label>
-          <Input
-            id="classified-title"
-            placeholder="Например: Продам сухие дрова"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <label htmlFor="classified-description" className="event-detail-label">Описание</label>
-          <textarea
-            id="classified-description"
-            className="literary-textarea w-full min-h-[100px]"
-            placeholder="Что предлагаете, в каком состоянии, как связаться"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
-          />
-          <div className="suggest-chips">
-            {CLASSIFIED_TEMPLATES.map((template) => (
-              <button
-                key={template}
-                type="button"
-                className="suggest-chip"
-                onClick={() => setForm((f) => ({ ...f, description: template }))}
-              >
-                {template}
-              </button>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground m-0 -mt-2">
-            Чем проще и короче текст, тем быстрее отклик.
-            <span className={`form-char-count${form.description.trim().length < 10 ? " form-char-count--warn" : ""}`}>
-              {" "}
-              {form.description.trim().length} симв. (рекомендуем от 10)
-            </span>
-          </p>
-          <label htmlFor="classified-phone" className="event-detail-label">Телефон для связи</label>
-          <Input
-            id="classified-phone"
-            placeholder="+7 9XX XXX-XX-XX"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            required
-          />
-          <label htmlFor="classified-author" className="event-detail-label">Ваше имя</label>
-          <Input
-            id="classified-author"
-            placeholder="Как к вам обращаться"
-            value={form.author_name}
-            onChange={(e) => setForm({ ...form, author_name: e.target.value })}
-            required
-          />
-
-          <button
-            type="button"
-            className="literary-btn literary-btn--ghost text-sm w-full"
-            onClick={() => setShowExtras(!showExtras)}
-          >
-            {showExtras ? "Скрыть дополнительно" : "Цена, адрес и ВК (необязательно)"}
-          </button>
-
-          {showExtras && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="classified-price" className="event-detail-label">Цена</label>
-                  <Input
-                    id="classified-price"
-                    type="number"
-                    placeholder="Ваша цена"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="classified-price-unit" className="event-detail-label">За что цена</label>
-                  <Input
-                    id="classified-price-unit"
-                    placeholder="за смену, месяц, штуку"
-                    value={form.price_unit}
-                    onChange={(e) => setForm({ ...form, price_unit: e.target.value })}
-                  />
-                </div>
-              </div>
-              <label htmlFor="classified-address" className="event-detail-label">Адрес или район</label>
-              <Input
-                id="classified-address"
-                placeholder="Где забрать или где оказать услугу"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-              />
-              <label htmlFor="classified-vk" className="event-detail-label">Контакт VK (необязательно)</label>
-              <Input
-                id="classified-vk"
-                placeholder="ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
-                value={form.contact_vk}
-                onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}
-              />
-            </>
-          )}
-
-          <input
-            type="text"
-            name="website_url"
-            value={form.website_url}
-            onChange={(e) => setForm({ ...form, website_url: e.target.value })}
-            className="honeypot-field"
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden
-          />
-          <label className="flex items-start gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.agree_rules}
-              onChange={(e) => setForm({ ...form, agree_rules: e.target.checked })}
-              className="mt-1"
-              required
-            />
-            <span>Объявление честное: без предоплаты и переводов незнакомцам.</span>
-          </label>
-          <button type="submit" className="literary-btn literary-btn--primary w-full" disabled={submitting}>
-            {submitting ? "Отправляем…" : "🆓 Отправить на модерацию"}
-          </button>
-          <p className="text-sm text-muted-foreground text-center m-0">Черновик сохраняется автоматически.</p>
-        </form>
+        <ClassifiedAdForm
+          mode="classifieds"
+          categories={adCategories}
+          form={form}
+          setForm={setForm}
+          onSubmit={submit}
+          formRef={formRef}
+          submitting={submitting}
+          showExtras={showExtras}
+          onToggleExtras={() => setShowExtras(!showExtras)}
+          kicker="✍️ Новое объявление"
+          title="Подать на модерацию"
+          freeTitle="Бесплатное размещение"
+          freeLead="Честные объявления — без предоплаты и переводов незнакомцам."
+          agreeLabel="Объявление честное: без предоплаты и переводов незнакомцам."
+          submitLabel="🆓 Отправить на модерацию"
+          showDraftNote
+        />
       )}
 
       {msg && (

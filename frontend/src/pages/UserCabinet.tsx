@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
+import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader, LiteraryIssueCard } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
-import { Badge } from "@/components/ui/badge";
 import { api, ClassifiedMineAd, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
-import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { ISSUE_ACTIVE_STATUSES } from "@/lib/utils";
 
 const STATUS_LABELS_VERIFY: Record<string, { text: string; tone: string }> = {
   pending: { text: "На проверке — мы свяжемся с вами", tone: "text-amber-700 bg-amber-50 border-amber-200" },
@@ -161,27 +160,15 @@ export function UserCabinet() {
             </div>
           </div>
           {recentIssues.map((issue) => (
-            <Link
-              key={issue.id}
-              to={`/complaints?issue=${issue.id}`}
-              className="block border-t border-border pt-3 first:border-0 first:pt-0 literary-cabinet-issue literary-cabinet-issue--link no-underline text-inherit"
-            >
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-base">#{issue.id}</span>
-                <Badge className={STATUS_COLORS[issue.status]}>{STATUS_LABELS[issue.status]}</Badge>
-                <span className="text-sm text-muted-foreground ml-auto">{formatDate(issue.created_at)}</span>
-              </div>
-              <p className="text-base mt-1 line-clamp-2">{issue.ai_analysis?.summary || issue.description}</p>
-              {issueStatusHint(issue.status) && (
-                <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
-              )}
-              {issue.resolution_text && (
-                <p className="text-sm mt-1 line-clamp-2">
-                  <span className="text-muted-foreground">Ответ службы: </span>
-                  {issue.resolution_text}
-                </p>
-              )}
-            </Link>
+            <div key={issue.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
+              <LiteraryIssueCard
+                issue={issue}
+                variant="link"
+                href={`/complaints?issue=${issue.id}`}
+                showStatusHint
+                showResolution
+              />
+            </div>
           ))}
         </div>
       )}

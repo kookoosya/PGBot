@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import { LiteraryEmptyState, LiterarySectionHead, PostSubmitPanel } from "@/components/literary";
+import { LiteraryEmptyState, LiteraryIssueCard, LiterarySectionHead, PostSubmitPanel } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { api, Issue } from "@/lib/api";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
-import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
+import { ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES } from "@/lib/utils";
 import { useFormDraft } from "@/hooks/useFormDraft";
 
 const ISSUE_FILTER_ACTIVE = ISSUE_ACTIVE_STATUSES;
@@ -391,70 +390,16 @@ export function Complaints() {
               ) : (
                 <div className="space-y-3">
                   {filteredIssues.map((issue) => (
-                    <article
+                    <LiteraryIssueCard
                       key={issue.id}
-                      ref={highlightId === String(issue.id) ? highlightRef : undefined}
-                      className={`literary-issue-card literary-issue-card--static${highlightId === String(issue.id) ? " literary-issue-card--highlight" : ""}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="literary-issue-id">#{issue.id}</span>
-                            <Badge className={STATUS_COLORS[issue.status]}>
-                              {STATUS_LABELS[issue.status]}
-                            </Badge>
-                            {issue.category && (
-                              <Badge className="bg-gray-100 text-gray-700">{issue.category}</Badge>
-                            )}
-                          </div>
-                          <p className="literary-issue-summary mt-2">
-                            {issue.ai_analysis?.summary || issue.description}
-                          </p>
-                          {issueStatusHint(issue.status) && (
-                            <p className="text-sm text-muted-foreground mt-1">{issueStatusHint(issue.status)}</p>
-                          )}
-                          {issue.address && (
-                            <p className="literary-issue-address">📍 {issue.address}</p>
-                          )}
-                        </div>
-                        <span className="literary-issue-date">{formatDate(issue.created_at)}</span>
-                      </div>
-
-                      {issue.status_timeline && issue.status_timeline.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-dashed border-border/60">
-                          <p className="event-detail-label mb-2">История статусов</p>
-                          <ol className="issue-status-timeline">
-                            {issue.status_timeline.map((event, index) => (
-                              <li
-                                key={`${event.at}-${event.status}-${index}`}
-                                className={index === issue.status_timeline!.length - 1 ? "issue-status-timeline-item--current" : ""}
-                              >
-                                <span className="issue-status-timeline-dot" aria-hidden />
-                                <div>
-                                  <p className="issue-status-timeline-label">{event.label}</p>
-                                  {event.previous_status && index > 0 && (
-                                    <p className="issue-status-timeline-prev">
-                                      из «{STATUS_LABELS[event.previous_status] || event.previous_status}»
-                                    </p>
-                                  )}
-                                  {event.resolution && (
-                                    <p className="issue-status-timeline-resolution">{event.resolution}</p>
-                                  )}
-                                  <p className="issue-status-timeline-date">{formatDate(event.at)}</p>
-                                </div>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
-
-                      {issue.resolution_text && (
-                        <div className="literary-page-note mt-3">
-                          <strong>Ответ службы:</strong>
-                          <p className="m-0 mt-1">{issue.resolution_text}</p>
-                        </div>
-                      )}
-                    </article>
+                      issue={issue}
+                      variant="static"
+                      highlighted={highlightId === String(issue.id)}
+                      cardRef={highlightId === String(issue.id) ? highlightRef : undefined}
+                      showStatusHint
+                      showTimeline
+                      showResolution
+                    />
                   ))}
                 </div>
               )}
