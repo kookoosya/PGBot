@@ -17,6 +17,7 @@ from app.services.event_sources.silver_source import SilverEventSource
 from app.services.event_sources.kudago_source import KudaGoEventSource
 from app.services.event_sources.orbilet_source import OrbiletEventSource
 from app.services.event_sources.proculture_source import ProCultureEventSource
+from app.services.event_sources.pushkinland_source import PushkinlandEventSource
 from app.services.event_sources.timepad_source import TimePadEventSource
 from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_stale_demo_cinema
 from app.services.event_enrichment_batch import (
@@ -40,6 +41,7 @@ _SOURCES: dict[str, EventSource] = {
     "proculture": ProCultureEventSource(),
     "kudago": KudaGoEventSource(),
     "kdc": KdcEventSource(),
+    "pushkinland": PushkinlandEventSource(),
     "drampush": DrampushEventSource(),
 }
 
@@ -144,7 +146,7 @@ async def sync_all_event_sources(
     actor_id: int | None = None,
 ) -> list[EventSyncResult]:
     results: list[EventSyncResult] = []
-    for name in ("vk", "timepad", "kdc", "drampush", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
+    for name in ("vk", "pushkinland", "timepad", "kdc", "drampush", "kinopskov", "mirage", "silver", "orbilet", "proculture", "kudago"):
         source = get_event_source(name)
         if not source:
             continue

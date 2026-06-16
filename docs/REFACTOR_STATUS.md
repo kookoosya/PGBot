@@ -126,6 +126,11 @@
 1. ✅ `weather_service.py` → `weather/` (fetch, format, schemas)
 2. ✅ `vk/commands.py` → `vk/commands/` (handlers, aliases)
 
+### P18 — календарь Пушкинского заповедника ✅ (2026-06-16)
+1. ✅ Источник `pushkinland` — pushkinland.ru/2018/calend (официальный календарь Михайловского)
+2. ✅ «Бугровский гарнец» 19–20 июня из календаря; фильтр длинных выставок
+3. ✅ 129 backend-тестов; chip «Пушкинский заповедник»
+
 ### P17 — источники без косяков ✅ (2026-06-16)
 1. ✅ VK: исправлены screen_name (drampush, gkcpskov, kultyrnipskov, vestnik); fallback `group_id`
 2. ✅ Новый источник `drampush` — афиша drampush.ru (театр, без VK token)
