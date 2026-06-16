@@ -80,6 +80,7 @@ check "Обращения" "$BASE/complaints" "root"
 check "Кабинет" "$BASE/cabinet" "root"
 check "Подать обращение (deep link)" "$BASE/complaints?new=1" "root"
 check "ИИ-помощник" "$BASE/ai" "root"
+check "VK Mini App" "$BASE/vk" "root"
 check "Подать объявление (deep link)" "$BASE/classifieds?new=1" "root"
 check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 

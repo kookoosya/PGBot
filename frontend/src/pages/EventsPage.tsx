@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, EventRegion, PublicEvent } from "@/lib/api";
 import { groupEventsByShow, isRealCinemaEvent } from "@/lib/eventUtils";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type RegionFilter = "all" | EventRegion;
 
@@ -75,7 +76,7 @@ export function EventsPage() {
         <LiterarySectionHead
           kicker="🔍 Поиск"
           title="Найти в афише"
-          lead="Концерт, кино, ярмарка — введите слово и выберите регион."
+          compact
         />
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <Input
@@ -142,7 +143,6 @@ export function EventsPage() {
           icon="⚠️"
           title="Афиша временно недоступна"
           text="Не удалось загрузить события. Попробуйте обновить страницу через минуту."
-          verse={LITERARY_VERSES.events}
         />
       ) : visibleEvents.length === 0 ? (
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
@@ -167,7 +167,7 @@ export function EventsPage() {
               <LiterarySectionHead
                 kicker={copy.pushkin.kicker}
                 title={copy.pushkin.title}
-                lead={copy.pushkin.lead}
+                compact
               />
               <ol className="events-grid events-grid--wide">
                 {pushkinEvents.map((event) => (
@@ -182,7 +182,7 @@ export function EventsPage() {
               <LiterarySectionHead
                 kicker={copy.pskov.kicker}
                 title={copy.pskov.title}
-                lead={copy.pskov.lead}
+                compact
               />
               <ol className="events-grid">
                 {pskovEvents.map((event) => (
@@ -194,9 +194,7 @@ export function EventsPage() {
         </div>
       )}
 
-      {!loading && visibleEvents.length > 0 && (
-        <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.events}</p>
-      )}
+      <PagePortalNav title="Куда дальше" />
     </div>
   );
 }

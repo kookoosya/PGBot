@@ -8,12 +8,12 @@ import {
   LiterarySectionHead,
   PostSubmitPanel,
 } from "@/components/literary";
-import { VkBotBanner } from "@/components/VkBotLink";
+import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useFormDraft } from "@/hooks/useFormDraft";
 
 const CLASSIFIED_TEMPLATES = [
@@ -177,7 +177,7 @@ export function Classifieds() {
         <LiterarySectionHead
           kicker="🔍 Поиск"
           title="Найти объявление"
-          lead="Введите слово из заголовка или описания."
+          compact
         />
         <div className="space-y-2">
           <label htmlFor="classified-search-input" className="event-detail-label">Поиск по объявлениям</label>
@@ -234,7 +234,7 @@ export function Classifieds() {
           <LiterarySectionHead
             kicker="✍️ Новое объявление"
             title="Подать на модерацию"
-            lead="Регистрация не нужна. Проверим и опубликуем в течение суток."
+            compact
           />
           <div className="free-banner">
             <span className="text-lg">🆓</span>
@@ -413,13 +413,9 @@ export function Classifieds() {
         />
       )}
 
-      <div className="mb-8">
-        <VkBotBanner />
-      </div>
-
       <div className="literary-classified-list">
         {ads.map((ad) => (
-          <LiteraryClassifiedCard key={ad.id} ad={ad} />
+          <LiteraryClassifiedCard key={ad.id} ad={ad} compact />
         ))}
         {!loading && ads.length === 0 && (
           <LiteraryEmptyState {...EMPTY_STATES.classifieds}>
@@ -438,7 +434,7 @@ export function Classifieds() {
         )}
       </div>
 
-      <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.classifieds}</p>
+      <PagePortalNav title="Куда дальше" />
     </div>
   );
 }

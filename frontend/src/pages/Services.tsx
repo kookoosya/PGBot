@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { PagePortalNav } from "@/components/layout/PagePortalNav";
 import { PageHeader } from "@/components/PageHeader";
 import {
   LiteraryClassifiedCard,
@@ -10,7 +11,7 @@ import {
 } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { api, CatalogItem, ClassifiedAd, ServiceProvider, TimeSlot } from "@/lib/api";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const CATALOG_ICONS: Record<string, string> = {
   garden: "🌱", firewood: "🪵", grass_mowing: "🌿", delivery: "🚚",
@@ -177,8 +178,9 @@ export function Services() {
             </Link>
           </LiteraryEmptyState>
         )}
-        <p className="literary-page-verse literary-page-verse--inline" aria-hidden>{LITERARY_VERSES.services}</p>
       </section>
+
+      <PagePortalNav title="Куда дальше" />
 
       {filter && nothingFound && (
         <LiteraryEmptyState {...EMPTY_STATES.servicesCatalog} compact />
