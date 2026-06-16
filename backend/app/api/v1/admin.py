@@ -221,7 +221,7 @@ async def admin_vk_moderation_overview(
         VkModerationOverviewResponse,
         VkModerationStateResponse,
     )
-    from app.services.vk_moderation_service import list_moderation_logs, list_moderation_states
+    from app.services.vk.moderation import list_moderation_logs, list_moderation_states
 
     states = await list_moderation_states(db, limit=limit)
     logs = await list_moderation_logs(db, limit=limit)
@@ -238,7 +238,7 @@ async def admin_unblock_vk_user(
     _: Annotated[User, Depends(require_owner())],
 ):
     """Clear ban and reset warnings for a VK user."""
-    from app.services.vk_moderation_service import unblock_vk_user
+    from app.services.vk.moderation import unblock_vk_user
 
     state = await unblock_vk_user(db, vk_user_id)
     if not state:

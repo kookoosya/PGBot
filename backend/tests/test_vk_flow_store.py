@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.models.enums import ClassifiedCategory
-from app.services.vk_flow_store import clear_flow, get_active_flows, get_flow, save_flow
-from app.services.vk_flows import handle_flow_message, start_classified_flow, start_wish_flow
+from app.services.vk.flow_store import clear_flow, get_active_flows, get_flow, save_flow
+from app.services.vk.flows import handle_flow_message, start_classified_flow, start_wish_flow
 from tests.conftest import postgres_available
 
 pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")

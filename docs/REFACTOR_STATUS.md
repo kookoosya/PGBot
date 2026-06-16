@@ -1,0 +1,163 @@
+# Статус рефакторинга портала Пушкинские Горы
+
+**Прод:** https://192-210-213-135.sslip.io  
+**Деплой:** `bash scripts/remote-deploy.sh` (пароль в `.deploy.env` или `VPS_PASSWORD`)  
+**Обновлено:** 2026-06-16
+
+---
+
+## Сводка
+
+| Область | Готово | В работе / осталось |
+|---------|--------|---------------------|
+| Инфра / деплой | sslip.io, smoke 26, cron афиши, 2 workers | DNS .ru отложен |
+| Backend домены | `issue/`, `place/`, `classified/`, `vk/` | `provider_service`, `issue_processor`, `event_service` |
+| Backend тесты | ~99 pytest | auth, admin, providers, map, AI — без покрытия |
+| Frontend API | split `lib/api/*` | `types.ts` ~630 строк |
+| Frontend Map | split `pages/map/*` | — |
+| Frontend UI | literary album, nav dedup, events layout | 3 параллельных UI обращений |
+| Frontend тесты | Vitest 13 (eventUtils, literaryCopy) | компоненты, API hooks |
+| Тексты | `shared/portal_copy.json` brand + issue hints | bulk UI copy только во frontend |
+| VK Mini App | заглушка `/vk` | нужен App ID + auth + CSP |
+
+---
+
+## ✅ Сделано (main)
+
+### Фаза 0 — стабильность
+- Канонический URL: `192-210-213-135.sslip.io`
+- VK flows и AI mode в PostgreSQL (миграции 020–021)
+- Smoke 26 проверок на каждый деплой
+- Cron: кино каждые 8ч, полная синхронизация в 03:15
+
+### Фаза 1 — backend
+- **`services/issue/`** — crud, status, comments, official, dedup; facade `issue_service.py`
+- **`services/place/`** — crud, map, reviews, sync; facade `place_service.py`
+- **`services/classified/`** — create, search, moderate; facade `classified_service.py`
+- **`services/vk/`** — bot, flows, moderation, digest, AI, voice (17 модулей)
+- **`services/event_sources/`** — адаптеры Kudago, VK, Orbilet, Kinopskov и др.
+- VK объявления → `create_classified_ad_from_vk()` (единая валидация)
+- `shared/portal_copy.json` ↔ backend `portal_copy.py`
+
+### Фаза 2 — frontend
+- **`lib/api/`** — client, types, auth, issues, classifieds, places, services, admin, ai, public, events
+- **`pages/map/`** — useMapPage, layers, panels (Map.tsx ~194 строк)
+- **`useSiteInfo`** — URL из `/api/v1/public/info`
+- Literary polish: nav, footer, PageHeader contrast, portal copy
+- Events: кино + Псков рядом сверху; source chip; trusted VK sources
+- Единые `filter-chip` и `literary-card` на объявлениях/услугах
+- Vitest: `eventUtils`, `literaryCopy`
+
+---
+
+## ⚠️ Лишнее / мёртвый код (удалять)
+
+### Frontend — компоненты без импортов
+| Файл | Причина |
+|------|---------|
+| `QuickNav.tsx` | заменён TabNav + LandingQuickNav |
+| `PagePortalNav.tsx` | убран с inner pages |
+| `PushkinBanner.tsx`, `PushkinVersesSection.tsx` | убраны стихи с продукта |
+| `VillageGallery.tsx` | не используется |
+| `SeasonalTip.tsx` + `seasonalTip.ts` | не используется |
+| `LandingJobsPreview.tsx`, `LandingUsefulNearby.tsx` | landing перестроен |
+| `WeatherWidgetDetailed.tsx` | не используется |
+
+### Frontend — CSS-сироты (после удаления компонентов)
+- `index.css`: `.landing-page`, `.hero-orbs*`, `.quick-nav-*`
+- `literary-album.css`: `.epic-verses-*`, `.literary-gallery-*`, `.seasonal-tip*`
+
+### Frontend — дубли логики
+- `EventsPage` + `UpcomingEvents` — одинаковые REGION_FILTERS и split cinema/pskov
+- `Complaints` + `OfficialIssues` + admin `Issues` — три UI обращений
+- `Jobs` ≈ `Classifieds` с `jobs_only` — форма дублируется
+
+### Backend — shim-файлы (re-export, можно убрать после миграции импортов)
+| Shim | Канонический путь | Импортёров |
+|------|-------------------|------------|
+| `vk_command_router.py` | `vk.command_router` | webhook |
+| `vk_moderation_service.py` | `vk.moderation` | webhook, admin |
+| `vk_flows.py`, `vk_flow_store.py` | `vk.flows`, `vk.flow_store` | webhook, tests |
+| `vk_digest.py` | `vk.digest` | background_tasks |
+| `ai_mode.py`, `vk_ai_mode_store.py` | `vk.ai_mode` | webhook, tests |
+| `vk_bot.py`, `vk_subscription.py`, `vk_voice.py`, `vk_ai_history.py` | `vk/*` | **0 — удалить** |
+| `pagination_utils`, `notify_utils`, `datetime_utils`, `service_errors` | `app/utils/*` | ~15 |
+
+### Backend — «боги» (ещё не разбиты)
+| Файл | Строк | Рекомендация |
+|------|------:|--------------|
+| `provider_service.py` | ~505 | → `provider/` (register, booking, schedule, cabinet) |
+| `issue_processor.py` | ~476 | ingest оставить; вынести AI/dedup/notify |
+| `event_service.py` | ~420 | → `event/` (crud, public, admin) |
+| `vk/commands.py` | ~394 | разбить по доменам меню |
+| `weather_service.py` | ~334 | fetch + format отдельно |
+| `models/enums.py` | ~286 | split по доменам |
+
+### Прочее лишнее
+- Черновые PR #20–#28 — устарели, закрыть
+- `navigation.ts` — `QUICK_NAV_*` без CSS и без потребителей
+- `portalCopyShared` — `PORTAL_COPY_LINKS`, `PORTAL_COPY_VK`, `ISSUE_STATUS_EMOJI` не используются во frontend
+- `Signup.tsx` — хардкод вместо `literaryCopy`
+
+---
+
+## 🔜 Куда двигаться (приоритет)
+
+### P0 — быстрая чистка (1 итерация)
+1. Удалить мёртвые компоненты и VK shims без импортов
+2. Webhook/admin → импорты из `services/vk/` напрямую
+3. Общий `eventRegionFilters.ts` для афиши
+4. Обновить ROADMAP + этот файл после каждого деплоя
+
+### P1 — качество и тесты
+1. Backend: тесты auth, classified create/moderate, provider booking
+2. Frontend: Vitest на `useSiteInfo`, `useToday`, API client mock
+3. Cross-test: frontend `portalCopyShared` ↔ backend `portal_copy.py`
+4. Расширить `portal_copy.json` — EMPTY_STATES, nav labels (опционально)
+
+### P2 — разбиение оставшихся god files
+1. `provider_service.py` → package
+2. `issue_processor.py` → `issue/ingest.py`
+3. `event_service.py` → package
+4. `vk_messages.py` → `vk/messages.py`
+
+### P3 — UX consolidation
+1. Единый компонент списка обращений (public / official / admin variants)
+2. Jobs форма → shared с Classifieds + `useFormDraft`
+3. Admin `Issues` → literary стиль или явный «admin shell» без смешения
+
+### P4 — VK Mini App (блокер: App ID)
+1. `VK_APP_ID`, CORS, `frame-ancestors`
+2. `POST /api/v1/vk/auth`
+3. Bridge + экраны: афиша, объявления, обращение, кабинет
+
+### P5 — продукт
+- PWA / офлайн-карта
+- Redis rate limit (PR #20)
+- VK Pay (если монетизация)
+
+---
+
+## Метрики
+
+| Метрика | Сейчас | Цель ROADMAP |
+|---------|--------|--------------|
+| Smoke | 26 OK | 26+ |
+| pytest | ~99 | 50+ критических (✅) → 120+ |
+| Vitest | 13 | 40+ |
+| God files ≥400 строк | 4 | 0 |
+| Мёртвые компоненты | 9 | 0 |
+| VK shim files | 10 | 0 |
+
+---
+
+## Команды
+
+```bash
+# Деплой (пароль в .deploy.env)
+BRANCH=main bash scripts/remote-deploy.sh
+
+# Тесты
+cd backend && pytest
+cd frontend && npm run test && npm run build
+```

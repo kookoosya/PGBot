@@ -32,7 +32,7 @@ async def _map_sync_work() -> None:
 
 async def _vk_digest_work() -> None:
     from app.database import AsyncSessionLocal
-    from app.services.vk_digest import send_daily_digest
+    from app.services.vk.digest import send_daily_digest
 
     async with AsyncSessionLocal() as db:
         sent = await send_daily_digest(db)

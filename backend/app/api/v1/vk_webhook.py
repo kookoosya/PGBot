@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.vk_command_router import (
+from app.config import get_settings
+from app.core.rate_limit import limiter
+from app.database import get_db
+from app.services.vk import get_welcome_keyboard, parse_vk_message, send_message
+from app.services.vk.ai_mode import exit_ai_mode
+from app.services.vk.command_router import (
     VkRouteContext,
     route_ai_message,
     route_complaint,
@@ -14,13 +19,8 @@ from app.services.vk_command_router import (
     route_welcome,
     send_fallback_message,
 )
-from app.services.vk_moderation_service import process_incoming_moderation
-from app.config import get_settings
-from app.core.rate_limit import limiter
-from app.database import get_db
-from app.services.ai_mode import exit_ai_mode
-from app.services.vk import get_welcome_keyboard, parse_vk_message, send_message
-from app.services.vk_flows import handle_flow_message
+from app.services.vk.flows import handle_flow_message
+from app.services.vk.moderation import process_incoming_moderation
 from app.services.vk.voice import extract_audio_url, transcribe_audio_url
 
 logger = logging.getLogger(__name__)

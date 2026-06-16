@@ -3,25 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
-import { api, EventRegion, PublicEvent } from "@/lib/api";
+import { api, PublicEvent } from "@/lib/api";
+import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
 import { groupEventsByShow, isRealCinemaEvent } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
-type RegionFilter = "all" | EventRegion;
-
-const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
-  { id: "all", label: "Все" },
-  { id: "pushkin_gory", label: "Пушкинские Горы" },
-  { id: "pskov", label: "Псков" },
-];
-
 const copy = PAGE_SECTIONS.events;
-
-function parseRegionParam(value: string | null): RegionFilter {
-  if (value === "pskov" || value === "pushkin_gory") return value;
-  if (value === "all") return "all";
-  return "pushkin_gory";
-}
 
 export function EventsPage() {
   const [searchParams] = useSearchParams();
@@ -159,7 +146,7 @@ export function EventsPage() {
         </div>
 
         <div className="events-region-filters mb-0" role="group" aria-label="Регион">
-          {REGION_FILTERS.map((item) => (
+          {EVENT_REGION_FILTERS.map((item) => (
             <button
               key={item.id}
               type="button"

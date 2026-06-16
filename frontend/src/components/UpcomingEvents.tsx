@@ -2,21 +2,13 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { ctaArrow, CTA } from "@/lib/cta";
-import { type EventRegion } from "@/lib/api";
 import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
+import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-type RegionFilter = "all" | EventRegion;
-
-const REGION_FILTERS: { id: RegionFilter; label: string }[] = [
-  { id: "all", label: "Все" },
-  { id: "pushkin_gory", label: "Пушкинские Горы" },
-  { id: "pskov", label: "Псков" },
-];
 
 const LANDING_LIMITS = {
   pushkin: 3,
@@ -99,7 +91,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
       {!isLanding && (
         <div className="events-toolbar mb-4">
           <div className="events-region-filters events-region-filters--inline" role="group" aria-label="Фильтр по региону">
-            {REGION_FILTERS.map((item) => (
+              {EVENT_REGION_FILTERS.map((item) => (
               <button
                 key={item.id}
                 type="button"

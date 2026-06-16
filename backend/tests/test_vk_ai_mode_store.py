@@ -3,8 +3,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.services.ai_mode import enter_ai_mode, exit_ai_mode, is_ai_mode
-from app.services.vk_ai_mode_store import get_active_ai_peers
+from app.services.vk.ai_mode import enter_ai_mode, exit_ai_mode, get_active_ai_peers, is_ai_mode
 from tests.conftest import postgres_available
 
 pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")

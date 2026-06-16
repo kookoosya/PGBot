@@ -51,6 +51,8 @@ backend/app/services/vk/
 | Структура `services/vk/` + разбиение router | ✅ `commands.py`, `message_handler.py`, `ai_handler.py` |
 | Объявление из VK → `create_classified_ad()` (единая валидация) | ✅ `create_classified_ad_from_vk` |
 | Перенос `vk_bot`, `vk_digest`, moderation в `vk/` | ✅ `bot.py`, `digest.py`, `moderation.py` |
+| Импорты webhook/admin → `services/vk/` напрямую | ✅ |
+| Удалить мёртвые VK shims (`vk_bot`, `vk_subscription`, …) | ✅ |
 | Единый источник статусов/эмодзи | `portal_copy.py` только | Малый |
 
 ### 1.2 «Божественные» сервисы
@@ -66,7 +68,7 @@ backend/app/services/vk/
 
 - Покрыть: auth, classifieds create/moderate, issue lifecycle, VK webhook (mock)
 - Цель: **50+** интеграционных тестов на критические пути
-- Frontend: **0 тестов сейчас** → Vitest на `eventUtils`, `literaryCopy`, API hooks (фаза 1b)
+- Frontend: **Vitest 13** → hooks, API client (фаза 1b)
 
 ---
 
@@ -74,10 +76,12 @@ backend/app/services/vk/
 
 | # | Задача | Файлы |
 |---|--------|-------|
-| 2.1 | Разбить `api.ts` (~1100 строк) | `lib/api/{auth,classifieds,issues,events,admin}.ts` |
-| 2.2 | Разбить `Map.tsx` (~850 строк) | `pages/map/*`, hooks |
-| 2.3 | URL сайта из `/public/info` | убрать хардкод в `siteUrl.ts` |
+| 2.1 | Разбить `api.ts` (~1100 строк) | ✅ `lib/api/*` |
+| 2.2 | Разбить `Map.tsx` (~850 строк) | ✅ `pages/map/*` |
+| 2.3 | URL сайта из `/public/info` | ✅ `useSiteInfo` |
 | 2.4 | Синхронизация текстов | ✅ `shared/portal_copy.json` |
+| 2.5 | Vitest на утилиты | ✅ `eventUtils`, `literaryCopy`, `eventRegionFilters` |
+| 2.6 | Удалить мёртвые компоненты | ✅ QuickNav, verses, gallery, … |
 
 ---
 
@@ -129,11 +133,14 @@ Deep links бота ведут на **sslip.io** (или в Mini App через 
 
 ## Что уже сделано (main)
 
-- Стиль «Пушкиногорский альбом»
+- Стиль «Пушкиногорский альбом», nav dedup, footer, PageHeader contrast
 - VK deep links, кабинет, фильтры обращений, post-submit
-- Smoke 23+ проверок, pytest ~20 unit/integration
-- Cron синхронизации афиши, cinema filter
-- Map polish (#30), literary cohesion (#37)
+- **Smoke 26** проверок, **pytest ~99**, **Vitest 13**
+- Cron синхронизации афиши, cinema filter, events city row (кино + Псков сверху)
+- Backend packages: `issue/`, `place/`, `classified/`, `vk/`, `event_sources/`
+- Frontend split: `lib/api/*`, `pages/map/*`, `useSiteInfo`
+- `shared/portal_copy.json`, единые `filter-chip` и `literary-card`
+- Подробный статус: **`docs/REFACTOR_STATUS.md`**
 
 ## Черновые PR (не мержить без ревью)
 
