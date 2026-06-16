@@ -129,7 +129,7 @@
 ### P20 — VK upsert fix + PLN RSS ✅ (2026-06-16)
 1. ✅ `sync_ends_at` — сброс битого `ends_at` при upsert (чинит VK-импорт)
 2. ✅ Общий парсер `news_rss_service.py`; источник `pln` — pln-pskov.ru/rss.php
-3. ✅ 137 backend-тестов
+3. ✅ 135 backend-тестов
 
 ### P19 — ИнформПсков RSS ✅ (2026-06-16)
 1. ✅ Источник `informpskov` — RSS culture/news с датами и региональным фильтром
