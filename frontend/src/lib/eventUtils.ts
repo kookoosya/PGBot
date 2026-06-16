@@ -223,6 +223,27 @@ export function pluralPerformances(count: number): string {
   return "спектаклей";
 }
 
+/** True when the festival starts within ``withinDays`` (incl. today and in-progress). */
+export function isFestivalImminent(
+  events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
+  withinDays = 3,
+): boolean {
+  if (!events.length) return false;
+  const now = Date.now();
+  const graceMs = 24 * 60 * 60 * 1000;
+  const horizon = now + withinDays * 24 * 60 * 60 * 1000;
+
+  for (const event of events) {
+    if (!event.starts_at) continue;
+    const start = Date.parse(event.starts_at);
+    if (Number.isNaN(start)) continue;
+    if (start >= now - graceMs && start <= horizon) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function groupEventsByShow<T extends ShowGroupable>(events: T[]): (T & { extraSessions?: T[] })[] {
   const buckets = new Map<string, T[]>();
   for (const event of events) {

@@ -775,6 +775,25 @@
     color: hsl(var(--muted-foreground));
   }
 
+  .events-festival-program--imminent {
+    border-color: hsl(var(--gold) / 0.55);
+    box-shadow: 0 8px 28px hsl(var(--gold) / 0.12);
+  }
+
+  .events-festival-program__badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    color: hsl(var(--forest));
+    background: hsl(var(--gold) / 0.35);
+  }
+
   .events-festival-program__link {
     display: inline-block;
     margin-top: 0.35rem;

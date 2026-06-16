@@ -7,6 +7,7 @@ import {
   groupEventsByShow,
   isDisplayablePoster,
   isRealCinemaEvent,
+  isFestivalImminent,
   partitionGarnectProgram,
   pluralPerformances,
   regionChipClass,
@@ -145,6 +146,18 @@ describe("pluralPerformances", () => {
     expect(pluralPerformances(1)).toBe("спектакль");
     expect(pluralPerformances(3)).toBe("спектакля");
     expect(pluralPerformances(14)).toBe("спектаклей");
+  });
+});
+
+describe("isFestivalImminent", () => {
+  it("returns true when a performance starts within 3 days", () => {
+    const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    expect(isFestivalImminent([{ starts_at: soon, starts_at_label: "скоро" }])).toBe(true);
+  });
+
+  it("returns false for distant festival", () => {
+    const later = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+    expect(isFestivalImminent([{ starts_at: later, starts_at_label: "позже" }])).toBe(false);
   });
 });
 
