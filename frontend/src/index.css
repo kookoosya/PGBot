@@ -856,6 +856,9 @@
   }
 
   .footer-nav {
+    @apply flex flex-col items-center gap-3;
+  }
+  .footer-nav-grid {
     @apply flex flex-wrap justify-center gap-2 md:gap-3;
   }
   .footer-nav-link {

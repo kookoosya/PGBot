@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CTA } from "@/lib/cta";
 import { LiterarySectionHead } from "@/components/literary";
 import { LANDING_SECTIONS } from "@/lib/literaryCopy";
 
@@ -32,7 +33,7 @@ export function LandingUsefulNearby({ compact = false }: { compact?: boolean }) 
             <span className="literary-useful-icon">{item.icon}</span>
             <h3 className="literary-useful-title">{item.title}</h3>
             <p className="literary-useful-desc">{item.desc}</p>
-            <span className="literary-useful-go">Открыть →</span>
+            <span className="literary-useful-go">{CTA.open} →</span>
           </Link>
         ))}
       </div>

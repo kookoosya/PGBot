@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { api } from "@/lib/api";
 
 const ROLES = [
@@ -149,10 +149,6 @@ export function Register() {
           {loading ? "Отправка…" : "Подать заявку на верификацию"}
         </button>
       </form>
-
-      <p className="literary-page-verse literary-page-verse--inline mt-8" aria-hidden>
-        {LITERARY_VERSES.register}
-      </p>
     </div>
   );
 }

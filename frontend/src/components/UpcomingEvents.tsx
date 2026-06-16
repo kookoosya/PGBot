@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { ctaArrow, CTA } from "@/lib/cta";
 import { type EventRegion } from "@/lib/api";
 import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
@@ -92,7 +93,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
           }
           compact={isLanding}
           linkTo="/events"
-          linkLabel="Вся афиша →"
+          linkLabel={ctaArrow(CTA.allEvents)}
         />
 
         {!isLanding && (

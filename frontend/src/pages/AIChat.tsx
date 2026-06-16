@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LiterarySectionHead } from "@/components/literary";
 import { Button } from "@/components/ui/button";
 import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
-import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type Tab = "chat" | "image";
 
@@ -168,7 +168,9 @@ export function AIChat() {
           )}
 
           <div className="ai-literary-panel flex flex-col">
-            <p className="ai-literary-welcome m-0">{LITERARY_VERSES.ai}</p>
+            <p className="ai-literary-welcome m-0 text-sm text-muted-foreground">
+              Задайте вопрос или выберите подсказку ниже.
+            </p>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -251,7 +253,6 @@ export function AIChat() {
           )}
         </div>
       )}
-      <p className="literary-page-verse mt-8" aria-hidden>{LITERARY_VERSES.ai}</p>
     </div>
   );
 }

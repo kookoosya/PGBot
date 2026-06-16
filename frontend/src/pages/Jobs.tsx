@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS, JOB_FORM_HINTS, LOCAL_EMPLOYERS } from "@/lib/jobs";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const copy = PAGE_SECTIONS.jobs;
 
@@ -96,7 +96,6 @@ export function Jobs() {
         <button type="button" className="literary-btn literary-btn--primary text-sm" onClick={() => setShowForm(!showForm)}>
           {showForm ? "✕ Отмена" : "+ Разместить вакансию"}
         </button>
-        <span className="free-badge">🆓 Бесплатно</span>
       </PageHeader>
 
       <div className="literary-page-note mb-6">
@@ -283,8 +282,6 @@ export function Jobs() {
           </div>
         )}
       </div>
-
-      <p className="literary-page-verse" aria-hidden>{LITERARY_VERSES.jobs}</p>
 
       <div className="mt-8">
         <VkBotBanner />

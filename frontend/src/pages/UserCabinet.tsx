@@ -3,7 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
-import { LITERARY_VERSES, EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { Badge } from "@/components/ui/badge";
 import { api, ClassifiedMineAd, Issue } from "@/lib/api";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
@@ -231,7 +231,7 @@ export function UserCabinet() {
           <span className="literary-useful-icon">⚠️</span>
           <div>
             <h3 className="literary-useful-title">Обращения</h3>
-            <p className="literary-useful-desc">Жалобы и статус рассмотрения</p>
+            <p className="literary-useful-desc">Обращения и статус рассмотрения</p>
           </div>
         </Link>
         <Link to="/events" className="literary-useful-card literary-useful-card--gold no-underline text-inherit">
@@ -249,8 +249,6 @@ export function UserCabinet() {
           </div>
         </Link>
       </div>
-
-      <p className="text-center text-sm text-muted-foreground mt-8 italic">{LITERARY_VERSES.cabinet}</p>
 
       <div className="mt-6">
         <p className="text-sm text-muted-foreground text-center mb-3">{PAGE_SECTIONS.cabinet.vkHint}</p>

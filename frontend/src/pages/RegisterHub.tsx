@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { LiterarySectionHead } from "@/components/literary";
-import { LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const copy = PAGE_SECTIONS.register;
 
@@ -61,10 +61,6 @@ export function RegisterHub() {
         <Link to="/cabinet/login" className="literary-link">
           Войти в кабинет
         </Link>
-      </p>
-
-      <p className="literary-page-verse literary-page-verse--inline mt-6" aria-hidden>
-        {LITERARY_VERSES.register}
       </p>
     </div>
   );

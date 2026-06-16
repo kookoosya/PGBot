@@ -1,4 +1,4 @@
-/** Единственный рабочий прод-URL (до смены домена владельцем). */
+/** Fallback до загрузки /public/info (см. hooks/useSiteInfo.ts). */
 export const CANONICAL_SITE_HOST = "192-210-213-135.sslip.io";
 export const PRIMARY_SITE_URL = `https://${CANONICAL_SITE_HOST}`;
 
@@ -7,4 +7,5 @@ export function siteOrigin(): string {
   return PRIMARY_SITE_URL;
 }
 
+/** @deprecated Предпочитайте useSiteInfo() или resolveSiteUrl() */
 export const SITE_URL = PRIMARY_SITE_URL;

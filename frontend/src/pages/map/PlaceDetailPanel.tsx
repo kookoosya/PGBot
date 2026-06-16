@@ -126,7 +126,7 @@ export function PlaceDetailPanel({
             className={`org-tab${tab === t ? " org-tab-active" : ""}`}
             onClick={() => setTab(t)}
           >
-            {t === "info" ? "Отзывы" : t === "review" ? "Оценить" : t === "report" ? "Ошибка" : "Жалоба"}
+            {t === "info" ? "Отзывы" : t === "review" ? "Оценить" : t === "report" ? "Ошибка" : "Претензия"}
           </button>
         ))}
       </div>
@@ -176,7 +176,7 @@ export function PlaceDetailPanel({
 
       {tab === "complaint" && (
         <div className="mt-3 space-y-3">
-          <p className="text-xs text-muted-foreground m-0">Жалоба на магазин: цена, чек, товар.</p>
+          <p className="text-xs text-muted-foreground m-0">Претензия к заведению: цена, чек, товар.</p>
           <select className="w-full border rounded px-2 py-1 text-sm" value={complaintForm.complaint_type} onChange={(e) => setComplaintForm({ ...complaintForm, complaint_type: e.target.value })}>
             {complaintTypes.map((t: ComplaintType) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
@@ -186,7 +186,7 @@ export function PlaceDetailPanel({
           </div>
           <textarea className="w-full border rounded p-2 text-sm min-h-[100px]" placeholder="Опишите ситуацию (мин. 10 символов)..." value={complaintForm.description} onChange={(e) => setComplaintForm({ ...complaintForm, description: e.target.value })} />
           <Button className="w-full" variant="destructive" disabled={complaintForm.description.length < 10} onClick={submitComplaint}>
-            Подать жалобу
+            Отправить претензию
           </Button>
         </div>
       )}

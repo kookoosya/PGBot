@@ -6,7 +6,7 @@ import { LiterarySectionHead } from "@/components/literary";
 import { LandingAlbumSection, LandingQuickNav } from "@/components/landing";
 import { BRAND } from "@/lib/branding";
 import { LANDING_HERO, LANDING_SECTIONS } from "@/lib/literaryCopy";
-import { HERO_VERSE, VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { VILLAGE_PHOTOS } from "@/lib/pushkin";
 import { Link } from "react-router-dom";
 
 const heroPhoto = VILLAGE_PHOTOS[0];
@@ -84,10 +84,6 @@ export function Landing() {
               <VkBotBanner hidePortalChips />
             </div>
           </LandingAlbumSection>
-
-          <blockquote className="landing-album-closing-verse" cite="Пушкин">
-            {HERO_VERSE}
-          </blockquote>
         </div>
       </div>
     </div>

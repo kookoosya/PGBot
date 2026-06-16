@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Badge } from "@/components/ui/badge";
 import { api, Issue } from "@/lib/api";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 
@@ -60,7 +60,7 @@ export function OfficialIssues() {
         subtitle={`${user?.organization || user?.full_name || ""}${user?.role ? ` · ${ROLE_LABELS[user.role] || user.role}` : ""}`}
       >
         <Link to="/" className="literary-btn literary-btn--ghost text-sm no-underline">На главную</Link>
-        <Link to="/complaints" className="literary-btn literary-btn--ghost text-sm no-underline">Форма жалобы</Link>
+        <Link to="/complaints" className="literary-btn literary-btn--ghost text-sm no-underline">Подать обращение</Link>
         <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={logout}>Выйти</button>
       </PageHeader>
 
@@ -182,8 +182,6 @@ export function OfficialIssues() {
           </div>
         )}
       </div>
-
-      <p className="literary-page-verse" aria-hidden>{LITERARY_VERSES.official}</p>
     </div>
   );
 }

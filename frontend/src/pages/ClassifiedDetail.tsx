@@ -5,7 +5,7 @@ import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@
 import { api, ClassifiedAd } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
-import { EMPTY_STATES, LITERARY_VERSES } from "@/lib/literaryCopy";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 export function ClassifiedDetail() {
   const { id } = useParams();
@@ -101,9 +101,6 @@ export function ClassifiedDetail() {
             </p>
           </div>
 
-          <p className="literary-page-verse literary-classified-detail-verse" aria-hidden>
-            {LITERARY_VERSES.classifieds}
-          </p>
         </div>
       </article>
     </div>

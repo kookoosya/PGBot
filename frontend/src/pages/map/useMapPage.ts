@@ -215,12 +215,12 @@ export function useMapPage() {
     if (!selected || complaintForm.description.length < 10) return;
     try {
       await api.addComplaint(selected.id, complaintForm);
-      setMsg("Жалоба принята!");
+      setMsg("Претензия принята!");
       setMsgType("ok");
       openPlace(selected.id);
       setTab("info");
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Не удалось отправить жалобу");
+      setMsg(e instanceof Error ? e.message : "Не удалось отправить претензию");
       setMsgType("err");
     }
   };

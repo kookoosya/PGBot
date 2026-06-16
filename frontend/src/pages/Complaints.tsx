@@ -6,7 +6,7 @@ import { VkBotBanner } from "@/components/VkBotLink";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { api, Issue } from "@/lib/api";
-import { EMPTY_STATES, LITERARY_VERSES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { formatDate, issueStatusHint, ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -464,8 +464,6 @@ export function Complaints() {
           <VkBotBanner />
         </div>
       </div>
-
-      <p className="literary-page-verse" aria-hidden>{LITERARY_VERSES.complaints}</p>
     </div>
   );
 }
