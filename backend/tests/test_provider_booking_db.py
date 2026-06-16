@@ -38,7 +38,7 @@ def _next_booking_date() -> date:
 
 
 @pytest.mark.asyncio
-@patch("app.services.provider_service.notify_owner", new_callable=AsyncMock)
+@patch("app.services.notifications.notify_owner", new_callable=AsyncMock)
 async def test_provider_register_and_approve(
     _notify,
     api_client: AsyncClient,
@@ -71,8 +71,8 @@ async def test_provider_register_and_approve(
 
 
 @pytest.mark.asyncio
-@patch("app.services.provider_service.notify_owner", new_callable=AsyncMock)
-@patch("app.services.provider_service.notify_vk_user", new_callable=AsyncMock)
+@patch("app.services.notifications.notify_owner", new_callable=AsyncMock)
+@patch("app.services.notifications.notify_vk_user", new_callable=AsyncMock)
 async def test_provider_booking_flow(
     _notify_vk,
     _notify_owner,

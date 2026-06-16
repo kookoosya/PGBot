@@ -118,7 +118,7 @@
 4. ⏭ Расширить `portal_copy.json` — EMPTY_STATES (опционально, P3)
 
 ### P2 — разбиение оставшихся god files
-1. `provider_service.py` → package
+1. ✅ `provider_service.py` → package `provider/`
 2. `issue_processor.py` → `issue/ingest.py`
 3. `event_service.py` → package
 4. `vk_messages.py` → `vk/messages.py`
