@@ -223,7 +223,7 @@ export function EventsPage() {
               <ol className="events-grid events-grid--wide">
                 {garnectProgram.length > 0 && (
                   <li className="events-festival-program-wrap">
-                    <FestivalProgramBlock events={garnectProgram} />
+                <FestivalProgramBlock events={garnectProgram} linkTo="/events" />
                   </li>
                 )}
                 {pushkinOtherEvents.map((event) => (

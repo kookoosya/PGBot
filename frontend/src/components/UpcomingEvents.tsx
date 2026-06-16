@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CinemaSpotlight, EventCard, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { ctaArrow, CTA } from "@/lib/cta";
-import { isRealCinemaEvent, groupEventsByShow } from "@/lib/eventUtils";
+import { api, type PublicEvent } from "@/lib/api";
+import { isRealCinemaEvent, groupEventsByShow, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
@@ -24,9 +25,29 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const isLanding = variant === "landing";
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
+  const [landingPushkin, setLandingPushkin] = useState<PublicEvent[] | null>(null);
   const apiRegion = regionFilter === "all" ? undefined : regionFilter;
   const { data, loading } = useToday(apiRegion);
   const events = data?.upcoming_events ?? [];
+
+  useEffect(() => {
+    if (!isLanding) {
+      setLandingPushkin(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .getPublicEvents({ region: "pushkin_gory", limit: "80" })
+      .then((response) => {
+        if (!cancelled) setLandingPushkin(response.items);
+      })
+      .catch(() => {
+        if (!cancelled) setLandingPushkin(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isLanding]);
 
   const filteredEvents = useMemo(() => {
     let list = events;
@@ -46,12 +67,18 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
     return list;
   }, [events, regionFilter, searchInput]);
 
-  const pushkinEvents = useMemo(
-    () =>
-      filteredEvents.filter(
-        (e) => e.region_label === "Пушкинские Горы" && !isRealCinemaEvent(e),
-      ),
-    [filteredEvents],
+  const pushkinEvents = useMemo(() => {
+    if (isLanding && landingPushkin) {
+      return landingPushkin.filter((event) => !isRealCinemaEvent(event));
+    }
+    return filteredEvents.filter(
+      (event) => event.region_label === "Пушкинские Горы" && !isRealCinemaEvent(event),
+    );
+  }, [filteredEvents, isLanding, landingPushkin]);
+
+  const { program: garnectProgram, rest: pushkinOtherEvents } = useMemo(
+    () => partitionGarnectProgram(pushkinEvents),
+    [pushkinEvents],
   );
   const cinemaEvents = useMemo(
     () => groupEventsByShow(filteredEvents.filter(isRealCinemaEvent)),
@@ -64,7 +91,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
   const showSplit = isLanding || (regionFilter === "all" && !searchInput.trim());
 
-  const displayPushkin = isLanding ? pushkinEvents.slice(0, LANDING_LIMITS.pushkin) : pushkinEvents;
+  const displayPushkin = isLanding ? pushkinOtherEvents.slice(0, LANDING_LIMITS.pushkin) : pushkinOtherEvents;
   const displayCinema = isLanding ? [] : cinemaEvents;
   const displayPskov = isLanding ? otherPskovEvents.slice(0, LANDING_LIMITS.pskov) : otherPskovEvents;
 
@@ -121,22 +148,34 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
       {loading && !data ? (
         <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
       ) : showSplit ? (
-        displayPushkin.length === 0 ? (
+        garnectProgram.length === 0 && displayPushkin.length === 0 ? (
           <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
         ) : (
-          <ol
-            className={[
-              "events-grid",
-              isLanding ? "events-grid--landing" : "events-grid--wide",
-              isLanding ? landingGridCountClass(displayPushkin.length, "events-grid--landing") : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {displayPushkin.map((event) => (
-              <EventCard key={event.id} event={event} compact={isLanding} descLimit={isLanding ? 80 : 120} />
-            ))}
-          </ol>
+          <>
+            {garnectProgram.length > 0 && (
+              <div className="events-festival-program-wrap mb-4">
+                <FestivalProgramBlock
+                  events={garnectProgram}
+                  linkTo={isLanding ? "/events" : undefined}
+                />
+              </div>
+            )}
+            {displayPushkin.length > 0 && (
+              <ol
+                className={[
+                  "events-grid",
+                  isLanding ? "events-grid--landing" : "events-grid--wide",
+                  isLanding ? landingGridCountClass(displayPushkin.length, "events-grid--landing") : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                {displayPushkin.map((event) => (
+                  <EventCard key={event.id} event={event} compact={isLanding} descLimit={isLanding ? 80 : 120} />
+                ))}
+              </ol>
+            )}
+          </>
         )
       ) : filteredEvents.length === 0 ? (
         <LiteraryEmptyState {...EMPTY_STATES.eventsSearch} />

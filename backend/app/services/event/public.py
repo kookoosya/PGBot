@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import or_, select
@@ -15,6 +16,35 @@ from app.services.event_dedupe_service import dedupe_display_events, group_event
 from app.services.event_title_utils import normalize_event_title
 
 logger = logging.getLogger(__name__)
+
+_FESTIVAL_PROGRAM_RE = re.compile(r"бугровский\s+гарнец|гарнец", re.IGNORECASE)
+
+
+def collapse_festival_program_feed(events: list[Event]) -> list[Event]:
+    """Keep one representative per festival program URL in compact feeds."""
+    by_url: dict[str, list[Event]] = {}
+    passthrough: list[Event] = []
+
+    for event in events:
+        url = (event.source_url or "").strip()
+        title = event.title or ""
+        if (
+            event.source == "pushkinland"
+            and "/news/" in url.lower()
+            and _FESTIVAL_PROGRAM_RE.search(title)
+        ):
+            by_url.setdefault(url, []).append(event)
+        else:
+            passthrough.append(event)
+
+    collapsed: list[Event] = []
+    for group in by_url.values():
+        group.sort(key=lambda item: item.starts_at)
+        collapsed.append(group[0])
+
+    merged = collapsed + passthrough
+    merged.sort(key=lambda item: item.starts_at)
+    return merged
 
 
 def _upcoming_base_conditions(now: datetime) -> list:
@@ -87,7 +117,9 @@ async def get_upcoming_events(
                 limit=safe_limit,
                 region=region,
             )
-            return grouped
+            if region in (None, EventRegion.PUSHKIN_GORY):
+                grouped = collapse_festival_program_feed(grouped)
+            return grouped[:safe_limit]
 
         pushkin_cap = max(4, safe_limit - 2)
         cinema_cap = 2
@@ -97,6 +129,7 @@ async def get_upcoming_events(
             limit=pushkin_cap,
             region=EventRegion.PUSHKIN_GORY,
         )
+        pushkin = collapse_festival_program_feed(pushkin)
         cinema = await _load_upcoming_grouped(
             db,
             now=now,

@@ -1,18 +1,23 @@
 import { useMemo } from "react";
-import type { PublicEvent } from "@/lib/api";
+import { Link } from "react-router-dom";
+import type { EventCardEvent } from "@/lib/eventUtils";
 import { formatFestivalDateRange, pluralPerformances } from "@/lib/eventUtils";
 import { EventCard } from "./EventCard";
 
 interface FestivalProgramBlockProps {
-  events: PublicEvent[];
+  events: EventCardEvent[];
   title?: string;
   kicker?: string;
+  linkTo?: string;
+  linkLabel?: string;
 }
 
 export function FestivalProgramBlock({
   events,
   title = "Бугровский гарнец",
   kicker = "🎭 Фестиваль",
+  linkTo,
+  linkLabel = "Вся программа →",
 }: FestivalProgramBlockProps) {
   const dateRange = useMemo(() => formatFestivalDateRange(events), [events]);
   if (events.length < 2) return null;
@@ -28,6 +33,15 @@ export function FestivalProgramBlock({
             {" · "}
             {events.length} {pluralPerformances(events.length)}
           </span>
+          {linkTo && (
+            <Link
+              to={linkTo}
+              className="events-festival-program__link"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {linkLabel}
+            </Link>
+          )}
         </div>
         <span className="events-festival-program__toggle" aria-hidden />
       </summary>

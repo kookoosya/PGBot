@@ -150,7 +150,7 @@ async def build_today_snapshot(
     upcoming: list[TodayEventRow] = []
     try:
         events = await get_upcoming_events(
-            db, limit=8, region=event_region, mix_categories=True,
+            db, limit=10, region=event_region, mix_categories=True,
         )
         upcoming = [
             TodayEventRow(
