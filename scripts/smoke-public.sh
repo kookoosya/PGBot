@@ -80,7 +80,23 @@ check "Обращения" "$BASE/complaints" "root"
 check "Кабинет" "$BASE/cabinet" "root"
 check "Подать обращение (deep link)" "$BASE/complaints?new=1" "root"
 check "ИИ-помощник" "$BASE/ai" "root"
-check "VK Mini App" "$BASE/vk" "root"
+if curl -sS --max-time 20 "$API/public/info" | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(0 if d.get('vk_bot_ready') else 1)"; then
+  echo -e "${GREEN}OK${NC}   VK бот (public/info)"
+  pass=$((pass + 1))
+else
+  echo -e "${RED}FAIL${NC} VK бот не готов (vk_bot_ready=false)"
+  fail=$((fail + 1))
+fi
+if code=$(curl -sS -o /tmp/smoke-vk-confirm.txt -w "%{http_code}" --max-time 15 -X POST "$API/vk/callback" -H "Content-Type: application/json" -d '{"type":"confirmation","group_id":238536142}'); then
+  body=$(cat /tmp/smoke-vk-confirm.txt 2>/dev/null || true)
+  if [[ "$code" == "200" && -n "$body" && "$body" != "ok" ]]; then
+    echo -e "${GREEN}OK${NC}   VK callback confirmation"
+    pass=$((pass + 1))
+  else
+    echo -e "${RED}FAIL${NC} VK callback — HTTP $code body=$body"
+    fail=$((fail + 1))
+  fi
+fi
 check "Подать объявление (deep link)" "$BASE/classifieds?new=1" "root"
 check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 
