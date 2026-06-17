@@ -1,6 +1,6 @@
 """Tests for KDC Pushgory HTML parsing."""
 
-from app.services.kdc_pushgory_service import _parse_homepage
+from app.services.event_sources.fetchers.kdc_pushgory import _parse_homepage
 
 
 SAMPLE_HOME = """

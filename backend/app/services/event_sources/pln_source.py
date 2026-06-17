@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventRegion
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
-from app.services.news_rss_service import NewsRssEvent
-from app.services.pln_service import fetch_pln_events
+from app.services.event_sources.fetchers.news_rss import NewsRssEvent
+from app.services.event_sources.fetchers.pln import fetch_pln_events
 
 logger = logging.getLogger(__name__)
 

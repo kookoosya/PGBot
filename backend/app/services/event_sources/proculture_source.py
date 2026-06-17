@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.models.enums import EventRegion
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
-from app.services.proculture_service import fetch_proculture_events, proculture_item_to_fields
+from app.services.event_sources.fetchers.proculture import fetch_proculture_events, proculture_item_to_fields
 
 logger = logging.getLogger(__name__)
 

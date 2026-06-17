@@ -15,7 +15,7 @@ from app.services.event_sources.base import EventSource, EventSyncResult, Fetche
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.models.enums import EventCategory
 from app.services.text_cleaning import normalize_event_text
-from app.services.timepad_service import (
+from app.services.event_sources.fetchers.timepad import (
     _parse_timepad_datetime,
     _event_location,
     fetch_timepad_events,

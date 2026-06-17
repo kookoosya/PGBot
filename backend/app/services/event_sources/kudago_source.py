@@ -6,14 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventRegion
 from app.services.event_sources.base import EventSource, EventSyncResult
-from app.services.kudago_service import sync_all_kudago_sources, sync_events_from_kudago
+from app.services.event_sources.fetchers.kudago import sync_all_kudago_sources, sync_events_from_kudago
 
 
 class KudaGoEventSource(EventSource):
     name = "kudago"
 
     async def fetch_events(self, region: EventRegion | None = None) -> list:
-        # KudaGo adapter works via direct upsert; fetch is internal to kudago_service.
+        # KudaGo adapter works via direct upsert; fetch is internal to fetchers/kudago.
         return []
 
     async def sync_events(

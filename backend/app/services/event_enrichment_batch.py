@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.constants.cinema_catalog import is_generic_cinema_title, lookup_film
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
-from app.services.cinema_enrichment import _CULTURE_LIKE_TITLE_RE
+from app.services.event.cinema import CULTURE_LIKE_TITLE_RE
 from app.services.event_enrichment_service import MIN_DESCRIPTION_LEN, enrich_event_fields
 from app.services.poster_service import (
     _is_planetarium_event,
@@ -49,7 +49,7 @@ async def recategorize_theater_from_cinema(db: AsyncSession, *, limit: int = 200
     )
     updated = 0
     for event in result.scalars().all():
-        if _CULTURE_LIKE_TITLE_RE.search(event.title):
+        if CULTURE_LIKE_TITLE_RE.search(event.title):
             event.category = EventCategory.CULTURE.value
             updated += 1
     if updated:
@@ -156,7 +156,7 @@ async def enrich_stale_events(db: AsyncSession) -> int:
             event.is_published = False
             changed = True
 
-        if category == EventCategory.CINEMA and _CULTURE_LIKE_TITLE_RE.search(event.title):
+        if category == EventCategory.CINEMA and CULTURE_LIKE_TITLE_RE.search(event.title):
             event.category = EventCategory.CULTURE.value
             changed = True
 
@@ -214,7 +214,7 @@ async def strip_bad_cinema_posters(db: AsyncSession) -> int:
 
 async def refresh_orbilet_posters(db: AsyncSession) -> int:
     """Attach official Orbilet promo images to imported sessions."""
-    from app.services.orbilet_service import fetch_orbilet_events
+    from app.services.event_sources.fetchers.orbilet import fetch_orbilet_events
 
     orbilet_items = await fetch_orbilet_events()
     if not orbilet_items:

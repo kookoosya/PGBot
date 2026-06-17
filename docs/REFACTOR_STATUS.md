@@ -6,6 +6,13 @@
 
 ---
 
+## P24 — P1.2–P1.3 event fetchers + cinema ✅ (2026-06-17)
+
+1. ✅ Fetchers перенесены в `event_sources/fetchers/` (13 модулей)
+2. ✅ `cinema_enrichment.py` → `event/cinema.py`
+
+---
+
 ## P23 — P1 facade removal ✅ (2026-06-17)
 
 1. ✅ Расширены `__init__.py` пакетов `issue/`, `classified/`, `place/`

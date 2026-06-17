@@ -3,7 +3,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.services.pushkinland_service import (
+from app.services.event_sources.fetchers.pushkinland import (
     _should_expand_with_program,
     parse_pushkinland_calendar,
     parse_pushkinland_program_page,

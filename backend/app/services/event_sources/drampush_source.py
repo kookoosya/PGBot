@@ -8,7 +8,7 @@ from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventRegion
-from app.services.drampush_service import DrampushEvent, fetch_drampush_events
+from app.services.event_sources.fetchers.drampush import DrampushEvent, fetch_drampush_events
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
 

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from app.constants.cinema_catalog import lookup_film
 from app.models.enums import EventCategory
-from app.services.cinema_enrichment import extract_genre
+from app.services.event.cinema import extract_genre
 from app.services.event_sources.text_utils import (
     VK_AD_KEYWORDS,
     infer_category_from_text,

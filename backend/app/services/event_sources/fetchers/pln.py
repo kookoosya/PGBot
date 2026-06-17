@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.services.news_rss_service import NewsRssEvent, fetch_news_rss_events, parse_news_rss
+from app.services.event_sources.fetchers.news_rss import NewsRssEvent, fetch_news_rss_events, parse_news_rss
 
 PLN_RSS_URL = "https://pln-pskov.ru/rss.php"
 

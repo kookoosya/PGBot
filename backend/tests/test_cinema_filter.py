@@ -3,7 +3,7 @@
 import pytest
 
 from app.models.enums import EventCategory
-from app.services.cinema_enrichment import is_real_cinema_event
+from app.services.event.cinema import is_real_cinema_event
 
 
 @pytest.mark.parametrize(
