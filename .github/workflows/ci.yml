@@ -78,10 +78,11 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install and build
+      - name: Install, test, and build
         working-directory: frontend
         run: |
           npm install
+          npm run test
           npm run build
 
   smoke-prod:
