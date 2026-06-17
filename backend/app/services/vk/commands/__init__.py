@@ -35,6 +35,7 @@ COMMAND_HANDLERS: dict[str, CommandHandler] = {
     "my_issues": handlers.handle_my_issues,
     "cabinet": handlers.handle_cabinet,
     "events": handlers.handle_events,
+    "cinema": handlers.handle_cinema,
     "weather": handlers.handle_weather,
     "help": handlers.handle_help,
 }
