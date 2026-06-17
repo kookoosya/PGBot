@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { api, EventSourceOverviewItem, EventSyncResult } from "@/lib/api";
+import { api, EventSourceHealth, EventSourceOverviewItem, EventSyncResult } from "@/lib/api";
 import { formatSyncAge } from "@/lib/formatSyncAge";
 
-function healthLabel(health: EventSourceOverviewItem["health"]): string {
+function healthLabel(health: EventSourceHealth): string {
   if (health === "ready") return "Готов";
-  if (health === "group_token_only") return "Только своя группа";
   return "Нужен токен";
 }
 
-function healthClass(health: EventSourceOverviewItem["health"]): string {
+function healthClass(health: EventSourceHealth): string {
   if (health === "ready") return "event-source-health event-source-health--ready";
-  if (health === "group_token_only") return "event-source-health event-source-health--warn";
   return "event-source-health event-source-health--bad";
 }
 
@@ -58,9 +56,7 @@ export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventS
 
   const tokenAlerts = useMemo(() => {
     const sources = overview?.sources ?? [];
-    const needsToken = sources.filter((source) => source.health === "needs_token");
-    const groupOnly = sources.filter((source) => source.health === "group_token_only");
-    return { needsToken, groupOnly };
+    return sources.filter((source) => source.health === "needs_token");
   }, [overview?.sources]);
 
   const runSync = async (source: string | "all") => {
@@ -100,21 +96,13 @@ export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventS
           </Button>
         </div>
 
-        {!loading && (tokenAlerts.needsToken.length > 0 || tokenAlerts.groupOnly.length > 0) && (
+        {!loading && tokenAlerts.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            {tokenAlerts.needsToken.length > 0 && (
-              <p>
-                <strong>{tokenAlerts.needsToken.length}</strong>{" "}
-                {tokenAlerts.needsToken.length === 1 ? "источник" : "источника"} без токена:{" "}
-                {tokenAlerts.needsToken.map((source) => source.label).join(", ")}.
-              </p>
-            )}
-            {tokenAlerts.groupOnly.length > 0 && (
-              <p className={tokenAlerts.needsToken.length > 0 ? "mt-1" : undefined}>
-                VK: только стена своего сообщества — для полной афиши нужен{" "}
-                <code className="text-xs">VK_EVENTS_TOKEN</code>.
-              </p>
-            )}
+            <p>
+              <strong>{tokenAlerts.length}</strong>{" "}
+              {tokenAlerts.length === 1 ? "источник" : "источника"} без токена:{" "}
+              {tokenAlerts.map((source) => source.label).join(", ")}.
+            </p>
             <p className="mt-1 text-amber-900/90">
               Инструкция: <code className="text-xs">docs/EVENT_SOURCES.md</code>, VK — шаг 8 в{" "}
               <code className="text-xs">docs/VK_SETUP.md</code>.

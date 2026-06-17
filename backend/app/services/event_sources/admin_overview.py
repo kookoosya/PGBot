@@ -46,8 +46,6 @@ def _source_health(source: str, health: dict[str, str]) -> str:
 def _token_hint(source: str, status: str) -> str | None:
     if status == "ready":
         return None
-    if source == "vk" and status == "group_token_only":
-        return TOKEN_HINTS["vk"]
     return TOKEN_HINTS.get(source)
 
 

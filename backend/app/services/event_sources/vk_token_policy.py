@@ -36,6 +36,4 @@ def vk_wall_health_status() -> str:
     """Health label for VK wall import readiness."""
     if _clean_token(settings.VK_EVENTS_TOKEN):
         return "ready"
-    if _clean_token(settings.VK_GROUP_TOKEN):
-        return "group_token_only"
     return "needs_token"

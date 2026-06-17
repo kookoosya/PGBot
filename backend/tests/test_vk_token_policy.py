@@ -29,12 +29,12 @@ def test_wall_health_ready_with_user_token(monkeypatch):
     assert vk_token_policy.vk_wall_health_status() == "ready"
 
 
-def test_wall_health_group_token_only(monkeypatch):
+def test_wall_health_needs_user_token_without_events_token(monkeypatch):
     from app.services.event_sources import vk_token_policy
 
     monkeypatch.setattr(vk_token_policy.settings, "VK_EVENTS_TOKEN", "")
     monkeypatch.setattr(vk_token_policy.settings, "VK_GROUP_TOKEN", "group-token")
-    assert vk_token_policy.vk_wall_health_status() == "group_token_only"
+    assert vk_token_policy.vk_wall_health_status() == "needs_token"
 
 
 def test_wall_health_needs_token(monkeypatch):

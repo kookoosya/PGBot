@@ -14,11 +14,11 @@ curl -sS https://192-210-213-135.sslip.io/health | python3 -m json.tool
 
 В ответе `event_sources`:
 
-| Поле | `ready` | `group_token_only` | `needs_token` |
-|------|---------|-------------------|---------------|
-| `vk_wall` | полный импорт из всех VK-групп | только стена своего сообщества | токен не задан |
-| `timepad` | TimePad API работает | — | нужен `TIMEPAD_API_TOKEN` |
-| `proculture` | PRO.Культура API работает | — | нужен `PROCULTURE_API_KEY` |
+| Поле | `ready` | `needs_token` |
+|------|---------|---------------|
+| `vk_wall` | полный импорт из всех VK-групп | нужен `VK_EVENTS_TOKEN` (user token; group token не читает `wall.get`) |
+| `timepad` | TimePad API работает | нужен `TIMEPAD_API_TOKEN` |
+| `proculture` | PRO.Культура API работает | нужен `PROCULTURE_API_KEY` |
 
 Админка: **/admin/events** → панель «Источники афиши» (статусы, счётчики, синхронизация).
 
