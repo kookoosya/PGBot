@@ -5,11 +5,13 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_health_ok(client: AsyncClient):
+async def test_health_ok(client: AsyncClient, monkeypatch):
+    monkeypatch.setenv("GIT_COMMIT", "abc1234")
     response = await client.get("/health")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
+    assert data.get("git_commit") == "abc1234"
     assert "Пушкин" in data["app"]
     # Local test env has no REDIS_URL — field omitted unless configured
     from app.config import get_settings

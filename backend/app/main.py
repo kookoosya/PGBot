@@ -63,6 +63,9 @@ async def health(request: Request):
         except Exception:
             payload["redis"] = "error"
     payload["event_sources"] = build_event_sources_health()
+    git_commit = os.environ.get("GIT_COMMIT", "").strip()
+    if git_commit:
+        payload["git_commit"] = git_commit
     return payload
 
 

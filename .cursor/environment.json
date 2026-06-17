@@ -1,5 +1,5 @@
 {
   "install": "cd /tmp && curl -fsSL -o sshpass.deb http://archive.ubuntu.com/ubuntu/pool/universe/s/sshpass/sshpass_1.09-1_amd64.deb && dpkg-deb -x sshpass.deb sshpass-extract 2>/dev/null || true",
-  "start": "",
+  "start": "if [ -n \"${SSHPASS:-${VPS_PASSWORD:-}}\" ]; then cd /workspace && BRANCH=main bash scripts/remote-deploy.sh; fi",
   "terminals": []
 }

@@ -15,6 +15,11 @@ USER="${VPS_USER:-root}"
 REMOTE_ENV="/opt/pgbot/.env"
 export SSHPASS="${SSHPASS:-${VPS_PASSWORD:-}}"
 
+if [ -z "${SSHPASS:-}" ]; then
+  echo "Пропуск sync-vps-env: нет SSHPASS/VPS_PASSWORD" >&2
+  exit 0
+fi
+
 _ssh() {
   if [ -n "${SSHPASS:-}" ] && command -v sshpass >/dev/null; then
     unset SSH_ASKPASS SSH_ASKPASS_REQUIRE DISPLAY

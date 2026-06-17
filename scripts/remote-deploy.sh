@@ -48,7 +48,7 @@ elif [ -n "${SSH_AUTH_SOCK:-}" ] && ssh-add -l >/dev/null 2>&1; then
   ssh -o StrictHostKeyChecking=no -o BatchMode=yes "$USER@$HOST" "$REMOTE"
 else
   echo "Нет доступа к VPS $USER@$HOST" >&2
-  echo "Добавьте VPS_PASSWORD в GitHub Secrets или .deploy.env" >&2
+  echo "Добавьте SSHPASS в Cursor Cloud Agent → Secrets или VPS_PASSWORD в GitHub Secrets" >&2
   exit 1
 fi
 
