@@ -1,6 +1,6 @@
 """End-to-end scenario tests for critical user journeys."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -145,27 +145,26 @@ async def test_resident_sees_issue_status_after_official_update(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue.ingest.process_web_complaint", new_callable=AsyncMock)
-async def test_guest_submits_issue_via_http(mock_process, api_client: AsyncClient):
-    mock_issue = MagicMock()
-    mock_issue.is_spam = False
-    mock_issue.id = 501
-    mock_issue.status = IssueStatus.NEW
-    mock_issue.description = "Сломан фонарь на улице"
-    mock_issue.resident_id = None
-    mock_process.return_value = mock_issue
+@patch("app.services.issue.gemini_analysis.run_gemini_with_retry", new_callable=AsyncMock)
+async def test_guest_submits_issue_via_http(mock_gemini, api_client: AsyncClient):
+    mock_gemini.return_value = AnalysisResult(
+        is_valid=True,
+        category="roads",
+        summary="Сломан фонарь на улице",
+        duplicate_probability=0.0,
+    )
 
-    with patch("app.services.issue.crud.get_issue_details", new_callable=AsyncMock, return_value=mock_issue):
-        response = await api_client.post(
-            "/api/v1/issues",
-            json={
-                "description": "Сломан фонарь на улице Ленина, темно по вечерам",
-                "phone": unique_phone(),
-                "full_name": "Гость",
-            },
-        )
+    response = await api_client.post(
+        "/api/v1/issues",
+        json={
+            "description": "Сломан фонарь на улице Ленина, темно по вечерам",
+            "phone": unique_phone(),
+            "full_name": "Гость",
+        },
+    )
     assert response.status_code == 201
-    assert response.json()["id"] == 501
+    assert response.json()["id"] > 0
+    assert response.json()["category"] == "Дороги"
 
 
 @pytest.mark.asyncio
