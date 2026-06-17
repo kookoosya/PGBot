@@ -162,6 +162,7 @@ async def update_issue_status_endpoint(
         resolution_text=data.resolution_text,
         actor=build_issue_actor(actor_id=current_user.id, ip_address=get_client_ip(request)),
     )
+    await db.refresh(issue)
     return issue_to_response(issue)
 
 
@@ -187,6 +188,7 @@ async def reopen_issue_endpoint(
         )
     except IssueValidationError as exc:
         raise_http_for_service_error(exc)
+    await db.refresh(issue)
     return issue_to_response(issue)
 
 
@@ -207,6 +209,7 @@ async def archive_issue_endpoint(
         issue,
         actor=build_issue_actor(actor_id=current_user.id, ip_address=get_client_ip(request)),
     )
+    await db.refresh(issue)
     return issue_to_response(issue)
 
 
