@@ -20,10 +20,17 @@ if [ -z "${SSHPASS:-}" ]; then
   exit 0
 fi
 
+SSHPASS_BIN=""
+if command -v sshpass >/dev/null; then
+  SSHPASS_BIN="sshpass"
+elif [ -x /tmp/sshpass-extract/usr/bin/sshpass ]; then
+  SSHPASS_BIN="/tmp/sshpass-extract/usr/bin/sshpass"
+fi
+
 _ssh() {
-  if [ -n "${SSHPASS:-}" ] && command -v sshpass >/dev/null; then
+  if [ -n "${SSHPASS:-}" ] && [ -n "$SSHPASS_BIN" ]; then
     unset SSH_ASKPASS SSH_ASKPASS_REQUIRE DISPLAY
-    SSHPASS="$SSHPASS" sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" "$@"
+    SSHPASS="$SSHPASS" "$SSHPASS_BIN" -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" "$@"
   else
     ssh -o StrictHostKeyChecking=no -o BatchMode=yes "$USER@$HOST" "$@"
   fi
