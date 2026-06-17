@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.cinema_enrichment import is_real_cinema_event
-from app.services.event_dedupe_service import dedupe_display_events, group_events_by_show
+from app.services.event_dedupe_service import dedupe_display_events, group_events_by_show, polish_public_event_feed
 from app.services.event_title_utils import normalize_event_title
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,46 @@ async def _load_upcoming_grouped(
             )
         ]
     return group_events_by_show(events)[:limit]
+
+
+async def load_mixed_public_events(
+    db: AsyncSession,
+    *,
+    limit: int,
+    now: datetime | None = None,
+) -> list[Event]:
+    """Settlement-first mixed feed for the public events page."""
+    moment = now or datetime.now(timezone.utc)
+    safe_limit = max(1, min(limit, 80))
+    pushkin_cap = max(safe_limit // 2, min(24, safe_limit))
+    cinema_cap = min(12, max(4, safe_limit // 4))
+    pushkin = await _load_upcoming_grouped(
+        db,
+        now=moment,
+        limit=pushkin_cap,
+        region=EventRegion.PUSHKIN_GORY,
+    )
+    pushkin = collapse_festival_program_feed(pushkin)
+    cinema = await _load_upcoming_grouped(
+        db,
+        now=moment,
+        limit=cinema_cap,
+        region=EventRegion.PSKOV,
+        category=EventCategory.CINEMA,
+    )
+    used_ids = {e.id for e in (*pushkin, *cinema)}
+    pskov_other_cap = max(0, safe_limit - len(pushkin) - len(cinema))
+    pskov_other: list[Event] = []
+    if pskov_other_cap:
+        pskov_other = await _load_upcoming_grouped(
+            db,
+            now=moment,
+            limit=pskov_other_cap,
+            region=EventRegion.PSKOV,
+            exclude_category=EventCategory.CINEMA,
+        )
+        pskov_other = [e for e in pskov_other if e.id not in used_ids]
+    return (pushkin + pskov_other + cinema)[:safe_limit]
 
 
 async def get_upcoming_events(
@@ -203,6 +243,10 @@ async def search_public_events(
     """Return upcoming published events for the public events page."""
     now = datetime.now(timezone.utc)
     safe_limit = max(1, min(limit, 100 if category == EventCategory.CINEMA else 80))
+
+    if region is None and category is None and not source and not search:
+        return await load_mixed_public_events(db, limit=safe_limit, now=now)
+
     conditions = [
         Event.is_published.is_(True),
         or_(Event.ends_at.is_(None), Event.ends_at >= now),
@@ -228,7 +272,22 @@ async def search_public_events(
         select(Event)
         .where(*conditions)
         .order_by(Event.starts_at.asc())
-        .limit(safe_limit * 3)
+        .limit(safe_limit * 4)
     )
-    events = dedupe_display_events(list(result.scalars().all()))
+    events = polish_public_event_feed(list(result.scalars().all()))
+    if category == EventCategory.CINEMA or region == EventRegion.PSKOV:
+        events = [
+            e for e in events
+            if e.category != EventCategory.CINEMA.value
+            or is_real_cinema_event(
+                title=e.title,
+                description=e.description,
+                category=e.category,
+                genre=e.genre,
+                source=e.source,
+                location=e.location,
+            )
+        ]
+    if region in (None, EventRegion.PUSHKIN_GORY) and category is None:
+        events = collapse_festival_program_feed(events)
     return events[:safe_limit]

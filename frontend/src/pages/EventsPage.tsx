@@ -10,7 +10,7 @@ import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
 import { parseSourceParam } from "@/lib/eventSourceFilters";
 import { absoluteGarnectShareUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
-import { groupEventsByShow, formatFestivalDateRange, isFestivalImminent, isFestivalPast, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl, eventSourceLabel } from "@/lib/eventUtils";
+import { groupEventsByShow, formatFestivalDateRange, isFestivalImminent, isFestivalPast, isRealCinemaEvent, partitionGarnectProgram, sharePageUrl, eventSourceLabel } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { siteOrigin } from "@/lib/siteUrl";
 
@@ -22,7 +22,7 @@ const garnectCopy = {
 };
 
 export function EventsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { pathname } = useLocation();
   const isVkEvents = pathname.startsWith("/vk/events");
   const eventsBase = isVkEvents ? "/vk/events" : "/events";
@@ -32,7 +32,7 @@ export function EventsPage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  // По умолчанию — посёлок, но кино и Псков всё равно подтягиваем в верхний блок.
+  // По умолчанию — все регионы; посёлок показываем первым блоком на странице.
   const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => parseRegionParam(searchParams.get("region")));
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -44,6 +44,21 @@ export function EventsPage() {
   usePageMeta(garnectOnly ? garnectCopy.meta : undefined);
 
   useEffect(() => {
+    setRegionFilter(parseRegionParam(searchParams.get("region")));
+  }, [searchParams]);
+
+  const selectRegion = (next: RegionFilter) => {
+    setRegionFilter(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === "all") {
+      params.delete("region");
+    } else {
+      params.set("region", next);
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  useEffect(() => {
     setLoading(true);
     setLoadError(false);
 
@@ -53,13 +68,13 @@ export function EventsPage() {
       garnectOnly
         ? api.getPublicEvents({ ...base, region: "pushkin_gory" }).then((r) => r.items)
         : sourceFilter
-          ? api.getPublicEvents({ ...base, region: regionFilter === "pskov" ? "pskov" : regionFilter === "pushkin_gory" ? "pushkin_gory" : undefined }).then((r) => r.items)
-          : regionFilter === "pskov"
-            ? api.getPublicEvents({ ...base, region: "pskov" }).then((r) => r.items)
-            : Promise.all([
-                api.getPublicEvents({ ...base, region: "pushkin_gory" }),
-                api.getPublicEvents({ ...base, region: "pskov" }),
-              ]).then(([pushkin, pskov]) => mergePublicEvents(pskov.items, pushkin.items));
+          ? api.getPublicEvents({
+              ...base,
+              region: regionFilter === "all" ? undefined : regionFilter,
+            }).then((r) => r.items)
+          : regionFilter === "all"
+            ? api.getPublicEvents({ ...base }).then((r) => r.items)
+            : api.getPublicEvents({ ...base, region: regionFilter }).then((r) => r.items);
 
     load
       .then(setEvents)
@@ -113,11 +128,11 @@ export function EventsPage() {
     [pushkinEvents],
   );
   const pskovEvents = useMemo(
-    () => visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
+    () => groupEventsByShow(visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e))),
     [visibleEvents],
   );
   const showPushkinBlock = !garnectOnly && !sourceFilter && pushkinEvents.length > 0 && regionFilter !== "pskov";
-  const showCityRow = !garnectOnly && !sourceFilter && regionFilter !== "pskov" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
+  const showCityRow = !garnectOnly && !sourceFilter && regionFilter === "all" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
   const showPskovOnlyBlock = !garnectOnly && !sourceFilter && regionFilter === "pskov" && pskovEvents.length > 0;
   const showSourceOnlyBlock = !!sourceFilter && visibleEvents.length > 0;
   const showGarnectOnlyBlock = garnectOnly && garnectProgram.length > 0;
@@ -237,7 +252,7 @@ export function EventsPage() {
                 key={item.id}
                 type="button"
                 className={`events-region-filter${regionFilter === item.id ? " events-region-filter--active" : ""}`}
-                onClick={() => setRegionFilter(item.id)}
+                onClick={() => selectRegion(item.id)}
               >
                 {item.label}
               </button>
@@ -298,6 +313,31 @@ export function EventsPage() {
         <LiteraryEmptyState {...(search ? EMPTY_STATES.eventsSearch : EMPTY_STATES.events)} />
       ) : (
         <div className="literary-dashboard">
+          {showPushkinBlock && (
+            <section className="page-panel page-panel--forest">
+              <LiterarySectionHead
+                kicker={copy.pushkin.kicker}
+                title={copy.pushkin.title}
+                compact
+              />
+              <ol className="events-grid events-grid--wide">
+                {garnectProgram.length > 0 && (
+                  <li className="events-festival-program-wrap">
+                    <FestivalProgramBlock
+                      events={garnectProgram}
+                      linkTo={garnectEventsPath(isVkEvents)}
+                      shareUrl={garnectShareUrl}
+                      eventQuerySuffix="?from=garnect"
+                    />
+                  </li>
+                )}
+                {pushkinOtherEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ol>
+            </section>
+          )}
+
           {showCityRow && (
             <div className="events-city-row">
               {cinemaBlock}
@@ -328,31 +368,6 @@ export function EventsPage() {
                   eventQuerySuffix="?from=garnect"
                 />
               </div>
-            </section>
-          )}
-
-          {showPushkinBlock && (
-            <section className="page-panel page-panel--forest">
-              <LiterarySectionHead
-                kicker={copy.pushkin.kicker}
-                title={copy.pushkin.title}
-                compact
-              />
-              <ol className="events-grid events-grid--wide">
-                {garnectProgram.length > 0 && (
-                  <li className="events-festival-program-wrap">
-                    <FestivalProgramBlock
-                      events={garnectProgram}
-                      linkTo={garnectEventsPath(isVkEvents)}
-                      shareUrl={garnectShareUrl}
-                      eventQuerySuffix="?from=garnect"
-                    />
-                  </li>
-                )}
-                {pushkinOtherEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </ol>
             </section>
           )}
         </div>

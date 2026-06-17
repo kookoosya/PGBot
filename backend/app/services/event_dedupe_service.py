@@ -85,6 +85,34 @@ def group_events_by_show(events: list[Event]) -> list[Event]:
     return grouped
 
 
+def _headline_prefix_key(title: str, *, words: int = 4) -> str:
+    parts = normalize_event_title(title).split()
+    return " ".join(parts[:words])
+
+
+def collapse_similar_headline_events(events: list[Event]) -> list[Event]:
+    """Keep one card when headlines share the same opening on the same day."""
+    best: dict[tuple[str, str, str], Event] = {}
+    for event in events:
+        day = event.starts_at.astimezone(MOSCOW_TZ).date().isoformat()
+        key = (day, event.region or "", _headline_prefix_key(event.title))
+        current = best.get(key)
+        if current is None or _rank_event(event) > _rank_event(current):
+            best[key] = event
+
+    seen: set[int] = set()
+    result: list[Event] = []
+    for event in events:
+        day = event.starts_at.astimezone(MOSCOW_TZ).date().isoformat()
+        key = (day, event.region or "", _headline_prefix_key(event.title))
+        winner = best[key]
+        if winner.id in seen:
+            continue
+        seen.add(winner.id)
+        result.append(winner)
+    return result
+
+
 def dedupe_display_events(events: list[Event]) -> list[Event]:
     """Keep the richest single card per show (same title, time, venue)."""
     best: dict[tuple[str, str, str, str, str], Event] = {}
@@ -104,6 +132,13 @@ def dedupe_display_events(events: list[Event]) -> list[Event]:
         seen.add(winner.id)
         result.append(winner)
     return result
+
+
+def polish_public_event_feed(events: list[Event]) -> list[Event]:
+    """Deduplicate showtimes and near-duplicate news headlines for the public feed."""
+    events = dedupe_display_events(events)
+    events = collapse_similar_headline_events(events)
+    return group_events_by_show(events)
 
 
 async def cleanup_duplicate_events(db: AsyncSession) -> int:
