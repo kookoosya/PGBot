@@ -30,7 +30,7 @@ proxy_block() {
 EOF
 }
 
-SITE_CONF="/etc/nginx/sites-available/pgbot-sslip"
+SITE_CONF="/etc/nginx/sites-available/pushkiny-mirror"
 cat > "$SITE_CONF" <<EOF
 server {
     listen 80;
@@ -40,7 +40,8 @@ server {
 $(proxy_block)
 }
 EOF
-ln -sf "$SITE_CONF" /etc/nginx/sites-enabled/pgbot-sslip
+ln -sf "$SITE_CONF" /etc/nginx/sites-enabled/pushkiny-mirror
+rm -f /etc/nginx/sites-enabled/pgbot-sslip 2>/dev/null || true
 
 # Убираем старые конфиги с .ru — сейчас не используем
 rm -f /etc/nginx/sites-enabled/pushkiny-primary 2>/dev/null || true
