@@ -1,4 +1,4 @@
-import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/pushkin";
+import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/mapLinks";
 import { LiterarySectionHead } from "@/components/literary";
 import type { MapRoute } from "@/lib/api";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";

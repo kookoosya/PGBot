@@ -59,5 +59,5 @@ docker compose exec backend alembic upgrade head
 ## Seed
 
 ```bash
-docker compose exec backend python /app/../scripts/seed_db.py
+docker compose exec backend python scripts/seed_db.py
 ```

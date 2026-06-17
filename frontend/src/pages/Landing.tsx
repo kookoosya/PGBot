@@ -8,7 +8,7 @@ import { LandingAlbumSection, LandingQuickNav } from "@/components/landing";
 import { LandingEventsCta } from "@/components/landing/LandingEventsCta";
 import { BRAND } from "@/lib/branding";
 import { LANDING_HERO, LANDING_SECTIONS } from "@/lib/literaryCopy";
-import { VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { VILLAGE_PHOTOS } from "@/lib/villagePhotos";
 import { Link } from "react-router-dom";
 
 const heroPhoto = VILLAGE_PHOTOS[0];

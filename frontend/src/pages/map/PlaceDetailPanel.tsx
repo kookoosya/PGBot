@@ -1,4 +1,4 @@
-import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/pushkin";
+import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/mapLinks";
 import { Button } from "@/components/ui/button";
 import type { ComplaintType, PlaceDetail } from "@/lib/api";
 
