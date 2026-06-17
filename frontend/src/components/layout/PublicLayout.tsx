@@ -4,7 +4,7 @@ import { PageBackdrop } from "@/components/PageBackdrop";
 import { FooterNav } from "@/components/FooterNav";
 import { VkBotLink } from "@/components/VkBotLink";
 import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/index";
 import { BRAND } from "@/lib/branding";
 import { getUserHomePath } from "@/lib/navigation";
 import { useUserAuth } from "@/lib/userAuth";

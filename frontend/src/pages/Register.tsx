@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
-import { api } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
 const ROLES = [
   { value: "administration", label: "Администрация района" },
   { value: "social_service", label: "ЖКХ / управляющая компания" },

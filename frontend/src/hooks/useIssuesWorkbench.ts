@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, Issue } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { Issue } from "@/lib/api/types/issues";
 import { buildIssueWorkbenchQuery, ISSUE_WORKBENCH_PAGE_SIZE, issueWorkbenchTotalPages } from "@/lib/issueWorkbench";
 
 export function useIssuesWorkbench() {

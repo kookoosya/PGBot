@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
-import { api } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
 export function Settings() {
   const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");

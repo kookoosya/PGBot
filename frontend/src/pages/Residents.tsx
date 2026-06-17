@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api, User } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { User } from "@/lib/api/types/auth";
 import { formatDate } from "@/lib/utils";
 
 export function Residents() {

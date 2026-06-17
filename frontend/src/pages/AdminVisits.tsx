@@ -8,8 +8,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { api, VisitStats } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { VisitStats } from "@/lib/api/types/public";
 export function AdminVisits() {
   const [stats, setStats] = useState<VisitStats | null>(null);
   const [error, setError] = useState("");

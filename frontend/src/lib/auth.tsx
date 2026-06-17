@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { api, User } from "./api";
-
+import { api } from "@/lib/api/index";
+import type { User } from "@/lib/api/types/auth";
 const OWNER_DENIED = "Личная панель только для владельца сайта";
 
 interface AuthContextType {

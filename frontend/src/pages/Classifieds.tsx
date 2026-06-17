@@ -10,7 +10,8 @@ import {
   PostSubmitPanel,
 } from "@/components/literary";
 import { Input } from "@/components/ui/input";
-import { api, ClassifiedAd } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { ClassifiedAd } from "@/lib/api/types/classifieds";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { CLASSIFIED_FORM_INITIAL, CLASSIFIEDS_DRAFT_KEY, type ClassifiedAdFormState } from "@/lib/classifiedForm";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";

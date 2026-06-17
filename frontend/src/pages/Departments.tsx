@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api, Department } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { Department } from "@/lib/api/types/issues";
 export function Departments() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [showForm, setShowForm] = useState(false);

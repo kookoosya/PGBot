@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { api, ClassifiedPending } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { ClassifiedPending } from "@/lib/api/types/classifieds";
 export function ClassifiedModeration() {
   const [items, setItems] = useState<ClassifiedPending[]>([]);
   const [loading, setLoading] = useState(true);

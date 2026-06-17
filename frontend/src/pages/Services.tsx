@@ -9,7 +9,10 @@ import {
   LiteraryServiceCard,
 } from "@/components/literary";
 import { Input } from "@/components/ui/input";
-import { api, CatalogItem, ClassifiedAd, ServiceProvider, TimeSlot } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { ClassifiedAd } from "@/lib/api/types/classifieds";
+import type { CatalogItem } from "@/lib/api/types/places";
+import type { ServiceProvider, TimeSlot } from "@/lib/api/types/services";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 const CATALOG_ICONS: Record<string, string> = {

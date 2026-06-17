@@ -1,5 +1,5 @@
-import type { EventRegion, PublicEvent, TodayEventSnippet } from "@/lib/api";
-
+import type { EventRegion, PublicEvent } from "@/lib/api/types/events";
+import type { TodayEventSnippet } from "@/lib/api/types/public";
 export type ShowGroupable = {
   id: number;
   title: string;

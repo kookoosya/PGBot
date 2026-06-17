@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
-import { api } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
 export function RegisterOrganization() {
   const [form, setForm] = useState({
     organization_name: "",

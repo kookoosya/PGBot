@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import type { Issue } from "@/lib/api";
+import type { Issue } from "@/lib/api/types/issues";
 import { LiteraryIssueCard } from "./LiteraryIssueCard";
 
 const baseIssue: Issue = {

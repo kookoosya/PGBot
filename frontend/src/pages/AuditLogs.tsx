@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { api, AuditLog } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { AuditLog } from "@/lib/api/types/admin";
 import { formatDate } from "@/lib/utils";
 
 export function AuditLogs() {

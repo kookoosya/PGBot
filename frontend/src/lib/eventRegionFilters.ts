@@ -1,5 +1,4 @@
-import type { EventRegion } from "@/lib/api";
-
+import type { EventRegion } from "@/lib/api/types/events";
 export type RegionFilter = "all" | EventRegion;
 
 export const EVENT_REGION_FILTERS: { id: RegionFilter; label: string }[] = [

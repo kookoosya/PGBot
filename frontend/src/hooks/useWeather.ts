@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type WeatherResponse } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { WeatherResponse } from "@/lib/api/types/public";
 const FALLBACK_REFRESH_MS = 30 * 60 * 1000;
 
 let sharedData: WeatherResponse | null = null;

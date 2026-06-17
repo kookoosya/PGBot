@@ -2,8 +2,7 @@ import { useEffect, useRef } from "react";
 import { useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
-import type { MapRoute, Place } from "@/lib/api";
-
+import type { MapRoute, Place } from "@/lib/api/types/places";
 import { makeIcon, makeRouteStopIcon } from "./icons";
 
 export function MapEvents({

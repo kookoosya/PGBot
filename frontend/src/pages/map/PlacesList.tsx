@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import type { Place } from "@/lib/api";
-
+import type { Place } from "@/lib/api/types/places";
 import { CATEGORY_ICONS } from "./constants";
 
 type PlacesListProps = {

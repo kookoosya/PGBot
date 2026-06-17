@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { User } from "./api";
+import type { User } from "@/lib/api/types/auth";
 import {
   MAIN_SECTIONS,
   PORTAL_NAV_ITEMS,

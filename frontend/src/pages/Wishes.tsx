@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/index";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 

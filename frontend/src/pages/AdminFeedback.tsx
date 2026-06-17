@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, FeedbackItem } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { FeedbackItem } from "@/lib/api/types/public";
 export function AdminFeedback() {
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [total, setTotal] = useState(0);

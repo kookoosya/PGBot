@@ -5,8 +5,7 @@ import { LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary"
 import { Input } from "@/components/ui/input";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
-import { api } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const copy = PAGE_SECTIONS.provider;
 

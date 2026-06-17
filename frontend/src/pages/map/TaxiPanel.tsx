@@ -1,6 +1,6 @@
 import { telHref } from "@/components/VkBotLink";
 import { LiterarySectionHead } from "@/components/literary";
-import type { TaxiService } from "@/lib/api";
+import type { TaxiService } from "@/lib/api/types/places";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type TaxiPanelProps = {

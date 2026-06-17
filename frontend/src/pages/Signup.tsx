@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/index";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 

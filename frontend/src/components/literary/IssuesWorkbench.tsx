@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Issue } from "@/lib/api";
+import type { Issue } from "@/lib/api/types/issues";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { ISSUE_WORKBENCH_STATUSES } from "@/lib/issueWorkbench";
 import { formatDate, STATUS_LABELS } from "@/lib/utils";

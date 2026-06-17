@@ -11,7 +11,8 @@ import {
 } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
-import { api, ClassifiedAd } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { ClassifiedAd } from "@/lib/api/types/classifieds";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { JOBS_DRAFT_KEY, JOBS_FORM_INITIAL, type ClassifiedAdFormState } from "@/lib/classifiedForm";
 import { JOB_CATEGORY_IDS, JOB_FORM_HINTS, LOCAL_EMPLOYERS } from "@/lib/jobs";

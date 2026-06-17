@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { api, EventSourceHealth, EventSourceOverviewItem, EventSyncResult } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { EventSourceHealth, EventSourceOverviewItem, EventSyncResult } from "@/lib/api/types/events";
 import { formatSyncAge } from "@/lib/formatSyncAge";
 
 function healthLabel(health: EventSourceHealth): string {

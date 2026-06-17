@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/index";
 import type { PublicInfo } from "@/lib/api/types";
 import { PRIMARY_SITE_URL } from "@/lib/siteUrl";
 

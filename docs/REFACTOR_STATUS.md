@@ -6,6 +6,13 @@
 
 ---
 
+## P26 — P1.5 api barrel removal ✅ (2026-06-17)
+
+1. ✅ Удалён `lib/api.ts` — импорты из `@/lib/api/index` и `@/lib/api/types/*`
+2. ✅ ~65 файлов обновлены
+
+---
+
 ## P25 — P1.4 verification package ✅ (2026-06-17)
 
 1. ✅ `verification_service.py` → `verification/` (schemas, register, moderation, responses)

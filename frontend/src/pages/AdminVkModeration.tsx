@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { api, VkModerationLog, VkModerationState } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { VkModerationLog, VkModerationState } from "@/lib/api/types/admin";
 export function AdminVkModeration() {
   const [states, setStates] = useState<VkModerationState[]>([]);
   const [logs, setLogs] = useState<VkModerationLog[]>([]);

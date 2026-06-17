@@ -1,5 +1,4 @@
-import type { Place, PlaceDetail } from "@/lib/api";
-
+import type { Place, PlaceDetail } from "@/lib/api/types/places";
 export function RatingBadge({ place }: { place: Place | PlaceDetail }) {
   if (place.display_rating <= 0) return <span className="org-rating-none">Нет оценок</span>;
   return (

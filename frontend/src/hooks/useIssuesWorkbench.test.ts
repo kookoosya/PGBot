@@ -9,7 +9,7 @@ const getIssues = vi.fn();
 const getIssue = vi.fn();
 const updateIssueStatus = vi.fn();
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/lib/api/index", () => ({
   api: {
     getIssues: (...args: unknown[]) => getIssues(...args),
     getIssue: (...args: unknown[]) => getIssue(...args),

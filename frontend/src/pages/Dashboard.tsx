@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api, Issue, Statistics, VisitStats } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { Statistics } from "@/lib/api/types/admin";
+import type { Issue } from "@/lib/api/types/issues";
+import type { VisitStats } from "@/lib/api/types/public";
 import { formatDate, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 import { AlertCircle, CheckCircle, Clock, FileText } from "lucide-react";
 

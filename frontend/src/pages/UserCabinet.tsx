@@ -4,7 +4,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader, LiteraryIssueCard } from "@/components/literary";
 import { VkBotBanner } from "@/components/VkBotLink";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
-import { api, ClassifiedMineAd, Issue } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { ClassifiedMineAd } from "@/lib/api/types/classifieds";
+import type { Issue } from "@/lib/api/types/issues";
 import { isOfficialUser, useUserAuth } from "@/lib/userAuth";
 import { ISSUE_ACTIVE_STATUSES } from "@/lib/utils";
 
