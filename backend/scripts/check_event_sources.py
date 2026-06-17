@@ -50,7 +50,7 @@ async def main() -> None:
         "vk_wall_probe_posts": probe_posts,
         "timepad_health": timepad_health_status(),
         "proculture_health": proculture_health_status(),
-        "status": health if health != "group_token_only" else "needs_vk_events_token",
+        "status": "needs_vk_events_token" if health == "needs_token" else health,
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 

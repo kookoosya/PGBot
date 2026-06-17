@@ -11,14 +11,14 @@ from app.services.event_sources.admin_overview import (
 
 
 def test_source_health_mapping():
-    health = {"vk_wall": "group_token_only", "timepad": "needs_token", "proculture": "ready"}
-    assert _source_health("vk", health) == "group_token_only"
+    health = {"vk_wall": "needs_token", "timepad": "needs_token", "proculture": "ready"}
+    assert _source_health("vk", health) == "needs_token"
     assert _source_health("timepad", health) == "needs_token"
     assert _source_health("pushkinland", health) == "ready"
 
 
-def test_token_hint_for_vk_group_token():
-    hint = _token_hint("vk", "group_token_only")
+def test_token_hint_for_vk_needs_token():
+    hint = _token_hint("vk", "needs_token")
     assert hint is not None
     assert "VK_EVENTS_TOKEN" in hint
 

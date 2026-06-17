@@ -74,7 +74,7 @@ export interface EventSyncResult {
   errors: string[];
 }
 
-export type EventSourceHealth = "ready" | "group_token_only" | "needs_token";
+export type EventSourceHealth = "ready" | "needs_token";
 
 export interface EventSourceOverviewItem {
   id: string;
