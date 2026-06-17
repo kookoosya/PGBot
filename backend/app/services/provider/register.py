@@ -1,6 +1,6 @@
 """Provider registration."""
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.password_policy import validate_password
@@ -21,9 +21,10 @@ async def register_provider(db: AsyncSession, data: ProviderRegisterRequest) -> 
     if not ok:
         raise ProviderValidationError(msg)
 
-    existing = await db.execute(select(User).where(
-        (User.username == data.username) | (User.email == data.email)
-    ))
+    filters = [User.username == data.username]
+    if data.email:
+        filters.append(User.email == data.email)
+    existing = await db.execute(select(User).where(or_(*filters)))
     if existing.scalar_one_or_none():
         raise ProviderValidationError("Логин или email уже заняты")
 
