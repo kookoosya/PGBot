@@ -2,7 +2,17 @@
 
 **Прод:** https://192-210-213-135.sslip.io  
 **Деплой:** `bash scripts/remote-deploy.sh` (пароль в `.deploy.env` или `VPS_PASSWORD`)  
-**Обновлено:** 2026-06-16
+**Обновлено:** 2026-06-17
+
+---
+
+## P22 — P0 быстрая чистка ✅ (2026-06-17)
+
+1. ✅ `pushkin.ts` → `mapLinks.ts` + `villagePhotos.ts` (удалены мёртвые цитаты/стихи)
+2. ✅ Убран deprecated `SITE_URL` из `siteUrl.ts`
+3. ✅ `scripts/seed_db.py` — thin wrapper → `backend/scripts/seed_db.py`
+4. ✅ Убран дубль Google Fonts CDN (`index.html`; шрифты через `@fontsource` в `main.tsx`)
+5. ⏭ PR #20–#28 — закрыть вручную на GitHub
 
 ---
 
@@ -83,7 +93,6 @@
 
 ### Прочее лишнее
 - Черновые PR #20–#28 — закрыть вручную на GitHub (bot без прав close)
-- `navigation.ts` — `QUICK_NAV_*` без CSS и без потребителей
 - `portalCopyShared` — `PORTAL_COPY_LINKS`, `PORTAL_COPY_VK` покрыты Vitest
 - ~~`Signup.tsx` — хардкод вместо `literaryCopy`~~ → `PAGE_SECTIONS.signup`
 

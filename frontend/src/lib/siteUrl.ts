@@ -6,6 +6,3 @@ export function siteOrigin(): string {
   if (typeof window !== "undefined") return window.location.origin;
   return PRIMARY_SITE_URL;
 }
-
-/** @deprecated Предпочитайте useSiteInfo() или resolveSiteUrl() */
-export const SITE_URL = PRIMARY_SITE_URL;

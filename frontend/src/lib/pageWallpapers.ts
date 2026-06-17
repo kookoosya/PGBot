@@ -1,4 +1,4 @@
-import { VILLAGE_PHOTOS } from "@/lib/pushkin";
+import { VILLAGE_PHOTOS } from "@/lib/villagePhotos";
 
 export type PageWallpaper = {
   webp: string;
