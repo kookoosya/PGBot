@@ -26,18 +26,18 @@ async def test_issue_reopen_and_archive_via_http(
     resolved = await api_client.patch(
         f"/api/v1/issues/{issue.id}/status",
         headers=auth_headers_for(official),
-        json={"status": "resolved", "resolution_text": "Проблема устранена"},
+        json={"status": "RESOLVED", "resolution_text": "Проблема устранена"},
     )
     assert resolved.status_code == 200
-    assert resolved.json()["status"] == "resolved"
+    assert resolved.json()["status"] == "RESOLVED"
 
     reopened = await api_client.patch(
         f"/api/v1/issues/{issue.id}/reopen",
         headers=auth_headers_for(official),
-        json={"target_status": "under_review"},
+        json={"target_status": "UNDER_REVIEW"},
     )
     assert reopened.status_code == 200
-    assert reopened.json()["status"] == "under_review"
+    assert reopened.json()["status"] == "UNDER_REVIEW"
     assert reopened.json()["resolved_at"] is None
 
     archived = await api_client.patch(
@@ -45,7 +45,7 @@ async def test_issue_reopen_and_archive_via_http(
         headers=auth_headers_for(official),
     )
     assert archived.status_code == 200
-    assert archived.json()["status"] == "archived"
+    assert archived.json()["status"] == "ARCHIVED"
 
 
 @pytest.mark.asyncio
@@ -59,6 +59,6 @@ async def test_resident_cannot_update_issue_status(
     response = await api_client.patch(
         f"/api/v1/issues/{issue.id}/status",
         headers=auth_headers_for(resident),
-        json={"status": "resolved", "resolution_text": "Сам решил"},
+        json={"status": "RESOLVED", "resolution_text": "Сам решил"},
     )
     assert response.status_code == 403

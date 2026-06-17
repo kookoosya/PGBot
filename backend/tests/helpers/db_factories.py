@@ -147,7 +147,8 @@ async def create_event(
 def auth_headers_for(user: User) -> dict[str, str]:
     pwd_anchor = user.password_changed_at or user.created_at
     pwd_ts = int(pwd_anchor.timestamp()) if pwd_anchor else 0
+    role_name = user.role.name.value if hasattr(user.role.name, "value") else user.role.name
     token = create_access_token(
-        {"sub": str(user.id), "role": user.role.name.value, "pwd": pwd_ts}
+        {"sub": str(user.id), "role": role_name, "pwd": pwd_ts}
     )
     return {"Authorization": f"Bearer {token}"}

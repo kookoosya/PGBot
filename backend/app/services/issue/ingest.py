@@ -22,6 +22,7 @@ from app.services.telegram import notify_about_issue
 from app.services.vk.client import send_message
 
 from .dedup import handle_deduplication
+from .category import normalize_issue_category
 from .gemini_analysis import analyze_issue_with_context
 from .residents import get_or_create_resident, get_or_create_web_resident
 
@@ -93,7 +94,7 @@ async def _create_issue_from_analysis(
             title=analysis.summary_or(text[:100]),
             description=text,
             status=IssueStatus.NEW,
-            category=category,
+            category=normalize_issue_category(category),
             priority=priority or analysis.resolved_priority,
             address=address,
             resident_id=resident.id,

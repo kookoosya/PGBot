@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import UserRole
-from tests.helpers.db_factories import auth_headers_for, create_owner_user, create_user
+from tests.helpers.db_factories import auth_headers_for, create_owner_user, create_user, unique_phone
 
 pytestmark = pytest.mark.postgres
 
@@ -24,7 +24,7 @@ async def test_create_classified_via_api(
         "category": "firewood",
         "title": "Дрова берёзовые колотые",
         "description": "Сухие дрова, самовывоз с участка у НКЦ",
-        "phone": "+79005556677",
+        "phone": unique_phone(),
         "author_name": "Сосед",
         "agree_rules": True,
     }
@@ -49,13 +49,14 @@ async def test_moderate_classified_approve_via_api(
     db_session: AsyncSession,
 ):
     owner = await create_owner_user(db_session)
+    phone = unique_phone()
     create_resp = await api_client.post(
         "/api/v1/classifieds",
         json={
             "category": "services",
             "title": "Покос травы аккуратно",
             "description": "Покошу участок, вывезу траву по договорённости",
-            "phone": "+79007778899",
+            "phone": phone,
             "author_name": "Мастер",
             "agree_rules": True,
         },
@@ -93,7 +94,7 @@ async def test_moderate_classified_reject_via_api(
             "category": "firewood",
             "title": "Дрова сомнительные",
             "description": "Описание для отклонения модератором",
-            "phone": "+79001112233",
+            "phone": unique_phone(),
             "author_name": "Автор",
             "agree_rules": True,
         },
@@ -131,7 +132,7 @@ async def test_moderate_classified_requires_owner(
             "category": "services",
             "title": "Услуга для модерации",
             "description": "Только владелец может одобрить",
-            "phone": "+79004445566",
+            "phone": unique_phone(),
             "author_name": "Мастер",
             "agree_rules": True,
         },
