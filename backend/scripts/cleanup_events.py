@@ -12,7 +12,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
-from app.services.event_dedupe_service import cleanup_duplicate_events, unpublish_stale_demo_cinema
+from app.services.event_dedupe_service import (
+    cleanup_duplicate_events,
+    unpublish_past_external_events,
+    unpublish_stale_demo_cinema,
+)
 from app.services.event_enrichment_batch import (
     enrich_missing_posters,
     enrich_stale_events,
@@ -28,12 +32,13 @@ async def main() -> None:
     async with Session() as db:
         demos = await unpublish_stale_demo_cinema(db)
         removed = await cleanup_duplicate_events(db)
+        stale = await unpublish_past_external_events(db)
         enriched = await enrich_stale_events(db)
         refreshed = await refresh_cinema_posters(db, limit=80)
         posters = await enrich_missing_posters(db, limit=100)
         await db.commit()
     print(
-        f"demo_cinema={demos} dupes={removed} enriched={enriched} "
+        f"demo_cinema={demos} dupes={removed} past={stale} enriched={enriched} "
         f"refreshed={refreshed} posters={posters}"
     )
 

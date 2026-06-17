@@ -223,11 +223,12 @@ async def refresh_orbilet_posters(db: AsyncSession) -> int:
     by_session: dict[str, str] = {}
     by_title: dict[str, str] = {}
     for item in orbilet_items:
-        if not item.poster_url:
+        poster_url = getattr(item, "poster_url", None)
+        if not poster_url:
             continue
-        by_session[item.source_url.rstrip("/")] = item.poster_url
+        by_session[item.source_url.rstrip("/")] = poster_url
         key = " ".join(item.title.lower().split())
-        by_title[key] = item.poster_url
+        by_title[key] = poster_url
 
     result = await db.execute(
         select(Event).where(
