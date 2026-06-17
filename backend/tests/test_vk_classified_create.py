@@ -10,15 +10,6 @@ from tests.conftest import postgres_available
 pytestmark = pytest.mark.postgres
 
 
-@pytest.fixture
-async def db_session():
-    from app.database import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
-
-
 @pytest.mark.asyncio
 async def test_create_classified_ad_from_vk_success(db_session: AsyncSession):
     result = await create_classified_ad_from_vk(

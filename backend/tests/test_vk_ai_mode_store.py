@@ -9,15 +9,6 @@ from tests.conftest import postgres_available
 pytestmark = pytest.mark.postgres
 
 
-@pytest.fixture
-async def db_session():
-    from app.database import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
-
-
 async def _cleanup_peer(db: AsyncSession, peer_id: int) -> None:
     await exit_ai_mode(db, peer_id)
     await db.flush()

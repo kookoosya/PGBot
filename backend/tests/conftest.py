@@ -22,6 +22,9 @@ os.environ.setdefault("ISSUE_RATE_LIMIT", "10000/hour")
 os.environ.setdefault("LOGIN_RATE_LIMIT", "10000/minute")
 
 from app.main import app  # noqa: E402
+from app.core.rate_limit import limiter
+
+limiter.enabled = False
 
 _DB_OK: bool | None = None
 
