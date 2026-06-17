@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  absoluteGarnectEventsUrl,
   FESTIVAL_GARNECT,
   garnectEventsPath,
+  GARNECT_FESTIVAL_TITLE,
   isGarnectFestivalFilter,
   parseFestivalParam,
 } from "./festivalFilters";
@@ -21,5 +23,15 @@ describe("festivalFilters", () => {
   it("builds events paths", () => {
     expect(garnectEventsPath()).toBe("/events?festival=garnect");
     expect(garnectEventsPath(true)).toBe("/vk/events?festival=garnect");
+  });
+
+  it("builds absolute garnect URL", () => {
+    expect(absoluteGarnectEventsUrl("https://example.test")).toBe(
+      "https://example.test/events?festival=garnect",
+    );
+  });
+
+  it("exports festival title", () => {
+    expect(GARNECT_FESTIVAL_TITLE).toBe("Бугровский гарнец");
   });
 });

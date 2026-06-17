@@ -56,6 +56,7 @@ def build_public_info() -> dict:
             "classifieds": f"{site}/classifieds",
             "classifieds_new": f"{site}/classifieds?new=1",
             "events": f"{site}/events",
+            "events_garnect": f"{site}/events?festival=garnect",
             "cabinet": f"{site}/cabinet",
             "map": f"{site}/map",
             "jobs": f"{site}/jobs",

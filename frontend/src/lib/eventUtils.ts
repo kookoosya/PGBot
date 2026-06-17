@@ -320,16 +320,20 @@ export function formatExtraSessions(sessions: Pick<ShowGroupable, "starts_at_lab
   return `Ещё сеансы: ${labels.join(", ")}${tail}`;
 }
 
-export async function shareEventUrl(title: string): Promise<string | null> {
-  const url = window.location.href;
+export async function sharePageUrl(title: string, url?: string): Promise<string | null> {
+  const target = url ?? window.location.href;
   try {
     if (navigator.share) {
-      await navigator.share({ title: `${title} — Пушкинские Горы`, url });
+      await navigator.share({ title, url: target });
       return null;
     }
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(target);
     return "Ссылка скопирована";
   } catch {
     return "Не удалось поделиться";
   }
+}
+
+export async function shareEventUrl(title: string): Promise<string | null> {
+  return sharePageUrl(`${title} — Пушкинские Горы`);
 }

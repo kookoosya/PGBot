@@ -3,15 +3,18 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
-import { garnectEventsPath, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
-import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram } from "@/lib/eventUtils";
+import { absoluteGarnectEventsUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
+import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import { siteOrigin } from "@/lib/siteUrl";
 
 const copy = PAGE_SECTIONS.events;
 const garnectCopy = {
-  title: "Бугровский гарнец",
+  title: GARNECT_FESTIVAL_TITLE,
   lead: "Программа фестиваля в Пушкинских Горах",
 };
 
@@ -29,6 +32,11 @@ export function EventsPage() {
   const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => parseRegionParam(searchParams.get("region")));
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [shareMsg, setShareMsg] = useState("");
+  const { info } = useSiteInfo();
+  const garnectShareUrl = absoluteGarnectEventsUrl(info?.site_url ?? siteOrigin());
+
+  useDocumentTitle(garnectOnly ? garnectCopy.title : copy.title);
 
   useEffect(() => {
     setLoading(true);
@@ -106,6 +114,14 @@ export function EventsPage() {
   const showPskovOnlyBlock = !garnectOnly && regionFilter === "pskov" && pskovEvents.length > 0;
   const showGarnectOnlyBlock = garnectOnly && garnectProgram.length > 0;
 
+  const shareGarnect = async () => {
+    const msg = await sharePageUrl(`${GARNECT_FESTIVAL_TITLE} — Пушкинские Горы`, garnectShareUrl);
+    if (msg) {
+      setShareMsg(msg);
+      window.setTimeout(() => setShareMsg(""), 2500);
+    }
+  };
+
   const cinemaBlock = (
     <CinemaSpotlight linkTo="/events" linkLabel="Все сеансы →" empty={cinemaEvents.length === 0}>
       {cinemaEvents.length > 0 ? (
@@ -141,7 +157,15 @@ export function EventsPage() {
         icon={garnectOnly ? "🎭" : "📅"}
         title={garnectOnly ? garnectCopy.title : copy.title}
         subtitle={garnectOnly ? garnectCopy.lead : copy.lead}
-      />
+      >
+        {garnectOnly && (
+          <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={shareGarnect}>
+            Поделиться
+          </button>
+        )}
+      </PageHeader>
+
+      {shareMsg && <p className="alert-success mb-4">{shareMsg}</p>}
 
       <section className="page-panel page-panel--gold mb-6">
         <LiterarySectionHead
@@ -251,7 +275,7 @@ export function EventsPage() {
           {showGarnectOnlyBlock && (
             <section className="page-panel page-panel--forest">
               <div className="events-festival-program-wrap">
-                <FestivalProgramBlock events={garnectProgram} />
+                <FestivalProgramBlock events={garnectProgram} shareUrl={garnectShareUrl} />
               </div>
             </section>
           )}
@@ -266,7 +290,11 @@ export function EventsPage() {
               <ol className="events-grid events-grid--wide">
                 {garnectProgram.length > 0 && (
                   <li className="events-festival-program-wrap">
-                    <FestivalProgramBlock events={garnectProgram} linkTo={garnectEventsPath(isVkEvents)} />
+                    <FestivalProgramBlock
+                      events={garnectProgram}
+                      linkTo={garnectEventsPath(isVkEvents)}
+                      shareUrl={garnectShareUrl}
+                    />
                   </li>
                 )}
                 {pushkinOtherEvents.map((event) => (

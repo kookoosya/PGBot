@@ -807,6 +807,13 @@
     text-decoration: underline;
   }
 
+  .events-festival-program__share-msg {
+    margin: 0.35rem 0 0;
+    padding: 0 0.25rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--forest));
+  }
+
   .events-festival-program__toggle {
     flex-shrink: 0;
     font-size: 0.8125rem;

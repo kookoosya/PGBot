@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { EventCardEvent } from "@/lib/eventUtils";
-import { formatFestivalDateRange, FESTIVAL_COMPACT_LIST_THRESHOLD, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
+import { formatFestivalDateRange, FESTIVAL_COMPACT_LIST_THRESHOLD, isFestivalImminent, pluralPerformances, sharePageUrl } from "@/lib/eventUtils";
+import { GARNECT_FESTIVAL_TITLE } from "@/lib/festivalFilters";
 import { EventCard } from "./EventCard";
 import { FestivalProgramSchedule } from "./FestivalProgramSchedule";
 
@@ -11,22 +12,35 @@ interface FestivalProgramBlockProps {
   kicker?: string;
   linkTo?: string;
   linkLabel?: string;
+  shareUrl?: string;
 }
 
 export function FestivalProgramBlock({
   events,
-  title = "Бугровский гарнец",
+  title = GARNECT_FESTIVAL_TITLE,
   kicker = "🎭 Фестиваль",
   linkTo,
   linkLabel = "Вся программа →",
+  shareUrl,
 }: FestivalProgramBlockProps) {
   const dateRange = useMemo(() => formatFestivalDateRange(events), [events]);
   const isImminent = useMemo(() => isFestivalImminent(events, 3), [events]);
   const [open, setOpen] = useState(isImminent);
+  const [shareMsg, setShareMsg] = useState("");
 
   useEffect(() => {
     if (isImminent) setOpen(true);
   }, [isImminent]);
+
+  const share = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!shareUrl) return;
+    const msg = await sharePageUrl(`${GARNECT_FESTIVAL_TITLE} — Пушкинские Горы`, shareUrl);
+    if (msg) {
+      setShareMsg(msg);
+      window.setTimeout(() => setShareMsg(""), 2500);
+    }
+  };
 
   if (events.length < 2) return null;
 
@@ -59,9 +73,15 @@ export function FestivalProgramBlock({
               {linkLabel}
             </Link>
           )}
+          {shareUrl && (
+            <button type="button" className="events-festival-program__link" onClick={share}>
+              Поделиться
+            </button>
+          )}
         </div>
         <span className="events-festival-program__toggle" aria-hidden />
       </summary>
+      {shareMsg && <p className="events-festival-program__share-msg">{shareMsg}</p>}
       {useCompactList ? (
         <div className="events-festival-program__body">
           <FestivalProgramSchedule events={events} />

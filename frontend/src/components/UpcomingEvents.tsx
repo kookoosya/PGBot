@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { ctaArrow, CTA } from "@/lib/cta";
 import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { isRealCinemaEvent, groupEventsByShow, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
-import { garnectEventsPath } from "@/lib/festivalFilters";
+import { absoluteGarnectEventsUrl, garnectEventsPath } from "@/lib/festivalFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
+import { siteOrigin } from "@/lib/siteUrl";
 import { useToday } from "@/hooks/useToday";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,8 @@ interface UpcomingEventsProps {
 
 export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const isLanding = variant === "landing";
+  const { info } = useSiteInfo();
+  const garnectShareUrl = absoluteGarnectEventsUrl(info?.site_url ?? siteOrigin());
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
   const { program: landingGarnect, rest: landingPushkinRest, loading: landingGarnectLoading } =
@@ -142,6 +146,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
                 <FestivalProgramBlock
                   events={garnectProgram}
                   linkTo={isLanding ? garnectEventsPath() : undefined}
+                  shareUrl={isLanding ? garnectShareUrl : undefined}
                 />
               </div>
             )}
