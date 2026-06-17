@@ -180,14 +180,14 @@ describe("isFestivalImminent", () => {
 describe("festival promo labels", () => {
   it("uses live kicker when a performance is today", () => {
     const today = new Date().toISOString();
-    expect(festivalPromoKicker([{ starts_at: today }])).toContain("Сейчас");
-    expect(festivalBadgeLabel([{ starts_at: today }])).toBe("Идёт");
+    expect(festivalPromoKicker([{ starts_at: today, starts_at_label: "сегодня" }])).toContain("Сейчас");
+    expect(festivalBadgeLabel([{ starts_at: today, starts_at_label: "сегодня" }])).toBe("Идёт");
   });
 
   it("uses soon badge before opening day", () => {
     const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
-    expect(festivalPromoKicker([{ starts_at: soon }])).toContain("выходных");
-    expect(festivalBadgeLabel([{ starts_at: soon }])).toBe("Скоро");
+    expect(festivalPromoKicker([{ starts_at: soon, starts_at_label: "скоро" }])).toContain("выходных");
+    expect(festivalBadgeLabel([{ starts_at: soon, starts_at_label: "скоро" }])).toBe("Скоро");
   });
 });
 

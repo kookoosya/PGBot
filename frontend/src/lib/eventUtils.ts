@@ -248,7 +248,9 @@ export function isFestivalImminent(
 }
 
 /** Kicker text for festival promo blocks on the landing and hero banner. */
-export function festivalPromoKicker(events: Pick<ShowGroupable, "starts_at">[]): string {
+export function festivalPromoKicker(
+  events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
+): string {
   const today = new Date().toISOString().slice(0, 10);
   if (events.some((event) => event.starts_at?.slice(0, 10) === today)) {
     return "🎭 Сейчас на фестивале";
@@ -257,7 +259,9 @@ export function festivalPromoKicker(events: Pick<ShowGroupable, "starts_at">[]):
 }
 
 /** Badge label: «Скоро» before opening day, «Идёт» during the festival. */
-export function festivalBadgeLabel(events: Pick<ShowGroupable, "starts_at">[]): string | null {
+export function festivalBadgeLabel(
+  events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
+): string | null {
   if (!isFestivalImminent(events)) return null;
   const today = new Date().toISOString().slice(0, 10);
   if (events.some((event) => event.starts_at?.slice(0, 10) === today)) {

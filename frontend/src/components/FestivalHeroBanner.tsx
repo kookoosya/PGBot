@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
-import { formatFestivalDateRange, festivalBadgeLabel, festivalPromoKicker, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
+import { formatFestivalDateRange, festivalPromoKicker, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
 import { garnectEventsPath } from "@/lib/festivalFilters";
 
 export function FestivalHeroBanner() {
