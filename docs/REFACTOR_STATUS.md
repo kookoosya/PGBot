@@ -6,6 +6,14 @@
 
 ---
 
+## P29 — P2.3 vk/commands/handlers split ✅ (2026-06-17)
+
+1. ✅ `vk/commands/handlers.py` → пакет `vk/commands/handlers/` (welcome, ai, subscriptions, classifieds, map_nav, issues, portal, common)
+2. ✅ `commands/__init__.py` — без изменений (`from . import handlers`)
+3. ✅ `test_vk_unsubscribe_command` — mock → `handlers.subscriptions.unsubscribe_peer`
+
+---
+
 ## P28 — P2.2 vk/flows split ✅ (2026-06-17)
 
 1. ✅ `vk/flows.py` → пакет `vk/flows/` (common, classified, wish, map_report, listings, router)

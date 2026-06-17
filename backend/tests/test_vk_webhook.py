@@ -186,7 +186,7 @@ async def test_vk_complaint_routes_to_issue_processor(
 @patch("app.api.v1.vk_webhook.route_ai_message", new_callable=AsyncMock, return_value=False)
 @patch("app.api.v1.vk_webhook.handle_flow_message", new_callable=AsyncMock, return_value=None)
 @patch("app.services.vk.helpers.send_message", new_callable=AsyncMock)
-@patch("app.services.vk.commands.handlers.unsubscribe_peer", new_callable=AsyncMock, return_value="Вы отписаны")
+@patch("app.services.vk.commands.handlers.subscriptions.unsubscribe_peer", new_callable=AsyncMock, return_value="Вы отписаны")
 @patch("app.api.v1.vk_webhook.process_incoming_moderation", new_callable=AsyncMock)
 async def test_vk_unsubscribe_command(
     mock_mod, mock_unsub, _send, _flow, _ai, _free, vk_client: AsyncClient
