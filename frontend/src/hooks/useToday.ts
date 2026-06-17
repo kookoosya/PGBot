@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type EventRegion, type TodayResponse } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { EventRegion } from "@/lib/api/types/events";
+import type { TodayResponse } from "@/lib/api/types/public";
 const FALLBACK_REFRESH_MS = 5 * 60 * 1000;
 
 type CacheEntry = {

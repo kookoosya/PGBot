@@ -8,8 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ClassifiedMarketingStats } from "@/lib/api";
-
+import type { ClassifiedMarketingStats } from "@/lib/api/types/classifieds";
 const ROI_COLORS = ["#b45309", "#15803d", "#1d4ed8", "#7c3aed"];
 
 interface Props {

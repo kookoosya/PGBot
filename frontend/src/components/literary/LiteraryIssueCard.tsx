@@ -1,6 +1,6 @@
 import type { ReactNode, Ref } from "react";
 import { Link } from "react-router-dom";
-import type { Issue } from "@/lib/api";
+import type { Issue } from "@/lib/api/types/issues";
 import { formatDate, issueStatusHint, STATUS_COLORS, STATUS_LABELS } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 

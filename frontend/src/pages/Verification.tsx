@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api, PendingProvider, VerificationRequest } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { PendingProvider } from "@/lib/api/types/admin";
+import type { VerificationRequest } from "@/lib/api/types/auth";
 import { formatDate } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {

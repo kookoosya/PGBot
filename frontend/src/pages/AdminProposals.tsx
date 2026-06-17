@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { api, CatalogItemAdmin, CatalogItemCreate } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { CatalogItemAdmin, CatalogItemCreate } from "@/lib/api/types/places";
 const CATEGORIES = [
   { value: "garden", label: "Огород / дача" },
   { value: "firewood", label: "Дрова" },

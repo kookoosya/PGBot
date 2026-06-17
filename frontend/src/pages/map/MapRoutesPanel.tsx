@@ -1,6 +1,6 @@
 import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/mapLinks";
 import { LiterarySectionHead } from "@/components/literary";
-import type { MapRoute } from "@/lib/api";
+import type { MapRoute } from "@/lib/api/types/places";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type MapRoutesPanelProps = {

@@ -1,4 +1,4 @@
-import { User } from "./api";
+import type { User } from "@/lib/api/types/auth";
 import { isOfficialUser } from "./userAuth";
 
 /** Куда вести пользователя после входа или по клику на имя в шапке */

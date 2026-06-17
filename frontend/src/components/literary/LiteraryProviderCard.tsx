@@ -1,5 +1,4 @@
-import type { ServiceProvider } from "@/lib/api";
-
+import type { ServiceProvider } from "@/lib/api/types/services";
 const STATUS: Record<string, { label: string; className: string }> = {
   free: { label: "🟢 Свободен", className: "literary-provider-status--free" },
   busy: { label: "🔴 Занят", className: "literary-provider-status--busy" },

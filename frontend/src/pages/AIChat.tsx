@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { LiterarySectionHead } from "@/components/literary";
 import { Button } from "@/components/ui/button";
-import { api, AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { AIModelOption, AIStatus, ChatMessage, UsageInfo } from "@/lib/api/types/ai";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 type Tab = "chat" | "image";

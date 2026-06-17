@@ -1,5 +1,4 @@
-import type { WeatherResponse } from "@/lib/api";
-
+import type { WeatherResponse } from "@/lib/api/types/public";
 const LAT = 57.0267;
 const LNG = 28.91;
 const TZ = "Europe/Moscow";

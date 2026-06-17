@@ -1,6 +1,5 @@
 import { telHref } from "@/components/VkBotLink";
-import type { CatalogItem } from "@/lib/api";
-
+import type { CatalogItem } from "@/lib/api/types/places";
 interface LiteraryServiceCardProps {
   item: CatalogItem;
   icon: string;

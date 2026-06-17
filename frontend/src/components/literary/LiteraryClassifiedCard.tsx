@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { ClassifiedAd } from "@/lib/api";
+import type { ClassifiedAd } from "@/lib/api/types/classifieds";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
 import { formatShortDate } from "@/lib/utils";
 

@@ -9,8 +9,7 @@ import {
   offlineBundleAge,
   saveOfflineBundle,
 } from "./offlineMap";
-import type { Place } from "./api";
-
+import type { Place } from "@/lib/api/types/places";
 const storage = new Map<string, string>();
 
 function mockLocalStorage() {

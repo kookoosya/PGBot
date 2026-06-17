@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { LiteraryEmptyState, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
-import { api } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export function ServiceRegister() {

@@ -1,5 +1,4 @@
-import type { MapFilterMode } from "@/lib/api";
-
+import type { MapFilterMode } from "@/lib/api/types/places";
 export const MAP_CENTER: [number, number] = [57.0267, 28.91];
 
 export const FALLBACK_MAP_MODES: MapFilterMode[] = [

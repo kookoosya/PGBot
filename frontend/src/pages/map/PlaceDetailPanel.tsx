@@ -1,7 +1,7 @@
 import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/mapLinks";
 import { Button } from "@/components/ui/button";
-import type { ComplaintType, PlaceDetail } from "@/lib/api";
-
+import type { ComplaintType } from "@/lib/api/types/issues";
+import type { PlaceDetail } from "@/lib/api/types/places";
 import { CATEGORY_ICONS } from "./constants";
 import { RatingBadge } from "./RatingBadge";
 import { formatPlaceNote } from "./utils";

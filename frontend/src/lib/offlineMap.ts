@@ -1,4 +1,4 @@
-import type { Place } from "./api";
+import type { Place } from "@/lib/api/types/places";
 import { osmTileUrl } from "./mapTiles";
 
 const CACHE_KEY = "pgbot_map_offline_v1";

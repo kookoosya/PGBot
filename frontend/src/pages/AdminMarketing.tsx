@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ClassifiedMarketingCharts } from "@/components/ClassifiedMarketingCharts";
-import { api, ClassifiedMarketingStats } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { ClassifiedMarketingStats } from "@/lib/api/types/classifieds";
 export function AdminMarketing() {
   const [stats, setStats] = useState<ClassifiedMarketingStats | null>(null);
   const [error, setError] = useState("");

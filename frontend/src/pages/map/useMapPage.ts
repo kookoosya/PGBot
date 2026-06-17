@@ -8,8 +8,9 @@ import {
   offlineBundleAge,
   registerServiceWorker,
 } from "@/lib/offlineMap";
-import { api, ComplaintType, MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api";
-
+import { api } from "@/lib/api/index";
+import type { ComplaintType } from "@/lib/api/types/issues";
+import type { MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api/types/places";
 import { FALLBACK_MAP_MODES } from "./constants";
 
 export function useMapPage() {

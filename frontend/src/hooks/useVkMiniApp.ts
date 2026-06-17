@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api } from "@/lib/api/index";
 import { initVkBridge, isVkMiniAppRuntime, readVkLaunchParamsAsync } from "@/lib/vkBridge";
 import { useUserAuth } from "@/lib/userAuth";
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type PublicEvent } from "@/lib/api";
+import { api } from "@/lib/api/index";
+import type { PublicEvent } from "@/lib/api/types/events";
 import { isRealCinemaEvent, partitionGarnectProgram } from "@/lib/eventUtils";
 
 type GarnectCache = {

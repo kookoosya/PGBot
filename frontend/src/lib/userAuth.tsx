@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { api, User } from "./api";
-
+import { api } from "@/lib/api/index";
+import type { User } from "@/lib/api/types/auth";
 const OFFICIAL_ROLES = ["administration", "social_service", "moderator"];
 
 export function isOfficialUser(user: User | null | undefined): boolean {
