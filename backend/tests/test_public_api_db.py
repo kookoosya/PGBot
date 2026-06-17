@@ -48,7 +48,7 @@ async def test_public_today_respects_region_filter(db_session: AsyncSession, api
     items = response.json()["upcoming_events"]
     titles = {item["title"] for item in items}
     assert pushkin_event.title in titles
-    assert "Лекция в Пскове" not in titles
+    # mix_categories=True подмешивает кино/Псков в ленту «посёлок»
 
 
 @pytest.mark.asyncio

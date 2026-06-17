@@ -26,7 +26,8 @@ def unique_username(prefix: str) -> str:
 
 
 def unique_phone() -> str:
-    return f"+79{uuid.uuid4().int % 10_000_000_000:09d}"
+    tail = uuid.uuid4().int % 1_000_000_000
+    return f"+7{9}{tail:09d}"
 
 
 async def get_or_create_role(db: AsyncSession, role_name: UserRole) -> Role:

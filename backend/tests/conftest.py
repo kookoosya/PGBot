@@ -26,6 +26,16 @@ from app.core.rate_limit import limiter
 
 limiter.enabled = False
 
+
+@pytest.fixture(autouse=True)
+async def _reset_async_engine():
+    from app.database import engine
+
+    await engine.dispose()
+    yield
+    await engine.dispose()
+
+
 _DB_OK: bool | None = None
 
 
