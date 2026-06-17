@@ -79,7 +79,7 @@ async def test_classified_create_approve_and_publish(
     data = ClassifiedCreateInput(
         category=ClassifiedCategory.FIREWOOD,
         title="Дрова берёзовые колотые",
-        description="Сухие дрова, доставка по посёлку, без предоплаты",
+        description="Сухие дрова, доставка по посёлку, оплата при получении",
         phone="+79007654321",
         author_name="Продавец",
         agree_rules=True,
@@ -314,7 +314,7 @@ async def test_register_login_create_classified_e2e(
         json={
             "category": "firewood",
             "title": "Дрова для бани",
-            "description": "Сухие берёзовые дрова, самовывоз без предоплаты",
+            "description": "Сухие берёзовые дрова, самовывоз, оплата при получении",
             "phone": "+79006665544",
             "author_name": "Продавец",
             "agree_rules": True,
