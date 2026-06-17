@@ -29,7 +29,7 @@ def vk_mini_app_ready() -> bool:
 
 def build_public_info() -> dict:
     """Return public site URLs and VK bot readiness for the frontend."""
-    from app.services.event_sources.vk_token_policy import vk_wall_health_status
+    from app.services.event_source_health import build_event_sources_health
 
     site = (settings.PUBLIC_SITE_URL or CANONICAL_SITE_URL).rstrip("/")
     vk_url = settings.VK_GROUP_URL.rstrip("/") if settings.VK_GROUP_URL else "https://vk.com"
@@ -57,11 +57,10 @@ def build_public_info() -> dict:
             "classifieds_new": f"{site}/classifieds?new=1",
             "events": f"{site}/events",
             "events_garnect": f"{site}/events?festival=garnect",
+            "events_garnect_share": f"{site}/share/festival/garnect",
             "cabinet": f"{site}/cabinet",
             "map": f"{site}/map",
             "jobs": f"{site}/jobs",
         },
-        "event_sources": {
-            "vk_wall": vk_wall_health_status(),
-        },
+        "event_sources": build_event_sources_health(),
     }

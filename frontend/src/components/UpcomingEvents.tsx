@@ -6,7 +6,7 @@ import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { isRealCinemaEvent, groupEventsByShow, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
-import { absoluteGarnectEventsUrl, garnectEventsPath } from "@/lib/festivalFilters";
+import { absoluteGarnectShareUrl, garnectEventsPath } from "@/lib/festivalFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
 import { siteOrigin } from "@/lib/siteUrl";
@@ -27,7 +27,7 @@ interface UpcomingEventsProps {
 export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const isLanding = variant === "landing";
   const { info } = useSiteInfo();
-  const garnectShareUrl = absoluteGarnectEventsUrl(info?.site_url ?? siteOrigin());
+  const garnectShareUrl = absoluteGarnectShareUrl(info?.site_url ?? siteOrigin());
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
   const { program: landingGarnect, rest: landingPushkinRest, loading: landingGarnectLoading } =

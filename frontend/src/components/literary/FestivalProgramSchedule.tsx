@@ -8,9 +8,10 @@ import {
 
 interface FestivalProgramScheduleProps {
   events: EventCardEvent[];
+  eventQuerySuffix?: string;
 }
 
-export function FestivalProgramSchedule({ events }: FestivalProgramScheduleProps) {
+export function FestivalProgramSchedule({ events, eventQuerySuffix = "" }: FestivalProgramScheduleProps) {
   const days = groupFestivalPerformancesByDay(events);
 
   return (
@@ -22,7 +23,7 @@ export function FestivalProgramSchedule({ events }: FestivalProgramScheduleProps
             {day.items.map((event) => (
               <li key={event.id} className="events-festival-schedule__item">
                 <time className="events-festival-schedule__time">{extractEventTimeLabel(event)}</time>
-                <Link to={`/events/${event.id}`} className="events-festival-schedule__title">
+                <Link to={`/events/${event.id}${eventQuerySuffix}`} className="events-festival-schedule__title">
                   {shortenFestivalPerformanceTitle(event.title)}
                 </Link>
               </li>

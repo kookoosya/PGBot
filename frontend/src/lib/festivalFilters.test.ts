@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   absoluteGarnectEventsUrl,
+  absoluteGarnectShareUrl,
   FESTIVAL_GARNECT,
   garnectEventsPath,
+  garnectSharePath,
   GARNECT_FESTIVAL_TITLE,
   isGarnectFestivalFilter,
   parseFestivalParam,
@@ -29,6 +31,10 @@ describe("festivalFilters", () => {
     expect(absoluteGarnectEventsUrl("https://example.test")).toBe(
       "https://example.test/events?festival=garnect",
     );
+    expect(absoluteGarnectShareUrl("https://example.test")).toBe(
+      "https://example.test/share/festival/garnect",
+    );
+    expect(garnectSharePath()).toBe("/share/festival/garnect");
   });
 
   it("exports festival title", () => {

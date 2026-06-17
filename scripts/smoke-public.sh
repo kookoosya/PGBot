@@ -86,6 +86,7 @@ check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 
 # API
 check "Health" "${BASE%/}/health" "ok"
+check "Share garnect" "${BASE%/}/share/festival/garnect" "Бугровский гарнец"
 check "API today" "$API/public/today" "upcoming_events"
 check "API public info" "$API/public/info" "site_url"
 

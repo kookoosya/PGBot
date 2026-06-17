@@ -19,6 +19,7 @@ from app.services.event_sources.vk_token_policy import (
     vk_wall_access_token,
     vk_wall_health_status,
 )
+from app.services.event_source_health import proculture_health_status, timepad_health_status
 
 
 async def main() -> None:
@@ -47,6 +48,8 @@ async def main() -> None:
         "vk_wall_health": health,
         "vk_wall_probe_group": probe_group,
         "vk_wall_probe_posts": probe_posts,
+        "timepad_health": timepad_health_status(),
+        "proculture_health": proculture_health_status(),
         "status": health if health != "group_token_only" else "needs_vk_events_token",
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))

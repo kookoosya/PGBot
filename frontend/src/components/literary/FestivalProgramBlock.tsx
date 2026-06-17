@@ -13,6 +13,7 @@ interface FestivalProgramBlockProps {
   linkTo?: string;
   linkLabel?: string;
   shareUrl?: string;
+  eventQuerySuffix?: string;
 }
 
 export function FestivalProgramBlock({
@@ -22,6 +23,7 @@ export function FestivalProgramBlock({
   linkTo,
   linkLabel = "Вся программа →",
   shareUrl,
+  eventQuerySuffix,
 }: FestivalProgramBlockProps) {
   const dateRange = useMemo(() => formatFestivalDateRange(events), [events]);
   const isImminent = useMemo(() => isFestivalImminent(events, 3), [events]);
@@ -84,7 +86,7 @@ export function FestivalProgramBlock({
       {shareMsg && <p className="events-festival-program__share-msg">{shareMsg}</p>}
       {useCompactList ? (
         <div className="events-festival-program__body">
-          <FestivalProgramSchedule events={events} />
+          <FestivalProgramSchedule events={events} eventQuerySuffix={eventQuerySuffix} />
         </div>
       ) : (
         <ol className="events-grid events-grid--festival">

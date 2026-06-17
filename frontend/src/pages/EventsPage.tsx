@@ -4,10 +4,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { Input } from "@/components/ui/input";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
-import { absoluteGarnectEventsUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
+import { absoluteGarnectShareUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
 import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { siteOrigin } from "@/lib/siteUrl";
@@ -16,6 +17,7 @@ const copy = PAGE_SECTIONS.events;
 const garnectCopy = {
   title: GARNECT_FESTIVAL_TITLE,
   lead: "Программа фестиваля в Пушкинских Горах",
+  meta: "Программа всероссийского театрального фестиваля Бугровский гарнец в Пушкинских Горах — спектакли и расписание.",
 };
 
 export function EventsPage() {
@@ -34,9 +36,10 @@ export function EventsPage() {
   const [search, setSearch] = useState("");
   const [shareMsg, setShareMsg] = useState("");
   const { info } = useSiteInfo();
-  const garnectShareUrl = absoluteGarnectEventsUrl(info?.site_url ?? siteOrigin());
+  const garnectShareUrl = absoluteGarnectShareUrl(info?.site_url ?? siteOrigin());
 
   useDocumentTitle(garnectOnly ? garnectCopy.title : copy.title);
+  usePageMeta(garnectOnly ? garnectCopy.meta : undefined);
 
   useEffect(() => {
     setLoading(true);
@@ -275,7 +278,11 @@ export function EventsPage() {
           {showGarnectOnlyBlock && (
             <section className="page-panel page-panel--forest">
               <div className="events-festival-program-wrap">
-                <FestivalProgramBlock events={garnectProgram} shareUrl={garnectShareUrl} />
+                <FestivalProgramBlock
+                  events={garnectProgram}
+                  shareUrl={garnectShareUrl}
+                  eventQuerySuffix="?from=garnect"
+                />
               </div>
             </section>
           )}
@@ -294,6 +301,7 @@ export function EventsPage() {
                       events={garnectProgram}
                       linkTo={garnectEventsPath(isVkEvents)}
                       shareUrl={garnectShareUrl}
+                      eventQuerySuffix="?from=garnect"
                     />
                   </li>
                 )}

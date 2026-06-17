@@ -66,6 +66,7 @@ async def test_public_info_portal_links_shape(client: AsyncClient):
         "classifieds_new",
         "events",
         "events_garnect",
+        "events_garnect_share",
         "cabinet",
         "map",
         "jobs",

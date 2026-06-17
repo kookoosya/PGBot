@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -11,6 +12,8 @@ from app.config import get_settings
 from app.core.rate_limit import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.startup import lifespan
+from app.services.event_source_health import build_event_sources_health
+from app.services.share_pages import garnect_share_html
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -53,10 +56,14 @@ async def health(request: Request):
             payload["redis"] = "ok"
         except Exception:
             payload["redis"] = "error"
-    from app.services.event_sources.vk_token_policy import vk_wall_health_status
-
-    payload["event_sources"] = {"vk_wall": vk_wall_health_status()}
+    payload["event_sources"] = build_event_sources_health()
     return payload
+
+
+@app.get("/share/festival/garnect", response_class=HTMLResponse)
+@limiter.limit("60/minute")
+async def share_festival_garnect(request: Request):
+    return HTMLResponse(garnect_share_html())
 
 
 @app.get("/")

@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
 import { api, PublicEvent } from "@/lib/api";
 import { CTA } from "@/lib/cta";
+import { garnectEventsPath } from "@/lib/festivalFilters";
 import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 export function EventDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const fromGarnect = searchParams.get("from") === "garnect";
+  const eventsBackTo = fromGarnect ? garnectEventsPath() : "/events";
+  const eventsBackLabel = fromGarnect ? "← Программа гарнеца" : `← ${CTA.allEvents}`;
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [error, setError] = useState("");
   const [shareMsg, setShareMsg] = useState("");
@@ -37,7 +42,7 @@ export function EventDetail() {
     return (
       <div className="literary-page page-section max-w-3xl">
         <LiteraryEmptyState {...EMPTY_STATES.eventNotFound} text={error}>
-          <Link to="/events" className="literary-btn literary-btn--ghost mt-2 no-underline">← К афише</Link>
+          <Link to={eventsBackTo} className="literary-btn literary-btn--ghost mt-2 no-underline">{eventsBackLabel}</Link>
         </LiteraryEmptyState>
       </div>
     );
@@ -57,7 +62,7 @@ export function EventDetail() {
   return (
     <div className="literary-page page-section max-w-3xl">
       <PageHeader icon={cinema ? "🎬" : "📅"} title={event.title} subtitle={event.category_label}>
-        <Link to="/events" className="literary-btn literary-btn--ghost text-sm no-underline">← {CTA.allEvents}</Link>
+        <Link to={eventsBackTo} className="literary-btn literary-btn--ghost text-sm no-underline">{eventsBackLabel}</Link>
         <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={share}>
           Поделиться
         </button>
