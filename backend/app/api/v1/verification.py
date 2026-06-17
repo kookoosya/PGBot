@@ -14,7 +14,7 @@ from app.schemas.verification import (
     VerificationAction,
     VerificationRequestResponse,
 )
-from app.services.verification_service import (
+from app.services.verification import (
     VerificationNotFoundError,
     VerificationValidationError,
     approve_verification,
