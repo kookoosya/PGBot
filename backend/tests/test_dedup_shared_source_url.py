@@ -9,6 +9,8 @@ from app.models.enums import EventRegion
 from app.services.event_sources.dedup import find_existing_event
 from tests.helpers.db_factories import create_event
 
+pytestmark = pytest.mark.postgres
+
 MOSCOW = ZoneInfo("Europe/Moscow")
 PROGRAM_URL = "https://pushkinland.ru/2018/news/news26/news57.php"
 

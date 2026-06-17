@@ -7,7 +7,7 @@ from app.models.enums import ClassifiedCategory
 from app.services.classified_service import ClassifiedValidationError, create_classified_ad_from_vk
 from tests.conftest import postgres_available
 
-pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")
+pytestmark = pytest.mark.postgres
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ async def test_create_classified_ad_from_vk_success(db_session: AsyncSession):
         from_id=12345,
         category=ClassifiedCategory.OTHER,
         title="Продаю велосипед",
-        description="Отличное состояние, без предоплаты",
+        description="Отличное состояние, самовывоз в посёлке",
         phone="+79001234567",
         author_name="Иван",
     )
