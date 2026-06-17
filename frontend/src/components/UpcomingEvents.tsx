@@ -5,6 +5,7 @@ import { ctaArrow, CTA } from "@/lib/cta";
 import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
 import { isRealCinemaEvent, groupEventsByShow, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
+import { garnectEventsPath } from "@/lib/festivalFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { landingGridCountClass } from "@/lib/landingLayout";
 import { useToday } from "@/hooks/useToday";
@@ -140,7 +141,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
               <div className="events-festival-program-wrap mb-4">
                 <FestivalProgramBlock
                   events={garnectProgram}
-                  linkTo={isLanding ? "/events" : undefined}
+                  linkTo={isLanding ? garnectEventsPath() : undefined}
                 />
               </div>
             )}

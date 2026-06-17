@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
 import { formatFestivalDateRange, isFestivalImminent, pluralPerformances } from "@/lib/eventUtils";
+import { garnectEventsPath } from "@/lib/festivalFilters";
 
 export function FestivalHeroBanner() {
   const { program, loading } = usePushkinGarnectProgram();
@@ -20,7 +21,7 @@ export function FestivalHeroBanner() {
           {dateRange} · {program.length} {pluralPerformances(program.length)}
         </span>
       </p>
-      <Link to="/events" className="festival-hero-banner__cta">
+      <Link to={garnectEventsPath()} className="festival-hero-banner__cta">
         Программа →
       </Link>
     </div>
