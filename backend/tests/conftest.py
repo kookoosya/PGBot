@@ -14,6 +14,7 @@ os.environ.setdefault(
     "postgresql://postgres:postgres@localhost:5432/test_db",
 )
 os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("TESTING", "true")
 # Щедрые лимиты в тестах — иначе e2e с одного IP ловят 429
 os.environ.setdefault("RATE_LIMIT", "10000/minute")
 os.environ.setdefault("CLASSIFIED_RATE_LIMIT", "10000/hour")
@@ -76,11 +77,13 @@ async def db_session():
     if not postgres_available():
         pytest.skip("PostgreSQL is not available")
 
-    from app.database import AsyncSessionLocal
+    from app.database import AsyncSessionLocal, engine
 
+    await engine.dispose()
     async with AsyncSessionLocal() as session:
         yield session
         await session.rollback()
+    await engine.dispose()
 
 
 @pytest.fixture

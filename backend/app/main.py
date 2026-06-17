@@ -1,4 +1,5 @@
 import logging
+import os
 
 from typing import Annotated
 
@@ -34,7 +35,8 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
+if not os.environ.get("TESTING"):
+    app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
