@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import IssueStatus, UserRole
 from app.schemas.analysis_result import AnalysisResult
-from app.services.issue_processor import process_web_complaint
+from app.services.issue import process_web_complaint
 from tests.helpers.db_factories import create_issue, create_user
 
 pytestmark = pytest.mark.postgres

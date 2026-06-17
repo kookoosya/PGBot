@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.constants.event_config import VK_EVENT_GROUPS, VkGroupPreset
 from app.models.enums import EventCategory, EventRegion
-from app.services.event_service import EventValidationError
+from app.services.event import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.text_utils import find_upcoming_event_range
 from app.services.event_sources.upsert import upsert_fetched_event

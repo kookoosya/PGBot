@@ -17,7 +17,7 @@ from app.schemas.classified import (
     ClassifiedPendingResponse,
     ClassifiedResponse,
 )
-from app.services.classified_service import (
+from app.services.classified import (
     ClassifiedActorContext,
     ClassifiedSearchParams,
     ClassifiedSortField,

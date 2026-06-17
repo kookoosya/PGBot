@@ -6,6 +6,14 @@
 
 ---
 
+## P23 — P1 facade removal ✅ (2026-06-17)
+
+1. ✅ Расширены `__init__.py` пакетов `issue/`, `classified/`, `place/`
+2. ✅ Все импорты переведены на пакеты напрямую
+3. ✅ Удалены shim-файлы: `issue_service`, `issue_processor`, `classified_service`, `event_service`, `place_service`, `provider_service`, `weather_service`
+
+---
+
 ## P22 — P0 быстрая чистка ✅ (2026-06-17)
 
 1. ✅ `pushkin.ts` → `mapLinks.ts` + `villagePhotos.ts` (удалены мёртвые цитаты/стихи)

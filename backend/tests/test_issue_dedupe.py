@@ -1,7 +1,7 @@
 """Unit tests for issue duplicate linking business rules."""
 
 from app.config import get_settings
-from app.services.issue_processor import should_link_duplicate_issue
+from app.services.issue import should_link_duplicate_issue
 
 
 def test_should_link_at_threshold():

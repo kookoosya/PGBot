@@ -63,7 +63,7 @@ async def test_weather_forecast_ok(mock_get: AsyncMock, client: AsyncClient):
 @pytest.mark.asyncio
 @patch("app.api.v1.weather.get_weather", new_callable=AsyncMock)
 async def test_weather_forecast_upstream_error(mock_get: AsyncMock, client: AsyncClient):
-    from app.services.weather_service import WeatherFetchError
+    from app.services.weather import WeatherFetchError
 
     mock_get.side_effect = WeatherFetchError("upstream down")
     response = await client.get("/api/v1/weather")

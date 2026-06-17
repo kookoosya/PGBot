@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.constants.event_config import KUDAGO_CATEGORY_MAP, KUDAGO_LOCATION_PRESETS
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
-from app.services.event_service import (
+from app.services.event import (
     EventCreateInput,
     EventUpdateInput,
     EventValidationError,

@@ -22,7 +22,8 @@ from app.schemas.place import (
 from app.services.map_routes import get_map_routes
 from app.services.map_sync import sync_all_map_data
 from app.services.osm_sync import seed_pushkin_landmarks, sync_places_from_osm
-from app.services.place_service import (
+from app.constants.map_config import get_map_filter_modes
+from app.services.place import (
     PlaceComplaintInput,
     PlaceNotFoundError,
     PlaceReviewInput,
@@ -33,7 +34,6 @@ from app.services.place_service import (
     build_complaint_response,
     build_place_response,
     create_place_complaint,
-    get_map_filter_modes,
     get_map_stats,
     get_place_details,
     list_active_taxi,

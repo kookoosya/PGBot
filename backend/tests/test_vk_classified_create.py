@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import ClassifiedCategory
-from app.services.classified_service import ClassifiedValidationError, create_classified_ad_from_vk
+from app.services.classified import ClassifiedValidationError, create_classified_ad_from_vk
 from tests.conftest import postgres_available
 
 pytestmark = pytest.mark.postgres

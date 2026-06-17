@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.config import get_settings
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
-from app.services.event_service import EventCreateInput, create_event, get_upcoming_events
+from app.services.event import EventCreateInput, create_event, get_upcoming_events
 
 logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
