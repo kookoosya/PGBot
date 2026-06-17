@@ -145,7 +145,7 @@ async def test_resident_sees_issue_status_after_official_update(
 
 
 @pytest.mark.asyncio
-@patch("app.services.issue_processor.process_web_complaint", new_callable=AsyncMock)
+@patch("app.services.issue.ingest.process_web_complaint", new_callable=AsyncMock)
 async def test_guest_submits_issue_via_http(mock_process, api_client: AsyncClient):
     mock_issue = MagicMock()
     mock_issue.is_spam = False
@@ -155,7 +155,7 @@ async def test_guest_submits_issue_via_http(mock_process, api_client: AsyncClien
     mock_issue.resident_id = None
     mock_process.return_value = mock_issue
 
-    with patch("app.services.issue_service.get_issue_details", new_callable=AsyncMock, return_value=mock_issue):
+    with patch("app.services.issue.crud.get_issue_details", new_callable=AsyncMock, return_value=mock_issue):
         response = await api_client.post(
             "/api/v1/issues",
             json={
@@ -212,23 +212,23 @@ async def test_issue_timeline_via_http_after_status_change(
     status_update = await api_client.patch(
         f"/api/v1/issues/{issue.id}/status",
         headers=auth_headers_for(official),
-        json={"status": "under_review"},
+        json={"status": "UNDER_REVIEW"},
     )
     assert status_update.status_code == 200
 
     resolved = await api_client.patch(
         f"/api/v1/issues/{issue.id}/status",
         headers=auth_headers_for(official),
-        json={"status": "resolved", "resolution_text": "Фонарь заменён"},
+        json={"status": "RESOLVED", "resolution_text": "Фонарь заменён"},
     )
     assert resolved.status_code == 200
 
     mine = await api_client.get("/api/v1/issues/my", headers=auth_headers_for(resident))
     assert mine.status_code == 200
     item = next(row for row in mine.json()["items"] if row["id"] == issue.id)
-    assert item["status"] == "resolved"
+    assert item["status"] == "RESOLVED"
     assert item["status_timeline"]
-    assert item["status_timeline"][-1]["status"] == "resolved"
+    assert item["status_timeline"][-1]["status"] == "RESOLVED"
 
 
 @pytest.mark.asyncio

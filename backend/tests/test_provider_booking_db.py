@@ -7,13 +7,12 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.helpers.db_factories import auth_headers_for, create_owner_user, unique_username
+from tests.helpers.db_factories import auth_headers_for, create_owner_user, unique_phone, unique_username
 
 pytestmark = pytest.mark.postgres
 
-_PROVIDER_REGISTER = {
+_PROVIDER_REGISTER_BASE = {
     "full_name": "Мария Стилист",
-    "phone": "+79001234567",
     "password": "Testpass1234",
     "bio": "Стрижки и укладки",
     "address": "рп. Пушкинские Горы",
@@ -32,6 +31,10 @@ _PROVIDER_REGISTER = {
 }
 
 
+def _provider_register_payload(username: str) -> dict:
+    return {**_PROVIDER_REGISTER_BASE, "username": username, "phone": unique_phone()}
+
+
 def _next_booking_date() -> date:
     """Pick a date within the next week that is not in the past."""
     return date.today() + timedelta(days=1)
@@ -46,7 +49,7 @@ async def test_provider_register_and_approve(
 ):
     owner = await create_owner_user(db_session)
     username = unique_username("master")
-    payload = {**_PROVIDER_REGISTER, "username": username}
+    payload = _provider_register_payload(username)
 
     reg = await api_client.post("/api/v1/services/register", json=payload)
     assert reg.status_code == 201
@@ -83,7 +86,7 @@ async def test_provider_booking_flow(
     username = unique_username("book")
     reg = await api_client.post(
         "/api/v1/services/register",
-        json={**_PROVIDER_REGISTER, "username": username},
+        json=_provider_register_payload(username),
     )
     provider_id = reg.json()["id"]
     await api_client.post(
