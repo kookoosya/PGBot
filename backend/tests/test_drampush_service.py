@@ -1,6 +1,6 @@
 """Tests for drampush.ru afisha parser."""
 
-from app.services.drampush_service import _parse_page
+from app.services.event_sources.fetchers.drampush import _parse_page
 
 SAMPLE = """
 <div class="afishalist" data-age="18+" data-place="большаясцена" data-date="20260619">

@@ -1,4 +1,4 @@
-"""Cinema metadata extraction — genre, title resolution and teaser descriptions."""
+"""Cinema metadata — genre, title resolution, filter for real film shows."""
 
 from __future__ import annotations
 
@@ -23,6 +23,17 @@ _INLINE_GENRE_RE = re.compile(
     r"\b(" + "|".join(re.escape(g) for g in _KNOWN_GENRES) + r")\b",
     re.IGNORECASE,
 )
+
+CULTURE_LIKE_TITLE_RE = re.compile(
+    r"культурно-просветительн|мероприяти[ея]|петрушкин|спектакл|концерт|выставк|"
+    r"праздник|фестиваль|экскурс|лекци|ярмарк|театр|музе[йя]|мастер[- ]класс|"
+    r"постановк|игра\s*«",
+    re.IGNORECASE,
+)
+
+_CINEMA_AFISHA_SOURCES = frozenset({
+    "orbilet", "kinopskov", "mirage", "silver", "kudago", "timepad",
+})
 
 
 def extract_genre(text: str) -> str | None:
@@ -96,52 +107,6 @@ def build_cinema_description(
     return " ".join(parts)
 
 
-def enrich_cinema_fields(
-    *,
-    title: str,
-    description: str | None,
-    category: EventCategory,
-    genre: str | None = None,
-    location: str | None = None,
-) -> tuple[str | None, str | None]:
-    """Return (genre, enriched_description) for cinema events.
-
-    Deprecated: prefer ``event_enrichment_service.enrich_event_fields``.
-    """
-    if category != EventCategory.CINEMA:
-        if description and len(description.strip()) < 24 and title:
-            return genre, f"{title}. {description}".strip()[:2000]
-        return genre, description
-
-    catalog = resolve_cinema_from_catalog(f"{title} {description or ''}")
-    resolved_title = enrich_cinema_title(title, description, catalog=catalog)
-    resolved_genre = genre or (catalog.genre if catalog else None) or extract_genre(
-        f"{resolved_title} {description or ''}"
-    )
-    body = description
-    if catalog and (not body or len(body) < 40):
-        body = catalog.teaser
-    enriched = build_cinema_description(
-        title=resolved_title,
-        genre=resolved_genre,
-        raw_description=body,
-        location=location,
-    )
-    return resolved_genre, enriched
-
-
-_CULTURE_LIKE_TITLE_RE = re.compile(
-    r"культурно-просветительн|мероприяти[ея]|петрушкин|спектакл|концерт|выставк|"
-    r"праздник|фестиваль|экскурс|лекци|ярмарк|театр|музе[йя]|мастер[- ]класс|"
-    r"постановк|игра\s*«",
-    re.IGNORECASE,
-)
-
-_CINEMA_AFISHA_SOURCES = frozenset({
-    "orbilet", "kinopskov", "mirage", "silver", "kudago", "timepad",
-})
-
-
 def is_real_cinema_event(
     *,
     title: str,
@@ -161,7 +126,7 @@ def is_real_cinema_event(
         return False
 
     combined = f"{title} {description or ''}"
-    if _CULTURE_LIKE_TITLE_RE.search(title):
+    if CULTURE_LIKE_TITLE_RE.search(title):
         return False
 
     catalog = lookup_film(combined)

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventRegion
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
-from app.services.informpskov_service import InformpskovEvent, fetch_informpskov_events
+from app.services.event_sources.fetchers.informpskov import InformpskovEvent, fetch_informpskov_events
 
 logger = logging.getLogger(__name__)
 

@@ -24,7 +24,8 @@ from app.services.event import (
     create_event,
     update_event,
 )
-from app.services.event_sync_service import EventSyncResult, infer_category_from_text
+from app.services.event_sources.base import EventSyncResult
+from app.services.event_sources.text_utils import infer_category_from_text
 
 logger = logging.getLogger(__name__)
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")

@@ -6,7 +6,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.cinema_enrichment import is_real_cinema_event
+from app.services.event.cinema import is_real_cinema_event
 from app.services.event import get_upcoming_events
 from app.services.notifications import notify_owner
 from app.services.site_urls import public_site_url

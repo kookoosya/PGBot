@@ -122,7 +122,7 @@ DEMO_EVENTS: list[dict] = [
 async def _try_kudago_sync(db: AsyncSession) -> int:
     """Best-effort KudaGo import; returns created count (0 if API unavailable)."""
     try:
-        from app.services.kudago_service import sync_events_from_kudago
+        from app.services.event_sources.fetchers.kudago import sync_events_from_kudago
 
         result = await sync_events_from_kudago(db, EventRegion.PSKOV)
         if result.errors:

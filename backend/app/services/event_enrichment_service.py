@@ -7,7 +7,7 @@ import re
 from app.constants.pskov_cinemas import format_cinema_location, match_pskov_cinema
 from app.models.enums import EventCategory, EventRegion
 from app.services.text_cleaning import first_sentences, normalize_event_text
-from app.services.cinema_enrichment import (
+from app.services.event.cinema import (
     build_cinema_description,
     enrich_cinema_title,
     extract_genre,

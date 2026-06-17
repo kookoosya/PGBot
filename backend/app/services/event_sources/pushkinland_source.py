@@ -11,7 +11,7 @@ from app.models.enums import EventRegion
 from app.models.event import Event
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
-from app.services.pushkinland_service import PushkinlandEvent, fetch_pushkinland_events
+from app.services.event_sources.fetchers.pushkinland import PushkinlandEvent, fetch_pushkinland_events
 
 logger = logging.getLogger(__name__)
 

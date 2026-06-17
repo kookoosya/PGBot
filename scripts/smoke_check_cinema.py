@@ -9,7 +9,7 @@ import sys
 import urllib.error
 import urllib.request
 
-# Keep in sync with backend/app/services/cinema_enrichment.py
+# Keep in sync with backend/app/services/event/cinema.py
 _CULTURE_LIKE_TITLE_RE = re.compile(
     r"культурно-просветительн|мероприяти[ея]|петрушкин|спектакл|концерт|выставк|"
     r"праздник|фестиваль|экскурс|лекци|ярмарк|театр|музе[йя]|мастер[- ]класс|"

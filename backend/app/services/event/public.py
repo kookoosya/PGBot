@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
-from app.services.cinema_enrichment import is_real_cinema_event
+from app.services.event.cinema import is_real_cinema_event
 from app.services.event_dedupe_service import dedupe_display_events, group_events_by_show
 from app.services.event_title_utils import normalize_event_title
 

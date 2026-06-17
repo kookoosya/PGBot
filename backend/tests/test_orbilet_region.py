@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from app.models.enums import EventCategory, EventRegion
 from app.services.event_sources.orbilet_source import _to_fetched
-from app.services.orbilet_service import OrbiletEvent
+from app.services.event_sources.fetchers.orbilet import OrbiletEvent
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 

@@ -3,7 +3,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.services.informpskov_service import parse_informpskov_rss
+from app.services.event_sources.fetchers.informpskov import parse_informpskov_rss
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 

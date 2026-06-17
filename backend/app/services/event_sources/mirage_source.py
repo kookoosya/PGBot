@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import EventRegion
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
-from app.services.mirage_cinema_service import MirageCinemaEvent, fetch_mirage_cinema_events
+from app.services.event_sources.fetchers.mirage_cinema import MirageCinemaEvent, fetch_mirage_cinema_events
 
 logger = logging.getLogger(__name__)
 
