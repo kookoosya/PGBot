@@ -6,6 +6,14 @@
 
 ---
 
+## P28 — P2.2 vk/flows split ✅ (2026-06-17)
+
+1. ✅ `vk/flows.py` → пакет `vk/flows/` (common, classified, wish, map_report, listings, router)
+2. ✅ Исправлен missing import `notify_owner` в map_report
+3. ✅ `test_vk_flows_package.py`
+
+---
+
 ## P27 — P2.1 EventsPage split ✅ (2026-06-17)
 
 1. ✅ `pages/events/` — `useEventsPage`, `EventsFilters`, `EventsCityRow`, `EventsDashboard`, `EventsGarnectAlerts`
