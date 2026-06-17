@@ -28,9 +28,10 @@ function formatSyncSummary(results: EventSyncResult[]): string {
 
 interface AdminEventSourcesPanelProps {
   onSynced?: () => void;
+  onFilterSource?: (sourceId: string) => void;
 }
 
-export function AdminEventSourcesPanel({ onSynced }: AdminEventSourcesPanelProps) {
+export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventSourcesPanelProps) {
   const [overview, setOverview] = useState<Awaited<ReturnType<typeof api.getAdminEventSources>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -112,7 +113,19 @@ export function AdminEventSourcesPanel({ onSynced }: AdminEventSourcesPanelProps
                   <td className="py-2 pr-3 align-top">
                     <span className={healthClass(source.health)}>{healthLabel(source.health)}</span>
                   </td>
-                  <td className="py-2 pr-3 align-top text-right tabular-nums">{source.published_count}</td>
+                  <td className="py-2 pr-3 align-top text-right tabular-nums">
+                    {onFilterSource && source.published_count > 0 ? (
+                      <button
+                        type="button"
+                        className="admin-event-sources__count-link"
+                        onClick={() => onFilterSource(source.id)}
+                      >
+                        {source.published_count}
+                      </button>
+                    ) : (
+                      source.published_count
+                    )}
+                  </td>
                   <td className="py-2 align-top text-right">
                     {source.id !== "manual" ? (
                       <Button

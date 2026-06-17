@@ -219,4 +219,15 @@
     background: hsl(0 70% 94%);
     color: hsl(0 55% 38%);
   }
+
+  .admin-event-sources__count-link {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: hsl(var(--primary));
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 }

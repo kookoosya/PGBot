@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventCategory, EventRegion
@@ -58,12 +58,26 @@ async def list_events_admin(
     db: AsyncSession,
     *,
     include_unpublished: bool = True,
-    limit: int = 50,
+    limit: int = 100,
+    source: str | None = None,
+    search: str | None = None,
 ) -> list[Event]:
     """Return events for the admin panel, newest first."""
-    query = select(Event).order_by(Event.starts_at.desc()).limit(max(1, min(limit, 100)))
+    query = select(Event).order_by(Event.starts_at.desc())
     if not include_unpublished:
         query = query.where(Event.is_published.is_(True))
+    if source:
+        query = query.where(Event.source == source.strip())
+    if search:
+        needle = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                Event.title.ilike(needle),
+                Event.description.ilike(needle),
+                Event.location.ilike(needle),
+            ),
+        )
+    query = query.limit(max(1, min(limit, 200)))
     result = await db.execute(query)
     return list(result.scalars().all())
 

@@ -71,9 +71,17 @@ async def admin_list_events(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_owner())],
     include_unpublished: bool = Query(True),
-    limit: int = Query(50, ge=1, le=100),
+    source: str | None = Query(None, max_length=32),
+    search: str | None = Query(None, max_length=100),
+    limit: int = Query(100, ge=1, le=200),
 ):
-    events = await list_events_admin(db, include_unpublished=include_unpublished, limit=limit)
+    events = await list_events_admin(
+        db,
+        include_unpublished=include_unpublished,
+        limit=limit,
+        source=source,
+        search=search,
+    )
     return build_event_list_response(events)
 
 

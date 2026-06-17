@@ -1,8 +1,9 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminEventSourcesPanel } from "@/components/admin/AdminEventSourcesPanel";
-import { api, EventCreate, EventItem, EventRegion } from "@/lib/api";
+import { api, EventCreate, EventItem, EventRegion, EventSourceOverviewItem } from "@/lib/api";
+import { eventSourceLabel } from "@/lib/eventUtils";
 
 const REGIONS: { value: EventRegion; label: string }[] = [
   { value: "pushkin_gory", label: "Пушкинские Горы" },
@@ -48,21 +49,33 @@ const emptyForm: EventCreate = {
 
 export function AdminEvents() {
   const [items, setItems] = useState<EventItem[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<EventSourceOverviewItem[]>([]);
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<EventCreate>(emptyForm);
   const [editId, setEditId] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
-  const load = () => {
+  const load = useCallback(() => {
     api
-      .getAdminEvents(true)
+      .getAdminEvents({
+        source: sourceFilter || undefined,
+        search: search || undefined,
+        limit: 100,
+      })
       .then((response) => setItems(response.items))
       .catch((err) => setError(err instanceof Error ? err.message : "Ошибка загрузки"));
-  };
+  }, [sourceFilter, search]);
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  useEffect(() => {
+    api.getAdminEventSources().then((overview) => setSourceOptions(overview.sources)).catch(() => {});
   }, []);
 
   const resetForm = () => {
@@ -135,7 +148,68 @@ export function AdminEvents() {
         </Button>
       </div>
 
-      <AdminEventSourcesPanel onSynced={load} />
+      <AdminEventSourcesPanel onSynced={load} onFilterSource={setSourceFilter} />
+
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-2">
+            <input
+              className="rounded-md border px-3 py-2 flex-1"
+              placeholder="Поиск по названию, описанию, месту…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
+            />
+            <Button type="button" variant="outline" onClick={() => setSearch(searchInput.trim())}>
+              Найти
+            </Button>
+            {(search || sourceFilter) && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setSearch("");
+                  setSearchInput("");
+                  setSourceFilter("");
+                }}
+              >
+                Сбросить
+              </Button>
+            )}
+          </div>
+
+          {sourceOptions.length > 0 && (
+            <div className="literary-filter-bar flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`filter-chip${!sourceFilter ? " filter-chip-active" : ""}`}
+                onClick={() => setSourceFilter("")}
+              >
+                Все источники
+              </button>
+              {sourceOptions
+                .filter((source) => source.id !== "manual" || source.published_count > 0)
+                .map((source) => (
+                  <button
+                    key={source.id}
+                    type="button"
+                    className={`filter-chip${sourceFilter === source.id ? " filter-chip-active" : ""}`}
+                    onClick={() => setSourceFilter(source.id)}
+                  >
+                    {source.label}
+                    {source.published_count > 0 ? ` (${source.published_count})` : ""}
+                  </button>
+                ))}
+            </div>
+          )}
+
+          <p className="text-sm text-muted-foreground m-0">
+            Показано: {items.length}
+            {sourceFilter && ` · ${eventSourceLabel(sourceFilter)}`}
+            {search && ` · «${search}»`}
+          </p>
+        </CardContent>
+      </Card>
 
       {msg && <p className="text-green-700">{msg}</p>}
       {error && <p className="text-destructive">{error}</p>}
@@ -254,7 +328,7 @@ export function AdminEvents() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {event.region_label} · {event.category_label} · {event.starts_at_label}
-                  {event.source && ` · ${event.source}`}
+                  {event.source && ` · ${eventSourceLabel(event.source)}`}
                   {!event.is_published && " · черновик"}
                 </p>
                 <p className="font-semibold text-lg">{event.title}</p>
@@ -271,7 +345,11 @@ export function AdminEvents() {
           </Card>
         ))}
         {items.length === 0 && !error && (
-          <p className="text-muted-foreground">Пока нет событий — добавьте вручную или синхронизируйте источники выше.</p>
+          <p className="text-muted-foreground">
+            {search || sourceFilter
+              ? "Ничего не найдено — сбросьте фильтр или измените запрос."
+              : "Пока нет событий — добавьте вручную или синхронизируйте источники выше."}
+          </p>
         )}
       </div>
     </div>

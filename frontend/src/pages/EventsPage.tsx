@@ -8,8 +8,9 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
+import { parseSourceParam } from "@/lib/eventSourceFilters";
 import { absoluteGarnectShareUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
-import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl } from "@/lib/eventUtils";
+import { groupEventsByShow, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl, eventSourceLabel } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { siteOrigin } from "@/lib/siteUrl";
 
@@ -27,6 +28,7 @@ export function EventsPage() {
   const eventsBase = isVkEvents ? "/vk/events" : "/events";
   const festivalFilter = parseFestivalParam(searchParams.get("festival"));
   const garnectOnly = isGarnectFestivalFilter(festivalFilter);
+  const sourceFilter = garnectOnly ? null : parseSourceParam(searchParams.get("source"));
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -45,17 +47,19 @@ export function EventsPage() {
     setLoading(true);
     setLoadError(false);
 
-    const base = { search: search || undefined, limit: "80" as const };
+    const base = { search: search || undefined, limit: "80" as const, source: sourceFilter || undefined };
 
     const load =
       garnectOnly
         ? api.getPublicEvents({ ...base, region: "pushkin_gory" }).then((r) => r.items)
-        : regionFilter === "pskov"
-          ? api.getPublicEvents({ ...base, region: "pskov" }).then((r) => r.items)
-          : Promise.all([
-              api.getPublicEvents({ ...base, region: "pushkin_gory" }),
-              api.getPublicEvents({ ...base, region: "pskov" }),
-            ]).then(([pushkin, pskov]) => mergePublicEvents(pskov.items, pushkin.items));
+        : sourceFilter
+          ? api.getPublicEvents({ ...base, region: regionFilter === "pskov" ? "pskov" : regionFilter === "pushkin_gory" ? "pushkin_gory" : undefined }).then((r) => r.items)
+          : regionFilter === "pskov"
+            ? api.getPublicEvents({ ...base, region: "pskov" }).then((r) => r.items)
+            : Promise.all([
+                api.getPublicEvents({ ...base, region: "pushkin_gory" }),
+                api.getPublicEvents({ ...base, region: "pskov" }),
+              ]).then(([pushkin, pskov]) => mergePublicEvents(pskov.items, pushkin.items));
 
     load
       .then(setEvents)
@@ -64,7 +68,7 @@ export function EventsPage() {
         setLoadError(true);
       })
       .finally(() => setLoading(false));
-  }, [garnectOnly, regionFilter, search]);
+  }, [garnectOnly, regionFilter, search, sourceFilter]);
 
   const categoryFilters = useMemo(() => {
     const pushkinCats = new Set(
@@ -112,9 +116,10 @@ export function EventsPage() {
     () => visibleEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
     [visibleEvents],
   );
-  const showPushkinBlock = !garnectOnly && pushkinEvents.length > 0 && regionFilter !== "pskov";
-  const showCityRow = !garnectOnly && regionFilter !== "pskov" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
-  const showPskovOnlyBlock = !garnectOnly && regionFilter === "pskov" && pskovEvents.length > 0;
+  const showPushkinBlock = !garnectOnly && !sourceFilter && pushkinEvents.length > 0 && regionFilter !== "pskov";
+  const showCityRow = !garnectOnly && !sourceFilter && regionFilter !== "pskov" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
+  const showPskovOnlyBlock = !garnectOnly && !sourceFilter && regionFilter === "pskov" && pskovEvents.length > 0;
+  const showSourceOnlyBlock = !!sourceFilter && visibleEvents.length > 0;
   const showGarnectOnlyBlock = garnectOnly && garnectProgram.length > 0;
 
   const shareGarnect = async () => {
@@ -158,8 +163,8 @@ export function EventsPage() {
     <div className="literary-page page-section max-w-6xl events-page">
       <PageHeader
         icon={garnectOnly ? "🎭" : "📅"}
-        title={garnectOnly ? garnectCopy.title : copy.title}
-        subtitle={garnectOnly ? garnectCopy.lead : copy.lead}
+        title={garnectOnly ? garnectCopy.title : sourceFilter ? eventSourceLabel(sourceFilter) : copy.title}
+        subtitle={garnectOnly ? garnectCopy.lead : sourceFilter ? "События из выбранного источника афиши" : copy.lead}
       >
         {garnectOnly && (
           <button type="button" className="literary-btn literary-btn--ghost text-sm" onClick={shareGarnect}>
@@ -219,7 +224,15 @@ export function EventsPage() {
           </div>
         )}
 
-        {!garnectOnly && categoryFilters.length > 1 && (
+        {sourceFilter && (
+          <div className="literary-filter-bar mt-4">
+            <Link to={eventsBase} className="filter-chip filter-chip-active no-underline">
+              {eventSourceLabel(sourceFilter)} ×
+            </Link>
+          </div>
+        )}
+
+        {!garnectOnly && !sourceFilter && categoryFilters.length > 1 && (
           <div className="literary-filter-bar mt-4">
             <button
               type="button"
@@ -274,6 +287,16 @@ export function EventsPage() {
           {regionFilter === "pskov" && !garnectOnly && cinemaBlock}
 
           {showPskovOnlyBlock && pskovBlock}
+
+          {showSourceOnlyBlock && (
+            <section className="page-panel page-panel--forest">
+              <ol className="events-grid events-grid--wide">
+                {visibleEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ol>
+            </section>
+          )}
 
           {showGarnectOnlyBlock && (
             <section className="page-panel page-panel--forest">

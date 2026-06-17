@@ -36,8 +36,18 @@ export function createEventsApi(client: HttpClient) {
       return client.request<PublicEvent>(`/public/events/${id}`);
     },
 
-    getAdminEvents(includeUnpublished = true) {
-      const q = includeUnpublished ? "" : "?include_unpublished=false";
+    getAdminEvents(params?: {
+      includeUnpublished?: boolean;
+      source?: string;
+      search?: string;
+      limit?: number;
+    }) {
+      const query = new URLSearchParams();
+      if (params?.includeUnpublished === false) query.set("include_unpublished", "false");
+      if (params?.source) query.set("source", params.source);
+      if (params?.search) query.set("search", params.search);
+      if (params?.limit) query.set("limit", String(params.limit));
+      const q = query.toString() ? `?${query.toString()}` : "";
       return client.request<EventListResponse>(`/admin/events${q}`);
     },
 
