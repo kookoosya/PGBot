@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import UserRole
-from tests.helpers.db_factories import auth_headers_for, create_owner_user, create_user, unique_phone
+from tests.helpers.db_factories import auth_headers_for, create_owner_user, create_user, unique_phone, unique_username
 
 pytestmark = pytest.mark.postgres
 
@@ -53,14 +53,15 @@ async def test_moderate_classified_approve_via_api(
     create_resp = await api_client.post(
         "/api/v1/classifieds",
         json={
-            "category": "services",
-            "title": "Покос травы аккуратно",
+            "category": "handyman",
+            "title": f"Покос травы {unique_username('svc')}",
             "description": "Покошу участок, вывезу траву по договорённости",
             "phone": phone,
             "author_name": "Мастер",
             "agree_rules": True,
         },
     )
+    assert create_resp.status_code == 201
     ad_id = create_resp.json()["id"]
 
     approve = await api_client.post(
@@ -71,7 +72,7 @@ async def test_moderate_classified_approve_via_api(
 
     listed = await api_client.get(
         "/api/v1/classifieds",
-        params={"category": "services", "ads_only": "true", "page_size": 50},
+        params={"category": "handyman", "ads_only": "true", "page_size": 50},
     )
     assert listed.status_code == 200
     ids = {item["id"] for item in listed.json()["items"]}
