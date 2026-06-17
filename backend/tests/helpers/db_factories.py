@@ -25,6 +25,10 @@ def unique_username(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:10]}"
 
 
+def unique_phone() -> str:
+    return f"+79{uuid.uuid4().int % 10_000_000_000:09d}"
+
+
 async def get_or_create_role(db: AsyncSession, role_name: UserRole) -> Role:
     result = await db.execute(select(Role).where(Role.name == role_name))
     role = result.scalar_one_or_none()

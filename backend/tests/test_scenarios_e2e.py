@@ -23,6 +23,7 @@ from tests.helpers.db_factories import (
     create_issue,
     create_owner_user,
     create_user,
+    unique_phone,
     unique_username,
 )
 
@@ -40,7 +41,7 @@ async def test_auth_register_login_and_me(api_client: AsyncClient):
             "username": username,
             "password": password,
             "full_name": "Иван Житель",
-            "phone": "+79001234567",
+            "phone": unique_phone(),
         },
     )
     assert register.status_code == 201
@@ -80,7 +81,7 @@ async def test_classified_create_approve_and_publish(
         category=ClassifiedCategory.FIREWOOD,
         title="Дрова берёзовые колотые",
         description="Сухие дрова, доставка по посёлку, оплата при получении",
-        phone="+79007654321",
+        phone=unique_phone(),
         author_name="Продавец",
         agree_rules=True,
     )
@@ -159,7 +160,7 @@ async def test_guest_submits_issue_via_http(mock_process, api_client: AsyncClien
             "/api/v1/issues",
             json={
                 "description": "Сломан фонарь на улице Ленина, темно по вечерам",
-                "phone": "+79001112233",
+                "phone": unique_phone(),
                 "full_name": "Гость",
             },
         )
@@ -240,6 +241,7 @@ async def test_register_login_create_issue_e2e(
 ):
     username = unique_username("issue_author")
     password = TEST_PASSWORD
+    phone = unique_phone()
 
     register = await api_client.post(
         "/api/v1/auth/register",
@@ -247,7 +249,7 @@ async def test_register_login_create_issue_e2e(
             "username": username,
             "password": password,
             "full_name": "Автор обращения",
-            "phone": "+79009998877",
+            "phone": phone,
         },
     )
     assert register.status_code == 201
@@ -289,6 +291,7 @@ async def test_register_login_create_classified_e2e(
 ):
     username = unique_username("seller")
     password = TEST_PASSWORD
+    phone = unique_phone()
 
     register = await api_client.post(
         "/api/v1/auth/register",
@@ -296,7 +299,7 @@ async def test_register_login_create_classified_e2e(
             "username": username,
             "password": password,
             "full_name": "Продавец",
-            "phone": "+79006665544",
+            "phone": phone,
         },
     )
     assert register.status_code == 201
@@ -315,7 +318,7 @@ async def test_register_login_create_classified_e2e(
             "category": "firewood",
             "title": "Дрова для бани",
             "description": "Сухие берёзовые дрова, самовывоз, оплата при получении",
-            "phone": "+79006665544",
+            "phone": phone,
             "author_name": "Продавец",
             "agree_rules": True,
         },
@@ -335,6 +338,7 @@ async def test_resident_reads_own_classifieds_in_cabinet(
 ):
     username = unique_username("cabinet_seller")
     password = TEST_PASSWORD
+    phone = unique_phone()
 
     register = await api_client.post(
         "/api/v1/auth/register",
@@ -342,7 +346,7 @@ async def test_resident_reads_own_classifieds_in_cabinet(
             "username": username,
             "password": password,
             "full_name": "Житель-продавец",
-            "phone": "+79001239876",
+            "phone": phone,
         },
     )
     assert register.status_code == 201
@@ -361,7 +365,7 @@ async def test_resident_reads_own_classifieds_in_cabinet(
             "category": "sale",
             "title": "Тумбочка деревянная",
             "description": "Тумбочка в хорошем состоянии",
-            "phone": "+79001239876",
+            "phone": phone,
             "author_name": "Житель-продавец",
             "agree_rules": True,
         },
@@ -388,6 +392,7 @@ async def test_full_cabinet_journey_issues_and_classifieds(
 ):
     username = unique_username("cabinet_full")
     password = TEST_PASSWORD
+    phone = unique_phone()
 
     register = await api_client.post(
         "/api/v1/auth/register",
@@ -395,7 +400,7 @@ async def test_full_cabinet_journey_issues_and_classifieds(
             "username": username,
             "password": password,
             "full_name": "Полный кабинет",
-            "phone": "+79005553322",
+            "phone": phone,
         },
     )
     assert register.status_code == 201
@@ -429,7 +434,7 @@ async def test_full_cabinet_journey_issues_and_classifieds(
             "category": "sale",
             "title": "Детский велосипед",
             "description": "Велосипед в хорошем состоянии, самовывоз",
-            "phone": "+79005553322",
+            "phone": phone,
             "author_name": "Полный кабинет",
             "agree_rules": True,
         },
