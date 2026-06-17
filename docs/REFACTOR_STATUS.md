@@ -6,6 +6,13 @@
 
 ---
 
+## P25 — P1.4 verification package ✅ (2026-06-17)
+
+1. ✅ `verification_service.py` → `verification/` (schemas, register, moderation, responses)
+2. ✅ Тест `test_verification_package.py`
+
+---
+
 ## P24 — P1.2–P1.3 event fetchers + cinema ✅ (2026-06-17)
 
 1. ✅ Fetchers перенесены в `event_sources/fetchers/` (13 модулей)
