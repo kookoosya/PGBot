@@ -4,8 +4,6 @@ import os
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
 
 os.environ.setdefault(
     "DATABASE_URL",
@@ -16,6 +14,11 @@ os.environ.setdefault(
     "postgresql://postgres:postgres@localhost:5432/test_db",
 )
 os.environ.setdefault("DEBUG", "true")
+# Щедрые лимиты в тестах — иначе e2e с одного IP ловят 429
+os.environ.setdefault("RATE_LIMIT", "10000/minute")
+os.environ.setdefault("CLASSIFIED_RATE_LIMIT", "10000/hour")
+os.environ.setdefault("ISSUE_RATE_LIMIT", "10000/hour")
+os.environ.setdefault("LOGIN_RATE_LIMIT", "10000/minute")
 
 from app.main import app  # noqa: E402
 
@@ -27,22 +30,18 @@ def postgres_available() -> bool:
     if _DB_OK is not None:
         return _DB_OK
 
-    url = os.environ["DATABASE_URL"]
+    try:
+        import psycopg2
 
-    async def _ping() -> bool:
-        engine = create_async_engine(url, pool_pre_ping=True)
+        conn = psycopg2.connect(os.environ["DATABASE_URL_SYNC"])
         try:
-            async with engine.connect() as conn:
-                await conn.execute(text("SELECT 1"))
-            return True
-        except Exception:
-            return False
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
         finally:
-            await engine.dispose()
-
-    import asyncio
-
-    _DB_OK = asyncio.run(_ping())
+            conn.close()
+        _DB_OK = True
+    except Exception:
+        _DB_OK = False
     return _DB_OK
 
 
