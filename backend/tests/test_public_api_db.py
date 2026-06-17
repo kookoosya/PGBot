@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import ClassifiedCategory, EventRegion
 from app.services.classified.schemas import ClassifiedActorContext, ClassifiedCreateInput
-from app.services.classified_service import create_classified_ad, moderate_classified_ad
+from app.services.classified import create_classified_ad, moderate_classified_ad
 from tests.helpers.db_factories import create_event, create_owner_user
 
 pytestmark = pytest.mark.postgres

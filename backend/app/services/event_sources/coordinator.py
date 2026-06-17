@@ -7,7 +7,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventRegion
-from app.services.event_service import EventValidationError
+from app.services.event import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult
 from app.services.event_sources.drampush_source import DrampushEventSource
 from app.services.event_sources.informpskov_source import InformpskovEventSource

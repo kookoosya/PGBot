@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.event_service import EventCreateInput, EventUpdateInput, create_event, update_event
+from app.services.event import EventCreateInput, EventUpdateInput, create_event, update_event
 from app.services.event_sources.base import FetchedEvent
 from app.services.event_sources.dedup import find_existing_event
 

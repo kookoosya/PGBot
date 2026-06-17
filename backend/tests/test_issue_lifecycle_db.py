@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import IssueStatus, UserRole
-from app.services.issue_service import (
+from app.services.issue import (
     IssueActorContext,
     add_issue_comment,
     apply_issue_status_update,
@@ -95,7 +95,7 @@ async def test_resident_can_read_own_issue(db_session: AsyncSession, issue_conte
 
 @pytest.mark.asyncio
 async def test_other_resident_cannot_read_issue(db_session: AsyncSession, issue_context):
-    from app.services.issue_service import IssueAccessDeniedError
+    from app.services.issue import IssueAccessDeniedError
 
     stranger = await create_user(db_session, role_name=UserRole.RESIDENT, full_name="Чужой")
     with pytest.raises(IssueAccessDeniedError):

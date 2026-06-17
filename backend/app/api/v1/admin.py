@@ -17,7 +17,7 @@ from app.schemas.event import (
     EventUpdate,
 )
 from app.services.admin_service import list_admin_notifications, list_audit_logs, process_pending_notifications
-from app.services.event_service import (
+from app.services.event import (
     EventCreateInput,
     EventNotFoundError,
     EventUpdateInput,

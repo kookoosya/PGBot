@@ -24,7 +24,7 @@ from app.schemas.service import (
     SlotsResponse,
     UpdateScheduleRequest,
 )
-from app.services.provider_service import (
+from app.services.provider import (
     ProviderAccessDeniedError,
     ProviderNotFoundError,
     ProviderValidationError,

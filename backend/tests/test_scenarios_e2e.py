@@ -8,14 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import ClassifiedCategory, ClassifiedPaymentStatus, EventRegion, IssueStatus, UserRole
 from app.services.classified.schemas import ClassifiedActorContext, ClassifiedCreateInput, ClassifiedSearchParams
-from app.services.classified_service import (
+from app.services.classified import (
     create_classified_ad,
     moderate_classified_ad,
     search_classifieds,
 )
 from app.schemas.analysis_result import AnalysisResult
-from app.services.event_service import search_public_events
-from app.services.issue_service import IssueActorContext, apply_issue_status_update, build_my_issues_response
+from app.services.event import search_public_events
+from app.services.issue import IssueActorContext, apply_issue_status_update, build_my_issues_response
 from tests.helpers.db_factories import (
     TEST_PASSWORD,
     auth_headers_for,

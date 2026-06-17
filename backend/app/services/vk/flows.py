@@ -27,7 +27,7 @@ from app.models.issue import Issue
 from app.models.place import Place, PlaceComplaint
 from app.models.site_feedback import SiteFeedback
 from app.services.classified_antifraud import validate_phone
-from app.services.classified_service import ClassifiedValidationError, create_classified_ad_from_vk
+from app.services.classified import ClassifiedValidationError, create_classified_ad_from_vk
 from app.services.map_routes import get_map_routes
 from app.services.vk.client import get_inline_links_keyboard, send_message
 from app.services.vk.flow_store import clear_flow as clear_flow_state

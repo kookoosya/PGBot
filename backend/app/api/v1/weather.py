@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.core.service_http import raise_http_for_service_error
 from app.schemas.weather import WeatherResponse
-from app.services.weather_service import WeatherFetchError, get_weather
+from app.services.weather import WeatherFetchError, get_weather
 
 router = APIRouter()
 

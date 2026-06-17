@@ -7,7 +7,7 @@ from app.database import get_db
 from app.models.enums import EventRegion
 from app.schemas.event import PublicEventListResponse, PublicEventResponse
 from app.schemas.today import TodayResponse
-from app.services.event_service import (
+from app.services.event import (
     event_to_public_response,
     get_public_event_by_id,
     search_public_events,

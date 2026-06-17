@@ -21,7 +21,7 @@ from app.schemas.issue import (
     IssueStatusUpdate,
     IssueUpdate,
 )
-from app.services.issue_service import (
+from app.services.issue import (
     IssueAccessDeniedError,
     IssueNotFoundError,
     IssueSearchParams,

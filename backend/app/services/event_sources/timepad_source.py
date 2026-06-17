@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.enums import EventRegion
-from app.services.event_service import EventValidationError
+from app.services.event import EventValidationError
 from app.services.event_sources.base import EventSource, EventSyncResult, FetchedEvent
 from app.services.event_sources.upsert import upsert_fetched_event
 from app.models.enums import EventCategory

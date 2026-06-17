@@ -42,7 +42,7 @@ async def _vk_digest_work() -> None:
 
 
 async def _weather_cache_work() -> None:
-    from app.services.weather_service import refresh_weather_cache
+    from app.services.weather import refresh_weather_cache
 
     await refresh_weather_cache()
 

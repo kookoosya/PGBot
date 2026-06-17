@@ -17,7 +17,7 @@ from app.models.vk_subscriber import VkSubscriber
 from app.services.site_urls import public_site_url
 from app.services.vk.client import get_welcome_keyboard, send_message
 from app.services.vk.subscription import subscriber_wants_category
-from app.services.weather_service import WeatherFetchError, format_weather_digest_lines, get_weather
+from app.services.weather import WeatherFetchError, format_weather_digest_lines, get_weather
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
