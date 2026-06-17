@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { EventCardEvent } from "@/lib/eventUtils";
-import { formatFestivalDateRange, FESTIVAL_COMPACT_LIST_THRESHOLD, isFestivalImminent, pluralPerformances, sharePageUrl } from "@/lib/eventUtils";
+import { formatFestivalDateRange, FESTIVAL_COMPACT_LIST_THRESHOLD, festivalBadgeLabel, isFestivalImminent, pluralPerformances, sharePageUrl } from "@/lib/eventUtils";
 import { GARNECT_FESTIVAL_TITLE } from "@/lib/festivalFilters";
 import { EventCard } from "./EventCard";
 import { FestivalProgramSchedule } from "./FestivalProgramSchedule";
@@ -27,6 +27,7 @@ export function FestivalProgramBlock({
 }: FestivalProgramBlockProps) {
   const dateRange = useMemo(() => formatFestivalDateRange(events), [events]);
   const isImminent = useMemo(() => isFestivalImminent(events, 3), [events]);
+  const badgeLabel = useMemo(() => festivalBadgeLabel(events), [events]);
   const [open, setOpen] = useState(isImminent);
   const [shareMsg, setShareMsg] = useState("");
 
@@ -59,7 +60,7 @@ export function FestivalProgramBlock({
           <span className="events-festival-program__kicker">{kicker}</span>
           <span className="events-festival-program__title">
             {title}
-            {isImminent && <span className="events-festival-program__badge">Скоро</span>}
+            {badgeLabel && <span className="events-festival-program__badge">{badgeLabel}</span>}
           </span>
           <span className="events-festival-program__meta">
             {dateRange}

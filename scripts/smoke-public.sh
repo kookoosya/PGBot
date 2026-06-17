@@ -110,6 +110,13 @@ if [[ "$BASE" == *"$CANONICAL_SITE_HOST"* ]]; then
   fi
 fi
 check "API events" "$API/public/events" "items"
+if curl -sS --max-time 20 "$API/public/events?source=pushkinland&limit=5" | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(0 if isinstance(d.get('items'), list) else 1)"; then
+  echo -e "${GREEN}OK${NC}   API events source filter"
+  pass=$((pass + 1))
+else
+  echo -e "${RED}FAIL${NC} API events source filter"
+  fail=$((fail + 1))
+fi
 check "API classifieds" "$API/classifieds" "items"
 check "API classifieds categories" "$API/classifieds/categories" "value"
 

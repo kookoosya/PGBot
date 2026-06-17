@@ -10,6 +10,8 @@ import {
   isDisplayablePoster,
   isRealCinemaEvent,
   isFestivalImminent,
+  festivalBadgeLabel,
+  festivalPromoKicker,
   partitionGarnectProgram,
   pluralPerformances,
   regionChipClass,
@@ -161,6 +163,31 @@ describe("isFestivalImminent", () => {
   it("returns false for distant festival", () => {
     const later = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
     expect(isFestivalImminent([{ starts_at: later, starts_at_label: "позже" }])).toBe(false);
+  });
+
+  it("stays visible on the second festival day after morning shows", () => {
+    const yesterdayMorning = new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString();
+    const tonight = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
+    expect(
+      isFestivalImminent([
+        { starts_at: yesterdayMorning, starts_at_label: "вчера" },
+        { starts_at: tonight, starts_at_label: "сегодня" },
+      ]),
+    ).toBe(true);
+  });
+});
+
+describe("festival promo labels", () => {
+  it("uses live kicker when a performance is today", () => {
+    const today = new Date().toISOString();
+    expect(festivalPromoKicker([{ starts_at: today }])).toContain("Сейчас");
+    expect(festivalBadgeLabel([{ starts_at: today }])).toBe("Идёт");
+  });
+
+  it("uses soon badge before opening day", () => {
+    const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    expect(festivalPromoKicker([{ starts_at: soon }])).toContain("выходных");
+    expect(festivalBadgeLabel([{ starts_at: soon }])).toBe("Скоро");
   });
 });
 

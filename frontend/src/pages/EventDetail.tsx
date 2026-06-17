@@ -5,15 +5,13 @@ import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@
 import { api, PublicEvent } from "@/lib/api";
 import { CTA } from "@/lib/cta";
 import { garnectEventsPath } from "@/lib/festivalFilters";
-import { eventSourceLabel, eventTeaser, isDisplayablePoster, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
+import { eventSourceLabel, eventTeaser, isDisplayablePoster, isGarnectProgramEvent, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 
 export function EventDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const fromGarnect = searchParams.get("from") === "garnect";
-  const eventsBackTo = fromGarnect ? garnectEventsPath() : "/events";
-  const eventsBackLabel = fromGarnect ? "← Программа гарнеца" : `← ${CTA.allEvents}`;
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [error, setError] = useState("");
   const [shareMsg, setShareMsg] = useState("");
@@ -39,6 +37,8 @@ export function EventDetail() {
   };
 
   if (error) {
+    const eventsBackTo = fromGarnect ? garnectEventsPath() : "/events";
+    const eventsBackLabel = fromGarnect ? "← Программа гарнеца" : `← ${CTA.allEvents}`;
     return (
       <div className="literary-page page-section max-w-3xl">
         <LiteraryEmptyState {...EMPTY_STATES.eventNotFound} text={error}>
@@ -58,6 +58,9 @@ export function EventDetail() {
 
   const cinema = isRealCinemaEvent(event);
   const posterUrl = isDisplayablePoster(event.poster_url, event.category) ? event.poster_url : null;
+  const garnectEvent = isGarnectProgramEvent(event);
+  const eventsBackTo = fromGarnect || garnectEvent ? garnectEventsPath() : "/events";
+  const eventsBackLabel = fromGarnect || garnectEvent ? "← Программа гарнеца" : `← ${CTA.allEvents}`;
 
   return (
     <div className="literary-page page-section max-w-3xl">
@@ -128,6 +131,11 @@ export function EventDetail() {
         )}
 
         <div className="event-detail-actions">
+          {garnectEvent && (
+            <Link to={garnectEventsPath()} className="literary-btn literary-btn--ghost no-underline">
+              Вся программа гарнеца
+            </Link>
+          )}
           {event.source_url ? (
             <a
               href={event.source_url}

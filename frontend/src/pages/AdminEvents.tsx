@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminEventSourcesPanel } from "@/components/admin/AdminEventSourcesPanel";
 import { api, EventCreate, EventItem, EventRegion, EventSourceOverviewItem } from "@/lib/api";
+import { buildEventsSourceHref } from "@/lib/eventSourceFilters";
 import { eventSourceLabel } from "@/lib/eventUtils";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
+import { siteOrigin } from "@/lib/siteUrl";
 
 const REGIONS: { value: EventRegion; label: string }[] = [
   { value: "pushkin_gory", label: "Пушкинские Горы" },
@@ -48,6 +51,8 @@ const emptyForm: EventCreate = {
 };
 
 export function AdminEvents() {
+  const { info } = useSiteInfo();
+  const siteBase = (info?.site_url ?? siteOrigin()).replace(/\/$/, "");
   const [items, setItems] = useState<EventItem[]>([]);
   const [sourceOptions, setSourceOptions] = useState<EventSourceOverviewItem[]>([]);
   const [sourceFilter, setSourceFilter] = useState("");
@@ -207,6 +212,19 @@ export function AdminEvents() {
             Показано: {items.length}
             {sourceFilter && ` · ${eventSourceLabel(sourceFilter)}`}
             {search && ` · «${search}»`}
+            {sourceFilter && (
+              <>
+                {" · "}
+                <a
+                  href={`${siteBase}${buildEventsSourceHref(sourceFilter)}`}
+                  className="text-primary underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  На сайте →
+                </a>
+              </>
+            )}
           </p>
         </CardContent>
       </Card>

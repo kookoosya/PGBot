@@ -223,25 +223,47 @@ export function pluralPerformances(count: number): string {
   return "спектаклей";
 }
 
-/** True when the festival starts within ``withinDays`` (incl. today and in-progress). */
+/** True while the festival window is relevant: soon, today, or still in progress. */
 export function isFestivalImminent(
   events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
   withinDays = 3,
 ): boolean {
   if (!events.length) return false;
   const now = Date.now();
-  const graceMs = 24 * 60 * 60 * 1000;
-  const horizon = now + withinDays * 24 * 60 * 60 * 1000;
+  const tailMs = 12 * 60 * 60 * 1000;
+  const horizonMs = withinDays * 24 * 60 * 60 * 1000;
+  let first = Infinity;
+  let last = -Infinity;
 
   for (const event of events) {
     if (!event.starts_at) continue;
     const start = Date.parse(event.starts_at);
     if (Number.isNaN(start)) continue;
-    if (start >= now - graceMs && start <= horizon) {
-      return true;
-    }
+    first = Math.min(first, start);
+    last = Math.max(last, start);
   }
-  return false;
+
+  if (!Number.isFinite(first)) return false;
+  return first <= now + horizonMs && last >= now - tailMs;
+}
+
+/** Kicker text for festival promo blocks on the landing and hero banner. */
+export function festivalPromoKicker(events: Pick<ShowGroupable, "starts_at">[]): string {
+  const today = new Date().toISOString().slice(0, 10);
+  if (events.some((event) => event.starts_at?.slice(0, 10) === today)) {
+    return "🎭 Сейчас на фестивале";
+  }
+  return "🎭 На этих выходных";
+}
+
+/** Badge label: «Скоро» before opening day, «Идёт» during the festival. */
+export function festivalBadgeLabel(events: Pick<ShowGroupable, "starts_at">[]): string | null {
+  if (!isFestivalImminent(events)) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  if (events.some((event) => event.starts_at?.slice(0, 10) === today)) {
+    return "Идёт";
+  }
+  return "Скоро";
 }
 
 export function extractEventTimeLabel(event: Pick<ShowGroupable, "starts_at" | "starts_at_label">): string {
