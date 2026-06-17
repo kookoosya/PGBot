@@ -1,26 +1,33 @@
 # Пушкинские Горы — портал посёлка
 
-Автоматизированная система приёма обращений жителей через ВКонтакте с AI-анализом, админ-панелью и Telegram-уведомлениями.
+Публичный портал посёлка Пушкинские Горы (Псковская область): афиша, объявления, карта, обращения жителей, VK-бот и VK Mini App.
+
+**Прод:** https://192-210-213-135.sslip.io
 
 ## Возможности
 
-- Приём обращений через VK Bot (текст + фото)
-- AI-анализ через Gemini (категория, приоритет, спам-фильтр, дедупликация)
-- Веб-панель для администрации и социальных служб
-- Назначение ответственных отделов
-- Telegram-уведомления (мгновенные для высокого приоритета)
-- Аналитика: статистика, топ категорий, динамика по месяцам
-- Аудит действий администрации
+| Модуль | Описание |
+|--------|----------|
+| **Обращения** | Приём через сайт и VK-бот; AI-анализ (Gemini), дедупликация, назначение отделов |
+| **Афиша** | 13 внешних источников: VK, Kudago, кинотеатры Пскова, Пушкинский заповедник и др. |
+| **Объявления / работа** | Доска с модерацией, квоты, оплата переводом |
+| **Карта** | Места, маршруты, такси, офлайн-тайлы (PWA) |
+| **Услуги** | Регистрация мастеров, запись, кабинет провайдера |
+| **ИИ-помощник** | `/ai` — **30** бесплатных сообщений/день |
+| **VK-бот** | Меню, пошаговые сценарии, digest, модерация |
+| **VK Mini App** | `/vk/*` — компактная оболочка внутри ВКонтакте |
+| **Админка** | `/admin` — обращения, аналитика, модерация, аудит |
 
 ## Стек
 
 | Компонент | Технологии |
-|-----------|-----------|
+|-----------|------------|
 | Backend | Python 3.12, FastAPI, SQLAlchemy, Alembic |
-| Frontend | React, Vite, Tailwind CSS |
+| Frontend | React 18, Vite 6, TypeScript, Tailwind CSS |
 | Database | PostgreSQL 16 |
-| AI | Google Gemini |
-| Infra | Docker, Docker Compose, Nginx |
+| Cache (prod) | Redis 7 |
+| AI | Gemini, Pollinations, OpenRouter |
+| Infra | Docker Compose, Nginx, GitHub Actions |
 
 ## Быстрый старт
 
@@ -31,54 +38,37 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-- Админ-панель: http://localhost
-- API документация: http://localhost/api/docs
-- Логин: `admin` / пароль из `SUPER_ADMIN_PASSWORD`
+- Сайт: http://localhost
+- API: http://localhost/api/docs
+- Админка: http://localhost/admin — логин `admin`, пароль из `SUPER_ADMIN_PASSWORD`
 
-## Структура проекта
+## Структура
 
 ```
-backend/          # FastAPI приложение
-frontend/         # React админ-панель
-docker/           # Nginx конфигурация
+backend/          # FastAPI
+frontend/         # React SPA
+shared/           # portal_copy.json — единые тексты
+docker/           # Nginx
 docs/             # Документация
-scripts/          # Утилиты
-.github/          # CI/CD
+scripts/          # Деплой, smoke, cron
 ```
 
-## API
+## Тесты
 
-| Endpoint | Описание |
-|----------|----------|
-| `/api/v1/auth` | Аутентификация (JWT) |
-| `/api/v1/issues` | Обращения |
-| `/api/v1/users` | Пользователи |
-| `/api/v1/categories` | Категории |
-| `/api/v1/departments` | Отделы |
-| `/api/v1/statistics` | Аналитика |
-| `/api/v1/admin` | Аудит, уведомления |
-| `/api/v1/vk/callback` | VK Webhook |
-
-## Роли
-
-- **Resident** — житель (обращения через VK)
-- **Moderator** — модерация, дубликаты
-- **Administration** — управление обращениями
-- **SocialService** — социальные обращения
-- **SuperAdmin** — полный доступ
-
-## Новое в этой версии
-
-- **ИИ-помощник** — публичная вкладка `/ai`, 15 бесплатных сообщений/день
-- **Пушкинский стиль** — дизайн сайта и бота в духе поэтического поселка
-- **Регистрация служб** — администрация регистрируется с верификацией
-- **Оплата ИИ** — перевод на карту для расширенного лимита
+```bash
+cd backend && python3 -m pytest -q -m "not postgres"
+cd frontend && npm run test && npm run build
+bash scripts/smoke-public.sh http://localhost
+```
 
 ## Документация
 
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Развёртывание](docs/DEPLOYMENT.md)
-- [Настройка VK API](docs/VK_SETUP.md) — пошагово для непрограммистов
+- [Настройка VK](docs/VK_SETUP.md)
+- [Настройка AI](docs/AI_SETUP.md)
+- [Статус рефакторинга](docs/REFACTOR_STATUS.md)
+- [Дорожная карта](docs/ROADMAP.md)
 
 ## Лицензия
 

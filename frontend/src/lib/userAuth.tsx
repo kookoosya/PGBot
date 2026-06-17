@@ -17,18 +17,25 @@ interface UserAuthContextType {
 
 const UserAuthContext = createContext<UserAuthContextType | null>(null);
 
+function readResidentToken(): string | null {
+  return localStorage.getItem("user_token") || sessionStorage.getItem("vk_mini_app_token");
+}
+
 export function UserAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const clearSession = () => {
     localStorage.removeItem("user_token");
+    sessionStorage.removeItem("vk_mini_app_token");
+    api.setUserToken(null);
     setUser(null);
   };
 
   const refresh = async () => {
-    const token = localStorage.getItem("user_token");
+    const token = readResidentToken();
     if (!token) {
+      api.setUserToken(null);
       setUser(null);
       return;
     }
@@ -38,7 +45,7 @@ export function UserAuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("user_token");
+    const token = readResidentToken();
     if (!token) {
       setLoading(false);
       return;
