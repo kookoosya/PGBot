@@ -24,7 +24,7 @@ def issue_to_response(issue: Issue):
     from app.schemas.issue import IssuePhotoResponse, IssueResponse
 
     insp = sa_inspect(issue)
-    payload = {attr.key: getattr(issue, attr.key) for attr in insp.mapper.column_attrs}
+    payload = {attr.key: insp.dict[attr.key] for attr in insp.mapper.column_attrs}
     photos = []
     if "photos" not in insp.unloaded:
         photos = [IssuePhotoResponse.model_validate(photo) for photo in issue.photos]
