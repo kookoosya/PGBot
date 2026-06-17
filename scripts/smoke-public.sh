@@ -119,6 +119,7 @@ check "Share garnect" "${BASE%/}/share/festival/garnect" "Бугровский �
 share_event_id=$(curl -sS --max-time 20 "$API/public/events?limit=1" | python3 -c "import sys,json; items=json.load(sys.stdin).get('items') or []; print(items[0]['id'] if items else '')" 2>/dev/null || true)
 if [[ -n "$share_event_id" ]]; then
   check "Share event" "${BASE%/}/share/events/${share_event_id}" 'property="og:title"'
+  check "Event detail SPA" "${BASE%/}/events/${share_event_id}" "root"
 else
   echo -e "${YELLOW}SKIP${NC} Share event — нет событий в API"
   warn=$((warn + 1))

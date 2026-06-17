@@ -100,7 +100,11 @@ async def send_daily_digest(db: AsyncSession) -> int:
                 cat = CLASSIFIED_LABELS.get(ad.category, ad.category)
                 lines.append(f"• [{cat}] {ad.title}")
 
-        lines.append(f"\n🌐 {public_site_url()}/classifieds")
+        site = public_site_url()
+        if events_lines:
+            lines.append(f"\n📅 {site}/events · 📋 {site}/classifieds")
+        else:
+            lines.append(f"\n🌐 {site}/classifieds")
         try:
             await send_message(sub.peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
             sub.last_digest_at = now

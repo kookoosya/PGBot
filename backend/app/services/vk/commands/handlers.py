@@ -40,7 +40,13 @@ from app.services.vk.helpers import (
 from app.services.vk.ai_mode import enter_ai_mode
 from app.services.vk.ai_history import clear_ai_history
 from app.services.vk.bot import format_ads_message, unsubscribe_peer
-from app.services.vk.events import format_events_message
+from app.services.vk.events import (
+    events_inline_buttons,
+    format_cinema_message_from_list,
+    format_events_message_from_list,
+    load_cinema_screenings,
+    load_upcoming_events_preview,
+)
 from app.services.vk.messages import ai_enter_text, box, help_text
 from app.services.weather import (
     WeatherFetchError,
@@ -202,12 +208,20 @@ async def handle_complaints_info(ctx: VkRouteContext) -> None:
 
 
 async def handle_events(ctx: VkRouteContext) -> None:
-    msg = await format_events_message(ctx.db)
-    await send_with_site_links(
-        ctx.peer_id,
-        msg,
-        (LINK_EVENTS, "/events"),
-    )
+    events = await load_upcoming_events_preview(ctx.db)
+    msg = format_events_message_from_list(events)
+    buttons = [*events_inline_buttons(events), (LINK_EVENTS, "/events")]
+    await send_with_site_links(ctx.peer_id, msg, *buttons[:3])
+
+
+async def handle_cinema(ctx: VkRouteContext) -> None:
+    films = await load_cinema_screenings(ctx.db)
+    msg = format_cinema_message_from_list(films)
+    buttons = [
+        *events_inline_buttons(films, prefix="🎬"),
+        ("🎬 Кино", "/events?region=pskov&category=cinema"),
+    ]
+    await send_with_site_links(ctx.peer_id, msg, *buttons[:3])
 
 
 async def handle_register(ctx: VkRouteContext) -> None:
