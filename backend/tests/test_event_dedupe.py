@@ -66,6 +66,34 @@ def test_group_events_by_show_keeps_nearest_session():
     assert result[0].id == 2
 
 
+def test_collapse_similar_headline_events_merges_news_duplicates():
+    day = datetime(2026, 6, 17, 9, 0, tzinfo=timezone.utc)
+    informpskov = _event(
+        1,
+        "Выставка архивных документов о предках Александра Пушкина откроется в Пскове",
+        starts_at=day,
+        source="informpskov",
+        category="holiday",
+    )
+    pln = _event(
+        2,
+        "Выставка архивных документов о Пушкине откроется в Пскове",
+        starts_at=day,
+        source="pln",
+        category="holiday",
+        poster_url="https://example.com/poster.jpg",
+    )
+    from app.services.event_dedupe_service import collapse_similar_headline_events, polish_public_event_feed
+
+    result = collapse_similar_headline_events([informpskov, pln])
+    assert len(result) == 1
+    assert result[0].id == 2
+
+    polished = polish_public_event_feed([informpskov, pln, _event(3, "Дюна"), _event(4, "Дюна", starts_at=datetime(2026, 6, 10, 20, 0, tzinfo=timezone.utc))])
+    titles = [event.title for event in polished]
+    assert titles.count("Дюна") == 1
+
+
 def test_different_venues_are_not_merged():
     a = _event(1, "Майкл", location="Мираж")
     b = _event(2, "Майкл", location="Сильвер Сити")

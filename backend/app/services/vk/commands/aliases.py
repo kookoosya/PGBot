@@ -101,7 +101,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "афиша": "events",
     "события": "events",
     "событие": "events",
-    "кино": "events",
+    "кино": "cinema",
     "мероприятия": "events",
     "ℹ️ помощь": "help",
     "помощь": "help",

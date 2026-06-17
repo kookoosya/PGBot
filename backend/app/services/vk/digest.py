@@ -16,6 +16,7 @@ from app.models.enums import (
 from app.models.vk_subscriber import VkSubscriber
 from app.services.site_urls import public_site_url
 from app.services.vk.client import get_welcome_keyboard, send_message
+from app.services.vk.events import format_events_digest_lines
 from app.services.vk.subscription import subscriber_wants_category
 from app.services.weather_service import WeatherFetchError, format_weather_digest_lines, get_weather
 
@@ -64,6 +65,12 @@ async def send_daily_digest(db: AsyncSession) -> int:
     except WeatherFetchError:
         logger.warning("Daily digest: weather unavailable")
 
+    events_lines: list[str] = []
+    try:
+        events_lines = await format_events_digest_lines(db)
+    except Exception:
+        logger.exception("Daily digest: failed to load upcoming events")
+
     sent = 0
 
     for sub in subs:
@@ -76,6 +83,9 @@ async def send_daily_digest(db: AsyncSession) -> int:
         ]
         if weather_lines:
             lines.extend(weather_lines)
+            lines.append("")
+        if events_lines:
+            lines.extend(events_lines)
             lines.append("")
         lines.extend([
             f"📋 Всего на доске: {total_count}",
@@ -90,7 +100,11 @@ async def send_daily_digest(db: AsyncSession) -> int:
                 cat = CLASSIFIED_LABELS.get(ad.category, ad.category)
                 lines.append(f"• [{cat}] {ad.title}")
 
-        lines.append(f"\n🌐 {public_site_url()}/classifieds")
+        site = public_site_url()
+        if events_lines:
+            lines.append(f"\n📅 {site}/events · 📋 {site}/classifieds")
+        else:
+            lines.append(f"\n🌐 {site}/classifieds")
         try:
             await send_message(sub.peer_id, "\n".join(lines), keyboard=get_welcome_keyboard())
             sub.last_digest_at = now

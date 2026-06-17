@@ -72,7 +72,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
     [filteredEvents],
   );
   const otherPskovEvents = useMemo(
-    () => filteredEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e)),
+    () => groupEventsByShow(filteredEvents.filter((e) => e.region_label === "Псков" && !isRealCinemaEvent(e))),
     [filteredEvents],
   );
 
@@ -253,25 +253,26 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
   return (
     <div className={isLanding ? "landing-events" : "literary-dashboard"}>
-      {showCityRow && (
-        <div className="events-city-row">
-          {cinemaBlock}
-          {pskovSection}
-        </div>
-      )}
-
       {isLanding ? (
         <>
           {pushkinSection}
           {pskovSection}
         </>
-      ) : showCityRow ? (
-        pushkinSection
       ) : (
         <>
           {pushkinSection}
-          {cinemaBlock}
-          {pskovSection}
+          {showCityRow && (
+            <div className="events-city-row">
+              {cinemaBlock}
+              {pskovSection}
+            </div>
+          )}
+          {!showCityRow && (
+            <>
+              {cinemaBlock}
+              {pskovSection}
+            </>
+          )}
         </>
       )}
     </div>
