@@ -37,7 +37,8 @@ _PAST_RE = re.compile(
 )
 _SKIP_RE = re.compile(
     r"орви|погиб|пожар|ремонт школ|ваканси|уголов|задержан|тариф|бюджет|налог|дтп|авария"
-    r"|вручили диплом|участникам программы «герои|\bсво\b",
+    r"|вручили диплом|участникам программы «герои|\bсво\b"
+    r"|кремл|национальной политик|семинар-совещан|назвал.*оплотом|заместитель руководителя администрации",
     re.IGNORECASE,
 )
 _IN_PSKOV_RE = re.compile(r"\bв пскове\b|\bг\.?\s*псков\b", re.IGNORECASE)
@@ -118,7 +119,7 @@ def _is_relevant_item(*, title: str, description: str, category: str) -> bool:
     has_category = any(cat in category_lower for cat in _ALLOWED_CATEGORIES)
     has_event_signal = _EVENT_SIGNAL_RE.search(combined) is not None
     has_invite = _INVITE_SIGNAL_RE.search(combined) is not None
-    return has_category and has_event_signal and (has_invite or "сегодня" in combined.lower())
+    return has_category and has_event_signal and has_invite
 
 
 def _parse_rss_items(xml_text: str) -> list[dict[str, str]]:
