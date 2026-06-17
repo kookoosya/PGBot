@@ -8,7 +8,7 @@ from app.services.vk.flow_store import clear_flow, get_active_flows, get_flow, s
 from app.services.vk.flows import handle_flow_message, start_classified_flow, start_wish_flow
 from tests.conftest import postgres_available
 
-pytestmark = pytest.mark.skipif(not postgres_available(), reason="PostgreSQL is not available")
+pytestmark = pytest.mark.postgres
 
 
 @pytest.fixture

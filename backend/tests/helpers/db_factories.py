@@ -113,7 +113,10 @@ async def create_event(
     title: str,
     region: EventRegion = EventRegion.PUSHKIN_GORY,
     source: str = "vk",
+    source_url: str | None = None,
     starts_at: datetime | None = None,
+    ends_at: datetime | None = None,
+    location: str = "Пушкиногорье",
     poster_url: str | None = None,
 ) -> Event:
     from datetime import timedelta, timezone
@@ -122,10 +125,12 @@ async def create_event(
         title=title,
         description="Тестовое событие",
         starts_at=starts_at or datetime.now(timezone.utc) + timedelta(days=3),
-        location="Пушкиногорье",
+        ends_at=ends_at,
+        location=location,
         region=region.value,
         category="culture",
         source=source,
+        source_url=source_url,
         poster_url=poster_url,
         is_published=True,
     )
