@@ -8,6 +8,8 @@ source "$SCRIPT_DIR/canonical-site.sh"
 
 cd /opt/pgbot
 
+export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
 bash scripts/setup-russia-mirror.sh
 docker compose -f docker-compose.prod.yml up -d --build
