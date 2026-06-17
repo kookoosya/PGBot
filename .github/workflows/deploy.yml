@@ -20,9 +20,21 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ secrets.VPS_PASSWORD != '' || secrets.VPS_SSH_KEY != '' }}
     steps:
+      - name: Check deploy credentials
+        id: creds
+        run: |
+          if [ -n "${{ secrets.VPS_PASSWORD }}" ] || [ -n "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Пропуск деплоя: нет VPS_PASSWORD и VPS_SSH_KEY в GitHub Secrets."
+            echo "Добавьте секрет: Settings → Secrets and variables → Actions → VPS_PASSWORD"
+            echo "Затем: Actions → Deploy VPS → Run workflow"
+          fi
+
       - name: Deploy to VPS
+        if: steps.creds.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: 192.210.213.135
@@ -40,8 +52,10 @@ jobs:
             bash scripts/vps-deploy.sh
 
       - uses: actions/checkout@v4
+        if: steps.creds.outputs.ready == 'true'
 
       - name: Smoke after deploy
+        if: steps.creds.outputs.ready == 'true'
         env:
           SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://192-210-213-135.sslip.io' }}
         run: |
