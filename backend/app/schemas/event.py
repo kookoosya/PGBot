@@ -100,3 +100,17 @@ class EventSyncResponse(BaseModel):
     updated: int
     skipped: int
     errors: list[str] = Field(default_factory=list)
+
+
+class EventSourceOverviewItem(BaseModel):
+    id: str
+    label: str
+    health: str
+    published_count: int
+    token_hint: str | None = None
+
+
+class EventSourcesOverviewResponse(BaseModel):
+    sources: list[EventSourceOverviewItem]
+    total_published: int
+    event_sources_health: dict[str, str]

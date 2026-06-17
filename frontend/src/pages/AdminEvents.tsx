@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AdminEventSourcesPanel } from "@/components/admin/AdminEventSourcesPanel";
 import { api, EventCreate, EventItem, EventRegion } from "@/lib/api";
 
 const REGIONS: { value: EventRegion; label: string }[] = [
@@ -45,16 +46,6 @@ const emptyForm: EventCreate = {
   is_published: true,
 };
 
-function formatSyncSummary(results: Awaited<ReturnType<typeof api.syncVkEvents>>): string {
-  return results
-    .map((r) => {
-      const label = r.region === "pskov" ? "Псков" : "Пушкинские Горы";
-      if (r.errors.length) return `${label}: ${r.errors[0]}`;
-      return `${label}: +${r.created} новых, обновлено ${r.updated}`;
-    })
-    .join(" · ");
-}
-
 export function AdminEvents() {
   const [items, setItems] = useState<EventItem[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -62,7 +53,6 @@ export function AdminEvents() {
   const [editId, setEditId] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
-  const [syncing, setSyncing] = useState(false);
 
   const load = () => {
     api
@@ -131,49 +121,21 @@ export function AdminEvents() {
     }
   };
 
-  const runSync = async (source: "vk" | "kudago", region?: EventRegion) => {
-    setSyncing(true);
-    setMsg("");
-    setError("");
-    try {
-      const results = source === "vk"
-        ? await api.syncVkEvents(region)
-        : await api.syncKudagoEvents(region);
-      setMsg(formatSyncSummary(results));
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Синхронизация не удалась");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">События региона</h1>
           <p className="text-muted-foreground mt-1">
-            Афиша для Пушкинских Гор и Пскова. Опубликованные события появляются на главной в блоке «Ближайшие события».
+            Афиша для Пушкинских Гор и Пскова. Опубликованные события появляются на сайте и в блоке «Ближайшие события».
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={syncing} onClick={() => runSync("vk")}>
-            {syncing ? "Синхронизация…" : "Синхронизировать из VK"}
-          </Button>
-          <Button variant="outline" disabled={syncing} onClick={() => runSync("kudago", "pskov")}>
-            {syncing ? "Синхронизация…" : "KudaGo (Псков)"}
-          </Button>
-          <Button onClick={() => { resetForm(); setShowForm(true); }}>
-            {showForm && !editId ? "Отмена" : "+ Добавить событие"}
-          </Button>
-        </div>
+        <Button onClick={() => { resetForm(); setShowForm(true); }}>
+          {showForm && !editId ? "Отмена" : "+ Добавить событие"}
+        </Button>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        VK: музей-заповедник Пушкина и официальная группа Пскова (<code>VK_GROUP_TOKEN</code>).
-        KudaGo: кино и концерты Пскова — без токена, по открытому API.
-      </p>
+      <AdminEventSourcesPanel onSynced={load} />
 
       {msg && <p className="text-green-700">{msg}</p>}
       {error && <p className="text-destructive">{error}</p>}
@@ -292,7 +254,7 @@ export function AdminEvents() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {event.region_label} · {event.category_label} · {event.starts_at_label}
-                  {event.source === "vk" && " · VK"}
+                  {event.source && ` · ${event.source}`}
                   {!event.is_published && " · черновик"}
                 </p>
                 <p className="font-semibold text-lg">{event.title}</p>
@@ -309,7 +271,7 @@ export function AdminEvents() {
           </Card>
         ))}
         {items.length === 0 && !error && (
-          <p className="text-muted-foreground">Пока нет событий — добавьте вручную или синхронизируйте из VK.</p>
+          <p className="text-muted-foreground">Пока нет событий — добавьте вручную или синхронизируйте источники выше.</p>
         )}
       </div>
     </div>

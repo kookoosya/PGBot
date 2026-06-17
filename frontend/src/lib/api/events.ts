@@ -6,6 +6,7 @@ import type {
   EventItem,
   EventListResponse,
   EventRegion,
+  EventSourcesOverview,
   EventSyncResult,
   PublicEvent,
   PublicEventListResponse,
@@ -64,6 +65,23 @@ export function createEventsApi(client: HttpClient) {
     syncKudagoEvents(region?: EventRegion) {
       const q = region ? `?region=${region}` : "";
       return client.request<EventSyncResult[]>(`/admin/events/sync-kudago${q}`, {
+        method: "POST",
+      });
+    },
+
+    getAdminEventSources() {
+      return client.request<EventSourcesOverview>("/admin/events/sources");
+    },
+
+    syncEventSource(source: string, region?: EventRegion) {
+      const q = region ? `?region=${region}` : "";
+      return client.request<EventSyncResult[]>(`/admin/events/sync-source/${source}${q}`, {
+        method: "POST",
+      });
+    },
+
+    syncAllEventSources() {
+      return client.request<EventSyncResult[]>(`/admin/events/sync-all`, {
         method: "POST",
       });
     },

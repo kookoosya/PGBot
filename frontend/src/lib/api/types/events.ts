@@ -65,10 +65,27 @@ export interface EventListResponse {
 }
 
 export interface EventSyncResult {
+  source: string;
   region: string;
   fetched: number;
   created: number;
   updated: number;
   skipped: number;
   errors: string[];
+}
+
+export type EventSourceHealth = "ready" | "group_token_only" | "needs_token";
+
+export interface EventSourceOverviewItem {
+  id: string;
+  label: string;
+  health: EventSourceHealth;
+  published_count: number;
+  token_hint: string | null;
+}
+
+export interface EventSourcesOverview {
+  sources: EventSourceOverviewItem[];
+  total_published: number;
+  event_sources_health: Record<string, EventSourceHealth>;
 }

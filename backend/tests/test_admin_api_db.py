@@ -49,3 +49,20 @@ async def test_admin_notifications_list(api_client: AsyncClient, db_session: Asy
     response = await api_client.get("/api/v1/admin/notifications", headers=auth_headers_for(owner))
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+
+@pytest.mark.asyncio
+async def test_admin_event_sources_overview_owner_only(api_client: AsyncClient, db_session: AsyncSession):
+    owner = await create_owner_user(db_session)
+    resident = await create_user(db_session, role_name=UserRole.RESIDENT)
+
+    denied = await api_client.get("/api/v1/admin/events/sources", headers=auth_headers_for(resident))
+    assert denied.status_code == 403
+
+    allowed = await api_client.get("/api/v1/admin/events/sources", headers=auth_headers_for(owner))
+    assert allowed.status_code == 200
+    data = allowed.json()
+    assert "sources" in data
+    assert "total_published" in data
+    ids = {item["id"] for item in data["sources"]}
+    assert "pushkinland" in ids

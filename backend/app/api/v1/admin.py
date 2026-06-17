@@ -8,7 +8,14 @@ from app.core.service_http import raise_http_for_service_error
 from app.database import get_db
 from app.models.enums import EventRegion, NotificationStatus
 from app.models.user import User
-from app.schemas.event import EventCreate, EventListResponse, EventResponse, EventSyncResponse, EventUpdate
+from app.schemas.event import (
+    EventCreate,
+    EventListResponse,
+    EventResponse,
+    EventSourcesOverviewResponse,
+    EventSyncResponse,
+    EventUpdate,
+)
 from app.services.admin_service import list_admin_notifications, list_audit_logs, process_pending_notifications
 from app.services.event_service import (
     EventCreateInput,
@@ -22,7 +29,8 @@ from app.services.event_service import (
     list_events_admin,
     update_event,
 )
-from app.services.event_sources.coordinator import sync_all_event_sources, sync_event_source
+from app.services.event_sources.admin_overview import build_event_sources_overview
+from app.services.event_sources.coordinator import list_event_sources, sync_all_event_sources, sync_event_source
 
 router = APIRouter()
 
@@ -134,6 +142,32 @@ async def admin_update_event(
     except EventValidationError as exc:
         raise_http_for_service_error(exc)
     return EventResponse(**event_to_response(event))
+
+
+@router.get("/events/sources", response_model=EventSourcesOverviewResponse)
+async def admin_event_sources_overview(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_owner())],
+):
+    """Published counts and token readiness per event import source."""
+    return await build_event_sources_overview(db)
+
+
+@router.post("/events/sync-source/{source_name}", response_model=list[EventSyncResponse])
+async def admin_sync_event_source(
+    source_name: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_owner())],
+    region: EventRegion | None = None,
+):
+    """Import events from a single configured source."""
+    if source_name not in list_event_sources():
+        raise_http_for_service_error(EventValidationError(f"Неизвестный источник: {source_name}"))
+    try:
+        results = await sync_event_source(db, source_name, region=region, actor_id=current_user.id)
+    except EventValidationError as exc:
+        raise_http_for_service_error(exc)
+    return _sync_responses(results)
 
 
 @router.post("/events/sync-vk", response_model=list[EventSyncResponse])
