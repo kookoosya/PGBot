@@ -133,7 +133,9 @@ async def load_mixed_public_events(
             exclude_category=EventCategory.CINEMA,
         )
         pskov_other = [e for e in pskov_other if e.id not in used_ids]
-    return (pushkin + pskov_other + cinema)[:safe_limit]
+    merged = pushkin + pskov_other + cinema
+    merged = collapse_similar_headline_events(merged)
+    return merged[:safe_limit]
 
 
 async def get_upcoming_events(
