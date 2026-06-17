@@ -42,3 +42,5 @@ async def test_build_event_sources_overview(db_session):
     assert "vk" in ids
     assert "pushkinland" in ids
     assert "event_sources_health" in payload
+    for item in payload["sources"]:
+        assert "last_synced_at" in item

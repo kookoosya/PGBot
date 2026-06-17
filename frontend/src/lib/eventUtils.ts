@@ -250,7 +250,11 @@ export function isFestivalImminent(
 /** Kicker text for festival promo blocks on the landing and hero banner. */
 export function festivalPromoKicker(
   events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
+  withinDays = 3,
 ): string {
+  if (isFestivalPast(events, withinDays)) {
+    return "🎭 Архив программы";
+  }
   const today = new Date().toISOString().slice(0, 10);
   if (events.some((event) => event.starts_at?.slice(0, 10) === today)) {
     return "🎭 Сейчас на фестивале";

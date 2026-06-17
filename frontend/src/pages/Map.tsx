@@ -15,7 +15,7 @@ import { PlaceDetailPanel } from "./map/PlaceDetailPanel";
 import { PlacesList } from "./map/PlacesList";
 import { TaxiPanel } from "./map/TaxiPanel";
 import { useMapPage } from "./map/useMapPage";
-import { formatSyncAge } from "./map/utils";
+import { formatSyncAge } from "@/lib/formatSyncAge";
 
 export function MapPage() {
   const map = useMapPage();

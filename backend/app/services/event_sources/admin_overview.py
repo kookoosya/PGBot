@@ -64,9 +64,21 @@ async def _published_counts_by_source(db: AsyncSession) -> dict[str, int]:
     return counts
 
 
+async def _last_synced_by_source(db: AsyncSession) -> dict[str, object | None]:
+    rows = await db.execute(
+        select(Event.source, func.max(Event.updated_at)).group_by(Event.source),
+    )
+    synced: dict[str, object | None] = {}
+    for source, updated_at in rows.all():
+        key = (source or "manual").strip() or "manual"
+        synced[key] = updated_at
+    return synced
+
+
 async def build_event_sources_overview(db: AsyncSession) -> dict:
     health = build_event_sources_health()
     counts = await _published_counts_by_source(db)
+    last_synced = await _last_synced_by_source(db)
     sources = []
     for name in list_event_sources():
         status = _source_health(name, health)
@@ -77,6 +89,7 @@ async def build_event_sources_overview(db: AsyncSession) -> dict:
                 "health": status,
                 "published_count": counts.get(name, 0),
                 "token_hint": _token_hint(name, status),
+                "last_synced_at": last_synced.get(name),
             },
         )
     manual_count = counts.get("manual", 0)
@@ -88,6 +101,7 @@ async def build_event_sources_overview(db: AsyncSession) -> dict:
                 "health": "ready",
                 "published_count": manual_count,
                 "token_hint": None,
+                "last_synced_at": last_synced.get("manual"),
             },
         )
     return {

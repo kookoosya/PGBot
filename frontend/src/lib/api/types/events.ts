@@ -82,6 +82,7 @@ export interface EventSourceOverviewItem {
   health: EventSourceHealth;
   published_count: number;
   token_hint: string | null;
+  last_synced_at: string | null;
 }
 
 export interface EventSourcesOverview {

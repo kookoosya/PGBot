@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api, EventSourceOverviewItem, EventSyncResult } from "@/lib/api";
+import { formatSyncAge } from "@/lib/formatSyncAge";
 
 function healthLabel(health: EventSourceOverviewItem["health"]): string {
   if (health === "ready") return "Готов";
@@ -13,6 +14,10 @@ function healthClass(health: EventSourceOverviewItem["health"]): string {
   if (health === "ready") return "event-source-health event-source-health--ready";
   if (health === "group_token_only") return "event-source-health event-source-health--warn";
   return "event-source-health event-source-health--bad";
+}
+
+export function canSyncEventSource(source: EventSourceOverviewItem): boolean {
+  return source.health !== "needs_token";
 }
 
 function formatSyncSummary(results: EventSyncResult[]): string {
@@ -51,6 +56,13 @@ export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventS
     load();
   }, [load]);
 
+  const tokenAlerts = useMemo(() => {
+    const sources = overview?.sources ?? [];
+    const needsToken = sources.filter((source) => source.health === "needs_token");
+    const groupOnly = sources.filter((source) => source.health === "group_token_only");
+    return { needsToken, groupOnly };
+  }, [overview?.sources]);
+
   const runSync = async (source: string | "all") => {
     setSyncing(source);
     setMsg("");
@@ -88,6 +100,28 @@ export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventS
           </Button>
         </div>
 
+        {!loading && (tokenAlerts.needsToken.length > 0 || tokenAlerts.groupOnly.length > 0) && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            {tokenAlerts.needsToken.length > 0 && (
+              <p>
+                <strong>{tokenAlerts.needsToken.length}</strong>{" "}
+                {tokenAlerts.needsToken.length === 1 ? "источник" : "источника"} без токена:{" "}
+                {tokenAlerts.needsToken.map((source) => source.label).join(", ")}.
+              </p>
+            )}
+            {tokenAlerts.groupOnly.length > 0 && (
+              <p className={tokenAlerts.needsToken.length > 0 ? "mt-1" : undefined}>
+                VK: только стена своего сообщества — для полной афиши нужен{" "}
+                <code className="text-xs">VK_EVENTS_TOKEN</code>.
+              </p>
+            )}
+            <p className="mt-1 text-amber-900/90">
+              Инструкция: <code className="text-xs">docs/EVENT_SOURCES.md</code>, VK — шаг 8 в{" "}
+              <code className="text-xs">docs/VK_SETUP.md</code>.
+            </p>
+          </div>
+        )}
+
         {msg && <p className="text-sm text-green-700">{msg}</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -97,51 +131,59 @@ export function AdminEventSourcesPanel({ onSynced, onFilterSource }: AdminEventS
               <tr>
                 <th className="text-left py-2 pr-3">Источник</th>
                 <th className="text-left py-2 pr-3">Статус</th>
+                <th className="text-left py-2 pr-3">Обновление</th>
                 <th className="text-right py-2 pr-3">В афише</th>
                 <th className="text-right py-2">Действие</th>
               </tr>
             </thead>
             <tbody>
-              {(overview?.sources ?? []).map((source) => (
-                <tr key={source.id} className="border-t border-border/60">
-                  <td className="py-2 pr-3 align-top">
-                    <div className="font-medium">{source.label}</div>
-                    {source.token_hint && (
-                      <div className="text-xs text-muted-foreground mt-0.5 max-w-md">{source.token_hint}</div>
-                    )}
-                  </td>
-                  <td className="py-2 pr-3 align-top">
-                    <span className={healthClass(source.health)}>{healthLabel(source.health)}</span>
-                  </td>
-                  <td className="py-2 pr-3 align-top text-right tabular-nums">
-                    {onFilterSource && source.published_count > 0 ? (
-                      <button
-                        type="button"
-                        className="admin-event-sources__count-link"
-                        onClick={() => onFilterSource(source.id)}
-                      >
-                        {source.published_count}
-                      </button>
-                    ) : (
-                      source.published_count
-                    )}
-                  </td>
-                  <td className="py-2 align-top text-right">
-                    {source.id !== "manual" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!!syncing || loading}
-                        onClick={() => runSync(source.id)}
-                      >
-                        {syncing === source.id ? "…" : "Синк"}
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {(overview?.sources ?? []).map((source) => {
+                const syncable = canSyncEventSource(source);
+                return (
+                  <tr key={source.id} className="border-t border-border/60">
+                    <td className="py-2 pr-3 align-top">
+                      <div className="font-medium">{source.label}</div>
+                      {source.token_hint && (
+                        <div className="text-xs text-muted-foreground mt-0.5 max-w-md">{source.token_hint}</div>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 align-top">
+                      <span className={healthClass(source.health)}>{healthLabel(source.health)}</span>
+                    </td>
+                    <td className="py-2 pr-3 align-top text-muted-foreground text-xs">
+                      {formatSyncAge(source.last_synced_at)}
+                    </td>
+                    <td className="py-2 pr-3 align-top text-right tabular-nums">
+                      {onFilterSource && source.published_count > 0 ? (
+                        <button
+                          type="button"
+                          className="admin-event-sources__count-link"
+                          onClick={() => onFilterSource(source.id)}
+                        >
+                          {source.published_count}
+                        </button>
+                      ) : (
+                        source.published_count
+                      )}
+                    </td>
+                    <td className="py-2 align-top text-right">
+                      {source.id !== "manual" ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!!syncing || loading || !syncable}
+                          title={!syncable ? source.token_hint ?? "Нужен токен" : undefined}
+                          onClick={() => runSync(source.id)}
+                        >
+                          {syncing === source.id ? "…" : "Синк"}
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -10,7 +10,7 @@ import { api, PublicEvent } from "@/lib/api";
 import { EVENT_REGION_FILTERS, parseRegionParam, type RegionFilter } from "@/lib/eventRegionFilters";
 import { parseSourceParam } from "@/lib/eventSourceFilters";
 import { absoluteGarnectShareUrl, garnectEventsPath, GARNECT_FESTIVAL_TITLE, isGarnectFestivalFilter, parseFestivalParam } from "@/lib/festivalFilters";
-import { groupEventsByShow, isFestivalImminent, isFestivalPast, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl, eventSourceLabel } from "@/lib/eventUtils";
+import { groupEventsByShow, formatFestivalDateRange, isFestivalImminent, isFestivalPast, isRealCinemaEvent, mergePublicEvents, partitionGarnectProgram, sharePageUrl, eventSourceLabel } from "@/lib/eventUtils";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { siteOrigin } from "@/lib/siteUrl";
 
@@ -177,7 +177,7 @@ export function EventsPage() {
 
       {garnectOnly && garnectProgram.length > 0 && isFestivalImminent(garnectProgram) && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-medium">Фестиваль «Гарнец» — 19–20 июня</p>
+          <p className="font-medium">Фестиваль «Гарнец» — {formatFestivalDateRange(garnectProgram)}</p>
           <p className="mt-1 text-amber-900/90">
             Программа на двух площадках: Пушкинские Горы и Пушкинский заповедник. Ниже — спектакли по датам.
           </p>

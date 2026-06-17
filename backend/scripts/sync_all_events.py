@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.config import get_settings
 from app.services.cinema_monitor import check_cinema_block_and_alert
 from app.services.event_enrichment_batch import enrich_missing_posters, enrich_stale_events
+from app.services.event_source_health import build_event_sources_health
 from app.services.event_sources.coordinator import sync_all_event_sources, sync_cinema_event_sources
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -41,6 +42,8 @@ def _summarize_results(results) -> dict[str, object]:
 
 async def run(mode: str, *, notify: bool) -> int:
     settings = get_settings()
+    health = build_event_sources_health()
+    logger.info("Event source health: %s", json.dumps(health, ensure_ascii=False))
     engine = create_async_engine(settings.DATABASE_URL)
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

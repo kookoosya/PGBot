@@ -4,7 +4,7 @@ import { CinemaSpotlight, EventCard, FestivalProgramBlock, LiteraryEmptyState, L
 import { ctaArrow, CTA } from "@/lib/cta";
 import { usePushkinGarnectProgram } from "@/hooks/usePushkinGarnectProgram";
 import { useSiteInfo } from "@/hooks/useSiteInfo";
-import { isRealCinemaEvent, groupEventsByShow, isFestivalImminent, partitionGarnectProgram } from "@/lib/eventUtils";
+import { isRealCinemaEvent, groupEventsByShow, isFestivalImminent, isFestivalPast, partitionGarnectProgram } from "@/lib/eventUtils";
 import { EVENT_REGION_FILTERS, type RegionFilter } from "@/lib/eventRegionFilters";
 import { absoluteGarnectShareUrl, garnectEventsPath } from "@/lib/festivalFilters";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
@@ -149,6 +149,13 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
                   shareUrl={isLanding ? garnectShareUrl : undefined}
                 />
               </div>
+            )}
+            {garnectProgram.length > 0 && isFestivalPast(garnectProgram) && isLanding && (
+              <p className="landing-garnect-archive mb-4 m-0">
+                <Link to={garnectEventsPath()} className="literary-link">
+                  🎭 Архив программы гарнеца →
+                </Link>
+              </p>
             )}
             {displayPushkin.length > 0 && (
               <ol

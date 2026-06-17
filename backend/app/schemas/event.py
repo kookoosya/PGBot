@@ -108,6 +108,7 @@ class EventSourceOverviewItem(BaseModel):
     health: str
     published_count: int
     token_hint: str | None = None
+    last_synced_at: datetime | None = None
 
 
 class EventSourcesOverviewResponse(BaseModel):

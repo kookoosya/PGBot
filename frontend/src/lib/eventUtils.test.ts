@@ -191,6 +191,16 @@ describe("festival promo labels", () => {
     expect(festivalPromoKicker([{ starts_at: soon, starts_at_label: "скоро" }])).toContain("выходных");
     expect(festivalBadgeLabel([{ starts_at: soon, starts_at_label: "скоро" }])).toBe("Скоро");
   });
+
+  it("uses archive kicker for past program", () => {
+    const old = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    expect(
+      festivalPromoKicker([
+        { starts_at: old, starts_at_label: "давно" },
+        { starts_at: old, starts_at_label: "давно" },
+      ]),
+    ).toContain("Архив");
+  });
 });
 
 describe("eventDetailHref", () => {

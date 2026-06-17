@@ -86,6 +86,14 @@ check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 
 # API
 check "Health" "${BASE%/}/health" "ok"
+if curl -sS --max-time 20 "${BASE%/}/health" | python3 -c "import sys,json; d=json.load(sys.stdin); es=d.get('event_sources',{}); sys.exit(0 if 'vk_wall' in es and 'timepad' in es else 1)"; then
+  echo -e "${GREEN}OK${NC}   Health event_sources"
+  pass=$((pass + 1))
+else
+  echo -e "${RED}FAIL${NC} Health event_sources shape"
+  fail=$((fail + 1))
+fi
+check "Garnect filter" "$BASE/events?festival=garnect" "root"
 check "Share garnect" "${BASE%/}/share/festival/garnect" "Бугровский гарнец"
 share_event_id=$(curl -sS --max-time 20 "$API/public/events?limit=1" | python3 -c "import sys,json; items=json.load(sys.stdin).get('items') or []; print(items[0]['id'] if items else '')" 2>/dev/null || true)
 if [[ -n "$share_event_id" ]]; then
