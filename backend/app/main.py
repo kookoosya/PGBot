@@ -1,19 +1,23 @@
 import logging
 
-from fastapi import FastAPI, Request
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.router import api_router
 from app.config import get_settings
 from app.core.rate_limit import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.startup import lifespan
+from app.database import get_db
 from app.services.event_source_health import build_event_sources_health
-from app.services.share_pages import garnect_share_html
+from app.services.share_pages import build_event_share_html, garnect_share_html
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -64,6 +68,19 @@ async def health(request: Request):
 @limiter.limit("60/minute")
 async def share_festival_garnect(request: Request):
     return HTMLResponse(garnect_share_html())
+
+
+@app.get("/share/events/{event_id}", response_class=HTMLResponse)
+@limiter.limit("60/minute")
+async def share_event(
+    event_id: int,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    html = await build_event_share_html(db, event_id)
+    if not html:
+        raise HTTPException(status_code=404, detail="Событие не найдено")
+    return HTMLResponse(html)
 
 
 @app.get("/")

@@ -360,6 +360,6 @@ export async function sharePageUrl(title: string, url?: string): Promise<string 
   }
 }
 
-export async function shareEventUrl(title: string): Promise<string | null> {
-  return sharePageUrl(`${title} — Пушкинские Горы`);
+export async function shareEventUrl(title: string, url?: string): Promise<string | null> {
+  return sharePageUrl(`${title} — Пушкинские Горы`, url);
 }

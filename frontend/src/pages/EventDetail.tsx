@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@/components/literary";
+import { useSiteInfo } from "@/hooks/useSiteInfo";
 import { api, PublicEvent } from "@/lib/api";
 import { CTA } from "@/lib/cta";
+import { absoluteEventShareUrl } from "@/lib/eventShare";
 import { garnectEventsPath } from "@/lib/festivalFilters";
 import { eventSourceLabel, eventTeaser, isDisplayablePoster, isGarnectProgramEvent, isRealCinemaEvent, regionChipClass, shareEventUrl } from "@/lib/eventUtils";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
+import { siteOrigin } from "@/lib/siteUrl";
 
 export function EventDetail() {
   const { id } = useParams();
+  const { info } = useSiteInfo();
   const [searchParams] = useSearchParams();
   const fromGarnect = searchParams.get("from") === "garnect";
   const [event, setEvent] = useState<PublicEvent | null>(null);
@@ -29,7 +33,8 @@ export function EventDetail() {
 
   const share = async () => {
     if (!event) return;
-    const msg = await shareEventUrl(event.title);
+    const origin = info?.site_url ?? siteOrigin();
+    const msg = await shareEventUrl(event.title, absoluteEventShareUrl(origin, event.id));
     if (msg) {
       setShareMsg(msg);
       window.setTimeout(() => setShareMsg(""), 2500);

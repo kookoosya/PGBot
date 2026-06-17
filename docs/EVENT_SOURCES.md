@@ -77,5 +77,6 @@ Cron на VPS: `scripts/vps-sync-events.sh cinema` каждые 8 ч, `all` — 
 | `/events?festival=garnect` | только программа Бугровского гарнеца |
 | `/events?source=pushkinland` | события из заповедника |
 | `/share/festival/garnect` | OG-страница для шаринга программы гарнеца |
+| `/share/events/{id}` | OG-страница для шаринга отдельного события |
 
 В API `/public/info` → `portal_links.events_garnect` и `events_garnect_share`.

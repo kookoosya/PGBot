@@ -5,6 +5,7 @@ import { VkBotBanner } from "@/components/VkBotLink";
 import { WeatherWidgetCompact } from "@/components/weather/WeatherWidgetCompact";
 import { LiterarySectionHead } from "@/components/literary";
 import { LandingAlbumSection, LandingQuickNav } from "@/components/landing";
+import { LandingEventsCta } from "@/components/landing/LandingEventsCta";
 import { BRAND } from "@/lib/branding";
 import { LANDING_HERO, LANDING_SECTIONS } from "@/lib/literaryCopy";
 import { VILLAGE_PHOTOS } from "@/lib/pushkin";
@@ -46,9 +47,7 @@ export function Landing() {
                 <Link to="/map" className="epic-btn epic-btn-primary epic-btn-lg">
                   🗺 {heroCopy.ctaMap}
                 </Link>
-                <Link to="/events" className="epic-btn epic-btn-glass epic-btn-lg">
-                  📅 {heroCopy.ctaEvents}
-                </Link>
+                <LandingEventsCta defaultLabel={heroCopy.ctaEvents} />
               </div>
               <FestivalHeroBanner />
               <p className="epic-hero-more">
