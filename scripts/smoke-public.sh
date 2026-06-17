@@ -87,6 +87,13 @@ check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 # API
 check "Health" "${BASE%/}/health" "ok"
 check "Share garnect" "${BASE%/}/share/festival/garnect" "Бугровский гарнец"
+share_event_id=$(curl -sS --max-time 20 "$API/public/events?limit=1" | python3 -c "import sys,json; items=json.load(sys.stdin).get('items') or []; print(items[0]['id'] if items else '')" 2>/dev/null || true)
+if [[ -n "$share_event_id" ]]; then
+  check "Share event" "${BASE%/}/share/events/${share_event_id}" 'property="og:title"'
+else
+  echo -e "${YELLOW}SKIP${NC} Share event — нет событий в API"
+  warn=$((warn + 1))
+fi
 check "API today" "$API/public/today" "upcoming_events"
 check "API public info" "$API/public/info" "site_url"
 

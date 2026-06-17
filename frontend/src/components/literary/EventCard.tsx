@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import {
   eventTeaser,
   formatExtraSessions,
+  eventDetailHref,
   isDisplayablePoster,
   isRealCinemaEvent,
   eventSourceLabel,
@@ -67,7 +68,7 @@ export function EventCard({
 
   return (
     <li className={cardClass}>
-      <Link to={`/events/${event.id}`} className={innerClass}>
+      <Link to={eventDetailHref(event)} className={innerClass}>
         {cinema && (
           <div className="event-card-poster-wrap">
             {posterUrl ? (

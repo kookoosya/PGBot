@@ -270,6 +270,19 @@ export function festivalBadgeLabel(
   return "Скоро";
 }
 
+/** True when a multi-show program exists but the promo window has ended. */
+export function isFestivalPast(
+  events: Pick<ShowGroupable, "starts_at" | "starts_at_label">[],
+  withinDays = 3,
+): boolean {
+  return events.length >= 2 && !isFestivalImminent(events, withinDays);
+}
+
+export function eventDetailHref(event: Pick<ShowGroupable, "id" | "title" | "source" | "source_url">): string {
+  const base = `/events/${event.id}`;
+  return isGarnectProgramEvent(event) ? `${base}?from=garnect` : base;
+}
+
 export function extractEventTimeLabel(event: Pick<ShowGroupable, "starts_at" | "starts_at_label">): string {
   if (event.starts_at_label.includes("·")) {
     return event.starts_at_label.split("·").pop()?.trim() || event.starts_at_label;

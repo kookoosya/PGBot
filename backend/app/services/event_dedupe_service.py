@@ -166,7 +166,7 @@ async def unpublish_stale_demo_cinema(db: AsyncSession) -> int:
     return count
 
 
-_EXTERNAL_SOURCES = ("vk", "informpskov", "pln", "kdc")
+_EXTERNAL_SOURCES = ("vk", "informpskov", "pln", "kdc", "pushkinland")
 
 
 async def unpublish_past_external_events(db: AsyncSession) -> int:

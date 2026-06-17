@@ -12,6 +12,8 @@ import {
   isFestivalImminent,
   festivalBadgeLabel,
   festivalPromoKicker,
+  eventDetailHref,
+  isFestivalPast,
   partitionGarnectProgram,
   pluralPerformances,
   regionChipClass,
@@ -188,6 +190,35 @@ describe("festival promo labels", () => {
     const soon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
     expect(festivalPromoKicker([{ starts_at: soon, starts_at_label: "скоро" }])).toContain("выходных");
     expect(festivalBadgeLabel([{ starts_at: soon, starts_at_label: "скоро" }])).toBe("Скоро");
+  });
+});
+
+describe("eventDetailHref", () => {
+  it("adds from=garnect for pushkinland performances", () => {
+    expect(
+      eventDetailHref({
+        id: 7,
+        title: "«Сказка» — Бугровский гарнец",
+        source: "pushkinland",
+        source_url: "https://pushkinland.ru/news/57.php",
+      }),
+    ).toBe("/events/7?from=garnect");
+  });
+
+  it("keeps plain path for other events", () => {
+    expect(eventDetailHref({ id: 3, title: "Концерт", source: "vk", source_url: null })).toBe("/events/3");
+  });
+});
+
+describe("isFestivalPast", () => {
+  it("is true when program exists but window ended", () => {
+    const old = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    expect(
+      isFestivalPast([
+        { starts_at: old, starts_at_label: "давно" },
+        { starts_at: old, starts_at_label: "давно" },
+      ]),
+    ).toBe(true);
   });
 });
 
