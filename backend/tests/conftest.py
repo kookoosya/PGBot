@@ -38,6 +38,31 @@ async def _reset_async_engine():
 
 _DB_OK: bool | None = None
 
+_ROLE_ROWS = [
+    ("resident", "Житель поселка"),
+    ("moderator", "Модератор"),
+    ("administration", "Администрация района"),
+    ("social_service", "Социальные службы"),
+    ("super_admin", "Суперадминистратор"),
+    ("service_provider", "Мастер услуг"),
+]
+
+
+def _seed_roles_if_needed() -> None:
+    import psycopg2
+
+    conn = psycopg2.connect(os.environ["DATABASE_URL_SYNC"])
+    try:
+        with conn.cursor() as cur:
+            for name, description in _ROLE_ROWS:
+                cur.execute(
+                    "INSERT INTO roles (name, description) VALUES (%s, %s) ON CONFLICT (name) DO NOTHING",
+                    (name, description),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def postgres_available() -> bool:
     global _DB_OK
@@ -66,6 +91,8 @@ def pytest_configure(config):
     )
     if os.environ.get("GITHUB_ACTIONS") == "true" and not postgres_available():
         raise pytest.UsageError("PostgreSQL is required in CI but is not reachable")
+    if postgres_available():
+        _seed_roles_if_needed()
 
 
 def pytest_collection_modifyitems(config, items):
