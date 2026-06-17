@@ -28,6 +28,16 @@ NOISE_ITEM = """
 </item>
 """
 
+POLITICS_ITEM = """
+<item>
+    <title>Представитель Кремля назвал Псков оплотом русской государственности</title>
+    <link>https://informpskov.ru/news/510421.html</link>
+    <description><![CDATA[<p>Заместитель руководителя администрации президента РФ назвал Псков оплотом русской государственности на семинаре-совещании по вопросам реализации государственной национальной политики сегодня, 17 июня.</p>]]></description>
+    <category>Общество</category>
+    <pubDate>Wed, 17 Jun 2026 12:00:00 +0300</pubDate>
+</item>
+"""
+
 PUSHKIN_ITEM = """
 <item>
     <title>Опубликована программа фестиваля «Бугровский гарнец» в «Михайловском»</title>
@@ -57,6 +67,15 @@ def test_skips_health_noise():
     now = datetime(2026, 6, 16, 12, 0, tzinfo=MOSCOW)
     events = parse_informpskov_rss(
         f"<rss><channel>{NOISE_ITEM}</channel></rss>",
+        now=now,
+    )
+    assert events == []
+
+
+def test_skips_political_news_without_invite():
+    now = datetime(2026, 6, 17, 12, 0, tzinfo=MOSCOW)
+    events = parse_informpskov_rss(
+        f"<rss><channel>{POLITICS_ITEM}</channel></rss>",
         now=now,
     )
     assert events == []
