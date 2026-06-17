@@ -6,6 +6,14 @@
 
 ---
 
+## P27 — P2.1 EventsPage split ✅ (2026-06-17)
+
+1. ✅ `pages/events/` — `useEventsPage`, `EventsFilters`, `EventsCityRow`, `EventsDashboard`, `EventsGarnectAlerts`
+2. ✅ `EventsPage.tsx` ~70 строк (было ~365)
+3. ✅ `utils.test.ts` — buildCategoryFilters
+
+---
+
 ## P26 — P1.5 api barrel removal ✅ (2026-06-17)
 
 1. ✅ Удалён `lib/api.ts` — импорты из `@/lib/api/index` и `@/lib/api/types/*`
