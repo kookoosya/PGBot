@@ -24,30 +24,12 @@ def issue_to_response(issue: Issue):
     from app.schemas.issue import IssuePhotoResponse, IssueResponse
 
     insp = sa_inspect(issue)
+    payload = {attr.key: getattr(issue, attr.key) for attr in insp.mapper.column_attrs}
     photos = []
     if "photos" not in insp.unloaded:
         photos = [IssuePhotoResponse.model_validate(photo) for photo in issue.photos]
-
-    return IssueResponse(
-        id=issue.id,
-        title=issue.title,
-        description=issue.description,
-        status=issue.status,
-        category=issue.category,
-        priority=issue.priority,
-        address=issue.address,
-        resident_id=issue.resident_id,
-        department_id=issue.department_id,
-        assignee_id=issue.assignee_id,
-        parent_issue_id=issue.parent_issue_id,
-        confirmation_count=issue.confirmation_count,
-        is_spam=issue.is_spam,
-        resolution_text=issue.resolution_text,
-        resolved_at=issue.resolved_at,
-        created_at=issue.created_at,
-        updated_at=issue.updated_at,
-        photos=photos,
-    )
+    payload["photos"] = photos
+    return IssueResponse.model_validate(payload)
 
 
 def issue_to_my_response(issue: Issue, timeline: list[IssueStatusEvent]):
