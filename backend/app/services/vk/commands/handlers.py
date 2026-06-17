@@ -40,6 +40,7 @@ from app.services.vk.helpers import (
 from app.services.vk.ai_mode import enter_ai_mode
 from app.services.vk.ai_history import clear_ai_history
 from app.services.vk.bot import format_ads_message, unsubscribe_peer
+from app.services.vk.events import format_events_message
 from app.services.vk.messages import ai_enter_text, box, help_text
 from app.services.weather import (
     WeatherFetchError,
@@ -201,12 +202,10 @@ async def handle_complaints_info(ctx: VkRouteContext) -> None:
 
 
 async def handle_events(ctx: VkRouteContext) -> None:
+    msg = await format_events_message(ctx.db)
     await send_with_site_links(
         ctx.peer_id,
-        box(
-            "Афиша Пушкиногорья",
-            "Концерты в посёлке, праздники и кино в Пскове — на одной странице.",
-        ),
+        msg,
         (LINK_EVENTS, "/events"),
     )
 
