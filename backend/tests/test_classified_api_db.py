@@ -130,14 +130,15 @@ async def test_moderate_classified_requires_owner(
     create_resp = await api_client.post(
         "/api/v1/classifieds",
         json={
-            "category": "services",
-            "title": "Услуга для модерации",
+            "category": "handyman",
+            "title": f"Услуга для модерации {unique_username('mod')}",
             "description": "Только владелец может одобрить",
             "phone": unique_phone(),
             "author_name": "Мастер",
             "agree_rules": True,
         },
     )
+    assert create_resp.status_code == 201
     ad_id = create_resp.json()["id"]
 
     forbidden = await api_client.post(
