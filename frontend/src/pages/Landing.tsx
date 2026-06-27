@@ -22,7 +22,15 @@ export function Landing() {
         <div className="epic-hero-bg" aria-hidden>
           <picture>
             <source srcSet={heroPhoto.webp} type="image/webp" />
-            <img src={heroPhoto.url} alt="" className="epic-hero-photo" />
+            <img
+              src={heroPhoto.url}
+              alt=""
+              className="epic-hero-photo"
+              width={1600}
+              height={900}
+              decoding="async"
+              fetchPriority="high"
+            />
           </picture>
           <div className="epic-hero-scrim" />
           <div className="epic-hero-vignette" />
