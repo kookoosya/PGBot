@@ -834,6 +834,7 @@
 
   /* === Hero главной — читаемость и атмосфера «Пушкиногорский альбом» === */
   .landing-epic .epic-hero--literary {
+    min-height: min(72vh, 720px);
     color: hsl(42 40% 97%);
   }
 

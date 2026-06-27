@@ -1,6 +1,6 @@
-const CACHE = "pgbot-shell-v8";
-const TILE_CACHE = "pgbot-map-tiles-v8";
-const SHELL_URLS = ["/", "/index.html", "/manifest.json"];
+const CACHE = "pgbot-shell-v9";
+const TILE_CACHE = "pgbot-map-tiles-v9";
+const SHELL_URLS = ["/manifest.json"];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

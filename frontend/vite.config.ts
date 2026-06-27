@@ -2,9 +2,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { stripCrossorigin } from "./src/vite-strip-crossorigin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), stripCrossorigin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

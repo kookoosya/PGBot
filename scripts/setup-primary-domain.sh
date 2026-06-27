@@ -33,6 +33,7 @@ EOF
 
 mkdir -p /var/www/certbot
 ln -sf "$CONF" /etc/nginx/sites-enabled/pgbot-primary
+rm -f /etc/nginx/sites-enabled/pushkiny-mirror /etc/nginx/sites-enabled/pgbot-sslip 2>/dev/null || true
 
 # Снять default с betmasterai если перехватывает
 for f in /etc/nginx/sites-enabled/*; do
