@@ -57,7 +57,7 @@ jobs:
       - name: Smoke after deploy
         if: steps.creds.outputs.ready == 'true'
         env:
-          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://192-210-213-135.sslip.io' }}
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://pushkinskie-gory.xyz' }}
         run: |
           sleep 15
           bash scripts/smoke-public.sh "$SMOKE_BASE_URL"

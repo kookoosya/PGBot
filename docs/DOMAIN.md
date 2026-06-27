@@ -1,30 +1,37 @@
 # Домен портала
 
-**Текущий прод (канонический):** https://192-210-213-135.sslip.io  
-**Домен pushkinskie-gory.ru:** отложен — DNS не настроен, в ссылках VK и smoke не используется.
+**Прод:** https://pushkinskie-gory.xyz
 
-Переменная `PUBLIC_SITE_URL` на VPS должна указывать на sslip.io (`scripts/setup-russia-mirror.sh` обновляет `.env` при деплое).
+## DNS (Porkbun)
 
-## Когда вернём .ru
-
-В панели регистратора домена `pushkinskie-gory.ru`:
+В панели домена **удалите** URL Forwarding / parking, затем добавьте:
 
 | Type | Host | Answer | TTL |
 |------|------|--------|-----|
 | A | `@` | `192.210.213.135` | 300 |
 | A | `www` | `192.210.213.135` | 300 |
 
-После смены DNS подождите 10–30 минут и на VPS выполнится авто-выпуск сертификата при деплое.
+Проверка: `nslookup pushkinskie-gory.xyz` → `192.210.213.135`
 
-Проверка: `dig +short pushkinskie-gory.ru A` → должно быть `192.210.213.135`
+После DNS (10–30 мин) на VPS автоматически при деплое:
+- nginx → docker :8088
+- certbot → HTTPS
+
+## Деплой
 
 ```bash
 ssh root@192.210.213.135
-certbot --nginx -d pushkinskie-gory.ru -d www.pushkinskie-gory.ru
+cd /opt/pgbot && git pull && bash scripts/setup-primary-domain.sh
+docker compose -f docker-compose.prod.yml restart backend nginx
 ```
 
-Затем сменить `PUBLIC_SITE_URL` и фронтовый `PRIMARY_SITE_URL` на `.ru`.
+Или push в `main` → GitHub Actions **Deploy VPS** (нужен `VPS_PASSWORD` в Secrets).
 
-## Старый домен
+## VK Callback
 
-`pushkiny.gmxreply.com` — **не использовать в РФ** (блокировка семейства GMX в реестре РКН).
+`https://pushkinskie-gory.xyz/api/v1/vk/callback`
+
+## Старые URL (не использовать)
+
+- `192-210-213-135.sslip.io` — резерв
+- `pg.gmxreply.com` — семейство GMX, может блокироваться в РФ

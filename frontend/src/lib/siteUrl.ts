@@ -1,5 +1,5 @@
 /** Fallback до загрузки /public/info (см. hooks/useSiteInfo.ts). */
-export const CANONICAL_SITE_HOST = "192-210-213-135.sslip.io";
+export const CANONICAL_SITE_HOST = "pushkinskie-gory.xyz";
 export const PRIMARY_SITE_URL = `https://${CANONICAL_SITE_HOST}`;
 
 export function siteOrigin(): string {

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Единственный рабочий прод-URL до смены домена владельцем.
-CANONICAL_SITE_HOST="192-210-213-135.sslip.io"
-CANONICAL_SITE_URL="https://${CANONICAL_SITE_HOST}"
-export CANONICAL_SITE_HOST CANONICAL_SITE_URL
+# Канонический URL продакшена. Override: SITE_HOST=... SITE_SCHEME=https
+VPS_IP="${VPS_IP:-192.210.213.135}"
+SITE_SCHEME="${SITE_SCHEME:-https}"
+CANONICAL_SITE_HOST="${SITE_HOST:-pushkinskie-gory.xyz}"
+CANONICAL_SITE_URL="${SITE_SCHEME}://${CANONICAL_SITE_HOST}"
+export VPS_IP CANONICAL_SITE_HOST CANONICAL_SITE_URL SITE_SCHEME

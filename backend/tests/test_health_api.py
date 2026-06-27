@@ -26,4 +26,4 @@ async def test_api_root_redirects_or_ok(client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert "site_url" in data
-    assert "sslip.io" in data["site_url"]
+    assert "pushkinskie-gory.xyz" in data["site_url"]

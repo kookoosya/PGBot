@@ -11,7 +11,7 @@ cd /opt/pgbot
 export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
-bash scripts/setup-russia-mirror.sh
+bash scripts/setup-primary-domain.sh
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml restart nginx
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \

@@ -9,8 +9,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-CANONICAL_SITE_URL = "https://192-210-213-135.sslip.io"
-CANONICAL_SITE_HOST = "192-210-213-135.sslip.io"
+CANONICAL_SITE_URL = "https://pushkinskie-gory.xyz"
+CANONICAL_SITE_HOST = "pushkinskie-gory.xyz"
 
 
 def _fetch(url: str, *, method: str = "GET", data: dict | None = None, timeout: float = 20.0) -> tuple[int, dict | str]:

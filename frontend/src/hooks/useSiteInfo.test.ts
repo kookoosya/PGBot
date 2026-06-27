@@ -7,7 +7,7 @@ describe("useSiteInfo", () => {
     expect(resolveSiteUrl("https://example.test")).toBe("https://example.test");
   });
 
-  it("PRIMARY_SITE_URL is sslip canonical", () => {
-    expect(PRIMARY_SITE_URL).toContain("sslip.io");
+  it("PRIMARY_SITE_URL is canonical", () => {
+    expect(PRIMARY_SITE_URL).toContain("pushkinskie-gory.xyz");
   });
 });

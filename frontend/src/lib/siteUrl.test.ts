@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { CANONICAL_SITE_HOST, PRIMARY_SITE_URL, siteOrigin } from "./siteUrl";
 
 describe("siteUrl", () => {
-  it("uses sslip.io canonical host", () => {
-    expect(CANONICAL_SITE_HOST).toContain("sslip.io");
+  it("uses canonical production host", () => {
+    expect(CANONICAL_SITE_HOST).toBe("pushkinskie-gory.xyz");
     expect(PRIMARY_SITE_URL).toBe(`https://${CANONICAL_SITE_HOST}`);
   });
 

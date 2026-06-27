@@ -11,8 +11,8 @@ async def test_public_info_keys(client: AsyncClient):
     data = response.json()
     for key in ("site_url", "vk_url", "map_url", "portal_links"):
         assert key in data
-    assert data["site_url"] == "https://192-210-213-135.sslip.io"
-    assert data["portal_links"]["home"] == "https://192-210-213-135.sslip.io"
+    assert data["site_url"] == "https://pushkinskie-gory.xyz"
+    assert data["portal_links"]["home"] == "https://pushkinskie-gory.xyz"
 
 
 @pytest.mark.asyncio
