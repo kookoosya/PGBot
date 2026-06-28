@@ -10,6 +10,12 @@
     border-top: none;
     margin-top: -1px;
   }
+  .landing-album--cinema {
+    margin-top: clamp(-2.5rem, -4vw, -1.25rem);
+    z-index: 3;
+    border-radius: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 3vw, 1.75rem) 0 0;
+    box-shadow: 0 -28px 56px hsl(var(--forest) / 0.14);
+  }
   .landing-album::before {
     content: "";
     position: absolute;

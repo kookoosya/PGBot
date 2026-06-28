@@ -21,9 +21,9 @@
 9. 🤖 ИИ `/ai`
 
 ## Прод
-- **Домен:** https://pushkinskie-gory.xyz
+- **Домен:** https://pushkinskie-gory.xyz (зеркало .ru — см. docs/RU_ACCESS.md)
 - **VPS:** root@192.210.213.135, `/opt/pgbot`
-- **Деплой:** `bash scripts/setup-primary-domain.sh` + `docker compose -f docker-compose.prod.yml up -d --build`
+- **Деплой:** push в `main` → GitHub Actions **Deploy VPS** (нужен `VPS_PASSWORD` в Secrets), или на VPS: `bash scripts/vps-deploy.sh`
 - **gmxreply.com** — другой проект, не трогаем.
 
 ## Ограничения

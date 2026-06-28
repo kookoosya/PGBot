@@ -8,7 +8,7 @@ export function Landing() {
     <div className="landing-epic">
       <LandingHeroCinema />
 
-      <div className="landing-album" id="landing-content">
+      <div className="landing-album landing-album--cinema" id="landing-content">
         <div className="landing-album-inner max-w-5xl mx-auto px-4">
           <LandingAlbumSection reveal>
             <TodayInVillage />
