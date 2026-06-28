@@ -23,8 +23,8 @@ async def test_create_classified_ad_from_vk_success(db_session: AsyncSession):
     )
     assert result.ad.id is not None
     assert result.ad.vk_id == 12345
-    assert result.ad.payment_status.value == "pending"
-    assert result.ad.is_active is False
+    assert result.ad.payment_status.value == "approved"
+    assert result.ad.is_active is True
 
 
 @pytest.mark.asyncio

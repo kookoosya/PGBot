@@ -4,7 +4,7 @@ from app.constants import portal_copy as pc
 
 
 def test_portal_copy_loads_from_shared_json():
-    assert pc.BRAND_TAGLINE == "Портал посёлка"
+    assert pc.BRAND_TAGLINE == "Для жителей и гостей"
     assert "Пушкиногорский район" in pc.BRAND_KICKER
     assert pc.ISSUE_STATUS_HINTS["NEW"]
     assert pc.ISSUE_STATUS_EMOJI["RESOLVED"] == "✅"

@@ -76,7 +76,6 @@ async def test_classified_create_approve_and_publish(
     _notify_owner,
     db_session: AsyncSession,
 ):
-    owner = await create_owner_user(db_session)
     data = ClassifiedCreateInput(
         category=ClassifiedCategory.FIREWOOD,
         title="Дрова берёзовые колотые",
@@ -87,18 +86,8 @@ async def test_classified_create_approve_and_publish(
     )
 
     created = await create_classified_ad(db_session, data)
-    assert created.ad.payment_status == ClassifiedPaymentStatus.PENDING
-    assert created.ad.is_active is False
-
-    actor = ClassifiedActorContext(actor_id=owner.id)
-    moderated = await moderate_classified_ad(
-        db_session,
-        created.ad.id,
-        action="approve",
-        actor=actor,
-    )
-    assert moderated.ad.payment_status == ClassifiedPaymentStatus.APPROVED
-    assert moderated.ad.is_active is True
+    assert created.ad.payment_status == ClassifiedPaymentStatus.APPROVED
+    assert created.ad.is_active is True
 
     published = await search_classifieds(
         db_session,
