@@ -1,200 +1,73 @@
-# Cloudflare — полная инструкция с нуля
+# Cloudflare и доступ из России (актуально 2026)
 
-**Домен:** `pushkinskie-gory.xyz` (лежит в Porkbun)  
-**Сервер (VPS):** `192.210.213.135` — сайт PGBot уже там  
-**Цель:** чтобы `https://pushkinskie-gory.xyz` открывался в России **без VPN**
-
-Cloudflare — бесплатный «прокси» перед сайтом. Люди в РФ ходят на IP Cloudflare, а не напрямую на US-сервер.
+**Домен:** `pushkinskie-gory.xyz`  
+**VPS:** `192.210.213.135`
 
 ---
 
-## Часть 1. Регистрация в Cloudflare
+## Важно: оранжевое облако в РФ не работает
 
-1. Открой в браузере: **https://dash.cloudflare.com/sign-up**
-2. Введи **email** и **пароль** → **Sign up**
-3. Подтверди почту (письмо от Cloudflare → ссылка **Verify email**)
-4. Войди: **https://dash.cloudflare.com/login**
+С июня 2025 провайдеры в России **режут сайты за Cloudflare Proxied** (~16 КБ на соединение). Сайт не в реестре РКН — **ломается весь Cloudflare**.
 
----
+**Для жителей России:** DNS-записи должны быть **DNS only (серое облако)**, не Proxied.
 
-## Часть 2. Добавить домен в Cloudflare
-
-1. На главной Cloudflare нажми синюю кнопку **Add a site** (или **Add site**)
-2. В поле введи **точно**:
-
-   ```
-   pushkinskie-gory.xyz
-   ```
-
-   Без `https://`, без `www`, без слэша в конце.
-
-3. Нажми **Continue**
-4. Выбери план **Free** → **Continue**
-5. Cloudflare просканирует DNS — нажми **Continue**
+Подробно: [RU_ACCESS_FIX.md](./RU_ACCESS_FIX.md)
 
 ---
 
-## Часть 3. DNS-записи в Cloudflare (важно!)
+## Настройка Cloudflare (DNS only)
 
-На шаге **Review your DNS records** (или позже: домен → **DNS** → **Records**):
+### 1. Домен Active, NS на Cloudflare
 
-### Удали лишнее
+Nameservers в Porkbun → два NS от Cloudflare (как раньше).
 
-- Если есть записи с **серым облачком** на IP Porkbun (`44.227.x.x` и т.п.) — удали или замени
-- Если включён **URL Forwarding** в Porkbun — его отключим в части 4
+### 2. DNS → Records
 
-### Добавь или измени две A-записи
+| Type | Name | IPv4 | Proxy |
+|------|------|------|-------|
+| A | `@` | `192.210.213.135` | **DNS only** (серое) |
+| A | `www` | `192.210.213.135` | **DNS only** (серое) |
 
-| Type | Name (имя) | IPv4 address (значение) | Proxy status |
-|------|------------|-------------------------|--------------|
-| **A** | `@` | `192.210.213.135` | **Proxied** (оранжевое облако ☁️) |
-| **A** | `www` | `192.210.213.135` | **Proxied** (оранжевое облако ☁️) |
+Поддомен `api` **не нужен** — API по пути `/api/v1/`.
 
-> **Отдельный поддомен `api` не нужен.** REST API на том же домене:  
-> `https://pushkinskie-gory.xyz/api/v1/...`  
-> Если при импорте DNS появилась запись `api` — удали (если не используешь `api.домен` отдельно).
+### 3. Проверка
 
-**Как добавить запись:**
+```bash
+dig +short pushkinskie-gory.xyz A
+```
 
-1. **Add record**
-2. Type: **A**
-3. Name: `@` (для корня домена) или `www` (для www.)
-4. IPv4 address: `192.210.213.135`
-5. **Proxy status** — кликни на облако, чтобы было **оранжевым** (надпись **Proxied**)
-6. **Save**
+Должно быть **`192.210.213.135`**. Если видишь `104.21.x` или `172.67.x` — облако всё ещё **оранжевое**, переключи на серое.
 
-> Серое облако (**DNS only**) — **не подходит**. Нужно только **оранжевое Proxied**.
+### 4. С телефона без VPN
 
-Нажми **Continue** / **Save** в мастере настройки.
+- https://pushkinskie-gory.xyz  
+- https://pushkinskie-gory.xyz/health  
 
 ---
 
-## Часть 4. Nameservers — переключить домен с Porkbun на Cloudflare
+## Регистрация / NS (если ещё не сделано)
 
-Cloudflare покажет экран **Change your nameservers** с **двумя** nameserver, например:
-
-```
-ada.ns.cloudflare.com
-bob.ns.cloudflare.com
-```
-
-(У тебя будут **свои** два адреса — скопируй их из Cloudflare, не эти примеры.)
-
-### В Porkbun
-
-1. Открой **https://porkbun.com** → войди в аккаунт
-2. **Domain Management** → кликни на **pushkinskie-gory.xyz**
-3. Найди раздел **Authoritative Nameservers** (или **DNS / Nameservers**)
-4. Выбери **Use custom nameservers** (свои NS, не Porkbun default)
-5. Вставь **оба** nameserver от Cloudflare (Host 1 и Host 2)
-6. **Save** / **Update**
-
-### Отключи parking / forwarding (если есть)
-
-В той же панели Porkbun:
-
-- **URL Forwarding** — **Off** / удалить
-- **Parking** — выключить, если включён
-
-### В Cloudflare
-
-Вернись в Cloudflare → нажми **Done, check nameservers** (или **Continue**)
-
-Статус домена станет **Active** (зелёный) через **10 минут — 24 часа**. Обычно **30–60 минут**.
-
-Пока **Pending** — это нормально, жди.
+1. https://dash.cloudflare.com → Add site → `pushkinskie-gory.xyz` → Free  
+2. DNS-записи как выше (**серое** облако)  
+3. Porkbun → custom NS → два nameserver от Cloudflare  
+4. Отключить URL Forwarding / parking в Porkbun  
 
 ---
 
-## Часть 5. SSL в Cloudflare
+## VPS (делает агент)
 
-Когда домен **Active**:
-
-1. Cloudflare → **pushkinskie-gory.xyz** → слева **SSL/TLS**
-2. **Overview** → режим **Full (strict)**
-
-   | Режим | Когда |
-   |-------|--------|
-   | **Full (strict)** | основной (у нас на VPS есть Let's Encrypt) |
-   | Full | только если strict выдаёт ошибку — временно для проверки |
-
-3. **SSL/TLS** → **Edge Certificates**:
-   - **Always Use HTTPS** → **On**
-   - **Automatic HTTPS Rewrites** → **On** (можно)
+- Let's Encrypt для `@` и `www`  
+- `bash scripts/setup-cloudflare-origin.sh` — real IP (полезно, если позже снова включишь Proxied)  
+- Деплой: `git pull && bash scripts/vps-deploy.sh`  
 
 ---
 
-## Часть 6. Проверка
+## Если после серого облака всё равно не открывается
 
-### В браузере (лучше с телефона без VPN, мобильный интернет)
-
-```
-https://pushkinskie-gory.xyz
-```
-
-Должен открыться портал Пушкинских Гор.
-
-```
-https://pushkinskie-gory.xyz/health
-```
-
-Должно быть:
-
-```json
-{"status":"ok",...}
-```
-
-### Если не открывается
-
-| Симптом | Что проверить |
-|---------|----------------|
-| «Сайт не найден» | NS в Porkbun ещё не обновились — подожди 1–2 часа |
-| Ошибка SSL | Cloudflare SSL → попробуй **Full** вместо strict |
-| 522 / 523 | VPS не отвечает — напиши мне, проверю сервер |
-| Открывается только с VPN | Облако должно быть **оранжевым** (Proxied) |
+IP `192.210.213.135` (US) могут резать отдельно. Нужен **VPS в России** — см. [RU_ACCESS_FIX.md](./RU_ACCESS_FIX.md), решение 2.
 
 ---
 
-## Часть 7. Что делает агент на VPS (тебе не трогать)
+## VK Callback
 
-После того как Cloudflare станет **Active**, на сервере уже настроено:
-
-- nginx + HTTPS (Let's Encrypt)
-- скрипт `setup-cloudflare-origin.sh` — правильные IP клиентов через Cloudflare
-- деплой через git / GitHub Actions
-
-**VK Callback** (если спросят):  
 `https://pushkinskie-gory.xyz/api/v1/vk/callback`
-
----
-
-## Краткий чеклист
-
-- [ ] Аккаунт Cloudflare создан
-- [ ] Домен `pushkinskie-gory.xyz` добавлен (план Free)
-- [ ] A `@` → `192.210.213.135` — **Proxied** (оранжевое)
-- [ ] A `www` → `192.210.213.135` — **Proxied** (оранжевое)
-- [ ] В Porkbun NS заменены на Cloudflare (2 штуки)
-- [ ] URL Forwarding в Porkbun выключен
-- [ ] Cloudflare статус **Active**
-- [ ] SSL **Full (strict)** + **Always Use HTTPS**
-- [ ] Сайт открывается без VPN
-
----
-
-## Чего НЕ нужно
-
-- Покупать `.ru` — **не нужен**
-- Переносить домен на Cloudflare Registrar — **не нужен**, достаточно NS
-- Платный план Cloudflare — **не нужен**, хватит Free
-- Трогать VPS / git — **делает агент**
-
----
-
-## Если застрял
-
-Напиши на каком шаге и что видишь на экране (или скрин). Чаще всего проблема:
-
-1. Облако **серое** вместо оранжевого  
-2. NS в Porkbun **не сохранились**  
-3. Ещё не прошло время после смены NS  
