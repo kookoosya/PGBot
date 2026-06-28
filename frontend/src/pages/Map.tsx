@@ -36,6 +36,7 @@ export function MapPage() {
 
       <MapStatsRibbon
         stats={map.mapStats}
+        categories={map.categories}
         activeCategory={map.category}
         onCategoryClick={map.applyCategoryFilter}
       />

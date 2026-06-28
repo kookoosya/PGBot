@@ -55,10 +55,26 @@ export function useMapPage() {
     api.getMapReportTypes().then(setMapReportTypes).catch(console.error);
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
-    api.getMapStats().then(setMapStats).catch(console.error);
     api.getMapFilterModes().then(setMapModes).catch(console.error);
     api.getMapRoutes().then(setRoutes).catch(console.error);
   }, []);
+
+  const refreshMapStats = useCallback(() => {
+    api.getMapStats().then(setMapStats).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    refreshMapStats();
+    const interval = window.setInterval(refreshMapStats, 5 * 60_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshMapStats();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refreshMapStats]);
 
   useEffect(() => {
     const t = window.setTimeout(() => setSearchDebounced(search.trim()), 400);

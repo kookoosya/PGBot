@@ -80,6 +80,8 @@ export interface MapStats {
   by_category: Record<string, number>;
   last_sync: string | null;
   center: { lat: number; lng: number };
+  auto_sync_hours?: number;
+  yandex_live?: boolean;
 }
 
 export interface MapRouteStop {

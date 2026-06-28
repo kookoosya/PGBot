@@ -4,6 +4,8 @@
 Часы и телефоны уточняйте перед визитом — данные могут меняться.
 """
 
+from datetime import datetime, timezone
+
 import hashlib
 
 from sqlalchemy import select
@@ -218,6 +220,7 @@ def _build_description(note: str | None, website: str | None) -> str | None:
 async def seed_village_places(db: AsyncSession) -> int:
     active_keys: set[str] = set()
     count = 0
+    now = datetime.now(timezone.utc)
     for row in VILLAGE_PLACES:
         name, cat, lat, lng, addr, phone, hours, rating, reviews = row[:9]
         website = row[9] if len(row) > 9 else None
@@ -244,6 +247,7 @@ async def seed_village_places(db: AsyncSession) -> int:
             place.external_source = "reference"
             place.yandex_url = y_url
             place.is_active = True
+            place.last_synced_at = now
         else:
             db.add(Place(
                 name=name, category=cat, latitude=lat, longitude=lng,
@@ -252,6 +256,7 @@ async def seed_village_places(db: AsyncSession) -> int:
                 yandex_id=key, external_source="reference",
                 external_rating=rating, external_review_count=reviews,
                 yandex_url=y_url,
+                last_synced_at=now,
             ))
             count += 1
 

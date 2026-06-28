@@ -1,6 +1,7 @@
 """Гостиницы, гостевые дома и посуточная аренда по Пушкиногорскому району."""
 
 import hashlib
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -93,6 +94,7 @@ def _yandex_maps_url(lat: float, lng: float, name: str) -> str:
 async def seed_lodging_places(db: AsyncSession) -> int:
     active_keys: set[str] = set()
     count = 0
+    now = datetime.now(timezone.utc)
     for row in LODGING_PLACES:
         name, cat, lat, lng, addr, phone, hours, website, desc = row
         key = _place_key(name, addr)
@@ -116,6 +118,7 @@ async def seed_lodging_places(db: AsyncSession) -> int:
             place.external_review_count = 0
             place.yandex_url = _yandex_maps_url(lat, lng, name)
             place.is_active = True
+            place.last_synced_at = now
         else:
             db.add(Place(
                 name=name, category=cat, latitude=lat, longitude=lng,
@@ -123,6 +126,7 @@ async def seed_lodging_places(db: AsyncSession) -> int:
                 website=website, description=desc,
                 yandex_id=key, external_source="reference",
                 yandex_url=_yandex_maps_url(lat, lng, name),
+                last_synced_at=now,
             ))
             count += 1
 

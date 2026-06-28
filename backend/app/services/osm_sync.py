@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.enums import PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.place import Place
-from app.services.place_cleanup import should_skip_osm_element
+from app.services.place_cleanup import deactivate_stale_imports, should_skip_osm_element
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -120,7 +120,8 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
         logger.error("OSM sync failed on all mirrors: %s", last_error)
         return {"error": str(last_error), "synced": 0}
 
-    now = datetime.now(timezone.utc)
+    sync_started = datetime.now(timezone.utc)
+    now = sync_started
 
     for element in data.get("elements", []):
         tags = element.get("tags", {})
@@ -175,8 +176,9 @@ async def sync_places_from_osm(db: AsyncSession) -> dict:
         synced += 1
 
     await db.flush()
-    logger.info("OSM sync: %d total, %d new, %d updated", synced, created, updated)
-    return {"synced": synced, "created": created, "updated": updated}
+    stale = await deactivate_stale_imports(db, "osm", sync_started)
+    logger.info("OSM sync: %d total, %d new, %d updated, %d stale off", synced, created, updated, stale)
+    return {"synced": synced, "created": created, "updated": updated, "stale_deactivated": stale}
 
 
 async def seed_pushkin_landmarks(db: AsyncSession) -> int:

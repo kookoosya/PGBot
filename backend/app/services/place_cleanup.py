@@ -3,6 +3,7 @@
 import logging
 import math
 import re
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -131,6 +132,44 @@ def should_skip_yandex_org(name: str, categories: list | None = None) -> bool:
         if "банк" in cn and not _is_allowed_reference_bank(name):
             return True
     return False
+
+
+async def deactivate_stale_imports(
+    db: AsyncSession,
+    source: str,
+    sync_started: datetime,
+) -> int:
+    """Снять с карты POI из OSM/Yandex, которых не было в последнем проходе синка."""
+    from sqlalchemy import or_
+
+    result = await db.execute(
+        select(Place).where(
+            Place.external_source == source,
+            Place.is_active.is_(True),
+            or_(Place.last_synced_at.is_(None), Place.last_synced_at < sync_started),
+        )
+    )
+    count = 0
+    for place in result.scalars().all():
+        place.is_active = False
+        count += 1
+    if count:
+        logger.info("Stale %s places deactivated: %d", source, count)
+    await db.flush()
+    return count
+
+
+def match_reference_import(
+    name: str,
+    lat: float,
+    lng: float,
+    reference: list[Place],
+    *,
+    radius_km: float = REF_DEDUP_KM,
+) -> Place | None:
+    """Сопоставить импорт OSM/Yandex со справочной точкой (без дубля)."""
+    probe = Place(name=name, latitude=lat, longitude=lng, category=PlaceCategory.OTHER)
+    return _nearby_reference(probe, reference, radius_km=radius_km)
 
 
 async def cleanup_map_places(db: AsyncSession) -> dict:

@@ -71,34 +71,41 @@ def _create_periodic_task(
 
 
 def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
-    return [
-        _create_periodic_task(
-            "Map auto-sync",
-            settings.MAP_AUTO_SYNC_HOURS * 3600,
-            _map_sync_work,
-        ),
-        _create_periodic_task(
-            "VK digest",
-            3600,
-            _vk_digest_work,
-        ),
-        _create_periodic_task(
-            "Weather cache",
-            settings.WEATHER_CACHE_TTL_SECONDS,
-            _weather_cache_work,
-        ),
-        *(
-            [
-                _create_periodic_task(
-                    "Event sync",
-                    settings.EVENT_SYNC_INTERVAL_HOURS * 3600,
-                    _event_sync_work,
-                )
-            ]
-            if settings.EVENT_SYNC_INTERVAL_HOURS > 0
-            else []
-        ),
-    ]
+    tasks: list[asyncio.Task] = []
+    if settings.MAP_AUTO_SYNC_HOURS > 0:
+        tasks.append(
+            _create_periodic_task(
+                "Map auto-sync",
+                settings.MAP_AUTO_SYNC_HOURS * 3600,
+                _map_sync_work,
+            )
+        )
+    tasks.extend(
+        [
+            _create_periodic_task(
+                "VK digest",
+                3600,
+                _vk_digest_work,
+            ),
+            _create_periodic_task(
+                "Weather cache",
+                settings.WEATHER_CACHE_TTL_SECONDS,
+                _weather_cache_work,
+            ),
+            *(
+                [
+                    _create_periodic_task(
+                        "Event sync",
+                        settings.EVENT_SYNC_INTERVAL_HOURS * 3600,
+                        _event_sync_work,
+                    )
+                ]
+                if settings.EVENT_SYNC_INTERVAL_HOURS > 0
+                else []
+            ),
+        ]
+    )
+    return tasks
 
 
 async def stop_background_tasks(tasks: list[asyncio.Task]) -> None:

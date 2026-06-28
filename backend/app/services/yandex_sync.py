@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.enums import PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.place import Place
-from app.services.place_cleanup import should_skip_yandex_org
+from app.services.place_cleanup import deactivate_stale_imports, match_reference_import, should_skip_yandex_org
 from app.services.pushkin_places_seed import seed_village_places
 
 logger = logging.getLogger(__name__)
@@ -92,9 +92,15 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
         seeded = await seed_village_places(db)
         return {"source": "reference_seed", "synced": seeded, "api": False}
 
-    synced = created = updated = 0
-    now = datetime.now(timezone.utc)
+    synced = created = updated = enriched = 0
+    sync_started = datetime.now(timezone.utc)
+    now = sync_started
     seen_ids: set[str] = set()
+
+    ref_result = await db.execute(
+        select(Place).where(Place.external_source == "reference", Place.is_active.is_(True))
+    )
+    reference = list(ref_result.scalars().all())
 
     async with httpx.AsyncClient(timeout=30) as client:
         for query in SEARCH_QUERIES:
@@ -145,6 +151,22 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
                 rating, reviews = _parse_rating(meta)
                 yandex_url = props.get("uri") or meta.get("url")
 
+                ref = match_reference_import(name, lat, lng, reference)
+                if ref:
+                    ref.phone = phone or ref.phone
+                    ref.opening_hours = hours or ref.opening_hours
+                    if rating:
+                        ref.external_rating = rating
+                    if reviews:
+                        ref.external_review_count = reviews
+                    if address:
+                        ref.address = address
+                    ref.yandex_url = yandex_url or ref.yandex_url
+                    ref.last_synced_at = now
+                    enriched += 1
+                    synced += 1
+                    continue
+
                 result = await db.execute(select(Place).where(Place.yandex_id == str(yid)))
                 place = result.scalar_one_or_none()
                 if place:
@@ -176,9 +198,31 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
                 synced += 1
 
     await db.flush()
+    stale = await deactivate_stale_imports(db, "yandex", sync_started)
     if synced == 0:
         seeded = await seed_village_places(db)
-        return {"source": "reference_fallback", "synced": seeded, "api": True, "error": "no_results"}
+        return {
+            "source": "reference_fallback",
+            "synced": seeded,
+            "api": True,
+            "error": "no_results",
+            "stale_deactivated": stale,
+        }
 
-    logger.info("Yandex sync: %d total, %d new, %d updated", synced, created, updated)
-    return {"source": "yandex", "synced": synced, "created": created, "updated": updated, "api": True}
+    logger.info(
+        "Yandex sync: %d total, %d new, %d updated, %d reference enriched, %d stale off",
+        synced,
+        created,
+        updated,
+        enriched,
+        stale,
+    )
+    return {
+        "source": "yandex",
+        "synced": synced,
+        "created": created,
+        "updated": updated,
+        "reference_enriched": enriched,
+        "stale_deactivated": stale,
+        "api": True,
+    }

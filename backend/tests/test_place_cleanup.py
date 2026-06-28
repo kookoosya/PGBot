@@ -31,3 +31,21 @@ def test_fix_magnit_kosmetik_category():
 def test_junk_names():
     assert _is_junk_name("Т-Банк") is True
     assert _is_junk_name("Пятёрочка") is False
+
+
+def test_match_reference_import():
+    from app.models.place import Place
+    from app.services.place_cleanup import match_reference_import
+
+    refs = [
+        Place(
+            name="М.Косметик",
+            category=PlaceCategory.BEAUTY,
+            latitude=57.0261,
+            longitude=28.9112,
+            external_source="reference",
+        ),
+    ]
+    hit = match_reference_import("Магнит Косметик", 57.0261, 28.9112, refs)
+    assert hit is not None
+    assert hit.name == "М.Косметик"

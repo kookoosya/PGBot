@@ -48,6 +48,7 @@ services:
       DATABASE_URL_SYNC: postgresql://${POSTGRES_USER:-pgbot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-narodny_kontrol}
       REDIS_URL: redis://redis:6379/0
       SEED_SKIP_MAP_SYNC: "true"
+      MAP_AUTO_SYNC_HOURS: "0"
     depends_on:
       postgres:
         condition: service_healthy

@@ -39,7 +39,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
             .group_by(Place.category)
         )
         by_category = {
-            PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): row[1]
+            row[0].value: row[1]
             for row in cat_rows.all()
         }
 
@@ -49,7 +49,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
             .group_by(Place.category)
         )
         avg_rating_by_category = {
-            PLACE_CATEGORY_LABELS.get(row[0], str(row[0])): round(float(row[1]), 1)
+            row[0].value: round(float(row[1]), 1)
             for row in rating_rows.all()
             if row[1] is not None
         }
@@ -103,6 +103,8 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
         avg_rating_by_category=avg_rating_by_category,
         active_taxi_count=active_taxi_count,
         route_count=route_count,
+        auto_sync_hours=settings.MAP_AUTO_SYNC_HOURS if settings.MAP_AUTO_SYNC_HOURS > 0 else 6,
+        yandex_live=bool(settings.YANDEX_MAPS_API_KEY),
     )
 
 

@@ -98,6 +98,8 @@ class MapStatsResponse(BaseModel):
     avg_rating_by_category: dict[str, float] = Field(default_factory=dict)
     active_taxi_count: int = 0
     route_count: int = 0
+    auto_sync_hours: int = 6
+    yandex_live: bool = False
 
 
 class TaxiServiceResponse(BaseModel):

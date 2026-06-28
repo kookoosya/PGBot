@@ -177,6 +177,8 @@ class MapStatsResult:
     avg_rating_by_category: dict[str, float]
     active_taxi_count: int
     route_count: int
+    auto_sync_hours: int = 6
+    yandex_live: bool = False
 
     def to_response(self) -> MapStatsResponse:
         """Serialize to the public API schema."""
@@ -191,6 +193,8 @@ class MapStatsResult:
             avg_rating_by_category=self.avg_rating_by_category,
             active_taxi_count=self.active_taxi_count,
             route_count=self.route_count,
+            auto_sync_hours=self.auto_sync_hours,
+            yandex_live=self.yandex_live,
         )
 
 
