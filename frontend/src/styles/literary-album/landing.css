@@ -33,34 +33,6 @@
     max-width: 72rem;
   }
 
-  /* Баннер .ru для жителей РФ */
-  .ru-access-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 0.45rem 1rem;
-    background: linear-gradient(90deg, hsl(152 45% 18%), hsl(152 40% 22%));
-    border-bottom: 1px solid hsl(42 70% 50% / 0.35);
-    color: hsl(42 85% 92%);
-    font-size: 0.8125rem;
-  }
-  .ru-access-banner-link {
-    color: hsl(42 90% 72%);
-    font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .ru-access-banner-close {
-    border: none;
-    background: transparent;
-    color: hsl(42 60% 85% / 0.8);
-    cursor: pointer;
-    padding: 0.15rem 0.35rem;
-    font-size: 0.75rem;
-    line-height: 1;
-  }
-
   .landing-closing {
     margin-top: var(--landing-gap);
     padding: 1.75rem 1rem 0.5rem;

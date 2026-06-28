@@ -1,31 +1,29 @@
 # Домен портала
 
-**Прод:** https://pushkinskie-gory.xyz (международный)  
-**Для РФ:** https://pushkinskie-gory.ru — см. [RU_ACCESS.md](./RU_ACCESS.md)
+**Прод:** https://pushkinskie-gory.xyz  
+**Доступ из РФ без VPN:** [CLOUDFLARE_RU.md](./CLOUDFLARE_RU.md) — прокси Cloudflare (оранжевое облако)
 
-## DNS (Porkbun / reg.ru)
-
-### pushkinskie-gory.xyz
+## DNS сейчас (прямо на VPS)
 
 | Type | Host | Answer | TTL |
 |------|------|--------|-----|
 | A | `@` | `192.210.213.135` | 300 |
 | A | `www` | `192.210.213.135` | 300 |
 
-### pushkinskie-gory.ru (рекомендуется для жителей РФ)
+## После подключения Cloudflare
 
-| Type | Host | Answer | TTL |
-|------|------|--------|-----|
-| A | `@` | **RU VPS IP** (или временно US IP для проверки) | 300 |
-| A | `www` | тот же IP | 300 |
+1. NS домена в Porkbun → nameservers Cloudflare  
+2. В Cloudflare DNS: A `@` и `www` → `192.210.213.135`, **Proxied**  
+3. SSL: **Full (strict)**  
+4. На VPS: `bash scripts/setup-cloudflare-origin.sh`
 
-На VPS после DNS:
+## Деплой
+
+Push в `main` → GitHub Actions **Deploy VPS**, или на сервере:
 
 ```bash
-cd /opt/pgbot && git pull && bash scripts/setup-dual-domain.sh
+cd /opt/pgbot && git pull && bash scripts/vps-deploy.sh
 ```
-
-Или push в `main` → GitHub Actions **Deploy VPS** (нужен `VPS_PASSWORD` в Secrets).
 
 ## VK Callback
 
@@ -33,5 +31,5 @@ cd /opt/pgbot && git pull && bash scripts/setup-dual-domain.sh
 
 ## Старые URL (не использовать)
 
-- `192-210-213-135.sslip.io` — резерв
-- `pg.gmxreply.com` — семейство GMX, может блокироваться в РФ
+- `192-210-213-135.sslip.io`
+- `pg.gmxreply.com`

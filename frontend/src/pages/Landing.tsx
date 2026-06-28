@@ -2,7 +2,7 @@ import { LandingHeroCinema } from "@/components/landing/LandingHeroCinema";
 import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { LandingAlbumSection, LandingQuickActions } from "@/components/landing";
-import { LandingClosingStrip } from "@/components/landing/LandingExtras";
+import { LandingClosingStrip } from "@/components/landing/LandingClosingStrip";
 
 export function Landing() {
   return (

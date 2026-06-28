@@ -9,11 +9,11 @@ source "$SCRIPT_DIR/canonical-site.sh"
 cd /opt/pgbot
 
 export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-export PRIMARY_DOMAIN="${PRIMARY_DOMAIN:-pushkinskie-gory.xyz}"
 
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
 docker compose -f docker-compose.prod.yml up -d --build
-PRIMARY_DOMAIN="$PRIMARY_DOMAIN" bash scripts/setup-dual-domain.sh || bash scripts/setup-primary-domain.sh
+bash scripts/setup-cloudflare-origin.sh 2>/dev/null || true
+bash scripts/setup-primary-domain.sh
 docker compose -f docker-compose.prod.yml restart nginx backend
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \
   || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head

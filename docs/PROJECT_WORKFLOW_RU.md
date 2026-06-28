@@ -21,9 +21,10 @@
 9. 🤖 ИИ `/ai`
 
 ## Прод
-- **Домен:** https://pushkinskie-gory.xyz (зеркало .ru — см. docs/RU_ACCESS.md)
+- **Домен:** https://pushkinskie-gory.xyz
+- **РФ без VPN:** Cloudflare — см. `docs/CLOUDFLARE_RU.md`
 - **VPS:** root@192.210.213.135, `/opt/pgbot`
-- **Деплой:** push в `main` → GitHub Actions **Deploy VPS** (нужен `VPS_PASSWORD` в Secrets), или на VPS: `bash scripts/vps-deploy.sh`
+- **Деплой:** push в `main` → GitHub Actions **Deploy VPS**
 - **gmxreply.com** — другой проект, не трогаем.
 
 ## Ограничения

@@ -9,7 +9,6 @@ import { BRAND } from "@/lib/branding";
 import { getUserHomePath } from "@/lib/navigation";
 import { useUserAuth } from "@/lib/userAuth";
 import { TabNav } from "./TabNav";
-import { RuAccessBanner } from "@/components/landing/LandingExtras";
 
 export function PublicLayout() {
   const { user } = useUserAuth();
@@ -25,7 +24,6 @@ export function PublicLayout() {
       <PageBackdrop />
       <div className="site-shell relative z-10 flex flex-col min-h-screen">
       <header className="pushkin-header-shell epic-header-shell">
-        <RuAccessBanner />
         <div className="pushkin-header epic-header">
           <div className="pushkin-header-row">
             <Link to="/" className="pushkin-brand">
