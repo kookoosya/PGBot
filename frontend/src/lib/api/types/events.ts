@@ -24,6 +24,14 @@ export interface PublicEventListResponse {
   total: number;
 }
 
+export interface PublicEventsStats {
+  total_events: number;
+  by_region: Record<string, number>;
+  last_sync: string | null;
+  cinema_sync_hours: number;
+  full_sync_hours: number;
+}
+
 export interface EventItem {
   id: number;
   title: string;

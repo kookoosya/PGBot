@@ -24,6 +24,7 @@ type EventsDashboardProps = Pick<
   | "showPskovOnlyBlock"
   | "showSourceOnlyBlock"
   | "visibleEvents"
+  | "reload"
 >;
 
 export function EventsDashboard({
@@ -38,6 +39,7 @@ export function EventsDashboard({
   pskovEvents,
   pushkinOtherEvents,
   regionFilter,
+  reload,
   search,
   showCityRow,
   showGarnectOnlyBlock,
@@ -55,8 +57,12 @@ export function EventsDashboard({
       <LiteraryEmptyState
         icon="⚠️"
         title="Афиша временно недоступна"
-        text="Не удалось загрузить события. Попробуйте обновить страницу через минуту."
-      />
+        text="Не удалось загрузить события. Проверьте интернет или попробуйте ещё раз."
+      >
+        <button type="button" className="literary-btn literary-btn--primary mt-3" onClick={reload}>
+          Повторить
+        </button>
+      </LiteraryEmptyState>
     );
   }
 

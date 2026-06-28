@@ -10,6 +10,7 @@ from .mappers import (
 )
 from .public import (
     get_public_event_by_id,
+    get_public_events_stats,
     get_related_event_sessions,
     get_upcoming_events,
     search_public_events,
@@ -29,7 +30,9 @@ __all__ = [
     "event_to_response",
     "get_event_by_id",
     "get_public_event_by_id",
+    "get_public_events_stats",
     "get_related_event_sessions",
+    "get_public_events_stats",
     "get_upcoming_events",
     "list_events_admin",
     "search_public_events",

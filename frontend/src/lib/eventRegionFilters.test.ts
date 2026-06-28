@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { EVENT_REGION_FILTERS, parseRegionParam } from "./eventRegionFilters";
 
 describe("eventRegionFilters", () => {
-  it("defaults to pushkin_gory", () => {
-    expect(parseRegionParam(null)).toBe("pushkin_gory");
+  it("defaults to all regions", () => {
+    expect(parseRegionParam(null)).toBe("all");
   });
 
   it("parses URL region param", () => {

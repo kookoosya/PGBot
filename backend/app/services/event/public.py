@@ -6,14 +6,14 @@ import logging
 import re
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventCategory, EventRegion
 from app.models.event import Event
 from app.services.event.cinema import is_real_cinema_event
 from app.services.event_dedupe_service import dedupe_display_events, group_events_by_show
-from app.services.event_title_utils import normalize_event_title
+from app.services.event.mappers import event_region_label
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +189,41 @@ async def get_related_event_sessions(db: AsyncSession, event: Event) -> list[Eve
             continue
         related.append(candidate)
     return related[:12]
+
+
+async def get_public_events_stats(db: AsyncSession) -> dict:
+    """Counters and freshness for the public events page."""
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(days=14)
+    active = [
+        Event.is_published.is_(True),
+        or_(Event.ends_at.is_(None), Event.ends_at >= now),
+        Event.starts_at >= window_start,
+    ]
+    try:
+        total = (
+            await db.execute(select(func.count(Event.id)).where(*active))
+        ).scalar() or 0
+        rows = await db.execute(
+            select(Event.region, func.count(Event.id)).where(*active).group_by(Event.region)
+        )
+        by_region: dict[str, int] = {}
+        for region_value, count in rows.all():
+            label = event_region_label(region_value)
+            by_region[label] = count
+        last_sync = (
+            await db.execute(select(func.max(Event.updated_at)).where(Event.is_published.is_(True)))
+        ).scalar()
+    except Exception:
+        logger.exception("Failed to build public events stats")
+        raise
+    return {
+        "total_events": total,
+        "by_region": by_region,
+        "last_sync": last_sync,
+        "cinema_sync_hours": 8,
+        "full_sync_hours": 24,
+    }
 
 
 async def search_public_events(

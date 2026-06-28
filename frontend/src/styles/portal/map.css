@@ -111,6 +111,14 @@
     border-color: hsl(42 78% 46%);
     background: hsl(42 55% 94%);
   }
+  .map-cat-bar-static {
+    cursor: default;
+    pointer-events: none;
+  }
+  .map-cat-bar-static:hover {
+    border-color: transparent;
+    background: hsl(40 55% 99% / 0.7);
+  }
   .map-cat-bar-label {
     @apply text-xs font-semibold truncate;
   }

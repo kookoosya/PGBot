@@ -10,7 +10,7 @@ export const EVENT_REGION_FILTERS: { id: RegionFilter; label: string }[] = [
 export function parseRegionParam(value: string | null): RegionFilter {
   if (value === "pskov" || value === "pushkin_gory") return value;
   if (value === "all") return "all";
-  return "pushkin_gory";
+  return "all";
 }
 
 export function regionLabelFromFilterId(region: EventRegion): string {

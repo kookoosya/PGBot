@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.enums import EventRegion
-from app.schemas.event import PublicEventListResponse, PublicEventResponse
+from app.schemas.event import PublicEventListResponse, PublicEventResponse, PublicEventsStatsResponse
 from app.schemas.today import TodayResponse
 from app.services.event import (
     event_to_public_response,
     get_public_event_by_id,
+    get_public_events_stats,
     search_public_events,
 )
 from app.services.site_service import build_public_info
@@ -31,6 +32,12 @@ async def today_in_village(
     """Aggregated landing snapshot: weather, latest ad, map stats, upcoming events."""
     snapshot = await build_today_snapshot(db, event_region=region)
     return snapshot.to_response()
+
+
+@router.get("/events/stats", response_model=PublicEventsStatsResponse)
+async def public_events_stats(db: Annotated[AsyncSession, Depends(get_db)]):
+    """Upcoming events counters and last import time for the public events page."""
+    return await get_public_events_stats(db)
 
 
 @router.get("/events", response_model=PublicEventListResponse)

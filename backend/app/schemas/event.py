@@ -92,6 +92,14 @@ class PublicEventListResponse(BaseModel):
     total: int
 
 
+class PublicEventsStatsResponse(BaseModel):
+    total_events: int
+    by_region: dict[str, int]
+    last_sync: datetime | None
+    cinema_sync_hours: int = 8
+    full_sync_hours: int = 24
+
+
 class EventSyncResponse(BaseModel):
     source: str = "unknown"
     region: str

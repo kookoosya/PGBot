@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -27,8 +27,40 @@ import { siteOrigin } from "@/lib/siteUrl";
 import { EVENTS_COPY, GARNECT_COPY } from "./constants";
 import { buildCategoryFilters } from "./utils";
 
+async function loadEventsForRegion(
+  regionFilter: RegionFilter,
+  base: { search?: string; limit: "80"; source?: string },
+  garnectOnly: boolean,
+  sourceFilter: string | null,
+): Promise<PublicEvent[]> {
+  if (garnectOnly) {
+    const r = await api.getPublicEvents({ ...base, region: "pushkin_gory" });
+    return r.items;
+  }
+  if (sourceFilter) {
+    const r = await api.getPublicEvents({
+      ...base,
+      region: regionFilter === "pskov" ? "pskov" : regionFilter === "pushkin_gory" ? "pushkin_gory" : undefined,
+    });
+    return r.items;
+  }
+  if (regionFilter === "pushkin_gory") {
+    const r = await api.getPublicEvents({ ...base, region: "pushkin_gory" });
+    return r.items;
+  }
+  if (regionFilter === "pskov") {
+    const r = await api.getPublicEvents({ ...base, region: "pskov" });
+    return r.items;
+  }
+  const [pushkin, pskov] = await Promise.all([
+    api.getPublicEvents({ ...base, region: "pushkin_gory" }),
+    api.getPublicEvents({ ...base, region: "pskov" }),
+  ]);
+  return mergePublicEvents(pskov.items, pushkin.items);
+}
+
 export function useEventsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { pathname } = useLocation();
   const isVkEvents = pathname.startsWith("/vk/events");
   const eventsBase = isVkEvents ? "/vk/events" : "/events";
@@ -39,7 +71,10 @@ export function useEventsPage() {
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>(() => parseRegionParam(searchParams.get("region")));
+  const [reloadToken, setReloadToken] = useState(0);
+  const [regionFilter, setRegionFilterState] = useState<RegionFilter>(() =>
+    parseRegionParam(searchParams.get("region")),
+  );
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [shareMsg, setShareMsg] = useState("");
@@ -55,9 +90,32 @@ export function useEventsPage() {
       ? "События из выбранного источника афиши"
       : EVENTS_COPY.lead;
   const pageIcon = garnectOnly ? "🎭" : "📅";
+  const eventsMeta = garnectOnly ? GARNECT_COPY.meta : EVENTS_COPY.meta;
 
   useDocumentTitle(pageTitle);
-  usePageMeta(garnectOnly ? GARNECT_COPY.meta : undefined);
+  usePageMeta(eventsMeta);
+
+  useEffect(() => {
+    setRegionFilterState(parseRegionParam(searchParams.get("region")));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setSearch(searchInput.trim()), 400);
+    return () => window.clearTimeout(t);
+  }, [searchInput]);
+
+  const setRegionFilter = useCallback(
+    (region: RegionFilter) => {
+      setRegionFilterState(region);
+      const next = new URLSearchParams(searchParams);
+      if (region === "all") next.delete("region");
+      else next.set("region", region);
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
   useEffect(() => {
     setLoading(true);
@@ -65,30 +123,14 @@ export function useEventsPage() {
 
     const base = { search: search || undefined, limit: "80" as const, source: sourceFilter || undefined };
 
-    const load = garnectOnly
-      ? api.getPublicEvents({ ...base, region: "pushkin_gory" }).then((r) => r.items)
-      : sourceFilter
-        ? api
-            .getPublicEvents({
-              ...base,
-              region: regionFilter === "pskov" ? "pskov" : regionFilter === "pushkin_gory" ? "pushkin_gory" : undefined,
-            })
-            .then((r) => r.items)
-        : regionFilter === "pskov"
-          ? api.getPublicEvents({ ...base, region: "pskov" }).then((r) => r.items)
-          : Promise.all([
-              api.getPublicEvents({ ...base, region: "pushkin_gory" }),
-              api.getPublicEvents({ ...base, region: "pskov" }),
-            ]).then(([pushkin, pskov]) => mergePublicEvents(pskov.items, pushkin.items));
-
-    load
+    loadEventsForRegion(regionFilter, base, garnectOnly, sourceFilter)
       .then(setEvents)
       .catch(() => {
         setEvents([]);
         setLoadError(true);
       })
       .finally(() => setLoading(false));
-  }, [garnectOnly, regionFilter, search, sourceFilter]);
+  }, [garnectOnly, regionFilter, search, sourceFilter, reloadToken]);
 
   const categoryFilters = useMemo(() => buildCategoryFilters(events), [events]);
 
@@ -120,9 +162,13 @@ export function useEventsPage() {
     [visibleEvents],
   );
 
-  const showPushkinBlock = !garnectOnly && !sourceFilter && pushkinEvents.length > 0 && regionFilter !== "pskov";
+  const showPushkinBlock =
+    !garnectOnly && !sourceFilter && pushkinEvents.length > 0 && regionFilter !== "pskov";
   const showCityRow =
-    !garnectOnly && !sourceFilter && regionFilter !== "pskov" && (cinemaEvents.length > 0 || pskovEvents.length > 0);
+    !garnectOnly &&
+    !sourceFilter &&
+    regionFilter === "all" &&
+    (cinemaEvents.length > 0 || pskovEvents.length > 0);
   const showPskovOnlyBlock = !garnectOnly && !sourceFilter && regionFilter === "pskov" && pskovEvents.length > 0;
   const showSourceOnlyBlock = !!sourceFilter && visibleEvents.length > 0;
   const showGarnectOnlyBlock = garnectOnly && garnectProgram.length > 0;
@@ -162,6 +208,7 @@ export function useEventsPage() {
     pskovEvents,
     pushkinOtherEvents,
     regionFilter,
+    reload,
     resetSearch,
     search,
     searchInput,

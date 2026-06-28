@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { EventsDashboard } from "./events/EventsDashboard";
 import { EventsFilters } from "./events/EventsFilters";
 import { EventsGarnectAlerts } from "./events/EventsGarnectAlerts";
+import { EventsStatsRibbon } from "./events/EventsStatsRibbon";
 import { useEventsPage } from "./events/useEventsPage";
 
 export function EventsPage() {
@@ -25,6 +26,10 @@ export function EventsPage() {
         garnectOnly={events.garnectOnly}
         garnectProgram={events.garnectProgram}
       />
+
+      {!events.garnectOnly && !events.sourceFilter && (
+        <EventsStatsRibbon totalVisible={events.loading ? undefined : events.visibleEvents.length} />
+      )}
 
       <EventsFilters
         EVENT_REGION_FILTERS={events.EVENT_REGION_FILTERS}
@@ -52,6 +57,7 @@ export function EventsPage() {
         garnectShareUrl={events.garnectShareUrl}
         loadError={events.loadError}
         loading={events.loading}
+        reload={events.reload}
         pskovEvents={events.pskovEvents}
         pushkinOtherEvents={events.pushkinOtherEvents}
         regionFilter={events.regionFilter}

@@ -10,6 +10,7 @@ import type {
   EventSyncResult,
   PublicEvent,
   PublicEventListResponse,
+  PublicEventsStats,
 } from "./types";
 
 export function createEventsApi(client: HttpClient) {
@@ -30,6 +31,10 @@ export function createEventsApi(client: HttpClient) {
           ).toString()
         : "";
       return client.request<PublicEventListResponse>(`/public/events${query}`);
+    },
+
+    getPublicEventsStats() {
+      return client.request<PublicEventsStats>("/public/events/stats");
     },
 
     getPublicEvent(id: number) {
