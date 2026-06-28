@@ -6,7 +6,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants.portal_copy import CLASSIFIED_SUBMITTED_VK, LINK_CLASSIFIEDS, LINK_SUBMIT_CLASSIFIED
+from app.constants.portal_copy import LINK_CLASSIFIEDS, LINK_SUBMIT_CLASSIFIED
 from app.models.enums import ClassifiedCategory
 from app.services.classified import ClassifiedValidationError, create_classified_ad_from_vk
 from app.services.classified_antifraud import validate_phone
@@ -50,12 +50,12 @@ async def handle_classified_flow(
         data["title"] = title
         flow["step"] = "description"
         await save_flow(db, peer_id, flow)
-        return "Шаг 2 — опишите подробнее (от 10 символов):"
+        return "Шаг 2 — опишите подробнее (от 15 символов):"
 
     if step == "description":
         desc = text.strip()
-        if len(desc) < 10:
-            return "Описание от 10 символов. Или «отмена»."
+        if len(desc) < 15:
+            return "Описание от 15 символов. Или «отмена»."
         data["description"] = desc
         flow["step"] = "phone"
         await save_flow(db, peer_id, flow)
@@ -78,7 +78,7 @@ async def handle_classified_flow(
         data["author_name"] = name
 
         try:
-            await create_classified_ad_from_vk(
+            result = await create_classified_ad_from_vk(
                 db,
                 from_id=from_id,
                 category=data.get("category", ClassifiedCategory.OTHER),
@@ -92,7 +92,7 @@ async def handle_classified_flow(
             return str(exc)
 
         await clear_flow_state(db, peer_id)
-        msg = box("Принято!", CLASSIFIED_SUBMITTED_VK)
+        msg = box("Принято!", result.message)
         await send_message(
             peer_id,
             msg,

@@ -134,9 +134,9 @@ export function ClassifiedAdForm({
           </div>
           <p className="text-sm text-muted-foreground m-0 -mt-2">
             Чем проще и короче текст, тем быстрее отклик.
-            <span className={`form-char-count${form.description.trim().length < 10 ? " form-char-count--warn" : ""}`}>
+            <span className={`form-char-count${form.description.trim().length < 15 ? " form-char-count--warn" : ""}`}>
               {" "}
-              {form.description.trim().length} симв. (рекомендуем от 10)
+              {form.description.trim().length} симв. (минимум 15)
             </span>
           </p>
         </>
@@ -226,7 +226,7 @@ export function ClassifiedAdForm({
             placeholder={
               isJobs
                 ? "VK — уведомим о публикации"
-                : "ВКонтакте (id или ссылка) — уведомим, когда опубликуем"
+                : "ВКонтакте (id или ссылка) — уведомим о публикации в VK"
             }
             value={form.contact_vk}
             onChange={(e) => setForm({ ...form, contact_vk: e.target.value })}

@@ -8,7 +8,7 @@ from app.models.enums import ClassifiedCategory, ClassifiedPaymentStatus
 class ClassifiedCreate(BaseModel):
     category: ClassifiedCategory
     title: str = Field(min_length=5, max_length=300)
-    description: str = Field(min_length=10, max_length=3000)
+    description: str = Field(min_length=15, max_length=3000)
     price: int | None = Field(None, ge=0)
     price_unit: str | None = None
     phone: str = Field(min_length=10, max_length=20)

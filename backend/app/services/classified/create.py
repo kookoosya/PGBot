@@ -58,6 +58,7 @@ async def create_classified_ad(
     data: ClassifiedCreateInput,
     *,
     user: Optional[User] = None,
+    skip_vk_moderation_notify: bool = False,
 ) -> ClassifiedCreateResult:
     """Validate, persist and auto-publish when text passes quality checks."""
     await validate_create_input(db, data)
@@ -102,6 +103,7 @@ async def create_classified_ad(
             ad.id,
             action="approve",
             actor=SYSTEM_ACTOR,
+            notify_vk=not skip_vk_moderation_notify,
         )
         message = (
             "«Сосед помогает» опубликовано — соседи уже видят объявление."
@@ -151,4 +153,5 @@ async def create_classified_ad_from_vk(
             contact_vk=str(from_id),
             agree_rules=True,
         ),
+        skip_vk_moderation_notify=True,
     )

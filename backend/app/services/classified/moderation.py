@@ -81,6 +81,8 @@ async def moderate_classified_ad(
     *,
     action: ModerationAction,
     actor: ClassifiedActorContext,
+    *,
+    notify_vk: bool = True,
 ) -> ModerationResult:
     """Approve or reject a pending classified ad."""
     result = await db.execute(select(ClassifiedAd).where(ClassifiedAd.id == ad_id))
@@ -93,12 +95,14 @@ async def moderate_classified_ad(
         ad.payment_status = ClassifiedPaymentStatus.APPROVED
         cat_label = CLASSIFIED_LABELS.get(ad.category, ad.category)
         vk_msg = CLASSIFIED_APPROVED_VK.format(title=ad.title, category=cat_label)
-        vk_notified = await safe_notify_vk(
-            ad,
-            vk_msg,
-            context="approve",
-            links=((LINK_CLASSIFIED, f"/classifieds/{ad.id}"),),
-        )
+        vk_notified = False
+        if notify_vk:
+            vk_notified = await safe_notify_vk(
+                ad,
+                vk_msg,
+                context="approve",
+                links=((LINK_CLASSIFIED, f"/classifieds/{ad.id}"),),
+            )
 
         subscribers_notified = 0
         try:
