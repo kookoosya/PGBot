@@ -14,7 +14,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/canonical-site.sh"
 
 BASE="${1:-${SMOKE_BASE_URL:-$CANONICAL_SITE_URL}}"
-API="${BASE%/}/api/v1"
+if [[ "${SMOKE_LOCAL_API:-}" == "1" ]]; then
+  API="http://127.0.0.1:8088/api/v1"
+  HEALTH_BASE="http://127.0.0.1:8088"
+else
+  API="${BASE%/}/api/v1"
+  HEALTH_BASE="${BASE%/}"
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -101,15 +107,15 @@ check "Подать объявление (deep link)" "$BASE/classifieds?new=1" 
 check "Обращение (deep link)" "$BASE/complaints?issue=1" "root"
 
 # API
-check "Health" "${BASE%/}/health" "ok"
-if curl -sS --max-time 20 "${BASE%/}/health" | python3 -c "import sys,json; d=json.load(sys.stdin); es=d.get('event_sources',{}); sys.exit(0 if 'vk_wall' in es and 'timepad' in es else 1)"; then
+check "Health" "${HEALTH_BASE}/health" "ok"
+if curl -sS --max-time 20 "${HEALTH_BASE}/health" | python3 -c "import sys,json; d=json.load(sys.stdin); es=d.get('event_sources',{}); sys.exit(0 if 'vk_wall' in es and 'timepad' in es else 1)"; then
   echo -e "${GREEN}OK${NC}   Health event_sources"
   pass=$((pass + 1))
 else
   echo -e "${RED}FAIL${NC} Health event_sources shape"
   fail=$((fail + 1))
 fi
-health_commit=$(curl -sS --max-time 20 "${BASE%/}/health" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('git_commit') or '')" 2>/dev/null || true)
+health_commit=$(curl -sS --max-time 20 "${HEALTH_BASE}/health" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('git_commit') or '')" 2>/dev/null || true)
 if [ -n "$health_commit" ] && [ "$health_commit" != "unknown" ]; then
   echo -e "${GREEN}OK${NC}   Health git_commit ($health_commit)"
   pass=$((pass + 1))
