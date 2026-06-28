@@ -1176,6 +1176,24 @@
   }
 
   @media (max-width: 640px) {
+    .landing-epic .epic-hero--cinema {
+      min-height: min(92vh, 680px);
+    }
+    .landing-epic .epic-feather {
+      display: none;
+    }
+    .landing-epic .epic-quote--cinema {
+      font-size: 0.9375rem;
+    }
+    .landing-epic .epic-hero-weather-corner {
+      top: 0.5rem;
+      right: 0.5rem;
+      max-width: 11rem;
+    }
+    .landing-epic .epic-scroll-hint {
+      bottom: 0.5rem;
+    }
+
     .landing-epic .epic-hero-plate {
       padding: 1.5rem 1.25rem;
       border-radius: 1.1rem;

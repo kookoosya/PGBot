@@ -49,7 +49,8 @@ jobs:
             git fetch origin "$BRANCH"
             git checkout "$BRANCH"
             git pull origin "$BRANCH"
-            bash scripts/vps-deploy.sh
+            sed -i 's|^PUBLIC_SITE_URL=.*|PUBLIC_SITE_URL=https://pushkinskie-gory.xyz|' .env 2>/dev/null || true
+            PRIMARY_DOMAIN=pushkinskie-gory.xyz bash scripts/vps-deploy.sh
 
       - uses: actions/checkout@v4
         if: steps.creds.outputs.ready == 'true'

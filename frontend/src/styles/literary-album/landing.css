@@ -321,6 +321,21 @@
     border: 1px solid hsl(var(--border) / 0.8);
     background: linear-gradient(165deg, hsl(var(--card) / 0.95), hsl(var(--parchment) / 0.65));
     min-height: 7.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .landing-card:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--gold) / 0.45);
+    box-shadow: 0 10px 28px hsl(var(--forest) / 0.08);
+  }
+  .landing-card--event {
+    border-top: 3px solid hsl(var(--burgundy));
+  }
+  .landing-card--ad {
+    border-top: 3px solid hsl(var(--gold));
+  }
+  .landing-card--map {
+    border-top: 3px solid hsl(var(--forest));
   }
   .landing-card-title {
     margin: 0;
