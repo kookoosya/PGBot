@@ -11,11 +11,11 @@ cd /opt/pgbot
 export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
+# Только CF-токен из .env (полный source ломается на кириллице в комментариях)
 if [ -f /opt/pgbot/.env ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source /opt/pgbot/.env
-  set +a
+  CF_API_TOKEN="$(grep -E '^CF_API_TOKEN=' /opt/pgbot/.env | tail -1 | cut -d= -f2- | tr -d '\r"'"'"'' || true)"
+  CLOUDFLARE_API_TOKEN="$(grep -E '^CLOUDFLARE_API_TOKEN=' /opt/pgbot/.env | tail -1 | cut -d= -f2- | tr -d '\r"'"'"'' || true)"
+  export CF_API_TOKEN CLOUDFLARE_API_TOKEN
 fi
 bash scripts/cloudflare-dns-only.sh 2>/dev/null || true
 docker compose -f docker-compose.prod.yml up -d --build
