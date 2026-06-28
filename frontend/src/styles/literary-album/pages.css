@@ -1009,6 +1009,172 @@
     font-weight: 700;
   }
 
+  /* === Cinema hero — crossfade, grain, scroll reveal === */
+  .landing-epic .epic-hero--cinema {
+    min-height: min(88vh, 820px);
+  }
+
+  .landing-epic .epic-hero-photo-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    animation: epicPhotoCrossfade 22s ease-in-out infinite;
+  }
+  .landing-epic .epic-hero-photo-layer--b {
+    animation-delay: -11s;
+  }
+  @keyframes epicPhotoCrossfade {
+    0%, 42% { opacity: 1; transform: scale(1.06); }
+    50%, 92% { opacity: 0; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1.06); }
+  }
+
+  .landing-epic .epic-hero-grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.14;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  .landing-epic .epic-hero-rays {
+    position: absolute;
+    inset: -20% -10%;
+    z-index: 1;
+    pointer-events: none;
+    background: conic-gradient(
+      from 200deg at 50% 0%,
+      transparent 0deg,
+      hsl(42 85% 62% / 0.12) 18deg,
+      transparent 36deg,
+      hsl(42 90% 70% / 0.08) 52deg,
+      transparent 70deg
+    );
+    animation: epicRaysDrift 28s linear infinite;
+    opacity: 0.75;
+  }
+  @keyframes epicRaysDrift {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1.05); }
+  }
+
+  .landing-epic .epic-hero-feathers {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .landing-epic .epic-feather {
+    position: absolute;
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    opacity: 0.35;
+    filter: blur(0.2px);
+    animation: epicFeatherFloat 14s ease-in-out infinite;
+  }
+  .landing-epic .epic-feather--1 { top: 18%; left: 8%; animation-delay: 0s; }
+  .landing-epic .epic-feather--2 { top: 62%; right: 10%; animation-delay: -4s; font-size: clamp(1rem, 2.5vw, 1.5rem); }
+  .landing-epic .epic-feather--3 { bottom: 22%; left: 14%; animation-delay: -8s; opacity: 0.22; }
+  @keyframes epicFeatherFloat {
+    0%, 100% { transform: translate(0, 0) rotate(-12deg); }
+    50% { transform: translate(12px, -20px) rotate(8deg); }
+  }
+
+  .landing-epic .epic-quote--cinema {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1rem, 2.4vw, 1.25rem);
+    line-height: 1.5;
+    color: hsl(42 50% 92%);
+  }
+  .landing-epic .epic-quote-source {
+    display: block;
+    margin-top: 0.35rem;
+    font-style: normal;
+    font-size: 0.75rem;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(42 55% 78% / 0.9);
+  }
+
+  .landing-epic .epic-title-line--cinema {
+    background: linear-gradient(135deg, hsl(42 35% 98%) 0%, hsl(42 70% 82%) 45%, hsl(42 35% 98%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .landing-epic .epic-kicker--cinema {
+    margin-bottom: 0.85rem;
+  }
+
+  .landing-epic .epic-btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .landing-epic .epic-btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, hsl(42 90% 96% / 0.35) 50%, transparent 65%);
+    transform: translateX(-120%);
+    animation: epicBtnShine 4.5s ease-in-out infinite;
+  }
+  @keyframes epicBtnShine {
+    0%, 70%, 100% { transform: translateX(-120%); }
+    85% { transform: translateX(120%); }
+  }
+
+  .landing-epic .epic-scroll-hint {
+    position: absolute;
+    bottom: clamp(0.75rem, 3vw, 1.5rem);
+    left: 50%;
+    z-index: 4;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    text-decoration: none;
+    color: hsl(42 50% 92% / 0.85);
+    font-size: 0.72rem;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    animation: epicScrollBounce 2.4s ease-in-out infinite;
+  }
+  .landing-epic .epic-scroll-hint-arrow {
+    font-size: 1.1rem;
+    line-height: 1;
+    opacity: 0.9;
+  }
+  @keyframes epicScrollBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.75; }
+    50% { transform: translateX(-50%) translateY(6px); opacity: 1; }
+  }
+
+  .landing-epic .animate-hero-cinema .epic-kicker { animation-delay: 0.05s; }
+  .landing-epic .animate-hero-cinema .epic-quote { animation-delay: 0.12s; }
+  .landing-epic .animate-hero-cinema .epic-hero-ornament { animation-delay: 0.18s; }
+  .landing-epic .animate-hero-cinema .epic-title { animation-delay: 0.24s; }
+  .landing-epic .animate-hero-cinema .epic-lead { animation-delay: 0.32s; }
+  .landing-epic .animate-hero-cinema .epic-cta-row { animation-delay: 0.4s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-epic .epic-hero-photo-layer,
+    .landing-epic .epic-hero-rays,
+    .landing-epic .epic-feather,
+    .landing-epic .epic-scroll-hint,
+    .landing-epic .epic-btn-shine::after {
+      animation: none !important;
+    }
+    .landing-epic .epic-hero-photo-layer--b {
+      display: none;
+    }
+  }
+
   @media (max-width: 640px) {
     .landing-epic .epic-hero-plate {
       padding: 1.5rem 1.25rem;

@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://localhost,"
         "https://pushkinskie-gory.xyz,https://www.pushkinskie-gory.xyz,"
+        "https://pushkinskie-gory.ru,https://www.pushkinskie-gory.ru,"
         "https://vk.com,https://m.vk.com,https://vk.ru,https://m.vk.ru"
     )
 

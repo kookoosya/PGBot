@@ -12,6 +12,8 @@ export { ISSUE_STATUS_HINTS, EMPTY_STATES } from "./portalCopyShared";
 export const LANDING_HERO = {
   kicker: PORTAL_COPY_BRAND.kicker,
   tagline: PORTAL_COPY_BRAND.tagline,
+  quote: LANDING_HERO_COPY.quote,
+  quoteSource: LANDING_HERO_COPY.quote_source,
   lead: LANDING_HERO_COPY.lead,
   ctaMap: LANDING_HERO_COPY.cta_map,
   ctaEvents: LANDING_HERO_COPY.cta_events,
