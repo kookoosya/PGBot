@@ -88,6 +88,10 @@ export function LandingHeroCinema() {
           ↓
         </span>
       </a>
+
+      <p className="epic-hero-caption" aria-hidden>
+        {heroPhotos.map((p) => p.title).join(" · ")}
+      </p>
     </section>
   );
 }

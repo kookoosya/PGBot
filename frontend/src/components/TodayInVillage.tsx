@@ -36,7 +36,7 @@ export function TodayInVillage() {
     <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в посёлке">
       <LiterarySectionHead
         title={copy.title}
-        compact
+        lead={copy.lead}
         meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
       />
 

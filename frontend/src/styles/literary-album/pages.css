@@ -1155,6 +1155,21 @@
     50% { transform: translateX(-50%) translateY(6px); opacity: 1; }
   }
 
+  .landing-epic .epic-hero-caption {
+    position: absolute;
+    bottom: clamp(2.75rem, 6vw, 3.5rem);
+    left: clamp(1rem, 4vw, 2rem);
+    z-index: 4;
+    margin: 0;
+    max-width: min(20rem, 55vw);
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(42 45% 92% / 0.72);
+    text-shadow: 0 1px 8px hsl(152 50% 4% / 0.8);
+  }
+
   .landing-epic .animate-hero-cinema .epic-kicker { animation-delay: 0.05s; }
   .landing-epic .animate-hero-cinema .epic-quote { animation-delay: 0.12s; }
   .landing-epic .animate-hero-cinema .epic-hero-ornament { animation-delay: 0.18s; }

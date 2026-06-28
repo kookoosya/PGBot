@@ -29,6 +29,60 @@
     z-index: 1;
     padding: clamp(1.75rem, 4vw, 2.5rem) 0 clamp(2.5rem, 5vw, 3.5rem);
   }
+  .landing-album-inner--wide {
+    max-width: 72rem;
+  }
+
+  /* Баннер .ru для жителей РФ */
+  .ru-access-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.45rem 1rem;
+    background: linear-gradient(90deg, hsl(152 45% 18%), hsl(152 40% 22%));
+    border-bottom: 1px solid hsl(42 70% 50% / 0.35);
+    color: hsl(42 85% 92%);
+    font-size: 0.8125rem;
+  }
+  .ru-access-banner-link {
+    color: hsl(42 90% 72%);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ru-access-banner-close {
+    border: none;
+    background: transparent;
+    color: hsl(42 60% 85% / 0.8);
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .landing-closing {
+    margin-top: var(--landing-gap);
+    padding: 1.75rem 1rem 0.5rem;
+    text-align: center;
+    border-top: 1px dashed hsl(var(--border) / 0.6);
+  }
+  .landing-closing-verse {
+    margin: 0 0 0.65rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-style: italic;
+    color: hsl(var(--forest));
+  }
+  .landing-closing-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--gold));
+    text-decoration: none;
+  }
+  .landing-closing-link:hover {
+    color: hsl(var(--forest));
+  }
   .landing-album-section {
     padding: 0;
   }
@@ -373,8 +427,12 @@
     color: hsl(var(--muted-foreground));
   }
   .landing-card-link {
-    font-family: "Source Serif 4", Georgia, serif;
+    display: block;
+    margin: 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.0625rem;
     font-weight: 600;
+    line-height: 1.35;
     color: hsl(var(--forest));
     text-decoration: none;
   }

@@ -53,13 +53,20 @@ systemctl reload nginx
 
 if command -v certbot >/dev/null; then
   certbot --nginx --expand \
-    -d "${RU_DOMAIN}" -d "www.${RU_DOMAIN}" \
     -d "${XYZ_DOMAIN}" -d "www.${XYZ_DOMAIN}" \
     --non-interactive --agree-tos --register-unsafely-without-email --redirect \
-    || certbot --nginx --expand \
+    || echo "CERTBOT_XYZ_PENDING"
+  RU_IP=$(dig +short "${RU_DOMAIN}" A 2>/dev/null | head -1 || true)
+  VPS_IP_LOCAL=$(curl -s --max-time 5 ifconfig.me 2>/dev/null || curl -s --max-time 5 icanhazip.com 2>/dev/null || true)
+  if [ -n "$RU_IP" ] && [ "$RU_IP" = "$VPS_IP_LOCAL" ]; then
+    certbot --nginx --expand \
+      -d "${RU_DOMAIN}" -d "www.${RU_DOMAIN}" \
       -d "${XYZ_DOMAIN}" -d "www.${XYZ_DOMAIN}" \
       --non-interactive --agree-tos --register-unsafely-without-email --redirect \
-    || echo "CERTBOT_PENDING: проверьте DNS A-записи"
+      || echo "CERTBOT_RU_PENDING"
+  else
+    echo "SKIP_RU_CERT: ${RU_DOMAIN} A=${RU_IP:-none}, VPS=${VPS_IP_LOCAL:-unknown} — bash scripts/print-ru-dns-instructions.sh"
+  fi
 fi
 
 ENV="/opt/pgbot/.env"
