@@ -90,7 +90,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const pushkinSection = (
     <section className="page-panel page-panel--forest landing-block" aria-label="Ближайшее в Пушкиногорье">
       <LiterarySectionHead
-        kicker={isLanding ? eventsCopy.kicker : "🪶 Пушкиногорье"}
+        kicker={isLanding ? undefined : "🪶 Пушкиногорье"}
         title={isLanding ? eventsCopy.title : "Ближайшее в посёлке"}
         lead={
           isLanding

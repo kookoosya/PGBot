@@ -972,6 +972,18 @@
     margin: 1.15rem 0 1.35rem;
   }
 
+  .landing-epic .epic-hero-weather-corner {
+    position: absolute;
+    top: clamp(0.75rem, 2.5vw, 1.25rem);
+    right: clamp(0.75rem, 3vw, 1.5rem);
+    z-index: 3;
+    max-width: min(100% - 1.5rem, 16rem);
+  }
+
+  .landing-epic .epic-hero-weather-corner .weather-compact--inline {
+    width: 100%;
+  }
+
   .landing-epic .weather-compact--inline {
     background: hsl(152 42% 8% / 0.55);
     border-color: hsl(42 60% 78% / 0.35);

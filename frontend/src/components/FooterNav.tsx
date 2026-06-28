@@ -21,7 +21,7 @@ export function FooterNav() {
           rel="noopener noreferrer"
           className="footer-nav-link no-underline mt-2 inline-flex items-center gap-1"
         >
-          📱 VK
+          💬 То же во ВКонтакте — бот в сообщениях
         </a>
       )}
     </div>

@@ -3,7 +3,6 @@ import { LiterarySectionHead, LiteraryInlineLoader } from "@/components/literary
 import { LandingCard } from "@/components/landing/LandingCard";
 import { formatTodayUpdatedAt, useToday } from "@/hooks/useToday";
 import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
-import { formatDate } from "@/lib/utils";
 
 const copy = LANDING_SECTIONS.today;
 
@@ -13,7 +12,7 @@ export function TodayInVillage() {
   if (loading && !data) {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-busy="true">
-        <LiterarySectionHead kicker={copy.kicker} title={copy.title} compact />
+        <LiterarySectionHead title={copy.title} compact />
         <LiteraryInlineLoader label="Собираем сводку дня…" compact />
       </section>
     );
@@ -22,7 +21,7 @@ export function TodayInVillage() {
   if (error && !data) {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel">
-        <LiterarySectionHead kicker={copy.kicker} title={copy.title} compact />
+        <LiterarySectionHead title={copy.title} compact />
         <p className="landing-muted">Сводка дня временно недоступна — загляните чуть позже.</p>
       </section>
     );
@@ -31,17 +30,40 @@ export function TodayInVillage() {
   if (!data) return null;
 
   const ad = data.latest_classified;
+  const nextEvent = data.upcoming_events[0] ?? null;
 
   return (
-    <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в Пушкиногорье">
+    <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в посёлке">
       <LiterarySectionHead
-        kicker={copy.kicker}
         title={copy.title}
         compact
         meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
       />
 
       <div className="landing-today-grid">
+        <LandingCard
+          title="Ближайшее событие"
+          action={{ label: "Вся афиша →", to: "/events" }}
+          className="landing-card--event"
+        >
+          {nextEvent ? (
+            <>
+              <p className="landing-card-meta">{nextEvent.starts_at_label}</p>
+              <Link to={`/events/${nextEvent.id}`} className="landing-card-link">
+                {nextEvent.title}
+              </Link>
+              {nextEvent.location && <p className="landing-card-date">{nextEvent.location}</p>}
+            </>
+          ) : (
+            <p className="landing-muted m-0">
+              {EMPTY_STATES.events.title}.{" "}
+              <Link to="/events" className="literary-link">
+                Афиша →
+              </Link>
+            </p>
+          )}
+        </LandingCard>
+
         <LandingCard
           title="Свежее объявление"
           action={{ label: "Все объявления →", to: "/classifieds" }}
@@ -53,12 +75,13 @@ export function TodayInVillage() {
               <Link to={`/classifieds/${ad.id}`} className="landing-card-link">
                 {ad.title}
               </Link>
-              <p className="landing-card-date">{formatDate(ad.created_at)}</p>
             </>
           ) : (
             <p className="landing-muted m-0">
               {EMPTY_STATES.todayNoAd.text}{" "}
-              <Link to="/classifieds" className="literary-link">Подать →</Link>
+              <Link to="/classifieds?new=1" className="literary-link">
+                Подать →
+              </Link>
             </p>
           )}
         </LandingCard>
