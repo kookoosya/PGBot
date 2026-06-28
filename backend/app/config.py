@@ -94,6 +94,7 @@ class Settings(BaseSettings):
     CLASSIFIED_PLACEMENT_FEE: int = 150
     CLASSIFIED_PERIOD_DAYS: int = 30
     CLASSIFIED_PAYMENT_DESCRIPTION: str = "Объявление Пушкинские Горы"
+    CLASSIFIED_AUTO_APPROVE: bool = True
 
     # Map / OSM sync (Pushkinogorsky district center)
     MAP_CENTER_LAT: float = 57.0267

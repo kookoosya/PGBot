@@ -33,9 +33,9 @@ export function ClassifiedModeration() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">📋 Модерация объявлений</h2>
+      <h2 className="text-2xl font-bold mb-6">📋 Объявления на проверке</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Размещение бесплатное — проверьте текст на мошенничество и опубликуйте
+        Обычно объявления публикуются автоматически. Здесь — только те, что требуют ручной проверки.
       </p>
       <div className="space-y-4">
         {items.map((ad) => (

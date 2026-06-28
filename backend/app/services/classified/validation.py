@@ -9,6 +9,7 @@ from app.services.classified.schemas import ClassifiedCreateInput, ClassifiedVal
 from app.services.classified_antifraud import (
     check_phone_rate_limit,
     check_recent_duplicate,
+    evaluate_classified_content,
     find_scam_phrase,
     validate_phone,
 )
@@ -34,6 +35,10 @@ async def validate_create_input(db: AsyncSession, data: ClassifiedCreateInput) -
         raise ClassifiedValidationError(
             "Текст похож на мошенническую схему. Уберите требование предоплаты или перевода.",
         )
+
+    content_err = evaluate_classified_content(data.title, data.description)
+    if content_err:
+        raise ClassifiedValidationError(content_err)
 
     rate_err = await check_phone_rate_limit(db, data.phone)
     if rate_err:

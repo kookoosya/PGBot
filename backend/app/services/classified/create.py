@@ -11,8 +11,10 @@ from app.config import get_settings
 from app.models.classified import ClassifiedAd
 from app.models.enums import CLASSIFIED_LABELS, ClassifiedCategory, ClassifiedPaymentStatus
 from app.models.user import User
+from app.services.classified.moderation import moderate_classified_ad
 from app.services.classified.quota import get_classified_quota
 from app.services.classified.schemas import (
+    ClassifiedActorContext,
     ClassifiedCreateInput,
     ClassifiedCreateResult,
     ClassifiedValidationError,
@@ -24,6 +26,7 @@ from app.services.site_urls import public_site_url
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+SYSTEM_ACTOR = ClassifiedActorContext(actor_id=0)
 
 
 async def notify_owner_new_ad(
@@ -56,7 +59,7 @@ async def create_classified_ad(
     *,
     user: Optional[User] = None,
 ) -> ClassifiedCreateResult:
-    """Validate, persist a pending ad and notify the site owner."""
+    """Validate, persist and auto-publish when text passes quality checks."""
     await validate_create_input(db, data)
 
     user_id = user.id if user else None
@@ -91,6 +94,26 @@ async def create_classified_ad(
     )
     db.add(ad)
     await db.flush()
+
+    owner_notified = False
+    if settings.CLASSIFIED_AUTO_APPROVE:
+        mod = await moderate_classified_ad(
+            db,
+            ad.id,
+            action="approve",
+            actor=SYSTEM_ACTOR,
+        )
+        message = (
+            "«Сосед помогает» опубликовано — соседи уже видят объявление."
+            if is_neighbor_help
+            else "Объявление опубликовано — соседи уже видят его на доске."
+        )
+        return ClassifiedCreateResult(
+            ad=mod.ad,
+            message=message,
+            free=True,
+            owner_notified=owner_notified,
+        )
 
     owner_notified = await notify_owner_new_ad(ad, data, placement_fee=placement_fee)
     message = (

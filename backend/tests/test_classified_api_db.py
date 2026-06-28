@@ -36,7 +36,7 @@ async def test_create_classified_via_api(
     pending = await api_client.get("/api/v1/classifieds", params={"ads_only": "true", "page_size": 50})
     assert pending.status_code == 200
     pending_ids = {item["id"] for item in pending.json()["items"]}
-    assert ad_id not in pending_ids
+    assert ad_id in pending_ids
 
 
 @pytest.mark.asyncio
@@ -146,3 +146,20 @@ async def test_moderate_classified_requires_owner(
         headers=auth_headers_for(resident),
     )
     assert forbidden.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_create_classified_rejects_short_description(api_client: AsyncClient):
+    response = await api_client.post(
+        "/api/v1/classifieds",
+        json={
+            "category": "firewood",
+            "title": "Дрова",
+            "description": "Сухие",
+            "phone": unique_phone(),
+            "author_name": "Сосед",
+            "agree_rules": True,
+        },
+    )
+    assert response.status_code == 400
+    assert "коротк" in response.json()["detail"].lower()

@@ -14,6 +14,7 @@ import { MapRoutesPanel } from "./map/MapRoutesPanel";
 import { PlaceDetailPanel } from "./map/PlaceDetailPanel";
 import { PlacesList } from "./map/PlacesList";
 import { TaxiPanel } from "./map/TaxiPanel";
+import { HotlinesPanel } from "./map/HotlinesPanel";
 import { useMapPage } from "./map/useMapPage";
 import { formatSyncAge } from "@/lib/formatSyncAge";
 
@@ -43,6 +44,8 @@ export function MapPage() {
       />
 
       <TaxiPanel taxi={map.taxi} taxiMode={map.taxiMode} />
+
+      <HotlinesPanel />
 
       <div className="map-mobile-tabs lg:hidden page-section pb-2">
         <button

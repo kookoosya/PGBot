@@ -399,6 +399,49 @@
     @apply text-xs opacity-85 mt-1 mb-0;
   }
 
+  .hotlines-panel {
+    @apply pushkin-card p-4 md:p-5;
+    background: linear-gradient(135deg, hsl(42 62% 96%), hsl(38 45% 92%));
+  }
+
+  .hotlines-grid {
+    @apply grid gap-2 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .hotline-card {
+    @apply rounded-xl p-3 no-underline text-inherit transition flex gap-3 items-start;
+    background: hsl(42 35% 97%);
+    border: 1px solid hsl(42 40% 82%);
+  }
+
+  .hotline-card:hover {
+    transform: translateY(-1px);
+    border-color: hsl(42 65% 58%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .hotline-card--emergency {
+    background: linear-gradient(135deg, hsl(0 55% 97%), hsl(0 40% 94%));
+    border-color: hsl(0 45% 78%);
+  }
+
+  .hotline-icon {
+    @apply text-xl shrink-0;
+  }
+
+  .hotline-body strong {
+    @apply block text-sm font-semibold leading-snug;
+  }
+
+  .hotline-phone {
+    @apply font-mono font-bold text-base m-0 mt-1;
+    color: hsl(152 48% 22%);
+  }
+
+  .hotline-note {
+    @apply text-xs text-muted-foreground m-0 mt-0.5;
+  }
+
   .org-list-card {
     @apply w-full text-left flex gap-3 p-3 rounded-xl border-2 border-transparent transition;
     background: hsl(42 40% 97%);

@@ -62,6 +62,6 @@ async def get_classified_quota(
         "card_number": settings.PAYMENT_CARD_NUMBER,
         "message": (
             f"Размещение объявлений бесплатно на {settings.CLASSIFIED_PERIOD_DAYS} дней. "
-            "После модерации объявление появится на портале."
+            "Публикуем сразу, если текст проходит автоматическую проверку."
         ),
     }

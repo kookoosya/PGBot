@@ -197,9 +197,9 @@ export function Jobs() {
           title={copy.form.title}
           lead={copy.form.lead}
           freeTitle="Бесплатная вакансия"
-          freeLead="После модерации — на сайте и в VK-боте"
+          freeLead="Сразу на сайте и в VK-боте — если текст проходит проверку"
           agreeLabel="Вакансия настоящая, без предоплаты соискателям"
-          submitLabel="Отправить на модерацию"
+          submitLabel="Опубликовать вакансию"
           showDraftNote
         />
       )}
@@ -212,7 +212,7 @@ export function Jobs() {
           entityId={submittedId}
           entityNoun="Вакансия"
           variant="gold-panel"
-          hint={msgType === "ok" && submittedId ? "Обычно проверяем до суток. После публикации вакансия появится на доске." : undefined}
+          hint={msgType === "ok" && submittedId ? "Вакансия уже на доске — соседи могут откликнуться." : undefined}
           actions={
             msgType === "ok" && submittedId ? (
               <button type="button" className="literary-link text-sm font-medium" onClick={() => setShowForm(true)}>

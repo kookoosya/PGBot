@@ -1,4 +1,4 @@
-"""Проверки объявлений: лимиты, телефон, типовые схемы обмана."""
+"""Проверки объявлений: лимиты, телефон, типовые схемы обмана, качество текста."""
 
 import re
 from datetime import datetime, timedelta, timezone
@@ -8,6 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.classified import ClassifiedAd
 from app.models.enums import ClassifiedPaymentStatus
+from app.services.vk.moderation import detect_profanity, detect_spam
+
+MIN_TITLE_LEN = 5
+MIN_DESC_LEN = 15
+_REPEAT_CHAR_RE = re.compile(r"(.)\1{5,}")
 
 SCAM_KEYWORDS = (
     "предоплат",
@@ -55,6 +60,28 @@ def find_scam_phrase(text: str) -> str | None:
     for phrase in SCAM_KEYWORDS:
         if phrase in low:
             return phrase
+    return None
+
+
+def evaluate_classified_content(title: str, description: str) -> str | None:
+    """Автопроверка текста объявления. None — можно публиковать."""
+    title_clean = (title or "").strip()
+    desc_clean = (description or "").strip()
+    combined = f"{title_clean} {desc_clean}"
+
+    if len(title_clean) < MIN_TITLE_LEN:
+        return "Заголовок слишком короткий — опишите суть в нескольких словах."
+    if len(desc_clean) < MIN_DESC_LEN:
+        return "Описание слишком короткое — добавьте детали для соседей."
+    if _REPEAT_CHAR_RE.search(title_clean) or _REPEAT_CHAR_RE.search(desc_clean):
+        return "Текст выглядит как спам — уберите повторяющиеся символы."
+    if detect_profanity(combined):
+        return "Текст содержит недопустимые выражения. Переформулируйте объявление."
+    if detect_spam(combined):
+        return "Текст похож на спам (много ссылок или КАПС). Пишите обычным языком."
+    letters = [c for c in title_clean if c.isalpha()]
+    if letters and sum(1 for c in letters if c.isupper()) / len(letters) >= 0.85:
+        return "Заголовок не должен быть полностью ЗАГЛАВНЫМИ — напишите обычным регистром."
     return None
 
 
@@ -111,5 +138,5 @@ async def check_recent_duplicate(
     for (existing_title,) in result.all():
         existing_key = re.sub(r"\s+", " ", (existing_title or "").strip().lower())
         if existing_key == title_key:
-            return "Похожее объявление с этого номера уже на модерации или опубликовано."
+            return "Похожее объявление с этого номера уже опубликовано."
     return None

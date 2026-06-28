@@ -203,7 +203,7 @@ export function UserCabinet() {
             </div>
           ))}
           <p className="text-sm text-muted-foreground m-0 pt-2 border-t border-border/60">
-            Статус «На модерации» обычно меняется в течение суток.
+            Отклонённые объявления не публикуются — проверьте текст и подайте заново.
           </p>
         </div>
       )}

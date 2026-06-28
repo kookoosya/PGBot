@@ -223,11 +223,11 @@ export function Classifieds() {
           showExtras={showExtras}
           onToggleExtras={() => setShowExtras(!showExtras)}
           kicker="✍️ Новое объявление"
-          title="Подать на модерацию"
+          title="Подать объявление"
           freeTitle="Бесплатное размещение"
-          freeLead="Честные объявления — без предоплаты и переводов незнакомцам."
+          freeLead="Честные объявления — без предоплаты и переводов незнакомцам. Публикуем сразу, если текст проходит проверку."
           agreeLabel="Объявление честное: без предоплаты и переводов незнакомцам."
-          submitLabel="🆓 Отправить на модерацию"
+          submitLabel="🆓 Опубликовать объявление"
           showDraftNote
         />
       )}
@@ -242,8 +242,8 @@ export function Classifieds() {
           variant="gold-panel"
           hint={
             msgType === "ok" && submittedId
-              ? `Обычно проверяем до суток. После публикации объявление появится на доске.${
-                  submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение, когда опубликуем."
+              ? `Объявление уже на доске.${
+                  submittedNotifyVk ? " Уведомим в VK." : " Укажите ВК в форме — пришлём сообщение в VK."
                 }`
               : undefined
           }
