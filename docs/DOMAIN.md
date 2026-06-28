@@ -1,7 +1,7 @@
 # Домен портала
 
 **Прод:** https://pushkinskie-gory.xyz  
-**Доступ из РФ без VPN:** [CLOUDFLARE_RU.md](./CLOUDFLARE_RU.md) — прокси Cloudflare (оранжевое облако)
+**Доступ из РФ без VPN:** [CLOUDFLARE_SETUP_RU.md](./CLOUDFLARE_SETUP_RU.md) — **полная пошаговая инструкция**
 
 ## DNS сейчас (прямо на VPS)
 
