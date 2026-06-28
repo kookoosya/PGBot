@@ -8,7 +8,8 @@ source "${SCRIPT_DIR}/canonical-site.sh"
 
 RU_DOMAIN="${RU_DOMAIN:-pushkinskie-gory.ru}"
 XYZ_DOMAIN="${XYZ_DOMAIN:-pushkinskie-gory.xyz}"
-PRIMARY_DOMAIN="${PRIMARY_DOMAIN:-${RU_DOMAIN}}"
+# Пока .ru DNS не на VPS — основной .xyz (override: PRIMARY_DOMAIN=pushkinskie-gory.ru)
+PRIMARY_DOMAIN="${PRIMARY_DOMAIN:-${XYZ_DOMAIN}}"
 UPSTREAM="${UPSTREAM:-http://127.0.0.1:8088}"
 CONF="/etc/nginx/sites-available/pgbot-primary"
 
@@ -51,11 +52,14 @@ nginx -t
 systemctl reload nginx
 
 if command -v certbot >/dev/null; then
-  certbot --nginx \
+  certbot --nginx --expand \
     -d "${RU_DOMAIN}" -d "www.${RU_DOMAIN}" \
     -d "${XYZ_DOMAIN}" -d "www.${XYZ_DOMAIN}" \
     --non-interactive --agree-tos --register-unsafely-without-email --redirect \
-    || echo "CERTBOT_PENDING: проверьте DNS A-записи для .ru и .xyz"
+    || certbot --nginx --expand \
+      -d "${XYZ_DOMAIN}" -d "www.${XYZ_DOMAIN}" \
+      --non-interactive --agree-tos --register-unsafely-without-email --redirect \
+    || echo "CERTBOT_PENDING: проверьте DNS A-записи"
 fi
 
 ENV="/opt/pgbot/.env"
