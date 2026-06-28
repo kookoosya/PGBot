@@ -19,6 +19,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Полная синхронизация всех источников — раз в сутки в 03:15
 15 3 * * * root cd ${ROOT} && bash scripts/vps-sync-events.sh all >> ${LOG_FILE} 2>&1
+
+# Карта: справочник + OSM + очистка дублей — каждые 6 часов
+30 */6 * * * root cd ${ROOT} && docker compose -f docker-compose.prod.yml exec -T backend python scripts/sync_map_once.py >> ${LOG_FILE} 2>&1
 EOF
 
 chmod 644 "$CRON_FILE"

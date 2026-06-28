@@ -1,4 +1,4 @@
-"""Очистка карты: убираем Авито, дубли и мусор из OSM."""
+"""Проверки и очистка карты: дубли, банки, мусор OSM/Yandex."""
 
 import logging
 import math
@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 
 SKIP_OSM_NAMES = {
     "ozon", "wildberries", "сдэк", "cdek", "pickpoint", "boxberry",
-    "exclusive palace", "пункт выдачи", "постамат", "пропан",
+    "exclusive palace", "пункт выдачи", "postamat", "постамат", "пропан",
+    "т-банк", "t-bank", "tinkoff", "тинькофф", "tbank",
+    "втб", "альфа-банк", "райффайзен", "газпромбанк", "открытие",
+    "россельхоз", "совкомбанк", "мкб", "пochtabank", "почта банк",
 }
 DEPRECATED_ADDRESS_PARTS = (
     "строителей, 1-б",
@@ -25,10 +28,17 @@ DEPRECATED_ADDRESS_PARTS = (
     "красноармейская",
 )
 SKIP_OSM_SHOPS = {"parcel_locker", "outpost", "kiosk", "ticket", "lottery"}
-SKIP_OSM_AMENITIES = {"parcel_locker", "vending_machine"}
+SKIP_OSM_AMENITIES = {"parcel_locker", "vending_machine", "atm", "bank"}
 
 # Радиус, в котором OSM/Yandex считается дублем справочника
 REF_DEDUP_KM = 0.15
+
+# В посёлке один банкомат — только reference «Сбербанк»
+ALLOWED_BANK_NAME_TOKENS = ("сбер", "900")
+
+YANDEX_SKIP_NAME_FRAGMENTS = SKIP_OSM_NAMES | {
+    "банкомат", "atm", "криптомат",
+}
 
 
 def _norm_name(name: str) -> str:
@@ -57,6 +67,28 @@ def _distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return 2 * r * math.asin(math.sqrt(a))
 
 
+def _is_junk_name(name: str) -> bool:
+    name_l = _norm_name(name)
+    return any(skip in name_l for skip in YANDEX_SKIP_NAME_FRAGMENTS)
+
+
+def _is_allowed_reference_bank(name: str) -> bool:
+    name_l = _norm_name(name)
+    return any(token in name_l for token in ALLOWED_BANK_NAME_TOKENS)
+
+
+def _fix_category(name: str, category: PlaceCategory) -> PlaceCategory:
+    """Исправить типовые ошибки категоризации из OSM/Yandex."""
+    name_l = _norm_name(name)
+    if "косметик" in name_l and category == PlaceCategory.BANK:
+        return PlaceCategory.BEAUTY
+    if "косметик" in name_l and category in (PlaceCategory.OTHER, PlaceCategory.SHOP):
+        return PlaceCategory.BEAUTY
+    if "магнит" in name_l and "косметик" in name_l:
+        return PlaceCategory.BEAUTY
+    return category
+
+
 def _nearby_reference(
     place: Place,
     reference: list[Place],
@@ -70,18 +102,41 @@ def _nearby_reference(
             continue
         if _names_overlap(place.name, ref.name):
             return ref
-        # Сетевые магазины: дубль только если рядом уже есть справочник той же сети
         if place.category == ref.category:
             ref_brand = _norm_name(ref.name)
-            for token in ("пятёрочка", "пятерочка", "магнит", "аптека"):
+            for token in ("пятёрочка", "пятерочка", "магнит", "аптека", "сбер"):
                 if token in brand and token in ref_brand:
                     return ref
+            # Один объект на категорию в центре посёлка (банк, почта, МФЦ…)
+            if place.category in (
+                PlaceCategory.BANK,
+                PlaceCategory.POST,
+                PlaceCategory.GOVERNMENT,
+                PlaceCategory.HOSPITAL,
+                PlaceCategory.TRANSPORT,
+            ):
+                return ref
     return None
 
 
+def should_skip_yandex_org(name: str, categories: list | None = None) -> bool:
+    """Не импортировать банки/мусор из Яндекс.Карт — банк только из справочника."""
+    if _is_junk_name(name):
+        return True
+    name_l = _norm_name(name)
+    if "банк" in name_l and not _is_allowed_reference_bank(name):
+        return True
+    for cat in categories or []:
+        cn = _norm_name((cat.get("name") if isinstance(cat, dict) else str(cat)) or "")
+        if "банк" in cn and not _is_allowed_reference_bank(name):
+            return True
+    return False
+
+
 async def cleanup_map_places(db: AsyncSession) -> dict:
-    """Деактивируем Авито, посуточку-агрегаторы, мусор OSM и дубли."""
+    """Деактивируем мусор, лишние банки и дубли справочника."""
     deactivated = 0
+    fixed_category = 0
     result = await db.execute(select(Place))
     places = list(result.scalars().all())
     reference = [p for p in places if p.external_source == "reference" and p.is_active]
@@ -89,6 +144,12 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
     for place in places:
         if not place.is_active:
             continue
+
+        new_cat = _fix_category(place.name, place.category)
+        if new_cat != place.category:
+            place.category = new_cat
+            fixed_category += 1
+
         reason = None
 
         website = (place.website or "").lower()
@@ -102,6 +163,11 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             reason = "propane_not_petrol"
         elif place.external_source == "seed":
             reason = "legacy_seed"
+        elif place.category == PlaceCategory.BANK:
+            if place.external_source != "reference" or not _is_allowed_reference_bank(place.name):
+                reason = "bank_not_reference"
+        elif _is_junk_name(place.name):
+            reason = "junk_name"
         elif place.external_source in ("osm", "yandex"):
             name_l = _norm_name(place.name)
             if any(skip in name_l for skip in SKIP_OSM_NAMES):
@@ -121,7 +187,6 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             place.is_active = False
             deactivated += 1
 
-    # Дубли OSM: одно имя в радиусе 80 м — оставляем с адресом
     osm_active = [p for p in places if p.is_active and p.external_source == "osm"]
     for i, a in enumerate(osm_active):
         if not a.is_active:
@@ -136,7 +201,6 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
                 loser.is_active = False
                 deactivated += 1
 
-    # Каталог: убираем Авито
     cat_result = await db.execute(select(CatalogItem))
     catalog_off = 0
     for item in cat_result.scalars().all():
@@ -149,12 +213,21 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             item.source = CatalogSource.REFERENCE
 
     await db.flush()
-    logger.info("Map cleanup: %d places deactivated, %d catalog items off", deactivated, catalog_off)
-    return {"places_deactivated": deactivated, "catalog_deactivated": catalog_off}
+    logger.info(
+        "Map cleanup: %d places deactivated, %d categories fixed, %d catalog off",
+        deactivated,
+        fixed_category,
+        catalog_off,
+    )
+    return {
+        "places_deactivated": deactivated,
+        "categories_fixed": fixed_category,
+        "catalog_deactivated": catalog_off,
+    }
 
 
 def should_skip_osm_element(tags: dict, name: str) -> bool:
-    """Не импортировать пункты выдачи и объекты без адреса."""
+    """Не импортировать пункты выдачи, банки/ATM и объекты без адреса."""
     name_l = _norm_name(name)
     brand = _norm_name(tags.get("brand") or "")
     if any(skip in name_l or skip in brand for skip in SKIP_OSM_NAMES):
@@ -162,6 +235,8 @@ def should_skip_osm_element(tags: dict, name: str) -> bool:
     if tags.get("shop") in SKIP_OSM_SHOPS:
         return True
     if tags.get("amenity") in SKIP_OSM_AMENITIES:
+        return True
+    if tags.get("amenity") == "bank" or tags.get("amenity") == "atm":
         return True
     if tags.get("vending") == "parcel_pickup":
         return True

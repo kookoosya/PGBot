@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.enums import PLACE_CATEGORY_LABELS, PlaceCategory
 from app.models.place import Place
+from app.services.place_cleanup import should_skip_yandex_org
 from app.services.pushkin_places_seed import seed_village_places
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,6 @@ SEARCH_QUERIES = [
     "гостиница Пушкинские Горы",
     "гостевой дом Пушкиногорский район",
     "база отдыха Пушкинские Горы",
-    "банк Пушкинские Горы",
     "АЗС Пушкинские Горы",
     "парикмахерская Пушкинские Горы",
     "почта Пушкинские Горы",
@@ -55,6 +55,7 @@ YANDEX_CAT_MAP = {
     "заправка": PlaceCategory.GAS,
     "парикмахерская": PlaceCategory.BEAUTY,
     "салон": PlaceCategory.BEAUTY,
+    "косметик": PlaceCategory.BEAUTY,
     "почта": PlaceCategory.POST,
     "музей": PlaceCategory.CULTURE,
     "школа": PlaceCategory.SCHOOL,
@@ -123,6 +124,9 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
                 name = meta.get("name")
                 if not yid or not name or yid in seen_ids:
                     continue
+                cats = meta.get("Categories") or []
+                if should_skip_yandex_org(name, cats):
+                    continue
                 seen_ids.add(yid)
 
                 coords = feature.get("geometry", {}).get("coordinates", [])
@@ -137,7 +141,6 @@ async def sync_places_from_yandex(db: AsyncSession) -> dict:
                     if phone:
                         break
                 hours = (meta.get("Hours") or {}).get("text")
-                cats = meta.get("Categories") or []
                 category = _guess_category(name, cats)
                 rating, reviews = _parse_rating(meta)
                 yandex_url = props.get("uri") or meta.get("url")
