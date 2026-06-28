@@ -29,10 +29,6 @@ if (process.env.CF_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN) {
 }
 
 const require = createRequire(import.meta.url);
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const require = createRequire(import.meta.url);
 const ssh2Paths = [
   join(dirname(fileURLToPath(import.meta.url)), "../../GMX - Replay/Backend/node_modules/ssh2"),
   join(dirname(fileURLToPath(import.meta.url)), "../../node_modules/ssh2"),
