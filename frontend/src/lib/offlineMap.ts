@@ -4,7 +4,7 @@ import { osmTileUrl } from "./mapTiles";
 const CACHE_KEY = "pgbot_map_offline_v1";
 const CACHE_TS_KEY = "pgbot_map_offline_ts";
 const READY_KEY = "pgbot_map_offline_ready";
-export const OFFLINE_TILE_CACHE = "pgbot-map-tiles-v8";
+export const OFFLINE_TILE_CACHE = "pgbot-map-tiles-v10";
 
 /** Район Пушкиногорья для кэша тайлов */
 const DISTRICT_BOUNDS = {
@@ -137,17 +137,6 @@ function lat2tile(lat: number, zoom: number): number {
   return Math.floor(
     ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * Math.pow(2, zoom),
   );
-}
-
-/** Убираем старый SW с главной — он мешал загрузке на мобильных */
-export async function clearStaleServiceWorkers(): Promise<void> {
-  if (!("serviceWorker" in navigator)) return;
-  const regs = await navigator.serviceWorker.getRegistrations();
-  await Promise.all(regs.map((r) => r.unregister()));
-  if ("caches" in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k.startsWith("pgbot-")).map((k) => caches.delete(k)));
-  }
 }
 
 export function registerServiceWorker(): void {

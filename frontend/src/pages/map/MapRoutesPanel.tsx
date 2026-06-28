@@ -8,19 +8,26 @@ type MapRoutesPanelProps = {
   activeRoute: MapRoute | null;
   onSelectRoute: (route: MapRoute) => void;
   onClearRoute: () => void;
+  compact?: boolean;
 };
 
-export function MapRoutesPanel({ routes, activeRoute, onSelectRoute, onClearRoute }: MapRoutesPanelProps) {
+export function MapRoutesPanel({
+  routes,
+  activeRoute,
+  onSelectRoute,
+  onClearRoute,
+  compact = false,
+}: MapRoutesPanelProps) {
   if (routes.length === 0) return null;
 
+  const copy = PAGE_SECTIONS.map.routes;
+
   return (
-    <div className="page-section pb-3">
-      <div className="page-panel page-panel--gold map-routes-panel">
-        <LiterarySectionHead
-          kicker={PAGE_SECTIONS.map.routes.kicker}
-          title={PAGE_SECTIONS.map.routes.title}
-          lead={PAGE_SECTIONS.map.routes.lead}
-        />
+    <div className={compact ? "map-routes-compact" : "page-section pb-3"}>
+      <div className={`page-panel page-panel--gold map-routes-panel${compact ? " map-routes-panel-compact" : ""}`}>
+        {!compact && (
+          <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        )}
         <div className="map-routes-grid">
           {routes.map((route) => (
             <button
@@ -43,7 +50,10 @@ export function MapRoutesPanel({ routes, activeRoute, onSelectRoute, onClearRout
                 Скрыть
               </button>
             </div>
-            <p className="text-xs text-muted-foreground m-0 mt-1">{activeRoute.duration} · {activeRoute.description}</p>
+            <p className="text-xs text-muted-foreground m-0 mt-1">
+              {activeRoute.duration} · {activeRoute.description}
+            </p>
+            <p className="text-xs m-0 mt-1 opacity-75">Маршрут на карте — ориентировочная линия между точками</p>
             <ol className="map-route-stops">
               {activeRoute.stops.map((stop, i) => (
                 <li key={`${stop.name}-${i}`} className="map-route-stop">

@@ -68,16 +68,132 @@
   }
 
   .map-taxi-overlay {
-    @apply absolute inset-0 z-[900] flex items-center justify-center pointer-events-none;
-    background: hsl(220 40% 18% / 0.12);
-    backdrop-filter: blur(1px);
+    display: none;
   }
-  .map-taxi-overlay p {
-    @apply m-0 px-4 py-2 rounded-xl text-sm font-bold;
+
+  .map-stats-ribbon {
+    @apply pushkin-card p-3 md:p-4;
+    background: linear-gradient(135deg, hsl(42 52% 97%), hsl(152 22% 95%));
+  }
+  .map-stats-ribbon-head {
+    @apply flex flex-wrap items-baseline justify-between gap-2 mb-3;
+  }
+  .map-stats-ribbon-total {
+    @apply text-sm;
+    color: hsl(152 40% 18%);
+  }
+  .map-stats-ribbon-sync {
+    @apply text-xs text-muted-foreground;
+  }
+  .map-stats-ribbon-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .map-cat-bar {
+    display: grid;
+    grid-template-columns: minmax(7rem, 9rem) 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    border: 1px solid transparent;
+    background: hsl(40 55% 99% / 0.7);
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    transition: all 0.15s ease;
+  }
+  .map-cat-bar:hover {
+    border-color: hsl(42 55% 72%);
+    background: hsl(40 55% 99%);
+  }
+  .map-cat-bar-active {
+    border-color: hsl(42 78% 46%);
+    background: hsl(42 55% 94%);
+  }
+  .map-cat-bar-label {
+    @apply text-xs font-semibold truncate;
+  }
+  .map-cat-bar-track {
+    @apply h-2 rounded-full overflow-hidden;
+    background: hsl(42 30% 88%);
+  }
+  .map-cat-bar-fill {
+    @apply block h-full rounded-full;
+    background: linear-gradient(90deg, hsl(152 48% 28%), hsl(152 40% 38%));
+    transition: width 0.35s ease;
+  }
+  .map-cat-bar-count {
+    @apply text-xs font-bold tabular-nums;
+    color: hsl(152 40% 22%);
+  }
+
+  .map-route-badge {
+    @apply absolute bottom-3 left-3 z-[1000] px-3 py-1.5 text-xs font-bold rounded-xl;
     background: hsl(40 55% 99% / 0.92);
     border: 2px solid hsl(42 65% 50%);
     color: hsl(152 40% 18%);
-    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.15);
+    box-shadow: 0 8px 24px rgba(12, 40, 28, 0.12);
+    max-width: calc(100% - 8rem);
+  }
+
+  .map-services-toggle {
+    @apply w-full flex justify-between items-center gap-3 p-3 rounded-xl font-bold text-sm mb-2;
+    background: hsl(42 45% 96%);
+    border: 2px solid hsl(42 45% 82%);
+    color: hsl(152 40% 18%);
+  }
+  .map-services-toggle-hint {
+    @apply text-xs font-normal opacity-75 truncate;
+  }
+  .map-services-inner {
+    display: none;
+  }
+  .map-services-inner-open {
+    display: block;
+  }
+  @media (min-width: 1024px) {
+    .map-services-inner {
+      display: block;
+    }
+    .map-services-toggle {
+      display: none;
+    }
+  }
+  .map-services-tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .map-services-tab {
+    flex: 1;
+    min-width: 6rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 2px solid hsl(42 45% 82%);
+    background: hsl(40 55% 99%);
+    color: hsl(152 35% 22%);
+    transition: all 0.15s ease;
+  }
+  .map-services-tab-active {
+    background: hsl(152 48% 18%);
+    border-color: hsl(152 48% 18%);
+    color: hsl(42 90% 94%);
+  }
+  .map-services-panel .page-section,
+  .map-services-panel .map-routes-compact,
+  .map-services-panel .taxi-compact,
+  .map-services-panel .hotlines-compact {
+    padding-bottom: 0;
+  }
+  .map-routes-panel-compact,
+  .taxi-panel-compact,
+  .hotlines-panel-compact {
+    @apply p-3 md:p-4;
+    box-shadow: none;
   }
 
   .map-overlay-controls {
@@ -105,14 +221,6 @@
     box-shadow: 0 2px 10px rgba(12, 40, 28, 0.2);
   }
 
-  .map-stats-overlay {
-    @apply absolute bottom-3 left-3 z-[1000] p-3 text-sm max-w-xs rounded-xl;
-    background: hsl(40 55% 99% / 0.9);
-    border: 2px solid hsl(42 55% 72%);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 28px rgba(12, 40, 28, 0.14);
-  }
-
   .map-sidebar-glass {
     background: linear-gradient(180deg, hsl(42 42% 97%), hsl(40 50% 99%));
     border-color: hsl(42 45% 82%) !important;
@@ -127,9 +235,6 @@
   .map-routes-panel {
     @apply pushkin-card p-4;
     background: linear-gradient(135deg, hsl(42 50% 96%), hsl(152 25% 94%));
-  }
-  .map-routes-title {
-    @apply text-base font-bold m-0 mb-3;
   }
   .map-routes-grid {
     display: flex;
@@ -375,10 +480,6 @@
   .taxi-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .taxi-card-app {
-    background: hsl(220 40% 22%);
   }
 
   .taxi-card-top {

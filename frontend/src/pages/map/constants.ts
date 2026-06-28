@@ -1,13 +1,4 @@
-import type { MapFilterMode } from "@/lib/api/types/places";
 export const MAP_CENTER: [number, number] = [57.0267, 28.91];
-
-export const FALLBACK_MAP_MODES: MapFilterMode[] = [
-  { id: "shops", label: "🛒 Магазины", category: null, shops_only: true, useful_only: false, show_taxi: false },
-  { id: "pharmacy", label: "💊 Аптеки", category: "pharmacy", shops_only: false, useful_only: false, show_taxi: false },
-  { id: "taxi", label: "🚕 Такси", category: null, shops_only: false, useful_only: false, show_taxi: true },
-  { id: "useful", label: "🏦 Полезное", category: null, shops_only: false, useful_only: true, show_taxi: false },
-  { id: "landmarks", label: "🏛 Достопримечательности", category: "culture", shops_only: false, useful_only: false, show_taxi: false },
-];
 
 export const CATEGORY_ICONS: Record<string, string> = {
   shop: "🛒", supermarket: "🏪", pharmacy: "💊", cafe: "☕",

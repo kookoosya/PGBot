@@ -9,14 +9,12 @@ import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 import { MAP_CENTER } from "./map/constants";
-import { ClusterLayer, FlyToPlace, MapEvents, RouteStopsLayer } from "./map/MapLayers";
-import { MapRoutesPanel } from "./map/MapRoutesPanel";
+import { ClusterLayer, FlyToPlace, FlyToRoute, MapEvents, RouteStopsLayer } from "./map/MapLayers";
+import { MapServicesTabs } from "./map/MapServicesTabs";
+import { MapStatsRibbon } from "./map/MapStatsRibbon";
 import { PlaceDetailPanel } from "./map/PlaceDetailPanel";
 import { PlacesList } from "./map/PlacesList";
-import { TaxiPanel } from "./map/TaxiPanel";
-import { HotlinesPanel } from "./map/HotlinesPanel";
 import { useMapPage } from "./map/useMapPage";
-import { formatSyncAge } from "@/lib/formatSyncAge";
 
 export function MapPage() {
   const map = useMapPage();
@@ -36,16 +34,11 @@ export function MapPage() {
         />
       </div>
 
-      <MapRoutesPanel
-        routes={map.routes}
-        activeRoute={map.activeRoute}
-        onSelectRoute={map.showRoute}
-        onClearRoute={() => map.setActiveRoute(null)}
+      <MapStatsRibbon
+        stats={map.mapStats}
+        activeCategory={map.category}
+        onCategoryClick={map.applyCategoryFilter}
       />
-
-      <TaxiPanel taxi={map.taxi} taxiMode={map.taxiMode} />
-
-      <HotlinesPanel />
 
       <div className="map-mobile-tabs lg:hidden page-section pb-2">
         <button
@@ -84,14 +77,9 @@ export function MapPage() {
                 <RouteStopsLayer route={map.activeRoute} />
               </>
             )}
+            <FlyToRoute route={map.activeRoute} pausedRef={map.boundsPausedRef} />
             <FlyToPlace place={map.highlight} pausedRef={map.boundsPausedRef} />
           </MapContainer>
-
-          {map.taxiMode && (
-            <div className="map-taxi-overlay" aria-hidden>
-              <p>🚕 Режим такси — выберите службу выше</p>
-            </div>
-          )}
 
           <div className="map-overlay-controls">
             <button type="button" className={`map-layer-btn ${map.mapStyle === "scheme" ? "active" : ""}`} onClick={() => map.setMapStyle("scheme")}>
@@ -102,12 +90,9 @@ export function MapPage() {
             </button>
           </div>
 
-          {map.mapStats && (
-            <div className="map-stats-overlay">
-              <p className="font-bold m-0 text-sm">📍 {map.mapStats.total_places} мест</p>
-              <p className="text-xs text-muted-foreground m-0 mt-1">
-                {formatSyncAge(map.mapStats.last_sync)}
-              </p>
+          {map.activeRoute && (
+            <div className="map-route-badge">
+              🧭 {map.activeRoute.title}
             </div>
           )}
         </div>
@@ -193,6 +178,13 @@ export function MapPage() {
         </div>
       </div>
 
+      <MapServicesTabs
+        routes={map.routes}
+        activeRoute={map.activeRoute}
+        onSelectRoute={map.showRoute}
+        onClearRoute={() => map.setActiveRoute(null)}
+        taxi={map.taxi}
+      />
     </div>
   );
 }

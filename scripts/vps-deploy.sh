@@ -18,6 +18,7 @@ docker compose -f docker-compose.prod.yml restart nginx backend
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head \
   || docker compose -f docker-compose.prod.yml exec -T backend alembic stamp head
 docker compose -f docker-compose.prod.yml exec -T backend python scripts/seed_events.py 2>/dev/null || true
+docker compose -f docker-compose.prod.yml exec -T backend python scripts/sync_map_once.py 2>/dev/null || true
 bash scripts/install-vps-cron.sh /opt/pgbot
 bash scripts/vps-sync-events.sh cinema 2>/dev/null || true
 bash scripts/smoke-public.sh "$CANONICAL_SITE_URL"

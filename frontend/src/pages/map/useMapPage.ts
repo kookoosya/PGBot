@@ -11,7 +11,6 @@ import {
 import { api } from "@/lib/api/index";
 import type { ComplaintType } from "@/lib/api/types/issues";
 import type { MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api/types/places";
-import { FALLBACK_MAP_MODES } from "./constants";
 
 export function useMapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -27,8 +26,7 @@ export function useMapPage() {
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
   const [mapStyle, setMapStyle] = useState<"scheme" | "satellite">("scheme");
-  const [mapModes, setMapModes] = useState<MapFilterMode[]>(FALLBACK_MAP_MODES);
-  const [taxiMode, setTaxiMode] = useState(false);
+  const [mapModes, setMapModes] = useState<MapFilterMode[]>([]);
   const [complaintTypes, setComplaintTypes] = useState<ComplaintType[]>([]);
   const [tab, setTab] = useState<"info" | "review" | "complaint" | "report">("info");
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: "", author_name: "" });
@@ -58,7 +56,7 @@ export function useMapPage() {
     api.getPlaceCategories().then(setCategories).catch(console.error);
     api.getTaxiServices().then(setTaxi).catch(console.error);
     api.getMapStats().then(setMapStats).catch(console.error);
-    api.getMapFilterModes().then(setMapModes).catch(() => setMapModes(FALLBACK_MAP_MODES));
+    api.getMapFilterModes().then(setMapModes).catch(console.error);
     api.getMapRoutes().then(setRoutes).catch(console.error);
   }, []);
 
@@ -69,13 +67,11 @@ export function useMapPage() {
 
   const isLodging = category === "hotel";
 
-  const activeFilterId = taxiMode
-    ? "taxi"
-    : shopsOnly
-      ? "shops"
-      : usefulOnly
-        ? "useful"
-        : mapModes.find((f) => f.category === category)?.id ?? "";
+  const activeFilterId = shopsOnly
+    ? "shops"
+    : usefulOnly
+      ? "useful"
+      : mapModes.find((f) => f.category === category)?.id ?? "";
 
   const applyQuickFilter = (filter: MapFilterMode) => {
     const isActive = activeFilterId === filter.id;
@@ -83,29 +79,29 @@ export function useMapPage() {
       setCategory("");
       setShopsOnly(false);
       setUsefulOnly(false);
-      setTaxiMode(false);
       return;
     }
     setCategory(filter.category ?? "");
     setShopsOnly(Boolean(filter.shops_only));
     setUsefulOnly(Boolean(filter.useful_only));
-    setTaxiMode(Boolean(filter.show_taxi));
+  };
+
+  const applyCategoryFilter = (cat: string) => {
+    setCategory(cat);
+    setShopsOnly(false);
+    setUsefulOnly(false);
+    setMobileTab("list");
   };
 
   const showRoute = (route: MapRoute) => {
     setActiveRoute(route);
     setSelected(null);
     setHighlight(null);
+    setMobileTab("map");
   };
 
   const loadPlaces = useCallback((bounds?: { south: number; west: number; north: number; east: number }) => {
     if (boundsPausedRef.current) return;
-    if (taxiMode) {
-      setPlaces([]);
-      setPlacesLoading(false);
-      setPlacesError(false);
-      return;
-    }
     if (bounds) boundsRef.current = bounds;
     const b = bounds || boundsRef.current;
     if (!b && !isLodging) return;
@@ -146,7 +142,7 @@ export function useMapPage() {
           setPlacesLoading(false);
         }
       });
-  }, [category, shopsOnly, usefulOnly, searchDebounced, isLodging, taxiMode]);
+  }, [category, shopsOnly, usefulOnly, searchDebounced, isLodging]);
 
   const handleOfflineDownload = async () => {
     setOfflineBusy(true);
@@ -265,7 +261,6 @@ export function useMapPage() {
     mapStyle,
     setMapStyle,
     mapModes,
-    taxiMode,
     complaintTypes,
     tab,
     setTab,
@@ -290,6 +285,7 @@ export function useMapPage() {
     boundsPausedRef,
     activeFilterId,
     applyQuickFilter,
+    applyCategoryFilter,
     showRoute,
     loadPlaces,
     handleOfflineDownload,

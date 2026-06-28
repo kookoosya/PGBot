@@ -47,7 +47,7 @@ describe("offlineMap", () => {
   });
 
   it("exports tile cache name aligned with service worker", () => {
-    expect(OFFLINE_TILE_CACHE).toBe("pgbot-map-tiles-v8");
+    expect(OFFLINE_TILE_CACHE).toBe("pgbot-map-tiles-v10");
   });
 
   it("saves and loads offline bundle", () => {

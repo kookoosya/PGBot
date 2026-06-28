@@ -96,6 +96,27 @@ export function RouteStopsLayer({ route }: { route: MapRoute | null }) {
   return null;
 }
 
+export function FlyToRoute({
+  route,
+  pausedRef,
+}: {
+  route: MapRoute | null;
+  pausedRef: React.MutableRefObject<boolean>;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!route?.stops.length) return;
+    pausedRef.current = true;
+    const bounds = L.latLngBounds(route.stops.map((s) => [s.latitude, s.longitude] as [number, number]));
+    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 15, animate: true, duration: 0.5 });
+    const t = window.setTimeout(() => {
+      pausedRef.current = false;
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [route, map, pausedRef]);
+  return null;
+}
+
 export function FlyToPlace({
   place,
   pausedRef,

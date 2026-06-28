@@ -22,7 +22,6 @@ class MapFilterMode:
 MAP_FILTER_MODES: tuple[MapFilterMode, ...] = (
     MapFilterMode(id="shops", label="🛒 Магазины", shops_only=True),
     MapFilterMode(id="pharmacy", label="💊 Аптеки", category=PlaceCategory.PHARMACY),
-    MapFilterMode(id="taxi", label="🚕 Такси", show_taxi=True),
     MapFilterMode(id="useful", label="🏦 Полезное", useful_only=True),
     MapFilterMode(id="landmarks", label="🏛 Достопримечательности", category=PlaceCategory.CULTURE),
 )

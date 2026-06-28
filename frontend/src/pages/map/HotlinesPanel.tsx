@@ -4,13 +4,19 @@ import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 import { VILLAGE_HOTLINES } from "./hotlines";
 
-export function HotlinesPanel() {
+type HotlinesPanelProps = {
+  compact?: boolean;
+};
+
+export function HotlinesPanel({ compact = false }: HotlinesPanelProps) {
   const copy = PAGE_SECTIONS.map.hotlines;
 
   return (
-    <div className="page-section pb-3">
-      <div className="page-panel page-panel--gold hotlines-panel">
-        <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+    <div className={compact ? "hotlines-compact" : "page-section pb-3"}>
+      <div className={`page-panel page-panel--gold hotlines-panel${compact ? " hotlines-panel-compact" : ""}`}>
+        {!compact && (
+          <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+        )}
         <div className="hotlines-grid">
           {VILLAGE_HOTLINES.map((h) => (
             <a
