@@ -12,10 +12,10 @@
 
 ## После подключения Cloudflare
 
-1. NS домена в Porkbun → nameservers Cloudflare  
-2. В Cloudflare DNS: A `@` и `www` → `192.210.213.135`, **Proxied**  
-3. SSL: **Full (strict)**  
-4. На VPS: `bash scripts/setup-cloudflare-origin.sh`
+1. NS домена в Porkbun → nameservers Cloudflare (уже видно по IP `172.67.x` / `104.21.x`)
+2. В Cloudflare DNS: A **`@`** и **`www`** → `192.210.213.135`, **Proxied** (не `api` — API по пути `/api/v1/`)
+3. SSL: **Full (strict)**
+4. На VPS: `bash scripts/setup-cloudflare-origin.sh` (уже выполняется при деплое)
 
 ## Деплой
 
