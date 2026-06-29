@@ -1,7 +1,8 @@
 # Домен портала
 
 **Прод:** https://pushkinskie-gory.xyz  
-**Доступ из РФ без VPN:** [CLOUDFLARE_SETUP_RU.md](./CLOUDFLARE_SETUP_RU.md) — **полная пошаговая инструкция**
+# Доступ из РФ без VPN:** [CLOUDFLARE_SETUP_RU.md](./CLOUDFLARE_SETUP_RU.md) — DNS only  
+**Если US-IP не открывается:** [RU_MIRROR_SETUP.md](./RU_MIRROR_SETUP.md) — RU reverse-proxy
 
 ## DNS сейчас (прямо на VPS)
 
