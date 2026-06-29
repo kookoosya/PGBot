@@ -81,7 +81,6 @@ async def moderate_classified_ad(
     *,
     action: ModerationAction,
     actor: ClassifiedActorContext,
-    *,
     notify_vk: bool = True,
 ) -> ModerationResult:
     """Approve or reject a pending classified ad."""
