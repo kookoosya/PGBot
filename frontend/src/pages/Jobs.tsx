@@ -163,7 +163,7 @@ export function Jobs() {
           <div className="map-stats-ribbon" aria-label="Статистика вакансий">
             <div className="map-stats-ribbon-head">
               <p className="map-stats-ribbon-total m-0">
-                <strong>{total}</strong> {sector ? "вакансий в выбранной сфере" : "вакансий на доске"}
+                <strong>{total}</strong> {sector || search ? "вакансий в выборке" : "вакансий на доске"}
               </p>
               <p className="map-stats-ribbon-sync m-0">Бесплатно — публикуем сразу после проверки текста</p>
             </div>
@@ -171,86 +171,55 @@ export function Jobs() {
         </div>
       )}
 
-      <div className="literary-page-note mb-6">
-        <p className="m-0">
-          {copy.note}{" "}
-          Дрова и услуги мастеров — в{" "}
-          <Link to="/classifieds" className="literary-link">объявлениях</Link> и{" "}
-          <Link to="/services" className="literary-link">справочнике услуг</Link>.
-        </p>
-      </div>
-
       <section className="page-panel page-panel--forest mb-6">
-        <LiterarySectionHead kicker={copy.employers.kicker} title={copy.employers.title} lead={copy.employers.lead} />
-        <div className="jobs-employers-grid">
-          {LOCAL_EMPLOYERS.map((e) => (
-            <div key={e.title} className="jobs-employer-card jobs-employer-card--literary">
-              <span className="jobs-employer-icon">{e.icon}</span>
-              <div>
-                <h3 className="jobs-employer-title">{e.title}</h3>
-                <p className="jobs-employer-desc">{e.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="page-panel page-panel--gold mb-4">
-        <LiterarySectionHead kicker={copy.search.kicker} title={copy.search.title} compact />
-        <div className="space-y-2">
-          <label htmlFor="jobs-search-input" className="event-detail-label">
-            Поиск по вакансиям
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              id="jobs-search-input"
-              placeholder={copy.search.placeholder}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-              className="flex-1 pushkin-select"
-            />
-            {search && (
-              <button
-                type="button"
-                className="literary-btn literary-btn--ghost shrink-0 text-sm"
-                onClick={() => {
-                  setSearch("");
-                  setSearchInput("");
-                }}
-              >
-                Сбросить
-              </button>
-            )}
-            <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
-              Найти
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div className="literary-filter-bar mb-6">
-        <button
-          type="button"
-          className={`filter-chip${!sector ? " filter-chip-active" : ""}`}
-          onClick={() => setSector("")}
-        >
-          🪶 Все {total > 0 && `(${total})`}
-        </button>
-        {jobCategories.map((c) => {
-          const visual = getCategoryVisual(c.value);
-          return (
+        <LiterarySectionHead kicker={copy.search.kicker} title={copy.search.title} lead={copy.search.lead} compact />
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <Input
+            placeholder={copy.search.placeholder}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
+            className="flex-1 pushkin-select"
+          />
+          {search && (
             <button
-              key={c.value}
               type="button"
-              className={`filter-chip${sector === c.value ? " filter-chip-active" : ""}`}
-              onClick={() => setSector(c.value)}
+              className="literary-btn literary-btn--ghost shrink-0 text-sm"
+              onClick={() => {
+                setSearch("");
+                setSearchInput("");
+              }}
             >
-              {visual.icon} {c.label}
+              Сбросить
             </button>
-          );
-        })}
-      </div>
+          )}
+          <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
+            Найти
+          </button>
+        </div>
+        <div className="literary-filter-bar">
+          <button
+            type="button"
+            className={`filter-chip${!sector ? " filter-chip-active" : ""}`}
+            onClick={() => setSector("")}
+          >
+            🪶 Все {total > 0 && `(${total})`}
+          </button>
+          {jobCategories.map((c) => {
+            const visual = getCategoryVisual(c.value);
+            return (
+              <button
+                key={c.value}
+                type="button"
+                className={`filter-chip${sector === c.value ? " filter-chip-active" : ""}`}
+                onClick={() => setSector(c.value)}
+              >
+                {visual.icon} {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {showForm && (
         <ClassifiedAdForm
@@ -308,28 +277,59 @@ export function Jobs() {
       )}
 
       {!loadError && (
-        <div className="literary-jobs-list">
-          {ads.map((ad) => (
-            <LiteraryJobCard key={ad.id} ad={ad} />
-          ))}
-          {!loading && ads.length === 0 && (
-            <LiteraryEmptyState {...emptyState}>
-              <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
-                + Разместить вакансию
-              </button>
-            </LiteraryEmptyState>
-          )}
-          {loading && <LiteraryInlineLoader label="Ищем вакансии в округе…" />}
-          {ads.length > 0 && ads.length < total && (
-            <div className="text-center pt-4">
-              <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={loadMore}>
-                Ещё ({ads.length} из {total})
-              </button>
-            </div>
-          )}
-        </div>
+        <section className="mb-6">
+          <LiterarySectionHead kicker="💼 Доска" title="Вакансии" lead="Работа в посёлке и районе — звоните напрямую работодателю." compact />
+          <div className="literary-jobs-list">
+            {ads.map((ad) => (
+              <LiteraryJobCard key={ad.id} ad={ad} />
+            ))}
+            {!loading && ads.length === 0 && (
+              <LiteraryEmptyState {...emptyState}>
+                <button type="button" className="literary-btn literary-btn--primary mt-2" onClick={() => setShowForm(true)}>
+                  + Разместить вакансию
+                </button>
+              </LiteraryEmptyState>
+            )}
+            {loading && <LiteraryInlineLoader label="Ищем вакансии…" />}
+            {ads.length > 0 && ads.length < total && (
+              <div className="text-center pt-4">
+                <button type="button" className="literary-btn literary-btn--ghost" disabled={loading} onClick={loadMore}>
+                  Ещё ({ads.length} из {total})
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
+      <details className="jobs-employers-details page-panel page-panel--gold">
+        <summary className="jobs-employers-summary">
+          <span>{copy.employers.title}</span>
+          <span className="jobs-employers-summary-hint">{copy.employers.lead}</span>
+        </summary>
+        <div className="jobs-employers-grid mt-4">
+          {LOCAL_EMPLOYERS.map((e) => (
+            <div key={e.title} className="jobs-employer-card jobs-employer-card--literary">
+              <span className="jobs-employer-icon">{e.icon}</span>
+              <div>
+                <h3 className="jobs-employer-title">{e.title}</h3>
+                <p className="jobs-employer-desc">{e.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="landing-muted text-sm mt-4 mb-0">
+          Подработка и услуги — в{" "}
+          <Link to="/classifieds/services" className="literary-link">
+            объявлениях
+          </Link>{" "}
+          и{" "}
+          <Link to="/services" className="literary-link">
+            справочнике услуг
+          </Link>
+          .
+        </p>
+      </details>
     </div>
   );
 }

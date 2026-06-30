@@ -623,6 +623,8 @@
     font-size: 0.78rem;
     line-height: 1.25;
     text-align: center;
+    cursor: pointer;
+    font: inherit;
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
   }
   .classified-board-tab:hover {
@@ -1331,6 +1333,36 @@
     margin: 0.25rem 0 0;
     font-size: 0.75rem;
     line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .jobs-employers-details {
+    margin-top: 0.5rem;
+  }
+  .jobs-employers-summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .jobs-employers-summary::-webkit-details-marker {
+    display: none;
+  }
+  .jobs-employers-summary::before {
+    content: "▸ ";
+    color: hsl(var(--gold));
+  }
+  .jobs-employers-details[open] .jobs-employers-summary::before {
+    content: "▾ ";
+  }
+  .jobs-employers-summary-hint {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-weight: 400;
+    font-size: 0.85rem;
     color: hsl(var(--muted-foreground));
   }
 

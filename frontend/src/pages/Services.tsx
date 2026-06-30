@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { ServiceSectionTabs } from "@/components/services/ServiceSectionTabs";
 import {
   LiteraryClassifiedCard,
   LiteraryEmptyState,
@@ -16,6 +17,12 @@ import type { ClassifiedAd } from "@/lib/api/types/classifieds";
 import type { CatalogItem } from "@/lib/api/types/places";
 import type { ServiceProvider, TimeSlot } from "@/lib/api/types/services";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
+import {
+  showsAds,
+  showsCatalog,
+  showsProviders,
+  type ServiceTabId,
+} from "@/lib/servicesBoard";
 
 const CATALOG_ICONS: Record<string, string> = {
   garden: "🌱",
@@ -31,6 +38,17 @@ const CATALOG_ICONS: Record<string, string> = {
   other: "📋",
 };
 
+const BEAUTY_PROVIDER_TYPES = new Set([
+  "manicure",
+  "haircut",
+  "massage",
+  "brows",
+  "pedicure",
+  "hair_color",
+  "cosmetology",
+  "other",
+]);
+
 const copy = PAGE_SECTIONS.services;
 
 function matchSearch(text: string, q: string) {
@@ -41,6 +59,7 @@ function matchSearch(text: string, q: string) {
 export function Services() {
   useDocumentTitle(copy.title);
 
+  const [activeTab, setActiveTab] = useState<ServiceTabId>("all");
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [ads, setAds] = useState<ClassifiedAd[]>([]);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -75,9 +94,7 @@ export function Services() {
   useEffect(() => {
     const params = filter ? { category: filter } : undefined;
     const providerParams =
-      filter && ["manicure", "haircut", "massage", "brows", "pedicure", "hair_color", "cosmetology", "other"].includes(filter)
-        ? { service_type: filter }
-        : undefined;
+      filter && BEAUTY_PROVIDER_TYPES.has(filter) ? { service_type: filter } : undefined;
 
     setLoading(true);
     setLoadError(false);
@@ -100,15 +117,15 @@ export function Services() {
       .finally(() => setLoading(false));
   }, [filter, reloadToken]);
 
-  const filteredCatalog = useMemo(() => {
-    return catalog.filter(
-      (c) => matchSearch(`${c.name} ${c.description || ""} ${c.address || ""}`, search),
-    );
-  }, [catalog, search]);
+  const filteredCatalog = useMemo(
+    () => catalog.filter((c) => matchSearch(`${c.name} ${c.description || ""} ${c.address || ""}`, search)),
+    [catalog, search],
+  );
 
-  const filteredAds = useMemo(() => {
-    return ads.filter((a) => matchSearch(`${a.title} ${a.description || ""}`, search));
-  }, [ads, search]);
+  const filteredAds = useMemo(
+    () => ads.filter((a) => matchSearch(`${a.title} ${a.description || ""}`, search)),
+    [ads, search],
+  );
 
   const filteredProviders = useMemo(() => {
     if (!search) return providers;
@@ -117,7 +134,27 @@ export function Services() {
     );
   }, [providers, search]);
 
-  const totalVisible = filteredCatalog.length + filteredAds.length + filteredProviders.length;
+  const tabCounts = useMemo(
+    () => ({
+      all: filteredCatalog.length + filteredAds.length + filteredProviders.length,
+      catalog: filteredCatalog.length,
+      ads: filteredAds.length,
+      providers: filteredProviders.length,
+    }),
+    [filteredCatalog.length, filteredAds.length, filteredProviders.length],
+  );
+
+  const visibleCount =
+    activeTab === "catalog"
+      ? filteredCatalog.length
+      : activeTab === "ads"
+        ? filteredAds.length
+        : activeTab === "providers"
+          ? filteredProviders.length
+          : tabCounts.all;
+
+  const emptyState = search || filter ? EMPTY_STATES.servicesCatalog : EMPTY_STATES.services;
+  const nothingFound = !loading && !loadError && visibleCount === 0;
 
   const openBooking = (p: ServiceProvider) => {
     setBooking(p);
@@ -157,48 +194,40 @@ export function Services() {
     }
   };
 
-  const emptyState = search || filter ? EMPTY_STATES.servicesCatalog : EMPTY_STATES.services;
-  const nothingFound = !loading && !loadError && totalVisible === 0;
-
   return (
     <div className="literary-page page-section max-w-5xl">
       <PageHeader icon="🛠" title={copy.title} subtitle={copy.lead}>
-        <Link to="/classifieds?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">
+        <Link to="/classifieds/services?new=1" className="literary-btn literary-btn--ghost text-sm no-underline">
           Подать объявление
         </Link>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/services/cabinet" className="literary-btn literary-btn--ghost text-sm no-underline">
-            Кабинет мастера
-          </Link>
-          <Link to="/services/register" className="literary-btn literary-btn--primary text-sm no-underline">
-            Стать мастером
-          </Link>
-        </div>
+        <Link to="/services/register" className="literary-btn literary-btn--primary text-sm no-underline">
+          Стать мастером
+        </Link>
       </PageHeader>
 
-      {!loadError && totalVisible > 0 && (
+      <ServiceSectionTabs active={activeTab} onChange={setActiveTab} counts={tabCounts} />
+
+      {!loadError && tabCounts.all > 0 && (
         <div className="page-section pb-2">
           <div className="map-stats-ribbon" aria-label="Статистика услуг">
             <div className="map-stats-ribbon-head">
               <p className="map-stats-ribbon-total m-0">
-                <strong>{totalVisible}</strong>{" "}
-                {filter || search ? "позиций в выборке" : "услуг и мастеров в справочнике"}
+                <strong>{visibleCount}</strong>{" "}
+                {filter || search ? "в выбранной категории" : "услуг и мастеров"}
               </p>
               <p className="map-stats-ribbon-sync m-0">
-                {filteredCatalog.length > 0 && `${filteredCatalog.length} в справочнике`}
-                {filteredAds.length > 0 && ` · ${filteredAds.length} от соседей`}
-                {filteredProviders.length > 0 && ` · ${filteredProviders.length} с записью`}
+                Справочник {tabCounts.catalog} · соседи {tabCounts.ads} · запись {tabCounts.providers}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <section className="page-panel page-panel--gold mb-4">
-        <LiterarySectionHead kicker="🔍 Поиск" title="Найти услугу" compact />
-        <div className="flex flex-col sm:flex-row gap-2">
+      <section className="page-panel page-panel--forest mb-6">
+        <LiterarySectionHead kicker="🔍 Поиск" title="Найти услугу" lead="Покос, дрова, маникюр, доставка…" compact />
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <Input
-            placeholder="Покос, дрова, маникюр, доставка…"
+            placeholder="Введите слово из названия или описания"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
@@ -220,10 +249,6 @@ export function Services() {
             Найти
           </button>
         </div>
-      </section>
-
-      <section className="page-panel page-panel--forest mb-6">
-        <LiterarySectionHead kicker="🔍 Категории" title="Выберите услугу" lead="Покос, дрова, красота, доставка — найдите нужное в посёлке." />
         <div className="literary-filter-bar">
           <button type="button" className={`filter-chip ${!filter ? "filter-chip-active" : ""}`} onClick={() => setFilter("")}>
             🪶 Все
@@ -249,9 +274,17 @@ export function Services() {
         </LiteraryEmptyState>
       )}
 
-      {loading && <LiteraryInlineLoader label="Загружаем справочник и объявления…" />}
+      {loading && <LiteraryInlineLoader label="Загружаем услуги…" />}
 
-      {!loadError && !loading && filteredCatalog.length > 0 && (
+      {!loadError && !loading && nothingFound && (
+        <LiteraryEmptyState {...emptyState}>
+          <Link to="/classifieds/services?new=1" className="literary-btn literary-btn--primary mt-2 no-underline">
+            Подать объявление
+          </Link>
+        </LiteraryEmptyState>
+      )}
+
+      {!loadError && !loading && showsCatalog(activeTab) && filteredCatalog.length > 0 && (
         <section className="page-panel page-panel--gold mb-6">
           <LiterarySectionHead kicker={copy.catalog.kicker} title={copy.catalog.title} lead={copy.catalog.lead} />
           <div className="literary-services-grid">
@@ -262,7 +295,7 @@ export function Services() {
         </section>
       )}
 
-      {!loadError && !loading && filteredAds.length > 0 && (
+      {!loadError && !loading && showsAds(activeTab) && filteredAds.length > 0 && (
         <section className="page-panel page-panel--gold mb-6">
           <LiterarySectionHead kicker={copy.ads.kicker} title={copy.ads.title} lead={copy.ads.lead} />
           <div className="literary-classified-list">
@@ -273,7 +306,7 @@ export function Services() {
         </section>
       )}
 
-      {!loadError && !loading && (
+      {!loadError && !loading && showsProviders(activeTab) && (
         <section className="page-panel page-panel--forest mb-6">
           <LiterarySectionHead kicker={copy.providers.kicker} title={copy.providers.title} lead={copy.providers.lead} />
           {filteredProviders.length > 0 ? (
@@ -283,7 +316,7 @@ export function Services() {
               ))}
             </div>
           ) : (
-            !nothingFound && (
+            activeTab === "providers" && (
               <LiteraryEmptyState {...EMPTY_STATES.providers}>
                 <Link to="/services/register" className="literary-btn literary-btn--primary mt-2 no-underline">
                   Стать мастером
@@ -293,8 +326,6 @@ export function Services() {
           )}
         </section>
       )}
-
-      {nothingFound && <LiteraryEmptyState {...emptyState} compact />}
 
       {booking && (
         <div className="literary-modal-overlay" onClick={() => setBooking(null)}>
@@ -349,7 +380,6 @@ export function Services() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
