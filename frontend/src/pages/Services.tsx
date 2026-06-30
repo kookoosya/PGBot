@@ -103,7 +103,7 @@ export function Services() {
 
   const filteredCatalog = useMemo(() => {
     return catalog.filter(
-      (c) => matchSearch(`${c.title} ${c.description || ""} ${c.address || ""}`, search),
+      (c) => matchSearch(`${c.name} ${c.description || ""} ${c.address || ""}`, search),
     );
   }, [catalog, search]);
 
