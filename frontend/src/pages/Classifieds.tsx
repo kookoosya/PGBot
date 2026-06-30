@@ -7,7 +7,6 @@ import {
   LiteraryClassifiedCard,
   LiteraryEmptyState,
   LiteraryInlineLoader,
-  LiterarySectionHead,
   PostSubmitPanel,
 } from "@/components/literary";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,12 @@ import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useFormDraft } from "@/hooks/useFormDraft";
 
 const formCopy = PAGE_SECTIONS.classifieds.form;
-const searchCopy = PAGE_SECTIONS.classifieds.search;
+
+const FLOW_STEPS = [
+  { icon: "✍️", title: "Напишите", text: "Заголовок, описание и телефон — регистрация не нужна." },
+  { icon: "✅", title: "Проверка", text: "Текст проходит автоматическую проверку — без мата и спама." },
+  { icon: "📞", title: "Звонят соседи", text: "Объявление сразу на доске — отклики напрямую по телефону." },
+];
 
 export function Classifieds() {
   const { pathname } = useLocation();
@@ -56,7 +60,7 @@ export function Classifieds() {
   const [reloadToken, setReloadToken] = useState(0);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [filter, setFilter] = useState("");
-  const [showForm, setShowForm] = useState(openNew);
+  const [showForm, setShowForm] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
   const { value: form, setValue: setForm, clearDraft } = useFormDraft<ClassifiedAdFormState>(
     CLASSIFIEDS_DRAFT_KEY,
@@ -127,6 +131,14 @@ export function Classifieds() {
       })
       .finally(() => setLoading(false));
   }, [filter, search, boardId, reloadToken]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [reload]);
 
   const loadMore = () => {
     const params: Record<string, string> = {
@@ -201,7 +213,7 @@ export function Classifieds() {
         key={c.value}
         type="button"
         className={`filter-chip${filter === c.value ? " filter-chip-active" : ""}`}
-        onClick={() => setFilter(c.value)}
+        onClick={() => setFilter(filter === c.value ? "" : c.value)}
       >
         {visual.icon} {c.label}
       </button>
@@ -218,71 +230,69 @@ export function Classifieds() {
 
       <ClassifiedBoardTabs />
 
-      {!loadError && total > 0 && (
+      <section className="page-panel page-panel--gold mb-6" aria-label="Как подать объявление">
+        <div className="complaints-flow">
+          {FLOW_STEPS.map((step) => (
+            <div key={step.title} className="complaints-flow-step">
+              <span className="complaints-flow-icon" aria-hidden>{step.icon}</span>
+              <div>
+                <p className="complaints-flow-title m-0">{step.title}</p>
+                <p className="complaints-flow-text m-0">{step.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {!loadError && (
         <div className="page-section pb-2">
           <div className="map-stats-ribbon" aria-label="Статистика доски">
             <div className="map-stats-ribbon-head">
               <p className="map-stats-ribbon-total m-0">
-                <strong>{total}</strong> {board.ribbonLabel}
+                <strong>{total}</strong>{" "}
+                {search || filter ? "в выборке" : board.ribbonLabel}
               </p>
-              <p className="map-stats-ribbon-sync m-0">Публикуем сразу после проверки текста</p>
+              <p className="map-stats-ribbon-sync m-0">
+                {PAGE_SECTIONS.classifieds.note} Вакансии —{" "}
+                <Link to="/jobs" className="literary-link">
+                  «Работа»
+                </Link>
+                , мастера —{" "}
+                <Link to="/services" className="literary-link">
+                  «Услуги»
+                </Link>
+                .
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="literary-page-note mb-6">
-        <p className="m-0">
-          {PAGE_SECTIONS.classifieds.note} Вакансии —{" "}
-          <Link to="/jobs" className="literary-link">
-            «Работа»
-          </Link>
-          , мастера с записью —{" "}
-          <Link to="/services" className="literary-link">
-            «Услуги»
-          </Link>
-          .
-        </p>
-      </div>
-
-      <section className="page-panel page-panel--gold mb-4">
-        <LiterarySectionHead kicker={searchCopy.kicker} title={searchCopy.title} compact />
-        <div className="space-y-2">
-          <label htmlFor="classified-search-input" className="event-detail-label">
-            Поиск по объявлениям
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              id="classified-search-input"
-              placeholder="Дрова, покос, продам, сдам…"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && setSearch(searchInput.trim())}
-              className="flex-1 pushkin-select"
-            />
-            {search && (
-              <button
-                type="button"
-                className="literary-btn literary-btn--ghost shrink-0 text-sm"
-                onClick={() => {
-                  setSearch("");
-                  setSearchInput("");
-                }}
-              >
-                Сбросить
-              </button>
-            )}
-            <button type="button" className="literary-btn literary-btn--ghost shrink-0" onClick={() => setSearch(searchInput.trim())}>
-              Найти
+      <section className="page-panel page-panel--forest mb-6 classifieds-filters-panel" aria-label="Поиск и фильтры">
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <Input
+            id="classified-search-input"
+            placeholder="Дрова, покос, продам, сдам…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="flex-1 pushkin-select"
+          />
+          {search && (
+            <button
+              type="button"
+              className="literary-btn literary-btn--ghost shrink-0 text-sm"
+              onClick={() => {
+                setSearch("");
+                setSearchInput("");
+              }}
+            >
+              Сбросить поиск
             </button>
-          </div>
+          )}
         </div>
-      </section>
 
-      {boardCategories.length > 0 && (
-        <section className="page-panel page-panel--forest mb-6">
-          <LiterarySectionHead kicker="🏷️ Категории" title="Уточнить раздел" compact />
-          {boardId === "all" ? (
+        {boardCategories.length > 0 && (
+          boardId === "all" ? (
             <div className="classified-category-groups">
               {CATEGORY_GROUPS.map((group) => {
                 const items = boardCategories.filter((c) => group.ids.has(c.value));
@@ -315,9 +325,9 @@ export function Classifieds() {
               </button>
               {boardCategories.map(renderCategoryChip)}
             </div>
-          )}
-        </section>
-      )}
+          )
+        )}
+      </section>
 
       {showForm && (
         <ClassifiedAdForm
@@ -349,11 +359,11 @@ export function Classifieds() {
           entityNoun="Объявление"
           variant="gold-panel"
           hint={
-            msgType === "ok" && submittedId && submittedNotifyVk
-              ? "Уведомим в VK, когда будет готово."
-              : msgType === "ok" && submittedId
-                ? "Укажите ВК в форме — пришлём сообщение в VK."
-                : undefined
+            msgType === "ok" && submittedId
+              ? submittedNotifyVk
+                ? "Объявление на доске — напишем в VK, если появятся важные ответы."
+                : "Объявление уже на доске. Укажите ВК в форме — пришлём уведомления."
+              : undefined
           }
           actions={
             msgType === "ok" && submittedId ? (
@@ -371,7 +381,7 @@ export function Classifieds() {
       )}
 
       {loadError && !loading && (
-        <LiteraryEmptyState icon="⚠️" title="Доска временно недоступна" text="Не удалось загрузить объявления. Попробуйте ещё раз.">
+        <LiteraryEmptyState {...EMPTY_STATES.classifiedsError} compact>
           <button type="button" className="literary-btn literary-btn--primary mt-3" onClick={reload}>
             Повторить
           </button>
