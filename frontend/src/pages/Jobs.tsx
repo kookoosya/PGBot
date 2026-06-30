@@ -9,7 +9,6 @@ import {
   LiterarySectionHead,
   PostSubmitPanel,
 } from "@/components/literary";
-import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { api } from "@/lib/api/index";
@@ -331,9 +330,6 @@ export function Jobs() {
         </div>
       )}
 
-      <div className="mt-8">
-        <VkBotBanner />
-      </div>
     </div>
   );
 }

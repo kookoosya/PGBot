@@ -1659,6 +1659,37 @@
     margin-bottom: 1.25rem;
   }
 
+  .complaints-flow {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .complaints-flow {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .complaints-flow-step {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .complaints-flow-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .complaints-flow-title {
+    font-family: var(--font-serif, Georgia, serif);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+  }
+  .complaints-flow-text {
+    font-size: 0.85rem;
+    color: var(--muted-foreground, #64748b);
+    line-height: 1.45;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .literary-card,
     .literary-classified-card,

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { CabinetSectionSkeleton, LiteraryEmptyState, LiteraryInlineLoader, LiteraryIssueCard } from "@/components/literary";
-import { VkBotBanner } from "@/components/VkBotLink";
 import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { api } from "@/lib/api/index";
 import type { ClassifiedMineAd } from "@/lib/api/types/classifieds";
@@ -239,10 +238,7 @@ export function UserCabinet() {
         </Link>
       </div>
 
-      <div className="mt-6">
-        <p className="text-sm text-muted-foreground text-center mb-3">{PAGE_SECTIONS.cabinet.vkHint}</p>
-        <VkBotBanner />
-      </div>
+      <p className="text-sm text-muted-foreground text-center mt-6 m-0">{PAGE_SECTIONS.cabinet.vkHint}</p>
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { LiteraryEmptyState, LiteraryIssueCard, LiterarySectionHead, PostSubmitPanel } from "@/components/literary";
-import { VkBotBanner } from "@/components/VkBotLink";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api/index";
 import type { Issue } from "@/lib/api/types/issues";
@@ -24,6 +23,12 @@ type IssueFilter = "all" | "active" | "done";
 
 const copy = PAGE_SECTIONS.complaints;
 const COMPLAINTS_DRAFT_KEY = "complaints_form_draft_v1";
+
+const FLOW_STEPS = [
+  { icon: "✍️", title: "Опишите", text: "Достаточно пары предложений — адрес по желанию." },
+  { icon: "🤖", title: "Передадим", text: "ИИ подскажет категорию, заявка уйдёт в службу." },
+  { icon: "📬", title: "Следите", text: "Статус — в кабинете или во ВК-боте «Мои обращения»." },
+];
 
 export function Complaints() {
   useDocumentTitle(copy.title);
@@ -142,7 +147,45 @@ export function Complaints() {
 
   return (
     <div className="literary-page page-section max-w-5xl">
-      <PageHeader icon="⚠️" title={copy.title} subtitle={copy.lead} />
+      <PageHeader icon="⚠️" title={copy.title} subtitle={copy.lead}>
+        {!user && (
+          <Link to="/cabinet/login?next=/complaints" className="literary-btn literary-btn--ghost text-sm no-underline">
+            Войти для истории
+          </Link>
+        )}
+      </PageHeader>
+
+      <section className="page-panel page-panel--gold mb-6" aria-label="Как подать обращение">
+        <div className="complaints-flow">
+          {FLOW_STEPS.map((step) => (
+            <div key={step.title} className="complaints-flow-step">
+              <span className="complaints-flow-icon" aria-hidden>{step.icon}</span>
+              <div>
+                <p className="complaints-flow-title m-0">{step.title}</p>
+                <p className="complaints-flow-text m-0">{step.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {user && myIssues.length > 0 && (
+        <div className="page-section pb-2">
+          <div className="map-stats-ribbon" aria-label="Мои обращения">
+            <div className="map-stats-ribbon-head">
+              <p className="map-stats-ribbon-total m-0">
+                <strong>{myIssues.length}</strong>{" "}
+                {myIssues.length === 1 ? "обращение" : myIssues.length < 5 ? "обращения" : "обращений"}
+              </p>
+              <p className="map-stats-ribbon-sync m-0">
+                В работе: {myIssues.filter((i) => ISSUE_FILTER_ACTIVE.has(i.status)).length}
+                {" · "}
+                Завершено: {myIssues.filter((i) => ISSUE_FILTER_DONE.has(i.status)).length}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
@@ -231,7 +274,7 @@ export function Complaints() {
                     >
                       <option value="">Авто (ИИ определит)</option>
                       {categories.map((c) => (
-                        <option key={c.value} value={c.label}>{c.label}</option>
+                        <option key={c.value} value={c.value}>{c.label}</option>
                       ))}
                     </select>
                   </div>
@@ -408,8 +451,6 @@ export function Complaints() {
               )}
             </section>
           )}
-
-          <VkBotBanner />
         </div>
       </div>
     </div>
