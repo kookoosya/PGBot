@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.classified import ClassifiedAd
 from app.models.enums import (
     JOB_CLASSIFIED_CATEGORIES,
+    MARKET_CLASSIFIED_CATEGORIES,
     NEIGHBOR_HELP_CATEGORIES,
     SERVICE_CLASSIFIED_CATEGORIES,
     ClassifiedPaymentStatus,
@@ -69,14 +70,16 @@ async def search_classifieds(
         query = query.where(ClassifiedAd.user_id == params.user_id)
     if params.phone is not None:
         query = query.where(ClassifiedAd.phone == params.phone)
-    if params.services_only:
-        query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
     if params.jobs_only:
         query = query.where(ClassifiedAd.category.in_(JOB_CLASSIFIED_CATEGORIES))
+    elif params.neighbor_only:
+        query = query.where(ClassifiedAd.category.in_(NEIGHBOR_HELP_CATEGORIES))
+    elif params.market_only:
+        query = query.where(ClassifiedAd.category.in_(MARKET_CLASSIFIED_CATEGORIES))
+    elif params.services_only:
+        query = query.where(ClassifiedAd.category.in_(SERVICE_CLASSIFIED_CATEGORIES))
     elif params.ads_only:
         query = query.where(ClassifiedAd.category.notin_(JOB_CLASSIFIED_CATEGORIES))
-    if params.neighbor_only:
-        query = query.where(ClassifiedAd.category.in_(NEIGHBOR_HELP_CATEGORIES))
     if params.category is not None:
         query = query.where(ClassifiedAd.category == params.category)
     if params.search:

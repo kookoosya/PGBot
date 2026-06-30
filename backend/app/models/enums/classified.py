@@ -32,6 +32,11 @@ NEIGHBOR_HELP_CATEGORIES = {
     ClassifiedCategory.NEIGHBOR_HELP,
 }
 
+MARKET_CLASSIFIED_CATEGORIES = {
+    ClassifiedCategory.SALE,
+    ClassifiedCategory.RENT,
+}
+
 SERVICE_CLASSIFIED_CATEGORIES = {
     ClassifiedCategory.GARDEN,
     ClassifiedCategory.FIREWOOD,

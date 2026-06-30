@@ -5,6 +5,7 @@ import { LiteraryEmptyState, LiteraryInlineLoader, LiterarySectionHead } from "@
 import { api } from "@/lib/api/index";
 import type { ClassifiedAd } from "@/lib/api/types/classifieds";
 import { getCategoryVisual } from "@/lib/classifiedCategories";
+import { boardPathForCategory } from "@/lib/classifiedBoard";
 import { JOB_CATEGORY_IDS } from "@/lib/jobs";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
 
@@ -58,8 +59,8 @@ export function ClassifiedDetail() {
 
   const visual = getCategoryVisual(ad.category);
   const isJob = JOB_CATEGORY_IDS.has(ad.category);
-  const backTo = isJob ? "/jobs" : "/classifieds";
-  const backLabel = isJob ? "← Все вакансии" : "← К доске";
+  const backTo = isJob ? "/jobs" : boardPathForCategory(ad.category);
+  const backLabel = isJob ? "← Все вакансии" : "← К разделу";
 
   return (
     <div className="literary-page page-section max-w-3xl">

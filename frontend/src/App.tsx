@@ -83,6 +83,9 @@ export default function App() {
         <Route path="services" element={<Lazy><Services /></Lazy>} />
         <Route path="services/register" element={<Lazy><ServiceRegister /></Lazy>} />
         <Route path="services/cabinet" element={<Lazy><ProviderCabinet /></Lazy>} />
+        <Route path="classifieds/help" element={<Lazy><Classifieds /></Lazy>} />
+        <Route path="classifieds/sale" element={<Lazy><Classifieds /></Lazy>} />
+        <Route path="classifieds/services" element={<Lazy><Classifieds /></Lazy>} />
         <Route path="classifieds" element={<Lazy><Classifieds /></Lazy>} />
         <Route path="classifieds/:id" element={<Lazy><ClassifiedDetail /></Lazy>} />
         <Route path="jobs" element={<Lazy><Jobs /></Lazy>} />

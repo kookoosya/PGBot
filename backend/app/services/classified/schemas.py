@@ -61,6 +61,7 @@ class ClassifiedSearchParams:
     services_only: bool = False
     jobs_only: bool = False
     ads_only: bool = False
+    market_only: bool = False
     neighbor_only: bool = False
     page: int = 1
     page_size: int = 20
