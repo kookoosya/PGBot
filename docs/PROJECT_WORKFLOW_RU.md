@@ -22,7 +22,8 @@
 
 ## Прод
 - **Домен:** https://pushkinskie-gory.xyz
-- **РФ без VPN:** Cloudflare — см. `docs/CLOUDFLARE_RU.md`
+- **РФ без VPN:** RU VPS `185.103.109.79` → proxy → US `192.210.213.135` (см. `docs/RU_MIRROR_SETUP.md`)
+- **DNS:** Cloudflare, A @ и www → `185.103.109.79`, DNS only (серое облако)
 - **VPS:** root@192.210.213.135, `/opt/pgbot`
 - **Деплой:** push в `main` → GitHub Actions **Deploy VPS**
 - **gmxreply.com** — другой проект, не трогаем.

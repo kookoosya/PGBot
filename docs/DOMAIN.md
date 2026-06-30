@@ -1,36 +1,55 @@
 # Домен портала
 
-**Прод:** https://pushkinskie-gory.xyz  
-# Доступ из РФ без VPN:** [CLOUDFLARE_SETUP_RU.md](./CLOUDFLARE_SETUP_RU.md) — DNS only  
-**Если US-IP не открывается:** [RU_MIRROR_SETUP.md](./RU_MIRROR_SETUP.md) — RU reverse-proxy
+**Прод:** https://pushkinskie-gory.xyz (Porkbun, до 2027-06-27)
 
-## DNS сейчас (прямо на VPS)
+## DNS в Porkbun (уже настроено)
 
-| Type | Host | Answer | TTL |
-|------|------|--------|-----|
-| A | `@` | `192.210.213.135` | 300 |
-| A | `www` | `192.210.213.135` | 300 |
+**Domain Management → pushkinskie-gory.xyz → DNS Records**
 
-## После подключения Cloudflare
+| Type | Host | Answer | Примечание |
+|------|------|--------|------------|
+| A | `@` (пусто) | `192.210.213.135` | US VPS, пока нет RU-зеркала |
+| A | `www` | `192.210.213.135` | то же |
 
-1. NS домена в Porkbun → nameservers Cloudflare  
-2. В Cloudflare DNS: A **`@`** и **`www`** → `192.210.213.135`, **DNS only (серое облако)** — **не Proxied** (в РФ Proxied не работает с 06.2025)  
-3. Проверка: `dig +short pushkinskie-gory.xyz A` → должен быть `192.210.213.135`  
-4. Подробно: [RU_ACCESS_FIX.md](./RU_ACCESS_FIX.md)
+- **URL Forwarding** — выключен
+- **Cloudflare не нужен** — NS остаются у Porkbun
+- Не включать прокси Cloudflare (оранжевое облако) — в РФ с 2025 ломает загрузку
 
-## Деплой
+Проверка: `nslookup pushkinskie-gory.xyz` → `192.210.213.135`
 
-Push в `main` → GitHub Actions **Deploy VPS**, или на сервере:
+---
 
-```bash
-cd /opt/pgbot && git pull && bash scripts/vps-deploy.sh
-```
+## Почему в России не открывается
+
+Домен **куплен и DNS правильный**. Проблема не в домене:
+
+- Сайт на **американском IP** `192.210.213.135`
+- Многие российские провайдеры **режут или не пускают** такие IP
+- Новый домен `.ru` это **не исправит**, если A-запись всё равно на US-IP
+
+**Решение:** маленький **VPS в России** (~200–400 ₽/мес) как зеркало. Подробно: [RU_MIRROR_SETUP.md](./RU_MIRROR_SETUP.md)
+
+После аренды RU-VPS в Porkbun меняешь только A-записи:
+
+| Host | Было | Станет |
+|------|------|--------|
+| `@` | `192.210.213.135` | **IP российского VPS** |
+| `www` | `192.210.213.135` | **IP российского VPS** |
+
+Сайт остаётся на US-сервере, пользователи из РФ ходят через RU-прокси.
+
+---
 
 ## VK Callback
 
 `https://pushkinskie-gory.xyz/api/v1/vk/callback`
 
-## Старые URL (не использовать)
+---
 
-- `192-210-213-135.sslip.io`
-- `pg.gmxreply.com`
+## Деплой на US-VPS
+
+```bash
+cd /opt/pgbot && git pull && bash scripts/vps-deploy.sh
+```
+
+Или push в `main` → GitHub Actions.

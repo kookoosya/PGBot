@@ -36,16 +36,18 @@ bash scripts/setup-ru-reverse-proxy.sh
 
 ---
 
-## Шаг 3. Cloudflare DNS
+## Шаг 3. DNS в Porkbun (без Cloudflare)
 
-**DNS → Records** (серое облако):
+**Domain Management → pushkinskie-gory.xyz → DNS Records**
 
-| Type | Name | Content | Proxy |
-|------|------|---------|-------|
-| A | `@` | `ВАШ_RU_IP` | DNS only |
-| A | `www` | `ВАШ_RU_IP` | DNS only |
+| Type | Host | Answer |
+|------|------|--------|
+| A | `@` | `ВАШ_RU_IP` |
+| A | `www` | `ВАШ_RU_IP` |
 
 US-IP `192.210.213.135` в DNS **больше не нужен** — origin остаётся там, пользователи ходят на RU-прокси.
+
+Если домен в Cloudflare — те же A-записи, **DNS only (серое облако)**.
 
 ---
 
