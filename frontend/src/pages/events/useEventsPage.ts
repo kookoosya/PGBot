@@ -132,6 +132,14 @@ export function useEventsPage() {
       .finally(() => setLoading(false));
   }, [garnectOnly, regionFilter, search, sourceFilter, reloadToken]);
 
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [reload]);
+
   const categoryFilters = useMemo(() => buildCategoryFilters(events), [events]);
 
   useEffect(() => {
@@ -181,7 +189,6 @@ export function useEventsPage() {
     }
   };
 
-  const applySearch = () => setSearch(searchInput.trim());
   const resetSearch = () => {
     setSearch("");
     setSearchInput("");
@@ -190,7 +197,6 @@ export function useEventsPage() {
   return {
     EVENT_REGION_FILTERS,
     EVENTS_COPY,
-    applySearch,
     categoryFilter,
     categoryFilters,
     cinemaEvents,

@@ -54,11 +54,7 @@ export function EventsDashboard({
 
   if (loadError) {
     return (
-      <LiteraryEmptyState
-        icon="⚠️"
-        title="Афиша временно недоступна"
-        text="Не удалось загрузить события. Проверьте интернет или попробуйте ещё раз."
-      >
+      <LiteraryEmptyState {...EMPTY_STATES.eventsError} compact>
         <button type="button" className="literary-btn literary-btn--primary mt-3" onClick={reload}>
           Повторить
         </button>

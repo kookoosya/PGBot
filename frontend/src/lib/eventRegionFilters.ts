@@ -16,3 +16,9 @@ export function parseRegionParam(value: string | null): RegionFilter {
 export function regionLabelFromFilterId(region: EventRegion): string {
   return region === "pskov" ? "Псков" : "Пушкинские Горы";
 }
+
+export function regionFilterFromLabel(label: string): RegionFilter | null {
+  if (label === "Псков") return "pskov";
+  if (label === "Пушкинские Горы") return "pushkin_gory";
+  return null;
+}
