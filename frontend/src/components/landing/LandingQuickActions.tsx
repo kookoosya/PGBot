@@ -4,11 +4,12 @@ import { LANDING_SECTIONS } from "@/lib/literaryCopy";
 
 const ACTIONS = [
   { to: "/classifieds?new=1", label: "Подать объявление", icon: "✍️" },
-  { to: "/complaints", label: "Обращение в администрацию", icon: "⚠️" },
+  { to: "/complaints?new=1", label: "Обращение в администрацию", icon: "⚠️" },
   { to: "/map", label: "Справочник на карте", icon: "🗺" },
+  { to: "/ai", label: "ИИ-помощник", icon: "🤖" },
 ] as const;
 
-/** Три частых действия — не дублирует вкладки навигации. */
+/** Четыре частых действия — не дублирует вкладки навигации. */
 export function LandingQuickActions() {
   const copy = LANDING_SECTIONS.useful;
 

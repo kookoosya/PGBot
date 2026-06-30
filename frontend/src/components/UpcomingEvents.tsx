@@ -94,7 +94,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         title={isLanding ? eventsCopy.title : "Ближайшее в посёлке"}
         lead={
           isLanding
-            ? undefined
+            ? eventsCopy.lead
             : "Концерты у НКЦ, праздники на площади, встречи музея-заповедника — жизнь рп. Пушкинские Горы."
         }
         compact={isLanding}

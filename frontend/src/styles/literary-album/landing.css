@@ -297,7 +297,7 @@
   }
   @media (max-width: 639px) {
     .landing-quick-nav--actions {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .landing-quick-nav-item {
@@ -335,6 +335,40 @@
     font-family: "Source Sans 3", system-ui, sans-serif;
     color: hsl(var(--forest));
     opacity: 1;
+  }
+
+  .landing-vk-promo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: inherit;
+    transition: opacity 0.15s ease;
+  }
+  .landing-vk-promo-link:hover {
+    opacity: 0.92;
+  }
+  .landing-vk-promo-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .landing-vk-promo-title {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: hsl(var(--forest));
+  }
+  .landing-vk-promo-lead {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.2rem;
+  }
+  .landing-vk-promo-arrow {
+    margin-left: auto;
+    font-size: 1.25rem;
+    color: hsl(var(--gold));
+    flex-shrink: 0;
   }
 
   /* Единые карточки блока «Сегодня» */

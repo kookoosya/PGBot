@@ -1,12 +1,14 @@
 import { LandingHeroCinema } from "@/components/landing/LandingHeroCinema";
 import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
-import { LandingAlbumSection, LandingQuickActions } from "@/components/landing";
+import { LandingAlbumSection, LandingQuickActions, LandingVkPromo } from "@/components/landing";
 import { LandingClosingStrip } from "@/components/landing/LandingClosingStrip";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function Landing() {
-  return (
-    <div className="landing-epic">
+  useDocumentTitle();
+
+  return (    <div className="landing-epic">
       <LandingHeroCinema />
 
       <div className="landing-album landing-album--cinema" id="landing-content">
@@ -21,6 +23,10 @@ export function Landing() {
 
           <LandingAlbumSection divider reveal>
             <LandingQuickActions />
+          </LandingAlbumSection>
+
+          <LandingAlbumSection divider reveal>
+            <LandingVkPromo />
           </LandingAlbumSection>
 
           <LandingClosingStrip />

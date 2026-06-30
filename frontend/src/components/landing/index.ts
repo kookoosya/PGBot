@@ -3,4 +3,4 @@ export { LandingCard } from "./LandingCard";
 export { LandingClosingStrip } from "./LandingClosingStrip";
 export { LandingHeroCinema } from "./LandingHeroCinema";
 export { LandingQuickActions } from "./LandingQuickActions";
-export { LandingQuickNav } from "./LandingQuickNav";
+export { LandingVkPromo } from "./LandingVkPromo";
