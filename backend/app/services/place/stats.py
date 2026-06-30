@@ -25,6 +25,15 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
+def _category_key(category: PlaceCategory | str | None) -> str:
+    """Normalize group_by category to API slug (enum or raw string from DB)."""
+    if category is None:
+        return "other"
+    if isinstance(category, PlaceCategory):
+        return category.value
+    return str(category)
+
+
 async def get_map_stats(db: AsyncSession) -> MapStatsResult:
     """Collect map dashboard statistics for active places and related entities."""
     active_filter = Place.is_active.is_(True)
@@ -39,7 +48,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
             .group_by(Place.category)
         )
         by_category = {
-            row[0].value: row[1]
+            _category_key(row[0]): row[1]
             for row in cat_rows.all()
         }
 
@@ -49,7 +58,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
             .group_by(Place.category)
         )
         avg_rating_by_category = {
-            row[0].value: round(float(row[1]), 1)
+            _category_key(row[0]): round(float(row[1]), 1)
             for row in rating_rows.all()
             if row[1] is not None
         }

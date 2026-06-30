@@ -14,6 +14,7 @@ from app.schemas.today import TodayResponse
 from app.services.classified import ClassifiedSearchParams, search_classifieds
 from app.utils.datetime import format_event_datetime
 from app.services.event import event_category_label, event_region_label, get_upcoming_events
+from app.services.map_routes import get_map_routes
 from app.services.place import get_map_stats
 from app.services.weather import WeatherFetchError, WeatherSnapshot, get_weather
 
@@ -137,7 +138,7 @@ async def build_today_snapshot(
     total_places = 0
     total_reviews = 0
     active_taxi_count = 0
-    route_count = 0
+    route_count = len(get_map_routes())
     try:
         stats = await get_map_stats(db)
         total_places = stats.total_places

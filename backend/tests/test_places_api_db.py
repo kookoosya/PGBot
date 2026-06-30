@@ -41,3 +41,14 @@ async def test_map_stats_returns_center(api_client: AsyncClient):
     data = response.json()
     assert "center" in data
     assert data["center"]["lat"]
+
+
+@pytest.mark.asyncio
+async def test_map_stats_by_category_uses_slugs(db_session: AsyncSession, api_client: AsyncClient):
+    await create_place(db_session, name="Аптека тест", category="pharmacy")
+    response = await api_client.get("/api/v1/places/map/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_places"] >= 1
+    assert "pharmacy" in data["by_category"]
+    assert data["route_count"] >= 1

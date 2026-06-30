@@ -10,6 +10,7 @@ import { EMPTY_STATES, PAGE_SECTIONS } from "@/lib/literaryCopy";
 import { useUserAuth } from "@/lib/userAuth";
 import { ISSUE_ACTIVE_STATUSES, ISSUE_DONE_STATUSES } from "@/lib/utils";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ISSUE_FILTER_ACTIVE = ISSUE_ACTIVE_STATUSES;
 const ISSUE_FILTER_DONE = ISSUE_DONE_STATUSES;
@@ -25,6 +26,7 @@ const copy = PAGE_SECTIONS.complaints;
 const COMPLAINTS_DRAFT_KEY = "complaints_form_draft_v1";
 
 export function Complaints() {
+  useDocumentTitle(copy.title);
   const { user } = useUserAuth();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get("issue");
