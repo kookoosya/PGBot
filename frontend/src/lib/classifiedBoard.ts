@@ -111,6 +111,7 @@ export function boardPathForCategory(category: string): string {
   return "/classifieds";
 }
 
+export const CATEGORY_GROUPS: { label: string; ids: Set<string> }[] = [
   { label: "Продажа и аренда", ids: MARKET_CATEGORY_IDS },
   { label: "Услуги", ids: SERVICE_CATEGORY_IDS },
   { label: "Взаимопомощь", ids: new Set(["neighbor_help"]) },
