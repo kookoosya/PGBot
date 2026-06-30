@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 import type { MapRoute, TaxiService } from "@/lib/api/types/places";
@@ -32,6 +32,12 @@ export function MapServicesTabs({
 }: MapServicesTabsProps) {
   const [tab, setTab] = useState<ServiceTab>("routes");
   const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (routes.length > 0 || taxi.length > 0) {
+      setExpanded(true);
+    }
+  }, [routes.length, taxi.length]);
 
   const summary = [
     routes.length ? `${routes.length} маршр.` : null,

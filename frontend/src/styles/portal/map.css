@@ -85,6 +85,10 @@
   .map-stats-ribbon-sync {
     @apply text-xs text-muted-foreground;
   }
+  .map-stats-ribbon-accuracy {
+    @apply text-xs w-full;
+    color: hsl(152 32% 28%);
+  }
   .map-stats-ribbon-bars {
     display: flex;
     flex-direction: column;
@@ -386,6 +390,16 @@
     font-size: 0.8rem;
     font-weight: 600;
   }
+  .map-more-categories {
+    @apply text-sm;
+  }
+  .map-more-categories-summary {
+    @apply cursor-pointer font-semibold text-muted-foreground;
+    list-style: none;
+  }
+  .map-more-categories-summary::-webkit-details-marker {
+    display: none;
+  }
 
   .org-action-grid {
     display: grid;
@@ -585,6 +599,13 @@
     background: hsl(152 48% 22%);
     color: hsl(42 85% 92%);
     line-height: 1;
+  }
+
+  .map-ref-badge {
+    @apply text-xs font-semibold rounded-lg px-2 py-1.5;
+    background: hsl(152 35% 93%);
+    color: hsl(152 40% 20%);
+    border: 1px solid hsl(152 30% 78%);
   }
 
   .org-detail-card {

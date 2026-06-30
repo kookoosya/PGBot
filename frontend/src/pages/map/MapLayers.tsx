@@ -5,6 +5,17 @@ import L from "leaflet";
 import type { MapRoute, Place } from "@/lib/api/types/places";
 import { makeIcon, makeRouteStopIcon } from "./icons";
 
+export function MapSetCenter({ center }: { center: [number, number] | null }) {
+  const map = useMap();
+  const appliedRef = useRef(false);
+  useEffect(() => {
+    if (!center || appliedRef.current) return;
+    map.setView(center, map.getZoom(), { animate: false });
+    appliedRef.current = true;
+  }, [center, map]);
+  return null;
+}
+
 export function MapEvents({
   onBounds,
   pausedRef,

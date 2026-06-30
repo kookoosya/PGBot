@@ -100,6 +100,7 @@ class MapStatsResponse(BaseModel):
     route_count: int = 0
     auto_sync_hours: int = 6
     yandex_live: bool = False
+    reference_places: int = 0
 
 
 class TaxiServiceResponse(BaseModel):

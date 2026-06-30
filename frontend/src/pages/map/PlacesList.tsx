@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
 import type { Place } from "@/lib/api/types/places";
+import { EMPTY_STATES } from "@/lib/literaryCopy";
 import { CATEGORY_ICONS } from "./constants";
 
 type PlacesListProps = {
@@ -10,15 +11,52 @@ type PlacesListProps = {
   onRetry: () => void;
 };
 
+const emptyCopy = EMPTY_STATES.mapPlaces;
+const errorCopy = EMPTY_STATES.mapPlacesError;
+
 export function PlacesList({ places, placesLoading, placesError, onOpenPlace, onRetry }: PlacesListProps) {
+  if (placesLoading) {
+    return (
+      <div className="p-4">
+        <LiteraryInlineLoader label="Загружаем точки на карте…" />
+      </div>
+    );
+  }
+
+  if (placesError) {
+    return (
+      <div className="p-3">
+        <LiteraryEmptyState
+          icon={errorCopy.icon}
+          title={errorCopy.title}
+          text={errorCopy.text}
+          compact
+        >
+          <button type="button" className="literary-btn literary-btn--outline mt-3" onClick={onRetry}>
+            Повторить
+          </button>
+        </LiteraryEmptyState>
+      </div>
+    );
+  }
+
+  if (places.length === 0) {
+    return (
+      <div className="p-3">
+        <LiteraryEmptyState
+          icon={emptyCopy.icon}
+          title={emptyCopy.title}
+          text={emptyCopy.text}
+          compact
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 space-y-2">
       <p className="text-xs text-muted-foreground px-1">
-        {placesLoading
-          ? "Загрузка…"
-          : placesError
-            ? "Ошибка загрузки"
-            : `${places.length} на карте`}
+        {places.length} в видимой области · ✓ — проверенный справочник
       </p>
       {places.map((p) => (
         <button key={p.id} className="org-list-card" onClick={() => onOpenPlace(p.id)}>
@@ -40,17 +78,6 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
           </div>
         </button>
       ))}
-      {!placesLoading && placesError && (
-        <div className="text-center py-8 px-3">
-          <p className="text-muted-foreground mb-3">Не удалось загрузить справочник</p>
-          <Button size="sm" variant="outline" onClick={onRetry}>
-            Повторить
-          </Button>
-        </div>
-      )}
-      {!placesLoading && !placesError && places.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">Ничего не найдено. Смените фильтр или поиск.</p>
-      )}
     </div>
   );
 }

@@ -82,6 +82,7 @@ export interface MapStats {
   center: { lat: number; lng: number };
   auto_sync_hours?: number;
   yandex_live?: boolean;
+  reference_places?: number;
 }
 
 export interface MapRouteStop {

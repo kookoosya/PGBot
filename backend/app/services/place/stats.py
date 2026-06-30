@@ -87,6 +87,15 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
         ).scalar() or 0
 
         last_sync = (await db.execute(select(func.max(Place.last_synced_at)))).scalar()
+
+        reference_places = (
+            await db.execute(
+                select(func.count(Place.id)).where(
+                    active_filter,
+                    Place.external_source == "reference",
+                )
+            )
+        ).scalar() or 0
     except Exception:
         logger.exception("Failed to build map stats")
         raise
@@ -114,6 +123,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
         route_count=route_count,
         auto_sync_hours=settings.MAP_AUTO_SYNC_HOURS if settings.MAP_AUTO_SYNC_HOURS > 0 else 6,
         yandex_live=bool(settings.YANDEX_MAPS_API_KEY),
+        reference_places=reference_places,
     )
 
 

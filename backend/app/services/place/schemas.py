@@ -179,6 +179,7 @@ class MapStatsResult:
     route_count: int
     auto_sync_hours: int = 6
     yandex_live: bool = False
+    reference_places: int = 0
 
     def to_response(self) -> MapStatsResponse:
         """Serialize to the public API schema."""
@@ -195,6 +196,7 @@ class MapStatsResult:
             route_count=self.route_count,
             auto_sync_hours=self.auto_sync_hours,
             yandex_live=self.yandex_live,
+            reference_places=self.reference_places,
         )
 
 
