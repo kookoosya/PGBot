@@ -21,6 +21,12 @@ import { useFormDraft } from "@/hooks/useFormDraft";
 
 const copy = PAGE_SECTIONS.jobs;
 
+const FLOW_STEPS = [
+  { icon: "✍️", title: "Разместите", text: "Бесплатно — вакансия или подработка в посёлке." },
+  { icon: "✅", title: "Проверка", text: "Текст проходит автоматическую модерацию." },
+  { icon: "📞", title: "Отклик", text: "Соседи звонят напрямую — без посредников." },
+];
+
 export function Jobs() {
   const [searchParams] = useSearchParams();
   const openNew = searchParams.get("new") === "1";
@@ -157,6 +163,20 @@ export function Jobs() {
           {showForm ? "✕ Отмена" : "+ Разместить вакансию"}
         </button>
       </PageHeader>
+
+      <section className="page-panel page-panel--gold mb-6" aria-label="Как разместить вакансию">
+        <div className="complaints-flow">
+          {FLOW_STEPS.map((step) => (
+            <div key={step.title} className="complaints-flow-step">
+              <span className="complaints-flow-icon" aria-hidden>{step.icon}</span>
+              <div>
+                <p className="complaints-flow-title m-0">{step.title}</p>
+                <p className="complaints-flow-text m-0">{step.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {!loadError && total > 0 && (
         <div className="page-section pb-2">

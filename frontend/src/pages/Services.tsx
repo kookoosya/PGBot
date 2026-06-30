@@ -51,6 +51,12 @@ const BEAUTY_PROVIDER_TYPES = new Set([
 
 const copy = PAGE_SECTIONS.services;
 
+const FLOW_STEPS = [
+  { icon: "📍", title: "Справочник", text: "Проверенные телефоны — покос, дрова, доставка." },
+  { icon: "🤝", title: "Соседи", text: "Объявления жителей с контактами в карточке." },
+  { icon: "💇", title: "Запись", text: "Мастера красоты — онлайн-запись на услугу." },
+];
+
 function matchSearch(text: string, q: string) {
   if (!q) return true;
   return text.toLowerCase().includes(q.toLowerCase());
@@ -206,6 +212,20 @@ export function Services() {
       </PageHeader>
 
       <ServiceSectionTabs active={activeTab} onChange={setActiveTab} counts={tabCounts} />
+
+      <section className="page-panel page-panel--gold mb-4" aria-label="Откуда берутся услуги">
+        <div className="complaints-flow">
+          {FLOW_STEPS.map((step) => (
+            <div key={step.title} className="complaints-flow-step">
+              <span className="complaints-flow-icon" aria-hidden>{step.icon}</span>
+              <div>
+                <p className="complaints-flow-title m-0">{step.title}</p>
+                <p className="complaints-flow-text m-0">{step.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {!loadError && tabCounts.all > 0 && (
         <div className="page-section pb-2">
