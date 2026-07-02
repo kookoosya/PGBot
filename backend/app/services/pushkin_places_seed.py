@@ -18,6 +18,7 @@ from app.services.place_inventory import (
     inventory_checked_at,
     inventory_village_places,
     parse_category,
+    primary_verification_url,
 )
 
 # Нет подтверждённых первичных источников для такси на этапе 2.
@@ -91,7 +92,7 @@ async def seed_village_places(db: AsyncSession) -> int:
             yandex_url=y_url,
             scope=entry.get("scope"),
             verification_status=entry.get("existence_status"),
-            verification_source_url=(entry.get("source_types") or [None])[0],
+            verification_source_url=primary_verification_url(entry),
             verified_at=now,
             verification_note=entry.get("verification_note"),
             is_active=stable_key not in CLOSED_STABLE_KEYS,

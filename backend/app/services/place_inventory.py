@@ -60,20 +60,64 @@ def parse_category(value: str) -> PlaceCategory:
         return PlaceCategory.OTHER
 
 
+_VERIFICATION_LABELS: dict[str, str] = {
+    "OWNER_CONFIRMED": "Подтверждено владельцем",
+    "YANDEX_ACTIVE": "Данные Яндекс Карт — уточняйте перед визитом",
+    "TWO_GIS_ACTIVE": "Данные 2GIS — уточняйте перед визитом",
+    "MULTISOURCE_CONFIRMED": "Данные подтверждены Яндекс Картами и 2GIS",
+    "OFFICIAL_PRIMARY": "Официальный источник",
+    "OFFICIAL_SOCIAL": "Официальная страница организации",
+    "OSM_ACTIVE": "Данные OpenStreetMap",
+    "COMMUNITY_CONFIRMED": "Подтверждено местным жителем",
+    "CONFLICTING": "Данные источников различаются — уточняйте перед визитом",
+    "UNVERIFIED": "Данные уточняются",
+    "CLOSED_CONFIRMED": "Закрыто",
+}
+
+
 def verification_label(status: str | None) -> str:
     if not status:
-        return "Данные уточняются"
-    if status in {"OWNER_CONFIRMED", "OFFICIAL_PRIMARY", "MULTISOURCE_CONFIRMED"}:
-        return "Подтверждено по первичным источникам"
-    if status in {"YANDEX_ACTIVE", "OSM_ACTIVE"}:
-        return "Данные Яндекс Карт" if status == "YANDEX_ACTIVE" else "Данные открытых карт — уточняйте перед визитом"
-    if status == "OFFICIAL_SOCIAL":
-        return "Официальная страница организации"
-    if status == "COMMUNITY_CONFIRMED":
-        return "Подтверждено местным сообществом"
-    if status == "CONFLICTING":
-        return "Данные уточняются"
-    return "Данные уточняются"
+        return _VERIFICATION_LABELS["UNVERIFIED"]
+    return _VERIFICATION_LABELS.get(status, _VERIFICATION_LABELS["UNVERIFIED"])
+
+
+ALLOWED_SOURCE_TYPES = frozenset({
+    "OWNER",
+    "YANDEX",
+    "TWO_GIS",
+    "OFFICIAL_WEBSITE",
+    "CHAIN_STORE_LOCATOR",
+    "GOVERNMENT_REGISTRY",
+    "OFFICIAL_SOCIAL",
+    "OSM",
+    "COMMUNITY",
+    "OFFICIAL_PRIMARY",
+})
+
+
+def entry_source_types(entry: dict[str, Any]) -> set[str]:
+    return {src.get("type") for src in entry.get("sources") or [] if src.get("type")}
+
+
+def primary_verification_url(entry: dict[str, Any]) -> str | None:
+    priority = (
+        "OWNER",
+        "OFFICIAL_PRIMARY",
+        "OFFICIAL_WEBSITE",
+        "GOVERNMENT_REGISTRY",
+        "YANDEX",
+        "TWO_GIS",
+        "OSM",
+        "CHAIN_STORE_LOCATOR",
+    )
+    sources = entry.get("sources") or []
+    by_type = {src["type"]: src for src in sources if src.get("type")}
+    for type_ in priority:
+        src = by_type.get(type_)
+        if src and src.get("url"):
+            return src["url"]
+    legacy = entry.get("source_types") or []
+    return legacy[0] if legacy else entry.get("yandex_url")
 
 
 def build_public_description(entry: dict[str, Any]) -> str | None:
