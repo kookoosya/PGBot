@@ -1,5 +1,13 @@
 """Готовые туристические маршруты по Пушкиногорью."""
 
+MONASTERY_NAME = "Свято-Успенский Святогорский мужской монастырь"
+MONASTERY_STOP = {
+    "name": MONASTERY_NAME,
+    "address": "ул. Пушкинская, 1",
+    "latitude": 57.0224228,
+    "longitude": 28.9200652,
+}
+
 MAP_ROUTES: list[dict] = [
     {
         "id": "pushkin-classic",
@@ -9,7 +17,7 @@ MAP_ROUTES: list[dict] = [
         "stops": [
             {"name": "Касса музея-заповедника", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
             {"name": "Усадьба «Михайловское»", "address": "с. Михайловское", "latitude": 57.0540, "longitude": 28.9680},
-            {"name": "Свято-Успенская Пушкиногорская лавра", "address": "Пушкинские Горы", "latitude": 57.0245, "longitude": 28.9125},
+            MONASTERY_STOP,
         ],
     },
     {
@@ -31,7 +39,7 @@ MAP_ROUTES: list[dict] = [
         "stops": [
             {"name": "Парковка «У Трёх Сосен»", "address": "бесплатно, ~1.5 км до усадьбы", "latitude": 57.0520, "longitude": 28.9650},
             {"name": "Усадьба «Михайловское»", "address": "с. Михайловское", "latitude": 57.0540, "longitude": 28.9680},
-            {"name": "Святогорский монастырь", "address": "с. Святогорье", "latitude": 57.0240, "longitude": 28.9130},
+            MONASTERY_STOP,
             {"name": "Касса и информация", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
         ],
     },
@@ -53,7 +61,7 @@ MAP_ROUTES: list[dict] = [
         "duration": "2–3 часа",
         "description": "Лавра на закате → центр посёлка → ужин",
         "stops": [
-            {"name": "Свято-Успенская лавра", "address": "Пушкинские Горы", "latitude": 57.0245, "longitude": 28.9125},
+            MONASTERY_STOP,
             {"name": "Площадь Ленина", "address": "пл. Ленина", "latitude": 57.0269, "longitude": 28.9115},
             {"name": "Кафе «Пушкинъ»", "address": "пл. Ленина, 3", "latitude": 57.0267, "longitude": 28.9112},
         ],
@@ -76,8 +84,7 @@ MAP_ROUTES: list[dict] = [
         "duration": "3–4 часа",
         "description": "Святогорская лавра и окрестности",
         "stops": [
-            {"name": "Свято-Успенская Пушкиногорская лавра", "address": "Пушкинские Горы", "latitude": 57.0245, "longitude": 28.9125},
-            {"name": "Святогорский монастырь", "address": "с. Святогорье", "latitude": 57.0240, "longitude": 28.9130},
+            MONASTERY_STOP,
             {"name": "Парковка у кассы музея", "address": "бульв. им. С. С. Гейченко, 1", "latitude": 57.0233, "longitude": 28.9308},
         ],
     },

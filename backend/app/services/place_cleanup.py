@@ -54,7 +54,11 @@ def _names_overlap(a: str, b: str) -> bool:
         return True
     words_a = {w for w in na.split() if len(w) > 3}
     words_b = {w for w in nb.split() if len(w) > 3}
-    return bool(words_a & words_b)
+    if words_a & words_b:
+        return True
+    if "косметик" in na and "косметик" in nb:
+        return True
+    return False
 
 
 def _distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -122,10 +126,15 @@ def _nearby_reference(
 
 def should_skip_yandex_org(name: str, categories: list | None = None) -> bool:
     """Не импортировать банки/мусор из Яндекс.Карт — банк только из справочника."""
+    if _is_allowed_reference_bank(name):
+        return False
     if _is_junk_name(name):
         return True
     name_l = _norm_name(name)
-    if "банк" in name_l and not _is_allowed_reference_bank(name):
+    if "банкомат" in name_l:
+        if not _is_allowed_reference_bank(name):
+            return True
+    elif "банк" in name_l and not _is_allowed_reference_bank(name):
         return True
     for cat in categories or []:
         cn = _norm_name((cat.get("name") if isinstance(cat, dict) else str(cat)) or "")
@@ -168,7 +177,12 @@ def match_reference_import(
     radius_km: float = REF_DEDUP_KM,
 ) -> Place | None:
     """Сопоставить импорт OSM/Yandex со справочной точкой (без дубля)."""
-    probe = Place(name=name, latitude=lat, longitude=lng, category=PlaceCategory.OTHER)
+    probe = Place(
+        name=name,
+        latitude=lat,
+        longitude=lng,
+        category=_fix_category(name, PlaceCategory.OTHER),
+    )
     return _nearby_reference(probe, reference, radius_km=radius_km)
 
 

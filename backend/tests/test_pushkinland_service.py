@@ -1,6 +1,6 @@
 """Tests for pushkinland.ru calendar parser."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.services.event_sources.fetchers.pushkinland import (
@@ -10,26 +10,36 @@ from app.services.event_sources.fetchers.pushkinland import (
 )
 
 MOSCOW = ZoneInfo("Europe/Moscow")
+MONTHS = (
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря",
+)
 
-GARNEC_ROW = """
+
+def _future_garnect() -> tuple[str, str, int, int, int]:
+    start = datetime.now(MOSCOW) + timedelta(days=21)
+    end = start + timedelta(days=1)
+    year = start.year
+    row = f"""
 <div class="three wide column">
-  <p class="ab"><b> 19 – 20 июня</b></p>
+  <p class="ab"><b> {start.day} – {end.day} {MONTHS[start.month - 1]}</b></p>
   </div>
   <div class="thirteen wide column">
 <p class="ab"><a href="/2018/news/news26/news57.php" target="_blank">Всероссийский театральный фестиваль <b>«Бугровский гарнец»</b></a>  </p>
 </div>
 """
-
-GARNEC_PROGRAM_SNIPPET = """
-<h3><b>19 июня </b></h3>
+    program = f"""
+<h3><b>{start.day} {MONTHS[start.month - 1]} </b></h3>
 <p class="ab"><b>10.00	Открытие всероссийского театрального фестиваля «Бугровский гарнец»</b></p>
 <p class="ab"><b>10.15	«Рассказы Девицы К. И. Т. »</b> по повестям – 70 мин</p>
 <p class="ab"><i>Театр Пушкинского Заповедника</i></p>
 <p class="ab"><b>13.00	Перерыв</b></p>
-<h2><b>20 июня </b></h2>
+<h2><b>{end.day} {MONTHS[end.month - 1]} </b></h2>
 <p class="ab"><b>10.15	Спектакль «Пиратские анекдоты»</b> – 45 мин</p>
 <p class="ab"><i>Детская студия</i></p>
 """
+    return row, program, year, start.day, end.day
+
 
 EXHIBITION_ROW = """
 <div class="three wide column">
@@ -51,15 +61,15 @@ ON_REQUEST_ROW = """
 
 
 def test_parse_garnect_festival():
-    fallback = datetime(2026, 6, 10, 12, 0, tzinfo=MOSCOW)
-    events = parse_pushkinland_calendar(GARNEC_ROW, year=2026)
+    garnect_row, _, year, day1, day2 = _future_garnect()
+    events = parse_pushkinland_calendar(garnect_row, year=year)
     assert len(events) == 1
     event = events[0]
     assert "гарнец" in event.title.lower()
     assert " . " not in event.title
-    assert event.starts_at.day == 19
+    assert event.starts_at.day == day1
     assert event.ends_at is not None
-    assert event.ends_at.day == 20
+    assert event.ends_at.day == day2
     assert event.starts_at.tzinfo == MOSCOW
     assert "pushkinland.ru" in event.source_url
     assert event.location.startswith("Бугрово")
@@ -71,24 +81,26 @@ def test_skips_long_exhibition_and_on_request():
 
 
 def test_parse_garnect_program_into_performances():
-    calendar = parse_pushkinland_calendar(GARNEC_ROW, year=2026)
+    garnect_row, program, year, day1, day2 = _future_garnect()
+    calendar = parse_pushkinland_calendar(garnect_row, year=year)
     assert len(calendar) == 1
     parent = calendar[0]
 
     performances = parse_pushkinland_program_page(
-        GARNEC_PROGRAM_SNIPPET,
-        year=2026,
+        program,
+        year=year,
         source_url=parent.source_url,
         festival_title=parent.title,
         location=parent.location,
     )
     assert len(performances) == 3
-    assert performances[0].starts_at.day == 19
-    assert performances[-1].starts_at.day == 20
+    assert performances[0].starts_at.day == day1
+    assert performances[-1].starts_at.day == day2
     assert all("гарнец" in item.title.lower() for item in performances)
     assert performances[1].description and "Коллектив" in performances[1].description
 
 
 def test_should_expand_multi_day_festival_with_news_link():
-    calendar = parse_pushkinland_calendar(GARNEC_ROW, year=2026)
+    garnect_row, _, year, _, _ = _future_garnect()
+    calendar = parse_pushkinland_calendar(garnect_row, year=year)
     assert _should_expand_with_program(calendar[0]) is True

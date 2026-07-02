@@ -2,15 +2,41 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from app.models.enums import PlaceCategory
 from app.models.place import Place
 from app.models.taxi import TaxiService
+from app.services.map_routes import MONASTERY_NAME, get_map_routes
 from app.services.place.responses import place_rating_meta
 from app.services.pushkin_places_seed import TAXI_SEED, VILLAGE_PLACES, seed_taxi_services, seed_village_places
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_MAP_DIR = REPO_ROOT / "frontend" / "src" / "pages" / "map"
+FRONTEND_PAGES_DIR = REPO_ROOT / "frontend" / "src" / "pages"
+
+PUBLIC_MAP_FILES = (
+    FRONTEND_PAGES_DIR / "Map.tsx",
+    FRONTEND_MAP_DIR / "PlacesList.tsx",
+    FRONTEND_MAP_DIR / "MapStatsRibbon.tsx",
+    FRONTEND_MAP_DIR / "PlaceDetailPanel.tsx",
+    FRONTEND_MAP_DIR / "hotlines.ts",
+    FRONTEND_MAP_DIR / "HotlinesPanel.tsx",
+    FRONTEND_MAP_DIR / "MapServicesTabs.tsx",
+)
+
 FORBIDDEN_PHONES = (
+    "2-01-01",
+    "2-02-02",
+    "2-05-05",
+    "2-06-06",
+    "000-28-28",
+    "997-90-00",
+)
+
+FORBIDDEN_PHONE_FULL = (
     "+7 (81146) 2-01-01",
     "+7 (81146) 2-02-02",
     "+7 (81146) 2-05-05",
@@ -40,8 +66,34 @@ def test_active_seed_excludes_old_monastery_name():
 
 def test_active_seed_excludes_placeholder_phones():
     blob = _seed_rows_text()
-    for phone in FORBIDDEN_PHONES:
+    for phone in FORBIDDEN_PHONE_FULL:
         assert phone not in blob
+
+
+@pytest.mark.parametrize("rel_path", PUBLIC_MAP_FILES, ids=lambda p: p.relative_to(REPO_ROOT).as_posix())
+def test_public_map_files_exclude_placeholder_phones(rel_path: Path):
+    text = rel_path.read_text(encoding="utf-8")
+    for phone in FORBIDDEN_PHONES:
+        assert phone not in text, f"placeholder phone {phone} in {rel_path.name}"
+
+
+@pytest.mark.parametrize("rel_path", PUBLIC_MAP_FILES, ids=lambda p: p.relative_to(REPO_ROOT).as_posix())
+def test_public_map_files_exclude_old_monastery_name(rel_path: Path):
+    text = rel_path.read_text(encoding="utf-8")
+    assert OLD_MONASTERY_NAME not in text
+
+
+def test_hotlines_exclude_unverified_placeholder_phones():
+    text = (FRONTEND_MAP_DIR / "hotlines.ts").read_text(encoding="utf-8")
+    for phone in FORBIDDEN_PHONE_FULL:
+        assert phone not in text
+
+
+def test_map_routes_use_official_monastery_name():
+    routes_blob = str(get_map_routes())
+    assert OLD_MONASTERY_NAME not in routes_blob
+    assert MONASTERY_NAME in routes_blob
+    assert routes_blob.count(MONASTERY_NAME) >= 3
 
 
 def test_taxi_seed_is_empty():
