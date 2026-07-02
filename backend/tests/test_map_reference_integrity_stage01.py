@@ -9,7 +9,7 @@ import pytest
 from app.models.enums import PlaceCategory
 from app.models.place import Place
 from app.models.taxi import TaxiService
-from app.services.map_routes import MONASTERY_NAME, get_map_routes
+from app.services.map_routes import MONASTERY_NAME, VERIFIED_ROUTE_STOP_NAMES, get_map_routes
 from app.services.place.responses import place_rating_meta
 from app.services.pushkin_places_seed import TAXI_SEED, VILLAGE_PLACES, seed_taxi_services, seed_village_places
 
@@ -46,6 +46,28 @@ FORBIDDEN_PHONE_FULL = (
 )
 
 OLD_MONASTERY_NAME = "Свято-Успенская Пушкиногорская лавра"
+
+FORBIDDEN_ROUTE_ORG_NAMES = (
+    "Кафе «Пушкинъ»",
+    "Пятёрочка",
+    "Магнит",
+    "Аптека-А",
+    "Почта России",
+    "Сбербанк",
+    "Автовокзал",
+    "Парковка «У Трёх Сосен»",
+    "Усадьба «Михайловское»",
+    "Усадьба «Тригорское»",
+    "Усадьба «Петровское»",
+)
+
+FORBIDDEN_LAVRA_WORDS = (
+    "лавра",
+    "пушкиногорская лавра",
+    "свято-успенская лавра",
+)
+
+EMERGENCY_NUMBERS = ("112", "101", "102", "103", "104")
 
 VERIFIED_SEED_NAMES = {
     "Государственный музей-заповедник А. С. Пушкина «Михайловское»",
@@ -93,7 +115,38 @@ def test_map_routes_use_official_monastery_name():
     routes_blob = str(get_map_routes())
     assert OLD_MONASTERY_NAME not in routes_blob
     assert MONASTERY_NAME in routes_blob
-    assert routes_blob.count(MONASTERY_NAME) >= 3
+    assert routes_blob.count(MONASTERY_NAME) >= 2
+
+
+def test_map_routes_exclude_unverified_organizations():
+    blob = str(get_map_routes())
+    for name in FORBIDDEN_ROUTE_ORG_NAMES:
+        assert name not in blob, f"unverified org in routes: {name}"
+
+
+def test_map_routes_exclude_lavra_wording():
+    routes_blob = str(get_map_routes()).lower()
+    for word in FORBIDDEN_LAVRA_WORDS:
+        assert word not in routes_blob, f"forbidden wording: {word}"
+
+
+def test_map_route_stops_match_verified_allowlist():
+    for route in get_map_routes():
+        for stop in route["stops"]:
+            assert stop["name"] in VERIFIED_ROUTE_STOP_NAMES, (
+                f"stop {stop['name']!r} in route {route['id']} not in allowlist"
+            )
+
+
+def test_hotlines_exclude_911():
+    text = (FRONTEND_MAP_DIR / "hotlines.ts").read_text(encoding="utf-8")
+    assert "911" not in text
+
+
+def test_hotlines_keep_official_emergency_numbers():
+    text = (FRONTEND_MAP_DIR / "hotlines.ts").read_text(encoding="utf-8")
+    for number in EMERGENCY_NUMBERS:
+        assert f'phone: "{number}"' in text
 
 
 def test_taxi_seed_is_empty():

@@ -66,4 +66,9 @@ describe("map factual integrity UI (stage 1)", () => {
     const text = readFileSync(join(pagesRoot, "map/hotlines.ts"), "utf8");
     expect(text).toContain(OFFICIAL_MONASTERY_NAME);
   });
+
+  it("hotlines does not mention 911", () => {
+    const text = readFileSync(join(pagesRoot, "map/hotlines.ts"), "utf8");
+    expect(text).not.toContain("911");
+  });
 });

@@ -9,7 +9,7 @@ export type HotlineEntry = {
 };
 
 export const VILLAGE_HOTLINES: HotlineEntry[] = [
-  { icon: "🆘", name: "Единый номер экстренных служб", phone: "112", note: "112 или 911 с мобильного", emergency: true },
+  { icon: "🆘", name: "Единый номер экстренных служб", phone: "112", note: "Бесплатно с мобильного и стационарного телефона", emergency: true },
   { icon: "🚑", name: "Скорая помощь", phone: "103", emergency: true },
   { icon: "🚒", name: "Пожарная охрана", phone: "101", emergency: true },
   { icon: "👮", name: "Полиция", phone: "102", emergency: true },
