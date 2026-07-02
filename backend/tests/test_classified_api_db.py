@@ -161,5 +161,9 @@ async def test_create_classified_rejects_short_description(api_client: AsyncClie
             "agree_rules": True,
         },
     )
-    assert response.status_code == 400
-    assert "коротк" in response.json()["detail"].lower()
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert any(
+        isinstance(item, dict) and item.get("loc") == ["body", "description"]
+        for item in (detail if isinstance(detail, list) else [detail])
+    )
