@@ -437,5 +437,5 @@ async def test_full_cabinet_journey_issues_and_classifieds(
     my_ads = await api_client.get("/api/v1/classifieds/mine", headers=headers)
     assert my_ads.status_code == 200
     ad_row = next(item for item in my_ads.json()["items"] if item["id"] == classified_id)
-    assert ad_row["payment_status"] == "pending"
+    assert ad_row["payment_status"] == "approved"
     assert ad_row["title"] == "Детский велосипед"

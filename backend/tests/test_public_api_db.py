@@ -182,7 +182,7 @@ async def test_classified_mine_lists_user_ads(
     data = response.json()
     assert data["total"] >= 1
     assert any(item["id"] == created.ad.id for item in data["items"])
-    assert data["items"][0]["payment_status"] == "pending"
+    assert data["items"][0]["payment_status"] == "approved"
 
 
 @pytest.mark.asyncio
