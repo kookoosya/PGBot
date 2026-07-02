@@ -58,7 +58,11 @@ export function LandingHeroCinema() {
 
             <blockquote className="epic-quote epic-quote--cinema">
               «{heroCopy.quote}»
-              <cite className="epic-quote-source">— {heroCopy.quoteSource}</cite>
+              <cite className="epic-quote-source">
+                — {heroCopy.quoteSource}
+                {heroCopy.quoteWork ? `, «${heroCopy.quoteWork}»` : ""}
+                {heroCopy.quoteYear ? `, ${heroCopy.quoteYear}` : ""}
+              </cite>
             </blockquote>
 
             <div className="epic-hero-ornament" aria-hidden />

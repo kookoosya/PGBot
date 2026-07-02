@@ -19,6 +19,13 @@ export interface Place {
   rating_source: string | null;
   yandex_url: string | null;
   complaint_count: number;
+  last_synced_at?: string | null;
+  scope?: string | null;
+  verification_status?: string | null;
+  verification_source_url?: string | null;
+  verified_at?: string | null;
+  verification_note?: string | null;
+  verification_label?: string | null;
 }
 
 export interface CatalogItem {

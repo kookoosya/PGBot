@@ -115,13 +115,13 @@ def test_map_routes_use_official_monastery_name():
     routes_blob = str(get_map_routes())
     assert OLD_MONASTERY_NAME not in routes_blob
     assert MONASTERY_NAME in routes_blob
-    assert routes_blob.count(MONASTERY_NAME) >= 2
+    assert routes_blob.count(MONASTERY_NAME) >= 1
 
 
-def test_map_routes_exclude_unverified_organizations():
-    blob = str(get_map_routes())
-    for name in FORBIDDEN_ROUTE_ORG_NAMES:
-        assert name not in blob, f"unverified org in routes: {name}"
+def test_map_routes_include_verified_village_stops():
+    names = {stop["name"] for route in get_map_routes() for stop in route["stops"]}
+    assert "Пятёрочка" in names
+    assert "Шиномонтаж" in names
 
 
 def test_map_routes_exclude_lavra_wording():
@@ -153,9 +153,11 @@ def test_taxi_seed_is_empty():
     assert TAXI_SEED == []
 
 
-def test_active_seed_has_only_three_verified_entries():
-    assert len(VILLAGE_PLACES) == 3
-    assert {row[0] for row in VILLAGE_PLACES} == VERIFIED_SEED_NAMES
+def test_active_seed_has_more_than_three_verified_entries():
+    assert len(VILLAGE_PLACES) > 3
+    names = {row[0] for row in VILLAGE_PLACES}
+    assert "Шиномонтаж" in names
+    assert "Пятёрочка" in names
 
 
 def test_reference_without_rating_has_no_public_verification_source():

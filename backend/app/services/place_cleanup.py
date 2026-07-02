@@ -210,8 +210,6 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
             reason = "aggregator"
         elif place.category == PlaceCategory.RENTAL:
             reason = "rental_removed"
-        elif any(part in (place.address or "").lower() for part in DEPRECATED_ADDRESS_PARTS):
-            reason = "deprecated_address"
         elif place.category == PlaceCategory.GAS and "пропан" in _norm_name(place.name):
             reason = "propane_not_petrol"
         elif place.external_source == "seed":
@@ -237,6 +235,8 @@ async def cleanup_map_places(db: AsyncSession) -> dict:
                 reason = "duplicate_ref_nearby"
 
         if reason:
+            if place.external_source == "reference" and place.verification_status:
+                continue
             place.is_active = False
             deactivated += 1
 

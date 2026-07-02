@@ -29,6 +29,12 @@ class PlaceResponse(BaseModel):
     yandex_url: str | None = None
     complaint_count: int
     last_synced_at: datetime | None
+    scope: str | None = None
+    verification_status: str | None = None
+    verification_source_url: str | None = None
+    verified_at: datetime | None = None
+    verification_note: str | None = None
+    verification_label: str | None = None
 
 
 class PlaceDetailResponse(PlaceResponse):

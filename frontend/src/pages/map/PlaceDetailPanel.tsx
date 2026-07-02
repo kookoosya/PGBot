@@ -88,8 +88,20 @@ export function PlaceDetailPanel({
         <p className="text-sm text-muted-foreground mt-2">{formatPlaceNote(selected.description)}</p>
       )}
       <p className="text-xs text-muted-foreground mt-2 m-0">
-        Данные из открытых источников — уточняйте часы и телефон перед визитом.
+        {selected.verification_label || "Данные уточняются"}
+        {selected.verified_at ? ` · проверено ${new Date(selected.verified_at).toLocaleDateString("ru-RU")}` : ""}
       </p>
+      {selected.verification_source_url && (
+        <p className="text-xs text-muted-foreground mt-1 m-0">
+          <a href={selected.verification_source_url} target="_blank" rel="noopener noreferrer">
+            Источник
+          </a>
+          {" · "}
+          <button type="button" className="literary-btn literary-btn--ghost text-xs p-0" onClick={() => setTab("report")}>
+            Сообщить об ошибке
+          </button>
+        </p>
+      )}
 
       <div className="org-action-grid mt-4">
         {selected.phone && (

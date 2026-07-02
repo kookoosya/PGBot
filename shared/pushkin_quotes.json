@@ -1,0 +1,36 @@
+{
+  "quotes": [
+    {
+      "text": "Приют спокойствия, трудов и вдохновенья",
+      "author": "А. С. Пушкин",
+      "work": "Деревня",
+      "year": 1819,
+      "source_url": "https://rvb.ru/pushkin/01text/01versus/0217_22/1819/0046.htm",
+      "context": "hero"
+    },
+    {
+      "text": "Друзья мои, прекрасен наш союз!",
+      "author": "А. С. Пушкин",
+      "work": "19 октября",
+      "year": 1825,
+      "source_url": "https://rvb.ru/pushkin/01text/01versus/0423_36/1825/0386.htm",
+      "context": "community"
+    },
+    {
+      "text": "Да здравствуют музы, да здравствует разум!",
+      "author": "А. С. Пушкин",
+      "work": "Вакхическая песня",
+      "year": 1825,
+      "source_url": "https://rvb.ru/pushkin/01text/01versus/0423_36/1825/0382.htm",
+      "context": "culture"
+    },
+    {
+      "text": "И долго буду тем любезен я народу, что чувства добрые я лирой пробуждал",
+      "author": "А. С. Пушкин",
+      "work": "Я памятник себе воздвиг нерукотворный…",
+      "year": 1836,
+      "source_url": "https://rvb.ru/pushkin/01text/01versus/0627_41/1836/0001.htm",
+      "context": "museum"
+    }
+  ]
+}

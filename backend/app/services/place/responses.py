@@ -12,6 +12,8 @@ from app.schemas.place import (
 )
 from app.services.schedule import format_opening_hours
 
+from app.services.place_inventory import verification_label
+
 from .schemas import PlaceRatingMeta
 
 
@@ -81,6 +83,12 @@ def build_place_response(place: Place) -> PlaceResponse:
         yandex_url=place.yandex_url,
         complaint_count=place.complaint_count,
         last_synced_at=place.last_synced_at,
+        scope=place.scope,
+        verification_status=place.verification_status,
+        verification_source_url=place.verification_source_url,
+        verified_at=place.verified_at,
+        verification_note=place.verification_note,
+        verification_label=verification_label(place.verification_status),
         **meta,
     )
 

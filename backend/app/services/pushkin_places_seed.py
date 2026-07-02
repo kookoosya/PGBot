@@ -1,8 +1,7 @@
-"""Справочник портала: ограниченный набор записей с полями из первичных источников.
+"""Справочник портала: curated inventory из docs/factual-integrity/stage-02-place-inventory.json.
 
-Координаты для оставшихся записей — из OpenStreetMap (геоданные, не верификация организации).
-Телефоны, адреса и названия — только с официальных сайтов, указанных в docs/factual-integrity/.
-Часы работы и цены не хранятся, если источник их не подтверждает на момент проверки.
+Телефоны и часы публикуются только при подтверждённом статусе поля.
+Отсутствие сайта не деактивирует организацию.
 """
 
 from datetime import datetime, timezone
@@ -12,83 +11,24 @@ import hashlib
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import PlaceCategory
 from app.models.place import Place
 from app.models.taxi import TaxiService
-
-# name, category, lat, lng, address, phone, hours, yandex_rating, review_count, website, note
-# lat/lng: OSM Nominatim (2026-06-27), see stage-01-map-reference-audit.md
-VILLAGE_PLACES: list[tuple] = [
-    (
-        "Государственный музей-заповедник А. С. Пушкина «Михайловское»",
-        PlaceCategory.CULTURE,
-        57.0234195,
-        28.9307908,
-        "бульвар им. С. С. Гейченко, 1",
-        "+7 (81146) 2-23-21",
-        None,
-        0,
-        0,
-        "https://pushkinland.ru",
-        "Заказ экскурсий: +7 (81146) 2-26-09 · Режим: pushkinland.ru/2018/inform/inform.php",
-    ),
-    (
-        "Свято-Успенский Святогорский мужской монастырь",
-        PlaceCategory.CULTURE,
-        57.0224228,
-        28.9200652,
-        "ул. Пушкинская, 1",
-        "+7 (81146) 2-33-89",
-        None,
-        0,
-        0,
-        "https://svyatogorskiy-monastery.ru/",
-        None,
-    ),
-    (
-        'Филиал «Пушкиногорский» ГБУЗ ПО «Островская МБ»',
-        PlaceCategory.HOSPITAL,
-        57.0305309,
-        28.9328886,
-        "ул. Ленина, 41",
-        "+7 (81146) 2-27-06",
-        None,
-        0,
-        0,
-        "https://ostrovmb.ru/index/filial_pushkinogorskij/0-63",
-        "Детская консультация: +7 (81146) 2-18-97",
-    ),
-]
-
-DEPRECATED_NAMES = {
-    "лукойл", "газпромнефть", "колёса", "колеса", "мотор",
-    "пушкиногорская црб", "магазин «пятёрочка»", "магазин «магнит»",
-    "т-банк", "t-bank", "tinkoff", "тинькофф", "tbank",
-    "свято-успенская пушкиногорская лавра",
-}
-DEPRECATED_ADDRESS_PARTS = (
-    "новоржевское шоссе",
-    "новоржевская, 45",
-    "пушкина, 5",
-    "строителей, 1-б",
-    "строителей, 1",
-    "красноармейская, 1",
-    "красноармейская, 30",
-    "красноармейская, 18",
-    "красноармейская, 8",
-    "новоржевская, 30",
-    "новоржевская, 18",
-    "лермонтова, 10",
-    "лермонтова, 42",
+from app.services.place_inventory import (
+    build_public_description,
+    inventory_checked_at,
+    inventory_village_places,
+    parse_category,
 )
 
-# Нет подтверждённых первичных источников для такси на этапе 1.
+# Нет подтверждённых первичных источников для такси на этапе 2.
 TAXI_SEED: list[tuple] = []
 
+# Явный список закрытых организаций — только с доказательством CLOSED_CONFIRMED.
+CLOSED_STABLE_KEYS: frozenset[str] = frozenset()
 
-def _place_key(name: str, addr: str) -> str:
-    digest = hashlib.md5(f"{name}|{addr}".encode()).hexdigest()[:20]
-    return f"ref_{digest}"
+
+def _place_key(stable_key: str) -> str:
+    return f"ref_{stable_key}"
 
 
 def _yandex_maps_url(lat: float, lng: float, name: str) -> str:
@@ -96,79 +36,78 @@ def _yandex_maps_url(lat: float, lng: float, name: str) -> str:
     return f"https://yandex.ru/maps/?pt={lng},{lat}&z=17&text={quote(name + ' Пушкинские Горы')}"
 
 
-def _build_description(note: str | None, website: str | None) -> str | None:
-    parts: list[str] = []
-    if note:
-        parts.append(note)
-    if website:
-        parts.append(f"Сайт: {website}")
-    parts.append("Данные из открытых источников — уточняйте перед визитом")
-    return " · ".join(parts) if parts else None
+def _public_phone(entry: dict) -> str | None:
+    if entry.get("phone_status") in (None, "UNVERIFIED"):
+        return None
+    return entry.get("phone")
+
+
+def _public_hours(entry: dict) -> str | None:
+    if entry.get("hours_status") in (None, "UNVERIFIED"):
+        return None
+    return entry.get("opening_hours")
 
 
 async def seed_village_places(db: AsyncSession) -> int:
     active_keys: set[str] = set()
     count = 0
-    now = datetime.now(timezone.utc)
-    for row in VILLAGE_PLACES:
-        name, cat, lat, lng, addr, phone, hours, rating, reviews = row[:9]
-        website = row[9] if len(row) > 9 else None
-        note = row[10] if len(row) > 10 else None
-        key = _place_key(name, addr)
+    now = inventory_checked_at()
+    inventory = inventory_village_places()
+
+    for entry in inventory:
+        if not entry.get("seed_as_reference", True):
+            continue
+        stable_key = entry["stable_key"]
+        key = _place_key(stable_key)
         active_keys.add(key)
+
+        name = entry["public_name"]
+        cat = parse_category(entry["category"])
+        lat = float(entry["latitude"])
+        lng = float(entry["longitude"])
+        addr = entry.get("address")
+        phone = _public_phone(entry)
+        hours = _public_hours(entry)
+        website = entry.get("website")
+        y_url = entry.get("yandex_url") or _yandex_maps_url(lat, lng, name)
+        description = build_public_description(entry)
+
         result = await db.execute(select(Place).where(Place.yandex_id == key))
         place = result.scalars().first()
-        description = _build_description(note, website)
-        y_url = _yandex_maps_url(lat, lng, name)
+
+        fields = dict(
+            name=name,
+            category=cat,
+            latitude=lat,
+            longitude=lng,
+            address=addr,
+            phone=phone,
+            opening_hours=hours,
+            description=description,
+            website=website,
+            external_rating=0,
+            external_review_count=0,
+            external_source="reference",
+            yandex_url=y_url,
+            scope=entry.get("scope"),
+            verification_status=entry.get("existence_status"),
+            verification_source_url=(entry.get("source_types") or [None])[0],
+            verified_at=now,
+            verification_note=entry.get("verification_note"),
+            is_active=stable_key not in CLOSED_STABLE_KEYS,
+            last_synced_at=now,
+        )
 
         if place:
-            place.name = name
-            place.category = cat
-            place.latitude = lat
-            place.longitude = lng
-            place.address = addr
-            place.phone = phone or place.phone
-            place.opening_hours = hours or None
-            place.description = description
-            place.website = website or place.website
-            place.external_rating = rating
-            place.external_review_count = reviews
-            place.external_source = "reference"
-            place.yandex_url = y_url
-            place.is_active = True
-            place.last_synced_at = now
+            for attr, value in fields.items():
+                setattr(place, attr, value)
         else:
-            db.add(Place(
-                name=name, category=cat, latitude=lat, longitude=lng,
-                address=addr, phone=phone, opening_hours=hours,
-                description=description, website=website,
-                yandex_id=key, external_source="reference",
-                external_rating=rating, external_review_count=reviews,
-                yandex_url=y_url,
-                last_synced_at=now,
-            ))
+            db.add(Place(yandex_id=key, **fields))
             count += 1
 
     ref_result = await db.execute(select(Place).where(Place.yandex_id.like("ref_%")))
     for place in ref_result.scalars().all():
         if place.yandex_id and place.yandex_id not in active_keys:
-            place.is_active = False
-
-    all_places = await db.execute(select(Place))
-    for place in all_places.scalars().all():
-        name_l = (place.name or "").lower()
-        addr_l = (place.address or "").lower()
-        if any(bad in name_l for bad in DEPRECATED_NAMES):
-            place.is_active = False
-        elif any(part in addr_l for part in DEPRECATED_ADDRESS_PARTS):
-            place.is_active = False
-        elif place.category == PlaceCategory.TYRE and "выезд на новоржевское" in addr_l:
-            place.is_active = False
-        elif place.category == PlaceCategory.GAS and ("лукойл" in name_l or "строителей" in addr_l):
-            place.is_active = False
-        elif place.category == PlaceCategory.GAS and "пропан" in name_l:
-            place.is_active = False
-        elif place.name == "АЗС" and place.external_source != "reference":
             place.is_active = False
 
     await db.flush()
@@ -206,3 +145,23 @@ async def seed_taxi_services(db: AsyncSession) -> int:
 
     await db.flush()
     return count
+
+
+# Back-compat for tests importing VILLAGE_PLACES length checks
+VILLAGE_PLACES = [
+    (
+        e["public_name"],
+        parse_category(e["category"]),
+        e["latitude"],
+        e["longitude"],
+        e.get("address"),
+        _public_phone(e),
+        _public_hours(e),
+        0,
+        0,
+        e.get("website"),
+        e.get("verification_note"),
+    )
+    for e in inventory_village_places()
+    if e.get("seed_as_reference", True)
+]

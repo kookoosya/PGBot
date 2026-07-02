@@ -30,6 +30,11 @@ class Place(Base):
     review_count: Mapped[int] = mapped_column(Integer, default=0)
     complaint_count: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
+    scope: Mapped[str | None] = mapped_column(String(30), index=True)
+    verification_status: Mapped[str | None] = mapped_column(String(30))
+    verification_source_url: Mapped[str | None] = mapped_column(String(500))
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    verification_note: Mapped[str | None] = mapped_column(String(500))
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

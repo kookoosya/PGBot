@@ -14,6 +14,8 @@ export const LANDING_HERO = {
   tagline: PORTAL_COPY_BRAND.tagline,
   quote: LANDING_HERO_COPY.quote,
   quoteSource: LANDING_HERO_COPY.quote_source,
+  quoteWork: (LANDING_HERO_COPY as { quote_work?: string }).quote_work,
+  quoteYear: (LANDING_HERO_COPY as { quote_year?: number }).quote_year,
   lead: LANDING_HERO_COPY.lead,
   ctaMap: LANDING_HERO_COPY.cta_map,
   ctaEvents: LANDING_HERO_COPY.cta_events,
