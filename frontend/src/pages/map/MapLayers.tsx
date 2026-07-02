@@ -61,10 +61,9 @@ export function ClusterLayer({
     const group = clusterRef.current;
     group.clearLayers();
     places.forEach((p) => {
-      const isRef = p.rating_source === "reference";
       const marker = L.marker([p.latitude, p.longitude], {
-        icon: makeIcon(p.category, p.display_rating, isRef),
-        zIndexOffset: (isRef ? 250 : 0) + Math.round(p.display_rating * 10),
+        icon: makeIcon(p.category, p.display_rating, false),
+        zIndexOffset: Math.round(p.display_rating * 10),
       });
       const ratingLine = p.display_rating > 0
         ? `★ ${p.display_rating.toFixed(1)} (${p.display_review_count})`

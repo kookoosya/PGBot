@@ -52,8 +52,8 @@ export function MapStatsRibbon({
     : `Справочник обновляется автоматически каждые ${syncHours} ч`;
   const refCount = stats.reference_places ?? 0;
   const accuracyHint = refCount > 0
-    ? `${refCount} точек проверены вручную · остальное — OSM${stats.yandex_live ? " и Яндекс" : ""}`
-    : "Точки из открытых карт — уточняйте адрес перед визитом";
+    ? `${refCount} записей справочника портала · остальное — открытые карты${stats.yandex_live ? " и Яндекс" : " (OSM)"}`
+    : "Точки из открытых карт — уточняйте адрес и часы перед визитом";
 
   return (
     <div className="page-section pb-2">
@@ -61,7 +61,7 @@ export function MapStatsRibbon({
         <div className="map-stats-ribbon-head">
           <p className="map-stats-ribbon-total m-0">
             <strong>{stats.total_places}</strong> мест на карте
-            {refCount > 0 ? ` · ${refCount} проверенных` : ""}
+            {refCount > 0 ? ` · ${refCount} справочник портала` : ""}
             {stats.yandex_live ? " · живые данные Яндекс" : ""}
           </p>
           <p className="map-stats-ribbon-sync m-0" title={syncHint}>

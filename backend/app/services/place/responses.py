@@ -44,7 +44,7 @@ def build_complaint_response(
 def place_rating_meta(place: Place) -> PlaceRatingMeta:
     """Return display rating fields for API responses."""
     if place.external_rating > 0:
-        source = "yandex" if place.external_source == "yandex" else "reference"
+        source = "yandex" if place.external_source == "yandex" else None
         return {
             "display_rating": place.external_rating,
             "display_review_count": place.external_review_count,
@@ -56,8 +56,6 @@ def place_rating_meta(place: Place) -> PlaceRatingMeta:
             "display_review_count": place.review_count,
             "rating_source": "users",
         }
-    if place.external_source == "reference":
-        return {"display_rating": 0.0, "display_review_count": 0, "rating_source": "reference"}
     return {"display_rating": 0.0, "display_review_count": 0, "rating_source": None}
 
 

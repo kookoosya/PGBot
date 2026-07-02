@@ -56,7 +56,7 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
   return (
     <div className="p-3 space-y-2">
       <p className="text-xs text-muted-foreground px-1">
-        {places.length} в видимой области · ✓ — проверенный справочник
+        {places.length} в видимой области · данные из открытых источников
       </p>
       {places.map((p) => (
         <button key={p.id} className="org-list-card" onClick={() => onOpenPlace(p.id)}>
@@ -65,9 +65,6 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
             <div className="flex justify-between gap-2 items-start">
               <strong className="text-sm text-left">{p.name}</strong>
               <div className="flex items-center gap-1 shrink-0">
-                {p.rating_source === "reference" && (
-                  <span className="org-list-ref" title="Проверенный справочник">✓</span>
-                )}
                 {p.display_rating > 0 && (
                   <span className="org-list-rating">★ {p.display_rating.toFixed(1)}</span>
                 )}

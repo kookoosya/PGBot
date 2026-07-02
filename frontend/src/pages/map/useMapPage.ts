@@ -181,12 +181,11 @@ export function useMapPage() {
   }, [category, shopsOnly, usefulOnly, searchDebounced, loadPlaces, isLodging]);
 
   const sortedPlaces = useMemo(
-    () => [...places].sort((a, b) => {
-      const refA = a.rating_source === "reference" ? 1 : 0;
-      const refB = b.rating_source === "reference" ? 1 : 0;
-      if (refB !== refA) return refB - refA;
-      return b.display_rating - a.display_rating || b.display_review_count - a.display_review_count || a.name.localeCompare(b.name, "ru");
-    }),
+    () => [...places].sort((a, b) =>
+      b.display_rating - a.display_rating
+      || b.display_review_count - a.display_review_count
+      || a.name.localeCompare(b.name, "ru"),
+    ),
     [places],
   );
 

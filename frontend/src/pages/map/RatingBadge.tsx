@@ -7,7 +7,6 @@ export function RatingBadge({ place }: { place: Place | PlaceDetail }) {
       <span className="org-rating-meta">
         {place.display_review_count} отзывов
         {place.rating_source === "yandex" && " · Яндекс"}
-        {place.rating_source === "reference" && " · справочник"}
         {place.rating_source === "users" && " · жители"}
       </span>
     </div>

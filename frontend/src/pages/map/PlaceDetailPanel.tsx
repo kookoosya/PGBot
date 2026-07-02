@@ -65,12 +65,6 @@ export function PlaceDetailPanel({
 
       <RatingBadge place={selected} />
 
-      {selected.rating_source === "reference" && (
-        <p className="map-ref-badge m-0 mt-2">
-          ✓ Координаты и адрес проверены справочником посёлка
-        </p>
-      )}
-
       {selected.address && <p className="org-detail-row">📍 {selected.address}</p>}
       {selected.opening_hours && (
         <div className="org-hours-box">
