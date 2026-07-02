@@ -11,6 +11,7 @@ class PlaceCategory(str, enum.Enum):
     POST = "post"
     SCHOOL = "school"
     HOSPITAL = "hospital"
+    VET = "vet"
     GOVERNMENT = "government"
     TRANSPORT = "transport"
     CULTURE = "culture"
@@ -50,6 +51,7 @@ PLACE_CATEGORY_LABELS = {
     PlaceCategory.POST: "Почта",
     PlaceCategory.SCHOOL: "Школа",
     PlaceCategory.HOSPITAL: "Медицина",
+    PlaceCategory.VET: "Ветеринария",
     PlaceCategory.GOVERNMENT: "Госучреждение",
     PlaceCategory.TRANSPORT: "Транспорт",
     PlaceCategory.CULTURE: "Культура",

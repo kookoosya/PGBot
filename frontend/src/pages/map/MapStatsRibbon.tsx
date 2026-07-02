@@ -16,6 +16,7 @@ const FALLBACK_LABELS: Record<string, string> = {
   pharmacy: "Аптеки",
   culture: "Культура",
   hospital: "Медицина",
+  vet: "Ветеринария",
   cafe: "Кафе",
   restaurant: "Еда",
   government: "Службы",

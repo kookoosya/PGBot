@@ -28,6 +28,13 @@ def test_fix_magnit_kosmetik_category():
     assert _fix_category("Магнит Косметик", PlaceCategory.BANK) == PlaceCategory.BEAUTY
 
 
+def test_fix_vet_clinic_category():
+    assert _fix_category(
+        "Пушкиногорская станция по борьбе с болезнями животных",
+        PlaceCategory.HOSPITAL,
+    ) == PlaceCategory.VET
+
+
 def test_junk_names():
     assert _is_junk_name("Т-Банк") is True
     assert _is_junk_name("Пятёрочка") is False

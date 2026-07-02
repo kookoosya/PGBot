@@ -475,27 +475,140 @@
       "address": "ул. Новоржевская, 25",
       "latitude": 57.0258,
       "longitude": 28.9125,
-      "phone": null,
+      "phone": "+7 (8112) 60-77-11",
       "opening_hours": null,
       "website": null,
       "social_url": null,
-      "yandex_url": "https://yandex.ru/maps/org/magnit/1624883377/",
-      "yandex_id": null,
+      "yandex_url": "https://yandex.ru/maps/org/apteka_a/193128665660/",
+      "yandex_id": "193128665660",
       "osm_id": null,
       "sources": [
         {
           "type": "YANDEX",
-          "url": "https://yandex.ru/maps/org/magnit/1624883377/",
-          "entity_id": "1624883377",
-          "checked_at": "2026-07-02T17:34:19Z",
+          "url": "https://yandex.ru/maps/org/apteka_a/193128665660/",
+          "entity_id": "193128665660",
+          "checked_at": "2026-06-27T18:30:00Z",
           "supports": [
+            "existence",
+            "name",
+            "category",
             "address",
             "coordinates",
-            "existence"
+            "phone",
+            "active_status"
           ]
         }
       ],
-      "source_checked_at": "2026-07-02T17:34:19Z",
+      "source_checked_at": "2026-06-27T18:30:00Z",
+      "existence_status": "YANDEX_ACTIVE",
+      "name_status": "YANDEX_ACTIVE",
+      "category_status": "YANDEX_ACTIVE",
+      "address_status": "YANDEX_ACTIVE",
+      "coordinates_status": "YANDEX_ACTIVE",
+      "phone_status": "YANDEX_ACTIVE",
+      "hours_status": "UNVERIFIED",
+      "active_status": "ACTIVE",
+      "conflict_notes": null,
+      "decision": "RESTORE",
+      "decision_reason": "Dedicated Yandex pharmacy card at Novorzhevskaya 25",
+      "verification_note": null,
+      "seed_as_reference": true
+    },
+    {
+      "stable_key": "farm-m-lenina-42",
+      "public_name": "Фарм-М",
+      "aliases": [],
+      "category": "pharmacy",
+      "scope": "VILLAGE",
+      "address": "ул. Ленина, 42",
+      "latitude": 57.0261,
+      "longitude": 28.9112,
+      "phone": "+7 (960) 222-67-76",
+      "opening_hours": null,
+      "website": null,
+      "social_url": null,
+      "yandex_url": "https://yandex.ru/maps/org/farm_m/158009837560/",
+      "yandex_id": "158009837560",
+      "osm_id": null,
+      "sources": [
+        {
+          "type": "YANDEX",
+          "url": "https://yandex.ru/maps/org/farm_m/158009837560/",
+          "entity_id": "158009837560",
+          "checked_at": "2026-06-27T18:30:00Z",
+          "supports": [
+            "existence",
+            "name",
+            "category",
+            "address",
+            "coordinates",
+            "phone",
+            "active_status"
+          ]
+        }
+      ],
+      "source_checked_at": "2026-06-27T18:30:00Z",
+      "existence_status": "YANDEX_ACTIVE",
+      "name_status": "YANDEX_ACTIVE",
+      "category_status": "YANDEX_ACTIVE",
+      "address_status": "YANDEX_ACTIVE",
+      "coordinates_status": "YANDEX_ACTIVE",
+      "phone_status": "YANDEX_ACTIVE",
+      "hours_status": "UNVERIFIED",
+      "active_status": "ACTIVE",
+      "conflict_notes": null,
+      "decision": "RESTORE",
+      "decision_reason": "Third village pharmacy — active Yandex Maps card",
+      "verification_note": "Same building as Magnit Lenina 42",
+      "seed_as_reference": true
+    },
+    {
+      "stable_key": "vet-sbbzh-stroiteley-3",
+      "public_name": "Пушкиногорская станция по борьбе с болезнями животных",
+      "aliases": [
+        "Пушкиногорский филиал СББЖ"
+      ],
+      "category": "vet",
+      "scope": "VILLAGE",
+      "address": "ул. Строителей, 3",
+      "latitude": 57.0298,
+      "longitude": 28.9335,
+      "phone": null,
+      "opening_hours": null,
+      "website": null,
+      "social_url": null,
+      "yandex_url": "https://yandex.ru/maps/org/pushkinogorskaya_stantsiya_po_borbe_s_boleznyami_zhivotnykh/151587943960/",
+      "yandex_id": "151587943960",
+      "osm_id": null,
+      "sources": [
+        {
+          "type": "YANDEX",
+          "url": "https://yandex.ru/maps/org/pushkinogorskaya_stantsiya_po_borbe_s_boleznyami_zhivotnykh/151587943960/",
+          "entity_id": "151587943960",
+          "checked_at": "2026-06-27T18:30:00Z",
+          "supports": [
+            "existence",
+            "name",
+            "category",
+            "address",
+            "coordinates",
+            "active_status"
+          ]
+        },
+        {
+          "type": "TWO_GIS",
+          "url": "https://2gis.ru/pskov/search/%D0%B2%D0%B5%D1%82%D0%B5%D1%80%D0%B8%D0%BD%D0%B0%D1%80%20%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%93%D0%BE%D1%80%D1%8B",
+          "entity_id": null,
+          "checked_at": "2026-06-27T18:30:00Z",
+          "supports": [
+            "existence",
+            "name",
+            "address",
+            "active_status"
+          ]
+        }
+      ],
+      "source_checked_at": "2026-06-27T18:30:00Z",
       "existence_status": "YANDEX_ACTIVE",
       "name_status": "YANDEX_ACTIVE",
       "category_status": "YANDEX_ACTIVE",
@@ -504,9 +617,9 @@
       "phone_status": "UNVERIFIED",
       "hours_status": "UNVERIFIED",
       "active_status": "ACTIVE",
-      "conflict_notes": null,
+      "conflict_notes": "2GIS also lists Stroiteley 3 filial and Sovkhozny 13 entry — Yandex card used as primary",
       "decision": "RESTORE",
-      "decision_reason": "Pharmacy at Magnit Novorzhevskaya per Yandex reviews",
+      "decision_reason": "Village veterinary clinic separate from human hospital",
       "verification_note": null,
       "seed_as_reference": true
     },

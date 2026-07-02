@@ -37,6 +37,7 @@ OSM_TAG_TO_CATEGORY = {
     "hospital": PlaceCategory.HOSPITAL,
     "clinic": PlaceCategory.HOSPITAL,
     "doctors": PlaceCategory.HOSPITAL,
+    "veterinary": PlaceCategory.VET,
     "townhall": PlaceCategory.GOVERNMENT,
     "library": PlaceCategory.CULTURE,
     "museum": PlaceCategory.CULTURE,

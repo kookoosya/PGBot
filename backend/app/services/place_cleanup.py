@@ -91,6 +91,8 @@ def _fix_category(name: str, category: PlaceCategory) -> PlaceCategory:
         return PlaceCategory.BEAUTY
     if "магнит" in name_l and "косметик" in name_l:
         return PlaceCategory.BEAUTY
+    if any(token in name_l for token in ("ветерин", "сббж", "болезнями животных", "ветклин")):
+        return PlaceCategory.VET
     return category
 
 

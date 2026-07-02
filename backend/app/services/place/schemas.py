@@ -43,6 +43,7 @@ USEFUL_CATEGORIES = {
     PlaceCategory.POST,
     PlaceCategory.GOVERNMENT,
     PlaceCategory.HOSPITAL,
+    PlaceCategory.VET,
     PlaceCategory.TRANSPORT,
     PlaceCategory.PARKING,
 }
