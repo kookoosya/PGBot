@@ -22,11 +22,16 @@
       0 0 0 2px hsl(48 100% 70% / 0.45),
       0 0 12px hsl(48 100% 55% / 0.35);
   }
-  .map-marker-emoji {
+  .map-marker-icon {
     transform: rotate(45deg);
-    font-size: 17px;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  }
+  .map-marker-icon-svg {
+    display: block;
   }
   .map-marker-star {
     position: absolute;
@@ -124,7 +129,10 @@
     background: hsl(40 55% 99% / 0.7);
   }
   .map-cat-bar-label {
-    @apply text-xs font-semibold truncate;
+    @apply text-xs font-semibold truncate inline-flex items-center gap-1.5 min-w-0;
+  }
+  .map-category-icon {
+    @apply shrink-0;
   }
   .map-cat-bar-track {
     @apply h-2 rounded-full overflow-hidden;
@@ -576,7 +584,9 @@
   }
 
   .org-list-icon {
-    @apply text-2xl shrink-0;
+    @apply shrink-0 inline-flex items-center justify-center;
+    width: 1.375rem;
+    height: 1.375rem;
   }
 
   .org-list-body {
@@ -617,7 +627,9 @@
   }
 
   .org-detail-icon {
-    @apply text-3xl;
+    @apply shrink-0 inline-flex items-center justify-center;
+    width: 2rem;
+    height: 2rem;
   }
 
   .org-rating-badge {
