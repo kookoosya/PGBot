@@ -571,4 +571,8 @@ out = {
 dest = Path(__file__).resolve().parents[1] / "docs" / "factual-integrity" / "stage-02-place-inventory.json"
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+app_data = Path(__file__).resolve().parents[1] / "backend" / "app" / "data" / "stage-02-place-inventory.json"
+app_data.parent.mkdir(parents=True, exist_ok=True)
+app_data.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 print(f"Wrote {len(places)} places to {dest}")
+print(f"Wrote {len(places)} places to {app_data}")

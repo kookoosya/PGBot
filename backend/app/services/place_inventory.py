@@ -10,15 +10,30 @@ from typing import Any
 
 from app.models.enums import PlaceCategory
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-INVENTORY_PATH = REPO_ROOT / "docs" / "factual-integrity" / "stage-02-place-inventory.json"
-
 ACTIVE_DECISIONS = frozenset({"KEEP", "RESTORE"})
+
+
+def _inventory_candidates() -> tuple[Path, ...]:
+    here = Path(__file__).resolve()
+    return (
+        here.parents[1] / "data" / "stage-02-place-inventory.json",
+        here.parents[3] / "docs" / "factual-integrity" / "stage-02-place-inventory.json",
+        Path("/app/app/data/stage-02-place-inventory.json"),
+    )
+
+
+def _resolve_inventory_path() -> Path:
+    for path in _inventory_candidates():
+        if path.is_file():
+            return path
+    raise FileNotFoundError(
+        "stage-02-place-inventory.json not found; expected backend/app/data/ or docs/factual-integrity/"
+    )
 
 
 @lru_cache(maxsize=1)
 def load_place_inventory() -> list[dict[str, Any]]:
-    with INVENTORY_PATH.open(encoding="utf-8") as handle:
+    with _resolve_inventory_path().open(encoding="utf-8") as handle:
         payload = json.load(handle)
     return list(payload.get("places", []))
 
