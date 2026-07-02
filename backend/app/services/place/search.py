@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.constants.place_scope import VILLAGE
 from app.models.place import Place
 from app.utils.pagination import normalize_pagination
 
@@ -116,6 +117,11 @@ async def search_places(
             query = query.where(Place.name.ilike(pattern) | Place.address.ilike(pattern))
         if params.min_rating is not None:
             query = query.where(EFFECTIVE_RATING >= params.min_rating)
+
+        if params.scope:
+            query = query.where(Place.scope == params.scope)
+        elif not params.district and params.category not in LODGING_CATEGORIES:
+            query = query.where(Place.scope == VILLAGE)
 
         query = apply_bbox_filter(query, params)
 

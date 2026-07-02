@@ -90,6 +90,10 @@ export interface MapStats {
   auto_sync_hours?: number;
   yandex_live?: boolean;
   reference_places?: number;
+  scope?: string;
+  village_places?: number;
+  nearby_places?: number;
+  district_places?: number;
 }
 
 export interface MapRouteStop {

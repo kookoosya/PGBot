@@ -107,6 +107,10 @@ class MapStatsResponse(BaseModel):
     auto_sync_hours: int = 6
     yandex_live: bool = False
     reference_places: int = 0
+    scope: str = "VILLAGE"
+    village_places: int = 0
+    nearby_places: int = 0
+    district_places: int = 0
 
 
 class TaxiServiceResponse(BaseModel):

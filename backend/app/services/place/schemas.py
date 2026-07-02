@@ -115,6 +115,7 @@ class PlaceSearchParams:
     north: Optional[float] = None
     east: Optional[float] = None
     district: bool = False
+    scope: str | None = None
     page: int = 1
     page_size: int = 100
     offset: Optional[int] = None
@@ -180,6 +181,10 @@ class MapStatsResult:
     auto_sync_hours: int = 6
     yandex_live: bool = False
     reference_places: int = 0
+    scope: str = "VILLAGE"
+    village_places: int = 0
+    nearby_places: int = 0
+    district_places: int = 0
 
     def to_response(self) -> MapStatsResponse:
         """Serialize to the public API schema."""
@@ -197,6 +202,10 @@ class MapStatsResult:
             auto_sync_hours=self.auto_sync_hours,
             yandex_live=self.yandex_live,
             reference_places=self.reference_places,
+            scope=self.scope,
+            village_places=self.village_places,
+            nearby_places=self.nearby_places,
+            district_places=self.district_places,
         )
 
 

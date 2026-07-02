@@ -79,8 +79,11 @@ async def list_map_filter_modes():
 
 
 @router.get("/map/stats", response_model=MapStatsResponse)
-async def map_stats(db: Annotated[AsyncSession, Depends(get_db)]):
-    stats = await get_map_stats(db)
+async def map_stats(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    scope: str = Query("VILLAGE", pattern="^(VILLAGE|NEARBY_ATTRACTION|MUNICIPAL_DISTRICT)$"),
+):
+    stats = await get_map_stats(db, scope=scope)
     return stats.to_response()
 
 
@@ -100,6 +103,7 @@ async def list_places(
     page_size: int = Query(100, ge=1, le=500),
     sort: PlaceSortField = Query("rating"),
     district: bool = False,
+    scope: str | None = Query(None, pattern="^(VILLAGE|NEARBY_ATTRACTION|MUNICIPAL_DISTRICT)$"),
 ):
     result = await search_places(
         db,
@@ -117,6 +121,7 @@ async def list_places(
             page_size=page_size,
             sort_by=sort,
             district=district,
+            scope=scope,
         ),
     )
     return PlaceListResponse(

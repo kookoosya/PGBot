@@ -89,6 +89,7 @@ async def create_place(
     *,
     name: str = "Тестовый магазин",
     category: PlaceCategory = PlaceCategory.SHOP,
+    scope: str | None = "VILLAGE",
 ) -> Place:
     place = Place(
         name=name,
@@ -96,6 +97,7 @@ async def create_place(
         latitude=settings.MAP_CENTER_LAT,
         longitude=settings.MAP_CENTER_LNG,
         is_active=True,
+        scope=scope,
     )
     db.add(place)
     await db.flush()

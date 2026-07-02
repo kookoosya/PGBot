@@ -17,6 +17,7 @@ from app.services.place_inventory import (
     build_public_description,
     inventory_checked_at,
     inventory_village_places,
+    load_place_inventory,
     parse_category,
     primary_verification_url,
 )
@@ -113,6 +114,53 @@ async def seed_village_places(db: AsyncSession) -> int:
 
     await db.flush()
     return count
+
+
+def _inventory_osm_ids(entry: dict) -> set[str]:
+    """Normalize OSM node/way ids from inventory source records."""
+    ids: set[str] = set()
+    raw = entry.get("osm_id")
+    if raw:
+        ids.add(str(raw).removeprefix("osm:"))
+    for source in entry.get("sources") or []:
+        if source.get("type") != "OSM":
+            continue
+        url = str(source.get("url") or "")
+        if url.startswith("osm:"):
+            ids.add(url.removeprefix("osm:"))
+        entity_id = source.get("entity_id")
+        if entity_id is not None:
+            ids.add(f"node/{entity_id}")
+    return ids
+
+
+async def sync_inventory_scopes(db: AsyncSession) -> int:
+    """Apply territorial scope from curated inventory without deactivating places."""
+    updated = 0
+    inventory = load_place_inventory()
+    result = await db.execute(select(Place))
+    places = list(result.scalars().all())
+    by_ref_key = {p.yandex_id: p for p in places if p.yandex_id}
+    by_osm_id = {p.osm_id: p for p in places if p.osm_id}
+
+    for entry in inventory:
+        scope = entry.get("scope")
+        if not scope:
+            continue
+        stable_key = entry["stable_key"]
+        ref_place = by_ref_key.get(_place_key(stable_key))
+        if ref_place and ref_place.scope != scope:
+            ref_place.scope = scope
+            updated += 1
+
+        for osm_id in _inventory_osm_ids(entry):
+            osm_place = by_osm_id.get(osm_id)
+            if osm_place and osm_place.scope != scope:
+                osm_place.scope = scope
+                updated += 1
+
+    await db.flush()
+    return updated
 
 
 async def seed_taxi_services(db: AsyncSession) -> int:

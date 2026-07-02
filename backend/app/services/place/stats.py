@@ -7,6 +7,7 @@ import logging
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.constants.place_scope import MUNICIPAL_DISTRICT, NEARBY_ATTRACTION, VILLAGE
 from app.config import get_settings
 from app.models.enums import (
     MAP_REPORT_LABELS,
@@ -34,17 +35,43 @@ def _category_key(category: PlaceCategory | str | None) -> str:
     return str(category)
 
 
-async def get_map_stats(db: AsyncSession) -> MapStatsResult:
-    """Collect map dashboard statistics for active places and related entities."""
+def _scope_filter(scope: str):
+    """SQLAlchemy filter for active places in the requested territorial scope."""
+    if scope == VILLAGE:
+        return Place.scope == VILLAGE
+    if scope == NEARBY_ATTRACTION:
+        return Place.scope == NEARBY_ATTRACTION
+    if scope == MUNICIPAL_DISTRICT:
+        return Place.scope == MUNICIPAL_DISTRICT
+    return Place.scope == VILLAGE
+
+
+async def _count_by_scope(db: AsyncSession) -> dict[str, int]:
+    rows = await db.execute(
+        select(Place.scope, func.count(Place.id))
+        .where(Place.is_active.is_(True))
+        .group_by(Place.scope)
+    )
+    counts = {VILLAGE: 0, NEARBY_ATTRACTION: 0, MUNICIPAL_DISTRICT: 0}
+    for raw_scope, count in rows.all():
+        if raw_scope in counts:
+            counts[raw_scope] = count
+    return counts
+
+
+async def get_map_stats(db: AsyncSession, *, scope: str = VILLAGE) -> MapStatsResult:
+    """Collect map dashboard statistics for active places in the requested scope."""
     active_filter = Place.is_active.is_(True)
+    scoped_filter = active_filter & _scope_filter(scope)
     try:
+        scope_counts = await _count_by_scope(db)
         total_places = (
-            await db.execute(select(func.count(Place.id)).where(active_filter))
+            await db.execute(select(func.count(Place.id)).where(scoped_filter))
         ).scalar() or 0
 
         cat_rows = await db.execute(
             select(Place.category, func.count(Place.id))
-            .where(active_filter)
+            .where(scoped_filter)
             .group_by(Place.category)
         )
         by_category = {
@@ -54,7 +81,7 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
 
         rating_rows = await db.execute(
             select(Place.category, func.avg(EFFECTIVE_RATING))
-            .where(active_filter, EFFECTIVE_RATING > 0)
+            .where(scoped_filter, EFFECTIVE_RATING > 0)
             .group_by(Place.category)
         )
         avg_rating_by_category = {
@@ -124,6 +151,10 @@ async def get_map_stats(db: AsyncSession) -> MapStatsResult:
         auto_sync_hours=settings.MAP_AUTO_SYNC_HOURS if settings.MAP_AUTO_SYNC_HOURS > 0 else 6,
         yandex_live=bool(settings.YANDEX_MAPS_API_KEY),
         reference_places=reference_places,
+        scope=scope,
+        village_places=scope_counts[VILLAGE],
+        nearby_places=scope_counts[NEARBY_ATTRACTION],
+        district_places=scope_counts[MUNICIPAL_DISTRICT],
     )
 
 
