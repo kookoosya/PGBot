@@ -94,5 +94,5 @@ jobs:
 
       - name: Smoke public URLs (production)
         env:
-          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://192-210-213-135.sslip.io' }}
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'https://pushkinskie-gory.xyz' }}
         run: bash scripts/smoke-public.sh "$SMOKE_BASE_URL"
