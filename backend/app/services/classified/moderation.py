@@ -41,7 +41,7 @@ async def safe_classified_audit(
             action,
             "classified",
             ad_id,
-            user_id=actor.actor_id,
+            user_id=actor.actor_id if actor.actor_id > 0 else None,
             details=details,
             ip_address=actor.ip_address,
         )
