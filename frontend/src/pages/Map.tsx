@@ -1,450 +1,225 @@
 import { useMemo } from "react";
-
 import { MapContainer, Polyline, TileLayer } from "react-leaflet";
-
 import "leaflet/dist/leaflet.css";
-
 import "leaflet.markercluster/dist/MarkerCluster.css";
-
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
 import "leaflet.markercluster";
 
-
-
 import { PageHeader } from "@/components/PageHeader";
-
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-
 import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
-
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
-
-
 import { MAP_CENTER } from "./map/constants";
-
 import { ClusterLayer, FlyToPlace, FlyToRoute, MapEvents, MapSetCenter, RouteStopsLayer } from "./map/MapLayers";
-
 import { MapMoreCategories } from "./map/MapMoreCategories";
-
 import { MapServicesTabs } from "./map/MapServicesTabs";
-
 import { MapStatsRibbon } from "./map/MapStatsRibbon";
-
 import { PlaceDetailPanel } from "./map/PlaceDetailPanel";
-
 import { PlacesList } from "./map/PlacesList";
-
 import { useMapPage } from "./map/useMapPage";
-
-
 
 const copy = PAGE_SECTIONS.map;
 
-
-
 const FLOW_STEPS = [
-
   { icon: "🔍", title: "Найдите", text: "Поиск, фильтр или метка на карте — уточняйте адрес перед визитом." },
-
   { icon: "📋", title: "Откройте карточку", text: "Адрес, часы, телефон и отзывы жителей." },
-
   { icon: "📞", title: "Позвоните или маршрут", text: "Звонок, Яндекс.Навигатор или GPS — даже офлайн." },
-
 ];
 
-
-
 export function MapPage() {
-
   useDocumentTitle(copy.title);
-
   const map = useMapPage();
 
-
-
   const mapCenter = useMemo<[number, number]>(() => {
-
     if (map.mapStats?.center) {
-
       return [map.mapStats.center.lat, map.mapStats.center.lng];
-
     }
-
     return MAP_CENTER;
-
   }, [map.mapStats]);
-
-
 
   const topRibbonCategories = useMemo(() => {
-
     if (!map.mapStats) return [];
-
     return Object.entries(map.mapStats.by_category)
-
       .sort((a, b) => b[1] - a[1])
-
       .slice(0, 8)
-
       .map(([cat]) => cat);
-
   }, [map.mapStats]);
 
-
-
   const handleOpenPlace = (id: number) => {
-
     map.openPlace(id);
-
     map.setMobileTab("map");
-
   };
 
-
-
   return (
-
     <div className="literary-page">
-
       <div className="page-section pb-2">
-
         <PageHeader
-
           icon="🗺"
-
           title={copy.title}
-
           subtitle={copy.lead}
-
         />
-
       </div>
-
-
 
       <section className="page-section pb-2" aria-label="Как пользоваться картой">
-
         <div className="complaints-flow map-flow">
-
           {FLOW_STEPS.map((step) => (
-
             <div key={step.title} className="complaints-flow-step">
-
               <span className="complaints-flow-icon" aria-hidden>{step.icon}</span>
-
               <div>
-
                 <p className="complaints-flow-title m-0">{step.title}</p>
-
                 <p className="complaints-flow-text m-0">{step.text}</p>
-
               </div>
-
             </div>
-
           ))}
-
         </div>
-
       </section>
 
-
-
       <MapStatsRibbon
-
         stats={map.mapStats}
-
         categories={map.categories}
-
         activeCategory={map.category}
-
         onCategoryClick={map.applyCategoryFilter}
-
       />
-
-
 
       <div className="map-mobile-tabs lg:hidden page-section pb-2">
-
         <button
-
           type="button"
-
           className={`map-mobile-tab ${map.mobileTab === "map" ? "map-mobile-tab-active" : ""}`}
-
           onClick={() => map.setMobileTab("map")}
-
         >
-
           🗺 Карта
-
         </button>
-
         <button
-
           type="button"
-
           className={`map-mobile-tab ${map.mobileTab === "list" ? "map-mobile-tab-active" : ""}`}
-
           onClick={() => map.setMobileTab("list")}
-
         >
-
           📋 Список ({map.places.length})
-
         </button>
-
       </div>
-
-
 
       <div className="flex flex-col lg:flex-row map-layout">
-
         <div className={`map-pane flex-1 relative ${map.mobileTab === "list" ? "map-pane-hidden-mobile" : ""}`}>
-
           <MapContainer center={mapCenter} zoom={14} className="map-canvas z-0" scrollWheelZoom>
-
             <TileLayer
-
               attribution={map.mapStyle === "scheme"
-
                 ? "© OpenStreetMap · справочник посёлка"
-
                 : "© Esri"}
-
               url={map.mapStyle === "scheme" ? MAP_TILE_OSM : MAP_TILE_SAT}
-
             />
-
             <MapSetCenter center={mapCenter} />
-
             <MapEvents onBounds={map.loadPlaces} pausedRef={map.boundsPausedRef} />
-
             <ClusterLayer places={map.places} onSelect={map.openPlace} />
-
             {map.activeRoute && map.activeRoute.stops.length > 1 && (
-
               <>
-
                 <Polyline
-
                   positions={map.activeRoute.stops.map((s) => [s.latitude, s.longitude] as [number, number])}
-
                   pathOptions={{ color: "#c9a227", weight: 4, opacity: 0.85, dashArray: "10 8" }}
-
                 />
-
                 <RouteStopsLayer route={map.activeRoute} />
-
               </>
-
             )}
-
             <FlyToRoute route={map.activeRoute} pausedRef={map.boundsPausedRef} />
-
             <FlyToPlace place={map.highlight} pausedRef={map.boundsPausedRef} />
-
           </MapContainer>
 
-
-
           <div className="map-overlay-controls">
-
             <button type="button" className={`map-layer-btn ${map.mapStyle === "scheme" ? "active" : ""}`} onClick={() => map.setMapStyle("scheme")}>
-
               Схема
-
             </button>
-
             <button type="button" className={`map-layer-btn ${map.mapStyle === "satellite" ? "active" : ""}`} onClick={() => map.setMapStyle("satellite")}>
-
               Спутник
-
             </button>
-
           </div>
-
-
 
           {map.activeRoute && (
-
             <div className="map-route-badge">
-
               🧭 {map.activeRoute.title}
-
             </div>
-
           )}
-
         </div>
-
-
 
         <div className={`w-full lg:w-[420px] border-l map-sidebar map-sidebar-glass overflow-y-auto ${map.mobileTab === "map" ? "map-sidebar-hidden-mobile" : ""}`}>
-
           <div className="p-4 space-y-3 border-b sticky top-0 map-sidebar-head z-10">
-
             <input
-
               className="pushkin-select w-full"
-
               placeholder="Поиск организации..."
-
               value={map.search}
-
               onChange={(e) => map.setSearch(e.target.value)}
-
             />
-
             <div className="map-filter-scroll">
-
               {map.mapModes.map((f) => (
-
                 <button
-
                   key={f.id}
-
                   type="button"
-
                   className={`map-filter-chip${map.activeFilterId === f.id ? " map-filter-chip-active" : ""}`}
-
                   onClick={() => map.applyQuickFilter(f)}
-
                 >
-
                   {f.label}
-
                 </button>
-
               ))}
-
             </div>
-
             <MapMoreCategories
-
               topCategories={topRibbonCategories}
-
               categories={map.categories}
-
               activeCategory={map.category}
-
               onSelect={map.applyCategoryFilter}
-
             />
-
             <div className="map-filter-row">
-
               <button
-
                 type="button"
-
                 className="map-offline-btn w-full"
-
                 onClick={map.handleOfflineDownload}
-
                 disabled={map.offlineBusy}
-
                 title={map.offlineReady ? "Офлайн-карта сохранена — обновить" : "Скачать карту и точки для офлайн"}
-
                 aria-label={map.offlineReady ? "Обновить офлайн-карту" : "Скачать офлайн-карту"}
-
               >
-
                 {map.offlineBusy ? "…" : map.offlineReady ? "📥 Обновить офлайн-карту" : "📥 Скачать для офлайн"}
-
               </button>
-
             </div>
-
             {map.offlineMsg ? <p className="text-xs text-muted-foreground">{map.offlineMsg}</p> : null}
-
           </div>
 
-
-
           {map.selected ? (
-
             <PlaceDetailPanel
-
               selected={map.selected}
-
               tab={map.tab}
-
               setTab={map.setTab}
-
               msg={map.msg}
-
               msgType={map.msgType}
-
               reviewForm={map.reviewForm}
-
               setReviewForm={map.setReviewForm}
-
               complaintForm={map.complaintForm}
-
               setComplaintForm={map.setComplaintForm}
-
               reportForm={map.reportForm}
-
               setReportForm={map.setReportForm}
-
               complaintTypes={map.complaintTypes}
-
               mapReportTypes={map.mapReportTypes}
-
               submitReview={map.submitReview}
-
               submitComplaint={map.submitComplaint}
-
               submitReport={map.submitReport}
-
               clearSelection={map.clearSelection}
-
             />
-
           ) : (
-
             <PlacesList
-
               places={map.places}
-
               placesLoading={map.placesLoading}
-
               placesError={map.placesError}
-
               onOpenPlace={handleOpenPlace}
-
               onRetry={() => map.loadPlaces(map.boundsRef.current ?? undefined)}
-
             />
-
           )}
-
         </div>
-
       </div>
 
-
-
       <MapServicesTabs
-
         routes={map.routes}
-
         activeRoute={map.activeRoute}
-
         onSelectRoute={map.showRoute}
-
         onClearRoute={() => map.setActiveRoute(null)}
-
         taxi={map.taxi}
-
       />
-
     </div>
-
   );
-
 }
-

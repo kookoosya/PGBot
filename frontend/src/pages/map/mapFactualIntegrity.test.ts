@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const MAP_UI_FILES = [
-  "src/pages/Map.tsx",
-  "src/pages/map/PlacesList.tsx",
-  "src/pages/map/MapStatsRibbon.tsx",
-  "src/pages/map/PlaceDetailPanel.tsx",
+  "Map.tsx",
+  "map/PlacesList.tsx",
+  "map/MapStatsRibbon.tsx",
+  "map/PlaceDetailPanel.tsx",
 ];
 
 const FORBIDDEN_PHRASES = [
