@@ -11,6 +11,7 @@ cd /opt/pgbot
 export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 bash scripts/vps-sync-ai-keys.sh 2>/dev/null || true
+bash scripts/ensure-event-sync-env.sh /opt/pgbot/.env 2>/dev/null || true
 # Только CF-токен из .env (полный source ломается на кириллице в комментариях)
 if [ -f /opt/pgbot/.env ]; then
   CF_API_TOKEN="$(grep -E '^CF_API_TOKEN=' /opt/pgbot/.env | tail -1 | cut -d= -f2- | tr -d '\r"'"'"'' || true)"

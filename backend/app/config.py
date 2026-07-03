@@ -118,7 +118,11 @@ class Settings(BaseSettings):
     KINOPOISK_API_TOKEN: str = ""
 
     # Auto-sync village events from external sources (hours; 0 = disabled)
-    EVENT_SYNC_INTERVAL_HOURS: int = 12
+    EVENT_SYNC_INTERVAL_HOURS: int = 4
+
+    @property
+    def event_sync_interval_seconds(self) -> int:
+        return self.EVENT_SYNC_INTERVAL_HOURS * 3600
 
     @property
     def cors_origins_list(self) -> list[str]:

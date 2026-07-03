@@ -28,6 +28,7 @@ export interface PublicEventsStats {
   total_events: number;
   by_region: Record<string, number>;
   last_sync: string | null;
+  event_sync_hours: number;
   cinema_sync_hours: number;
   full_sync_hours: number;
 }

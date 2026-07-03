@@ -6,6 +6,8 @@ from app.config import Settings
 
 logger = logging.getLogger(__name__)
 
+_background_tasks_started = False
+
 
 async def run_periodic(
     name: str,
@@ -71,6 +73,12 @@ def _create_periodic_task(
 
 
 def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
+    global _background_tasks_started
+    if _background_tasks_started:
+        logger.warning("Background tasks already started; skipping duplicate registration")
+        return []
+    _background_tasks_started = True
+
     tasks: list[asyncio.Task] = []
     if settings.MAP_AUTO_SYNC_HOURS > 0:
         tasks.append(
@@ -96,7 +104,7 @@ def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
                 [
                     _create_periodic_task(
                         "Event sync",
-                        settings.EVENT_SYNC_INTERVAL_HOURS * 3600,
+                        settings.event_sync_interval_seconds,
                         _event_sync_work,
                     )
                 ]
@@ -109,6 +117,7 @@ def start_background_tasks(settings: Settings) -> list[asyncio.Task]:
 
 
 async def stop_background_tasks(tasks: list[asyncio.Task]) -> None:
+    global _background_tasks_started
     for task in tasks:
         if not task.done():
             task.cancel()
@@ -120,3 +129,4 @@ async def stop_background_tasks(tasks: list[asyncio.Task]) -> None:
                 task.get_name(),
                 result,
             )
+    _background_tasks_started = False

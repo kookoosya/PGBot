@@ -193,6 +193,9 @@ async def get_related_event_sessions(db: AsyncSession, event: Event) -> list[Eve
 
 async def get_public_events_stats(db: AsyncSession) -> dict:
     """Counters and freshness for the public events page."""
+    from app.config import get_settings
+
+    settings = get_settings()
     now = datetime.now(timezone.utc)
     window_start = now - timedelta(days=14)
     active = [
@@ -221,6 +224,7 @@ async def get_public_events_stats(db: AsyncSession) -> dict:
         "total_events": total,
         "by_region": by_region,
         "last_sync": last_sync,
+        "event_sync_hours": settings.EVENT_SYNC_INTERVAL_HOURS,
         "cinema_sync_hours": 8,
         "full_sync_hours": 24,
     }

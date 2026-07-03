@@ -96,6 +96,7 @@ class PublicEventsStatsResponse(BaseModel):
     total_events: int
     by_region: dict[str, int]
     last_sync: datetime | None
+    event_sync_hours: int = 4
     cinema_sync_hours: int = 8
     full_sync_hours: int = 24
 

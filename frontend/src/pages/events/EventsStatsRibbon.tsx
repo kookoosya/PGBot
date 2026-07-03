@@ -33,9 +33,13 @@ export function EventsStatsRibbon({ totalVisible, regionFilter, onRegionClick }:
 
   if (!stats) return null;
 
-  const syncHint = stats.last_sync
-    ? `Обновлено ${formatSyncAge(stats.last_sync)} · кино каждые ${stats.cinema_sync_hours} ч · полная ${stats.full_sync_hours} ч`
-    : `Афиша обновляется автоматически · кино ${stats.cinema_sync_hours} ч · полная ${stats.full_sync_hours} ч`;
+  const syncHint = stats.event_sync_hours > 0
+    ? stats.last_sync
+      ? `Обновлено ${formatSyncAge(stats.last_sync)} · авто каждые ${stats.event_sync_hours} ч`
+      : `Афиша обновляется автоматически каждые ${stats.event_sync_hours} ч`
+    : stats.last_sync
+      ? `Обновлено ${formatSyncAge(stats.last_sync)}`
+      : "Афиша обновляется вручную";
 
   const regionEntries = Object.entries(stats.by_region).sort((a, b) => b[1] - a[1]);
   const interactive = Boolean(onRegionClick);
