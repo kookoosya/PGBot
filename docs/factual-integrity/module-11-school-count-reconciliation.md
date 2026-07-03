@@ -104,3 +104,15 @@ Main school address **unchanged** (already verified Лермонтова 13).
 
 **MODULE 11 decision:** `KEEP_BOTH_VERIFIED`  
 **MODULE 12:** NOT STARTED
+
+## Post-deploy verification (2026-07-03)
+
+| Check | Result |
+|-------|--------|
+| Final SHA | `75888dec7dbb1815b6337c6243a19cac3fa2ac85` |
+| `/health` git_commit | `75888de` |
+| CI run | `28678504579` — backend, frontend, smoke-prod: success |
+| Deploy | `agent-deploy.mjs` attempt 4 — smoke 33 OK, 0 FAIL |
+| `/api/v1/places?category=school` | 2 items: id 344 (Лермонтова 13), id 355 (Пушкинская 3) |
+| Lenina 30 school address | absent |
+| Village catalog | 45 (unchanged) |
