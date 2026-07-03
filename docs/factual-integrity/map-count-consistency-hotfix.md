@@ -50,8 +50,36 @@
 
 ## Cannot be verified (pre-deploy)
 
-- Production browser verification after deploy
 - Live cluster DOM count vs M (clustering library)
+
+## Post-deploy verification (2026-07-03)
+
+**Final SHA:** `e197a177528989a5b85619028a21125ba9613ae2`  
+**CI:** run [#429](https://github.com/kookoosya/PGBot/actions/runs/28670293893) — success  
+**Deploy:** attempt 29/50 via `agent-deploy.mjs` — smoke 33 OK, 0 FAIL  
+**`/health` git_commit:** `e197a17`
+
+| Счётчик | Production |
+|---------|------------|
+| catalog (Всего в справочнике) | 45 |
+| mappable | 45 (равно catalog — строка «С координатами» скрыта) |
+| sum(by_category) | 45 |
+| top-8 sum | 29 |
+| hidden categories | 16 |
+| current area (desktop full viewport) | 45 |
+| current area (mobile initial) | 30 |
+| list tab count | совпадает с current area |
+| cluster org sum (desktop) | 45 |
+| cluster org sum (mobile) | 29 (viewport subset) |
+
+**Browser checks:** 10+ zoom/pan cycles; фильтр «Супермаркет» → M=5 после ответа API; N=45 стабилен при zoom; нет «N мест на карте»; «Остальные категории: 16» видна.
+
+**Screenshots:** `docs/screenshots/map-count-hotfix/` (не коммитятся)
+
+### Cannot be verified
+
+- List row DOM count vs M (селекторы списка в headless не совпали с разметкой)
+- Transient filter label/count mismatch during loading (~2s после смены категории — старый total + новый filter label; после ответа API сходится)
 
 ## Module 9
 

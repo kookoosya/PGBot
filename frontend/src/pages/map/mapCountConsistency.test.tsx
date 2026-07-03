@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { MapMoreCategories } from "./MapMoreCategories";
@@ -66,7 +66,7 @@ describe("MapStatsRibbon count semantics", () => {
       />,
     );
     expect(container.textContent).toContain("Всего в справочнике: 45");
-    expect(container.textContent).toContain("В текущей области: 12");
+    expect(container.textContent).toContain("В видимой области: 12");
     expect(container.textContent).not.toMatch(/45\s+мест на карте/);
   });
 
@@ -117,7 +117,23 @@ describe("MapStatsRibbon count semantics", () => {
         hasActiveFilter
       />,
     );
-    expect(container.textContent).toContain("По текущему фильтру в области: 4");
+    expect(container.textContent).toContain("По фильтру в видимой области: 4");
+  });
+
+  it("shows updating message during incompatible filter loading", () => {
+    const { container } = render(
+      <MapStatsRibbon
+        stats={stats}
+        categories={[]}
+        activeCategory="pharmacy"
+        onCategoryClick={() => {}}
+        currentAreaCount={null}
+        hasActiveFilter
+        incompatibleFilterLoading
+      />,
+    );
+    expect(container.textContent).toContain("Обновляем список…");
+    expect(container.textContent).not.toContain("По фильтру в видимой области:");
   });
 });
 
@@ -149,10 +165,39 @@ describe("PlacesList count display", () => {
         onRetry={() => {}}
       />,
     );
-    expect(container.textContent).toContain("В текущей области: 12");
+    expect(container.textContent).toContain("В видимой области: 12");
   });
 
-  it("keeps count visible while loading when prior rows exist", () => {
+  it("renders stable data-place-id on each row", () => {
+    const { container } = render(
+      <PlacesList
+        places={[{ id: 42, name: "A", category: "pharmacy", category_label: "Аптека", address: "", latitude: 1, longitude: 1, display_rating: 0, display_review_count: 0, phone: null }]}
+        placesLoading={false}
+        placesError={false}
+        count={1}
+        onOpenPlace={() => {}}
+        onRetry={() => {}}
+      />,
+    );
+    expect(container.querySelector('[data-place-id="42"]')).toBeTruthy();
+  });
+
+  it("shows incompatible filter loading state", () => {
+    const { container } = render(
+      <PlacesList
+        places={[]}
+        placesLoading
+        placesError={false}
+        count={null}
+        incompatibleFilterLoading
+        onOpenPlace={() => {}}
+        onRetry={() => {}}
+      />,
+    );
+    expect(within(container).getByText("Обновляем список…")).toBeTruthy();
+  });
+
+  it("keeps count visible while bbox loading when prior rows exist", () => {
     const { container } = render(
       <PlacesList
         places={[{ id: 1, name: "A", category: "pharmacy", category_label: "Аптека", address: "", latitude: 1, longitude: 1, display_rating: 0, display_review_count: 0, phone: null }]}
@@ -163,7 +208,7 @@ describe("PlacesList count display", () => {
         onRetry={() => {}}
       />,
     );
-    expect(container.textContent).toContain("В текущей области: 12");
+    expect(container.textContent).toContain("В видимой области: 12");
     expect(container.textContent).toContain("обновляем");
   });
 });

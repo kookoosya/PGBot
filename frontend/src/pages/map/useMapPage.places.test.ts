@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Place } from "@/lib/api/types/places";
 
+import { padMapBounds } from "./mapPlacesRequest";
 import { useMapPage } from "./useMapPage";
 
 const placeA: Place = {
@@ -112,7 +113,7 @@ describe("useMapPage places loading", () => {
     expect(result.current.currentAreaCount).toBe(1);
   });
 
-  it("updates currentAreaCount from response.total for latest request only", async () => {
+  it("updates visible count from latest snapshot items, not response.total", async () => {
     let resolveFirst: (value: { items: Place[]; total: number }) => void;
     let resolveSecond: (value: { items: Place[]; total: number }) => void;
     const first = new Promise<{ items: Place[]; total: number }>((resolve) => {
@@ -135,17 +136,17 @@ describe("useMapPage places loading", () => {
     });
 
     await act(async () => {
-      resolveSecond!({ items: [placeB], total: 9 });
+      resolveSecond!({ items: [placeA, placeB], total: 99 });
     });
-    await waitFor(() => expect(result.current.currentAreaCount).toBe(9));
+    await waitFor(() => expect(result.current.currentAreaCount).toBe(2));
 
     await act(async () => {
       resolveFirst!({ items: [placeA], total: 99 });
     });
-    expect(result.current.currentAreaCount).toBe(9);
+    expect(result.current.currentAreaCount).toBe(2);
   });
 
-  it("does not clear currentAreaCount on AbortError", async () => {
+  it("does not clear visible count on AbortError", async () => {
     let rejectSecond: (reason: unknown) => void;
     const second = new Promise<{ items: Place[]; total: number }>((_, reject) => {
       rejectSecond = reject;
@@ -178,7 +179,7 @@ describe("useMapPage places loading", () => {
     expect(result.current.currentAreaCount).toBe(1);
   });
 
-  it("keeps previous places while newer request is loading", async () => {
+  it("keeps previous places while newer bbox request is loading", async () => {
     let resolveSecond: (value: { items: Place[]; total: number }) => void;
     const second = new Promise<{ items: Place[]; total: number }>((resolve) => {
       resolveSecond = resolve;
@@ -203,13 +204,72 @@ describe("useMapPage places loading", () => {
 
     expect(result.current.places).toHaveLength(1);
     expect(result.current.placesLoading).toBe(true);
+    expect(result.current.incompatibleFilterLoading).toBe(false);
     expect(result.current.currentAreaCount).toBe(1);
+    expect(result.current.clusterPlaces).toHaveLength(1);
 
     await act(async () => {
       resolveSecond!({ items: [placeA, placeB], total: 2 });
     });
     await waitFor(() => expect(result.current.places).toHaveLength(2));
     expect(result.current.currentAreaCount).toBe(2);
+  });
+
+  it("hides stale count and places when filter changes before response", async () => {
+    let resolveSecond: (value: { items: Place[]; total: number }) => void;
+    const second = new Promise<{ items: Place[]; total: number }>((resolve) => {
+      resolveSecond = resolve;
+    });
+    let call = 0;
+    getPlaces.mockImplementation(() => {
+      call += 1;
+      if (call === 1) return Promise.resolve({ items: [placeA, placeB], total: 2 });
+      return second;
+    });
+
+    const { result } = renderHook(() => useMapPage());
+
+    act(() => {
+      result.current.loadPlaces(bounds);
+    });
+    await waitFor(() => expect(result.current.places).toHaveLength(2));
+    expect(result.current.currentAreaCount).toBe(2);
+
+    act(() => {
+      result.current.applyCategoryFilter("supermarket");
+    });
+
+    expect(result.current.incompatibleFilterLoading).toBe(true);
+    expect(result.current.currentAreaCount).toBeNull();
+    expect(result.current.places).toHaveLength(0);
+    expect(result.current.clusterPlaces).toHaveLength(0);
+
+    await act(async () => {
+      resolveSecond!({ items: [placeA], total: 1 });
+    });
+    await waitFor(() => expect(result.current.incompatibleFilterLoading).toBe(false));
+    expect(result.current.places.map((p) => p.id)).toEqual([1]);
+    expect(result.current.currentAreaCount).toBe(1);
+    expect(result.current.clusterPlaces.map((p) => p.id)).toEqual([1]);
+  });
+
+  it("excludes padded-buffer-only places from visible count", async () => {
+    const padded = padMapBounds(bounds);
+    const bufferOnly: Place = {
+      ...placeA,
+      id: 99,
+      latitude: padded.south + 0.0001,
+      longitude: 28.92,
+    };
+    getPlaces.mockResolvedValueOnce({ items: [placeA, bufferOnly], total: 2 });
+
+    const { result } = renderHook(() => useMapPage());
+    act(() => {
+      result.current.loadPlaces(bounds);
+    });
+    await waitFor(() => expect(result.current.places).toHaveLength(1));
+    expect(result.current.currentAreaCount).toBe(1);
+    expect(result.current.clusterPlaces).toHaveLength(2);
   });
 
   it("passes category filter on every request", async () => {
