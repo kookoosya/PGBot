@@ -85,10 +85,6 @@ Already present in tree (commits `75888de` ancestry):
 
 ---
 
-**MODULE 11:** NOT COMPLETE until post-deploy verification at final HEAD
-
-**MODULE 12:** NOT STARTED
-
 ## Post-deploy verification (2026-07-03, HEAD `e64521f`)
 
 | Check | Result |
