@@ -86,4 +86,23 @@ Already present in tree (commits `75888de` ancestry):
 ---
 
 **MODULE 11:** NOT COMPLETE until post-deploy verification at final HEAD
+
 **MODULE 12:** NOT STARTED
+
+## Post-deploy verification (2026-07-03, HEAD `e64521f`)
+
+| Check | Result |
+|-------|--------|
+| Rules baseline pushed | `550eb48` on origin |
+| Module 11 docs commit | `e64521f` on origin |
+| CI `#28679979891` | backend, frontend, smoke-prod — success |
+| Deploy VPS `#28679979881` | success |
+| Local `agent-deploy.mjs` | SSH timeout/refused from agent network (after attempt 30+) — **Cannot be verified** locally |
+| `/health` git_commit | `75888de` (container `GIT_COMMIT` from last image build; docs-only `e64521f` does not rebuild) |
+| `/api/v1/places?category=school` | **2** — id **344** ул. Лермонтова, 13; id **355** ул. Пушкинская, 3 |
+| Lenina 30 as school address | absent |
+| Decision | **KEEP_BOTH_VERIFIED** — school:2 = СОШ + школа искусств |
+
+**MODULE 11 COMPLETE** (school reconciliation proven on production)
+
+**MODULE 12 NOT STARTED**
