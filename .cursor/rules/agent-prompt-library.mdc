@@ -1,0 +1,41 @@
+---
+description: Agent prompting patterns, skill routing, and PGBot verify/deploy conventions
+alwaysApply: true
+---
+
+# Agent prompts & skills (PGBot)
+
+Follow user skill **`agent-prompt-library`** (`~/.cursor/skills/agent-prompt-library/`).
+
+## Prompting
+
+- Outcome + verify in one message (tests, build, smoke, browser, `/health`)
+- Reference files with `@path`; paste logs/screenshots for bugs
+- Module work: BASELINE sha, SCOPE, FORBIDDEN, DONE WHEN, HARD STOP next module
+- Reports: `docs/factual-integrity/` with cannot-verify list when evidence missing
+
+## Verify commands
+
+| Layer | Command |
+|-------|---------|
+| Backend (no PG) | `cd backend && pytest -q -m "not postgres"` |
+| Backend + PG | `pytest -q -m postgres` (needs local Postgres) |
+| Frontend | `cd frontend && npm run test && npm run build` |
+| Public smoke | `bash scripts/smoke-public.sh https://pushkinskie-gory.xyz` |
+| Prod health | `/health` → `git_commit` must match deployed HEAD |
+
+## Skill routing
+
+| Task | Skill |
+|------|-------|
+| Minimal hotfix | `ponytail` |
+| Map/browser prod check | `playwright` / browser MCP |
+| Find code | `codebase-exploration` |
+| PR + CI loop | `babysit` |
+| Security / bugbot review | `review-security` / `review-bugbot` |
+
+## Deploy / git
+
+- Push, deploy, prod changes: **only when user explicitly asks**
+- Staged modules: factual-integrity doc per module; do not start N+1 without instruction
+- CI: `.github/workflows/ci.yml` + `deploy.yml` on `main`
