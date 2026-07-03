@@ -71,6 +71,7 @@ _VERIFICATION_LABELS: dict[str, str] = {
     "COMMUNITY_CONFIRMED": "Подтверждено местным жителем",
     "CONFLICTING": "Данные источников различаются — уточняйте перед визитом",
     "UNVERIFIED": "Данные уточняются",
+    "INSUFFICIENT_EVIDENCE": "Недостаточно подтверждений",
     "CLOSED_CONFIRMED": "Закрыто",
 }
 

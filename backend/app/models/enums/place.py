@@ -21,6 +21,9 @@ class PlaceCategory(str, enum.Enum):
     BEAUTY = "beauty"
     TYRE = "tyre"
     AUTO = "auto"
+    CAR_WASH = "car_wash"
+    AUTO_PARTS = "auto_parts"
+    TOWING = "towing"
     TAXI = "taxi"
     PARKING = "parking"
     OTHER = "other"
@@ -61,6 +64,9 @@ PLACE_CATEGORY_LABELS = {
     PlaceCategory.BEAUTY: "Красота/услуги",
     PlaceCategory.TYRE: "Шиномонтаж",
     PlaceCategory.AUTO: "Автосервис",
+    PlaceCategory.CAR_WASH: "Автомойка",
+    PlaceCategory.AUTO_PARTS: "Автозапчасти",
+    PlaceCategory.TOWING: "Эвакуатор",
     PlaceCategory.TAXI: "Такси",
     PlaceCategory.PARKING: "Парковка",
     PlaceCategory.OTHER: "Другое",

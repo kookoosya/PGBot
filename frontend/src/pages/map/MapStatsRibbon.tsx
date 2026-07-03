@@ -30,6 +30,9 @@ const FALLBACK_LABELS: Record<string, string> = {
   school: "Школа",
   tyre: "Шины",
   auto: "Авто",
+  car_wash: "Мойка",
+  auto_parts: "Запчасти",
+  towing: "Эвакуатор",
 };
 
 export function MapStatsRibbon({

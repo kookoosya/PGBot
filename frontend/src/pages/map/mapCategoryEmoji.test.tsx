@@ -22,6 +22,9 @@ const REQUIRED_EMOJI: Record<string, string> = {
   hotel: "🏨",
   tyre: "🛞",
   auto: "🔧",
+  car_wash: "🧽",
+  auto_parts: "⚙️",
+  towing: "🚚",
 };
 
 const sampleStats = {
