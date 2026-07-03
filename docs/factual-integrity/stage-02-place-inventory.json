@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-03T08:45:00Z",
-  "baseline_git": "e87212924d6e37f98e01bd5a1884b0d2abb5c92e",
+  "generated_at": "2026-07-03T10:05:00Z",
+  "baseline_git": "7e9e482432f837e8e5842dce45647a7024be41ff",
   "inventory_passes": 2,
   "places": [
     {
@@ -1125,29 +1125,31 @@
     },
     {
       "stable_key": "azs-pskovnefteprodukt-novorzhevskaya-31",
-      "public_name": "АЗС Псковнефтепродукт",
-      "aliases": [],
+      "public_name": "Сургутнефтегаз",
+      "aliases": [
+        "АЗС Псковнефтепродукт"
+      ],
       "category": "gas",
       "scope": "VILLAGE",
       "address": "ул. Новоржевская, 31",
-      "latitude": 57.0219,
-      "longitude": 28.9399,
-      "phone": null,
+      "latitude": 57.021887,
+      "longitude": 28.939604,
+      "phone": "+7 (81146) 2-12-07",
       "opening_hours": "круглосуточно",
-      "website": null,
+      "website": "https://pskovnp.ru",
       "social_url": null,
-      "yandex_url": "https://yandex.ru/maps/?text=%D0%90%D0%97%D0%A1%20%D0%9D%D0%BE%D0%B2%D0%BE%D1%80%D0%B6%D0%B5%D0%B2%D1%81%D0%BA%D0%B0%D1%8F%2031%20%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%93%D0%BE%D1%80%D1%8B",
-      "yandex_id": null,
+      "yandex_url": "https://yandex.ru/maps/org/surgutneftegaz/108531110258/",
+      "yandex_id": "108531110258",
       "osm_id": null,
       "sources": [
         {
           "type": "YANDEX",
-          "url": "https://yandex.ru/maps/?text=%D0%90%D0%97%D0%A1%20%D0%9D%D0%BE%D0%B2%D0%BE%D1%80%D0%B6%D0%B5%D0%B2%D1%81%D0%BA%D0%B0%D1%8F%2031%20%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%93%D0%BE%D1%80%D1%8B",
-          "entity_id": null,
-          "checked_at": "2026-07-02T17:34:19Z",
+          "url": "https://yandex.ru/maps/org/surgutneftegaz/108531110258/",
+          "entity_id": "108531110258",
+          "checked_at": "2026-07-03T10:05:00Z",
           "supports": [
             "existence",
-            "name",
+            "public_name",
             "category",
             "address",
             "coordinates",
@@ -1155,21 +1157,31 @@
             "opening_hours",
             "active_status"
           ]
+        },
+        {
+          "type": "OFFICIAL_WEBSITE",
+          "url": "https://pskovnp.ru",
+          "entity_id": null,
+          "checked_at": "2026-07-03T10:05:00Z",
+          "supports": [
+            "existence",
+            "category"
+          ]
         }
       ],
-      "source_checked_at": "2026-07-02T17:34:19Z",
-      "existence_status": "YANDEX_ACTIVE",
+      "source_checked_at": "2026-07-03T10:05:00Z",
+      "existence_status": "MULTISOURCE_CONFIRMED",
       "name_status": "YANDEX_ACTIVE",
       "category_status": "YANDEX_ACTIVE",
       "address_status": "YANDEX_ACTIVE",
       "coordinates_status": "YANDEX_ACTIVE",
-      "phone_status": "UNVERIFIED",
+      "phone_status": "YANDEX_ACTIVE",
       "hours_status": "YANDEX_ACTIVE",
       "active_status": "ACTIVE",
-      "conflict_notes": null,
+      "conflict_notes": "Единственная АЗС посёлка; «АЗС №1» и «№31» — одна точка Сургутнефтегаз",
       "decision": "RESTORE",
-      "decision_reason": "Fuel station Novorzhevskaya 31 — Yandex search; 2GIS not matched",
-      "verification_note": null,
+      "decision_reason": "Module 5: DUPLICATE_CONFIRMED старых имён; UPDATE_VERIFIED бренд и org card",
+      "verification_note": "Номер «АЗС №1» на карточке не указан — Cannot be verified",
       "seed_as_reference": true
     },
     {
@@ -1791,26 +1803,43 @@
     },
     {
       "stable_key": "hospital-pushkinogorsky-filial",
-      "public_name": "Филиал «Пушкиногорский» ГБУЗ ПО «Островская МБ»",
-      "aliases": [],
+      "public_name": "Пушкиногорская межрайонная больница",
+      "aliases": [
+        "Филиал «Пушкиногорский» ГБУЗ ПО «Островская МБ»"
+      ],
       "category": "hospital",
       "scope": "VILLAGE",
       "address": "ул. Ленина, 41",
-      "latitude": 57.0305309,
-      "longitude": 28.9328886,
+      "latitude": 57.030632,
+      "longitude": 28.932777,
       "phone": "+7 (81146) 2-27-06",
       "opening_hours": null,
-      "website": "https://ostrovmb.ru/index/filial_pushkinogorskij/0-63",
+      "website": "https://pushgori-crb.ru",
       "social_url": null,
-      "yandex_url": null,
-      "yandex_id": null,
+      "yandex_url": "https://yandex.ru/maps/org/pushkinogorskaya_mezhrayonnaya_bolnitsa/10683522075/",
+      "yandex_id": "10683522075",
       "osm_id": null,
       "sources": [
+        {
+          "type": "YANDEX",
+          "url": "https://yandex.ru/maps/org/pushkinogorskaya_mezhrayonnaya_bolnitsa/10683522075/",
+          "entity_id": "10683522075",
+          "checked_at": "2026-07-03T10:05:00Z",
+          "supports": [
+            "existence",
+            "public_name",
+            "category",
+            "address",
+            "coordinates",
+            "phone",
+            "active_status"
+          ]
+        },
         {
           "type": "OFFICIAL_WEBSITE",
           "url": "https://ostrovmb.ru/index/filial_pushkinogorskij/0-63",
           "entity_id": null,
-          "checked_at": "2026-07-02T17:34:19Z",
+          "checked_at": "2026-07-03T10:05:00Z",
           "supports": [
             "existence",
             "name",
@@ -1819,28 +1848,28 @@
           ]
         },
         {
-          "type": "GOVERNMENT_REGISTRY",
-          "url": "https://ostrovmb.ru/index/filial_pushkinogorskij/0-63",
+          "type": "OFFICIAL_WEBSITE",
+          "url": "https://pushgori-crb.ru",
           "entity_id": null,
-          "checked_at": "2026-07-02T17:34:19Z",
+          "checked_at": "2026-07-03T10:05:00Z",
           "supports": [
             "existence",
-            "name"
+            "public_name"
           ]
         }
       ],
-      "source_checked_at": "2026-07-02T17:34:19Z",
-      "existence_status": "OFFICIAL_PRIMARY",
-      "name_status": "YANDEX_ACTIVE",
+      "source_checked_at": "2026-07-03T10:05:00Z",
+      "existence_status": "MULTISOURCE_CONFIRMED",
+      "name_status": "MULTISOURCE_CONFIRMED",
       "category_status": "OFFICIAL_PRIMARY",
-      "address_status": "YANDEX_ACTIVE",
+      "address_status": "MULTISOURCE_CONFIRMED",
       "coordinates_status": "YANDEX_ACTIVE",
       "phone_status": "OFFICIAL_PRIMARY",
       "hours_status": "UNVERIFIED",
       "active_status": "ACTIVE",
-      "conflict_notes": null,
+      "conflict_notes": "Ликвидация прежнего самостоятельного юрлица; помощь продолжается как филиал Островской МБ",
       "decision": "KEEP",
-      "decision_reason": "Official hospital branch page",
+      "decision_reason": "Module 5: UPDATE_VERIFIED — active hospital branch, public map name",
       "verification_note": "Детская консультация: +7 (81146) 2-18-97",
       "seed_as_reference": true
     },
@@ -2129,51 +2158,63 @@
     },
     {
       "stable_key": "school-1-lenina-30",
-      "public_name": "Средняя школа №1",
-      "aliases": [],
+      "public_name": "Пушкиногорская средняя общеобразовательная школа имени А.С. Пушкина",
+      "aliases": [
+        "Средняя школа №1",
+        "Школа им. А.С. Пушкина"
+      ],
       "category": "school",
       "scope": "VILLAGE",
-      "address": "ул. Ленина, 30",
-      "latitude": 57.0255,
-      "longitude": 28.9095,
-      "phone": null,
+      "address": "ул. Лермонтова, 13",
+      "latitude": 57.024842,
+      "longitude": 28.933864,
+      "phone": "+7 (81146) 2-13-30",
       "opening_hours": null,
-      "website": null,
+      "website": "http://pushschool.ucoz.ru",
       "social_url": null,
-      "yandex_url": "https://yandex.ru/maps/?text=%D0%A8%D0%BA%D0%BE%D0%BB%D0%B0%20%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%93%D0%BE%D1%80%D1%8B",
-      "yandex_id": null,
+      "yandex_url": "https://yandex.ru/maps/org/pushkinogorskaya_shkola_srednego_obshchego_obrazovaniya_im_a_s_pushkina/1040866154/",
+      "yandex_id": "1040866154",
       "osm_id": null,
       "sources": [
         {
           "type": "YANDEX",
-          "url": "https://yandex.ru/maps/?text=%D0%A8%D0%BA%D0%BE%D0%BB%D0%B0%20%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%93%D0%BE%D1%80%D1%8B",
-          "entity_id": null,
-          "checked_at": "2026-07-02T17:34:19Z",
+          "url": "https://yandex.ru/maps/org/pushkinogorskaya_shkola_srednego_obshchego_obrazovaniya_im_a_s_pushkina/1040866154/",
+          "entity_id": "1040866154",
+          "checked_at": "2026-07-03T10:05:00Z",
           "supports": [
             "existence",
-            "name",
+            "public_name",
             "category",
             "address",
             "coordinates",
             "phone",
-            "opening_hours",
             "active_status"
+          ]
+        },
+        {
+          "type": "OFFICIAL_WEBSITE",
+          "url": "http://pushschool.ucoz.ru",
+          "entity_id": null,
+          "checked_at": "2026-07-03T10:05:00Z",
+          "supports": [
+            "existence",
+            "public_name"
           ]
         }
       ],
-      "source_checked_at": "2026-07-02T17:34:19Z",
-      "existence_status": "YANDEX_ACTIVE",
-      "name_status": "YANDEX_ACTIVE",
+      "source_checked_at": "2026-07-03T10:05:00Z",
+      "existence_status": "MULTISOURCE_CONFIRMED",
+      "name_status": "MULTISOURCE_CONFIRMED",
       "category_status": "YANDEX_ACTIVE",
       "address_status": "YANDEX_ACTIVE",
       "coordinates_status": "YANDEX_ACTIVE",
-      "phone_status": "UNVERIFIED",
+      "phone_status": "YANDEX_ACTIVE",
       "hours_status": "UNVERIFIED",
       "active_status": "ACTIVE",
-      "conflict_notes": null,
+      "conflict_notes": "ул. Ленина, 30 — ошибочный legacy-адрес; физическое здание — Лермонтова, 13",
       "decision": "RESTORE",
-      "decision_reason": "Village school — phone not published without official source",
-      "verification_note": null,
+      "decision_reason": "Module 5: UPDATE_VERIFIED физический адрес школы",
+      "verification_note": "Санаторная школа-интернат у ул. Ленина — отдельное учреждение, не дубль",
       "seed_as_reference": true
     },
     {
