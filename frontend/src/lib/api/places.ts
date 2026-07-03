@@ -21,9 +21,9 @@ export function createPlacesApi(client: HttpClient) {
       return client.request<MapFilterMode[]>("/places/map/modes");
     },
 
-    getPlaces(params?: Record<string, string>) {
+    getPlaces(params?: Record<string, string>, init?: RequestInit) {
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
-      return client.request<PlaceListResponse>(`/places${query}`);
+      return client.request<PlaceListResponse>(`/places${query}`, init);
     },
 
     getPlace(id: number) {

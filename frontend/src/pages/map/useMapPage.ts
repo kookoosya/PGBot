@@ -12,6 +12,12 @@ import { api } from "@/lib/api/index";
 import type { ComplaintType } from "@/lib/api/types/issues";
 import type { MapFilterMode, MapRoute, MapStats, Place, PlaceDetail, TaxiService } from "@/lib/api/types/places";
 
+import {
+  boundsToQueryParams,
+  createPlacesRequestController,
+  isPlacesAbortError,
+} from "./mapPlacesRequest";
+
 export function useMapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<PlaceDetail | null>(null);
@@ -48,6 +54,7 @@ export function useMapPage() {
   const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
   const boundsPausedRef = useRef(false);
+  const placesRequestRef = useRef(createPlacesRequestController());
 
   useEffect(() => {
     registerServiceWorker();
@@ -129,21 +136,22 @@ export function useMapPage() {
     if (isLodging) {
       params.district = "true";
     } else if (b) {
-      params.south = String(b.south);
-      params.west = String(b.west);
-      params.north = String(b.north);
-      params.east = String(b.east);
+      Object.assign(params, boundsToQueryParams(b));
     }
+    const { requestId, signal } = placesRequestRef.current.start();
     setPlacesLoading(true);
     setPlacesError(false);
     api
-      .getPlaces(params)
+      .getPlaces(params, { signal })
       .then((r) => {
+        if (!placesRequestRef.current.isLatest(requestId)) return;
         setPlaces(r.items);
         cachePlacesForOffline(r.items);
         setPlacesLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (!placesRequestRef.current.isLatest(requestId)) return;
+        if (isPlacesAbortError(err)) return;
         const cached = getOfflinePlaces();
         if (cached.length) {
           const filtered = category

@@ -85,9 +85,6 @@ export function ClusterLayer({
       marker.on("click", () => onSelect(p.id));
       group.addLayer(marker);
     });
-    return () => {
-      group.clearLayers();
-    };
   }, [places, map, onSelect]);
 
   return null;
