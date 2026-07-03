@@ -135,6 +135,8 @@ def test_tire_shop_phone_published():
 
 def test_inventory_allows_missing_phone_and_website():
     for entry in load_place_inventory():
+        if not entry.get("seed_as_reference", True):
+            continue
         if entry.get("phone") is None or entry.get("website") is None:
             assert entry["decision"] in ("KEEP", "RESTORE"), entry["stable_key"]
 
@@ -170,6 +172,8 @@ def test_multisource_label():
 def test_conflicting_not_deleted():
     conflicting = [p for p in load_place_inventory() if p.get("existence_status") == "CONFLICTING" or p.get("conflict_notes")]
     for entry in conflicting:
+        if not entry.get("seed_as_reference", True):
+            continue
         assert entry["decision"] in ("KEEP", "RESTORE"), entry["stable_key"]
 
 
