@@ -1,19 +1,26 @@
 # Module 11 — Village school count reconciliation
 
-**Baseline:** `383536fe36cfe11a6d4f603095e0e1f9529e5b34`  
+**Baseline:** `550eb482e5d44ab3ccc239e5fc3f24f1f65f329b`
+
+**Prior erroneous closure:** отчёт с baseline `383536f` и SHA `75888de` закрыт преждевременно; модуль переоткрыт с baseline rules-commit.
 **Decision:** `KEEP_BOTH_VERIFIED`  
-**Production `school` count:** `2` (unchanged, correct)
+**Status:** production verification pending new module commit HEAD
+
+## Production school records (pre-step-12, `/health` = `75888de`)
+
+| prod id | stable_key | public_name | address | coordinates | yandex_id |
+|---------|------------|-------------|---------|-------------|-----------|
+| 344 | `school-1-lenina-30` | Пушкиногорская средняя общеобразовательная школа имени А.С. Пушкина | ул. Лермонтова, 13 | 57.024842, 28.933864 | `1040866154` |
+| 355 | `art-school-geychenko-pushkinskaya-3` | Пушкиногорская школа искусств им. С. С. Гейченко | ул. Пушкинская, 3 | 57.0251, 28.9142 | `1036116088` |
+
+API: `/api/v1/places?scope=VILLAGE&category=school` → `total: 2`.
+Нет записи с адресом ул. Ленина, 30.
 
 ## 1. Why stats shows `school: 2`
 
-`scope=VILLAGE` + `category=school` + `seed_as_reference=true` + active inventory yields **two** entries:
+`scope=VILLAGE` + `category=school` + `seed_as_reference=true` + active inventory → **две** записи (см. таблицу выше).
 
-| # | stable_key | public_name | address | yandex_id |
-|---|------------|-------------|---------|-----------|
-| 1 | `school-1-lenina-30` | Пушкиногорская средняя общеобразовательная школа имени А.С. Пушкина | ул. Лермонтова, 13 | `1040866154` |
-| 2 | `art-school-geychenko-pushkinskaya-3` | Пушкиногорская школа искусств им. С. С. Гейченко | ул. Пушкинская, 3 | `1036116088` |
-
-**Not** the sanatorium school-interhat. That institution is **not** in inventory and **not** seeded.
+**Не** санаторная школа-интернат (ул. Ленина, 5) — отдельное учреждение, **не** в seed.
 
 ## 2. Main school (`school-1-lenina-30`)
 
@@ -22,97 +29,61 @@
 | Address | ул. Лермонтова, 13 |
 | Phone | +7 (81146) 2-13-30 |
 | Website | http://pushschool.ucoz.ru |
-| Coordinates | 57.024842, 28.933864 |
-| Status | ACTIVE, MULTISOURCE_CONFIRMED |
+| decision | RESTORE |
+| active_status | ACTIVE |
 
-**Sources**
+**Sources:** Yandex `1040866154`; http://pushschool.ucoz.ru; [municipality schools](https://pushgory.gosuslugi.ru/spravochnik/shkoly/) — МБОУ СОШ им. А.С. Пушкина, Лермонтова 13.
 
-- Yandex Maps org `1040866154`
-- Official site http://pushschool.ucoz.ru
-- Municipality schools directory: https://pushgory.gosuslugi.ru/spravochnik/shkoly/ — «МБОУ Пушкиногорская СОШ имени А.С. Пушкина», Лермонтова 13, +7 (81146) 2-13-30
-
-**Legacy:** `ул. Ленина, 30` in `conflict_notes` only — erroneous old address, not a second public record.
+**Legacy:** ул. Ленина, 30 только в `conflict_notes` — ошибочный старый адрес, не вторая карточка.
 
 ## 3. Second school (`art-school-geychenko-pushkinskaya-3`)
 
 | Field | Value |
 |-------|-------|
-| Type | МБО ДО (дополнительное образование), not general SOSH |
+| Type | МБО ДО дополнительного образования |
 | Address | ул. Пушкинская, 3 |
-| Coordinates | 57.0251, 28.9142 |
-| Phone | UNVERIFIED (official +7 (81146) 2-37-55 not published — Yandex card has no confirmed phone) |
-| Status | ACTIVE, MULTISOURCE_CONFIRMED |
+| Phone | null (`phone_status: UNVERIFIED`) |
+| decision | RESTORE |
+| active_status | ACTIVE |
 
-**Sources**
+**Sources:** Yandex `1036116088`; [municipality orgs](https://pushgory.gosuslugi.ru/ofitsialno/struktura-munitsipalnogo-obrazovaniya/munitsipalnye-podvedomstvennye-organizatsii/) — МБО ДО ШИ им. С.С. Гейченко, Пушкинская 3; ОГРН `1156027004495` (active).
 
-- Yandex Maps org `1036116088`
-- Municipality subordinate orgs: https://pushgory.gosuslugi.ru/ofitsialno/struktura-munitsipalnogo-obrazovaniya/munitsipalnye-podvedomstvennye-organizatsii/ — МБО ДО «ШИ имени С.С. Гейченко», Пушкинская 3
-- RBC / Tochka registry: ОГРН `1156027004495`, active as of 2026
+## 4. Sanatorium (out of scope for count)
 
-## 4. Sanatorium (investigated, not in production)
-
-| Field | Value |
-|-------|-------|
-| Name | ГБОУ «Пушкиногорская санаторная школа-интернат» |
-| Official address | **ул. Ленина, 5** (not 30) |
-| Phone | +7 (81146) 2-13-29 |
-| Status | Active separate legal entity (ОГРН `1026002142363`) |
-
-Listed on municipality schools page alongside SOSH. **Intentionally excluded** from portal seed (Module 5): no stable_key, `seed_as_reference` absent.
-
-**Conclusion:** Sanatorium does **not** explain `school: 2`. It is a third school in the settlement, outside current catalog scope.
+ГБОУ «Пушкиногорская санаторная школа-интернат» — ул. **Ленина, 5**, +7 (81146) 2-13-29.
+[Official directory](https://pushgory.gosuslugi.ru/spravochnik/shkoly/) lists it separately from SOSH.
+Not in inventory seed → does **not** contribute to `school: 2`.
 
 ## 5. Duplicate analysis
 
 | Hypothesis | Result |
 |------------|--------|
-| Main SOSH duplicate of art school | **No** — different legal entities, addresses, Yandex IDs |
-| Main SOSH duplicate at Lenina 30 | **No** — legacy address only in notes |
-| Art school = sanatorium | **No** — Pushkinskaya 3 vs Lenina 5 |
-| Sanatorium in production | **No** — not in inventory seed |
-| Two real village schools in catalog | **Yes** |
+| SOSH duplicate of art school | **No** — different entities, addresses, Yandex IDs |
+| Second record = Lenina 30 legacy | **No** — no public address Lenina 30 |
+| Second record = sanatorium | **No** — sanatorium at Lenina 5, not seeded |
+| Two real separate schools in catalog | **Yes** |
 
-## 6. Decision rules applied
+## 6. Decision
 
-Both seeded schools are real, active, separate institutions → **KEEP_BOTH_VERIFIED**, keep `school: 2`.
+**KEEP_BOTH_VERIFIED** — сохранить `school: 2`; не удалять школу искусств; не менять адрес СОШ.
 
-## 7. Changes made
+## 7. Inventory changes (from baseline `550eb48` tree)
 
-| File | Change |
-|------|--------|
-| `backend/app/data/stage-02-place-inventory.json` | Art school: official municipality source, MULTISOURCE_CONFIRMED, conflict_notes; main school: clarified verification_note |
-| `docs/factual-integrity/stage-02-place-inventory.json` | Identical copy |
-| `backend/tests/test_module11_school_reconciliation.py` | Targeted tests |
-| This audit | — |
+Already present in tree (commits `75888de` ancestry):
 
-Main school address **unchanged** (already verified Лермонтова 13).
+- Art school: `OFFICIAL_WEBSITE` municipality source, `MULTISOURCE_CONFIRMED`, `conflict_notes`
+- Main school: `verification_note` clarifies pair SOSH + art school vs sanatorium
 
 ## 8. Cannot be verified
 
-- Art school public phone (+7 (81146) 2-37-55) on portal — official municipality lists it; Yandex org card does not confirm → `phone_status: UNVERIFIED`, phone not published.
-- Production `/api/v1/places` live fetch from agent network — **Cannot be verified** locally (timeout); rely on inventory seed logic + post-deploy smoke (CI smoke-prod job).
+- Art school phone on portal — municipality lists +7 (81146) 2-37-55; Yandex org card unconfirmed → not published.
+- Local `/api/v1/places/stats?scope=VILLAGE` — intermittent timeout from agent network; use places list + deploy smoke.
 
-## 9. Expected production after deploy
+## 9. Targeted tests
 
-- `/health` → new commit SHA
-- `school: 2` in village stats
-- Two map cards: SOSH (Лермонтова 13) + art school (Пушкинская 3)
-- No school at ул. Ленина, 30
-- Total village catalog: 45
+`backend/tests/test_module11_school_reconciliation.py` — 11 tests; plus Module 5 school tests in `test_core_conflicts_inventory.py`.
 
 ---
 
-**MODULE 11 decision:** `KEEP_BOTH_VERIFIED`  
+**MODULE 11:** NOT COMPLETE until post-deploy verification at final HEAD
 **MODULE 12:** NOT STARTED
-
-## Post-deploy verification (2026-07-03)
-
-| Check | Result |
-|-------|--------|
-| Final SHA | `75888dec7dbb1815b6337c6243a19cac3fa2ac85` |
-| `/health` git_commit | `75888de` |
-| CI run | `28678504579` — backend, frontend, smoke-prod: success |
-| Deploy | `agent-deploy.mjs` attempt 4 — smoke 33 OK, 0 FAIL |
-| `/api/v1/places?category=school` | 2 items: id 344 (Лермонтова 13), id 355 (Пушкинская 3) |
-| Lenina 30 school address | absent |
-| Village catalog | 45 (unchanged) |
