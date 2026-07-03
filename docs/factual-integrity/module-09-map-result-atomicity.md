@@ -57,6 +57,24 @@ ClusterLayer получал все loaded markers; расхождение был
 - Production cluster DOM sum vs visible IDs in headless
 - Exact missing place ID on production mobile without live API trace
 
+## Post-deploy verification (2026-07-03)
+
+**Final SHA:** `a9b04ea7df1086cfa9a23b40a54005b707005fa3`  
+**CI:** [#430](https://github.com/kookoosya/PGBot/actions/runs/28673942197) — success  
+**Deploy:** attempt 2 via `agent-deploy.mjs`; smoke 33 OK  
+**`/health`:** `a9b04ea`
+
+| Check | Result |
+|-------|--------|
+| Filter loading | «Обновляем список…», visible=null, markers=0 |
+| Supermarket filter | visible=5, list IDs=5, clusters=5 |
+| Mobile visible | **29** (was 30) |
+| Mobile list IDs | **29** |
+| Mobile cluster sum | **29** |
+| Desktop visible | 45 = list IDs = clusters |
+
+**Screenshots:** `docs/screenshots/module-09-deploy/` (не коммитятся)
+
 ## Module 10
 
 **NOT STARTED.**
