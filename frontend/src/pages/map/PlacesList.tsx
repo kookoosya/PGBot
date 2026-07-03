@@ -1,8 +1,7 @@
 import { LiteraryEmptyState, LiteraryInlineLoader } from "@/components/literary";
 import type { Place } from "@/lib/api/types/places";
 import { EMPTY_STATES } from "@/lib/literaryCopy";
-import { CategoryIcon } from "./categoryIcons";
-import { CATEGORY_COLORS } from "./constants";
+import { CATEGORY_ICONS } from "./constants";
 
 type PlacesListProps = {
   places: Place[];
@@ -61,13 +60,7 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
       </p>
       {places.map((p) => (
         <button key={p.id} className="org-list-card" onClick={() => onOpenPlace(p.id)}>
-          <span className="org-list-icon">
-            <CategoryIcon
-              category={p.category}
-              size={22}
-              color={CATEGORY_COLORS[p.category] ?? CATEGORY_COLORS.other}
-            />
-          </span>
+          <span className="org-list-icon">{CATEGORY_ICONS[p.category] || "📍"}</span>
           <div className="org-list-body">
             <div className="flex justify-between gap-2 items-start">
               <strong className="text-sm text-left">{p.name}</strong>

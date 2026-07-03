@@ -11,7 +11,7 @@ import { MAP_TILE_OSM, MAP_TILE_SAT } from "@/lib/mapTiles";
 import { PAGE_SECTIONS } from "@/lib/literaryCopy";
 
 import { MAP_CENTER } from "./map/constants";
-import { ClusterLayer, FlyToPlace, FlyToRoute, MapEvents, MapSetCenter, RouteStopsLayer } from "./map/MapLayers";
+import { ClusterLayer, FlyToPlace, FlyToRoute, MapAttributionPrefix, MapEvents, MapSetCenter, RouteStopsLayer } from "./map/MapLayers";
 import { MapMoreCategories } from "./map/MapMoreCategories";
 import { MapServicesTabs } from "./map/MapServicesTabs";
 import { MapStatsRibbon } from "./map/MapStatsRibbon";
@@ -102,6 +102,7 @@ export function MapPage() {
       <div className="flex flex-col lg:flex-row map-layout">
         <div className={`map-pane flex-1 relative ${map.mobileTab === "list" ? "map-pane-hidden-mobile" : ""}`}>
           <MapContainer center={mapCenter} zoom={14} className="map-canvas z-0" scrollWheelZoom>
+            <MapAttributionPrefix />
             <TileLayer
               attribution={map.mapStyle === "scheme"
                 ? "© OpenStreetMap · справочник посёлка"

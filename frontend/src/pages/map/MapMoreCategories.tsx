@@ -1,5 +1,4 @@
-import { CategoryIcon } from "./categoryIcons";
-import { CATEGORY_COLORS } from "./constants";
+import { CATEGORY_ICONS } from "./constants";
 
 type MapMoreCategoriesProps = {
   topCategories: string[];
@@ -32,13 +31,7 @@ export function MapMoreCategories({
             className={`map-filter-chip${activeCategory === c.value ? " map-filter-chip-active" : ""}`}
             onClick={() => onSelect(activeCategory === c.value ? "" : c.value)}
           >
-            <CategoryIcon
-              category={c.value}
-              className="map-category-icon"
-              size={14}
-              color={CATEGORY_COLORS[c.value] ?? CATEGORY_COLORS.other}
-            />{" "}
-            {c.label}
+            {CATEGORY_ICONS[c.value] ?? "📍"} {c.label}
           </button>
         ))}
       </div>

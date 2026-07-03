@@ -3,7 +3,16 @@ import { useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
 import type { MapRoute, Place } from "@/lib/api/types/places";
+import { applyLeafletAttributionPrefix } from "./mapAttribution";
 import { makeIcon, makeRouteStopIcon } from "./icons";
+
+export function MapAttributionPrefix() {
+  const map = useMap();
+  useEffect(() => {
+    applyLeafletAttributionPrefix(map);
+  }, [map]);
+  return null;
+}
 
 export function MapSetCenter({ center }: { center: [number, number] | null }) {
   const map = useMap();

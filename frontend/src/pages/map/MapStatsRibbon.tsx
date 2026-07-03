@@ -1,8 +1,7 @@
 import type { MapStats } from "@/lib/api/types/places";
 import { formatSyncAge } from "@/lib/formatSyncAge";
 
-import { CategoryIcon } from "./categoryIcons";
-import { CATEGORY_COLORS } from "./constants";
+import { CATEGORY_ICONS } from "./constants";
 
 type MapStatsRibbonProps = {
   stats: MapStats | null;
@@ -76,6 +75,7 @@ export function MapStatsRibbon({
         <div className="map-stats-ribbon-bars">
           {entries.map(([cat, count]) => {
             const label = labelFor(cat);
+            const icon = CATEGORY_ICONS[cat] ?? "📍";
             const active = activeCategory === cat;
             return (
               <button
@@ -86,13 +86,7 @@ export function MapStatsRibbon({
                 title={`${label}: ${count}`}
               >
                 <span className="map-cat-bar-label">
-                  <CategoryIcon
-                    category={cat}
-                    className="map-category-icon"
-                    size={15}
-                    color={CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.other}
-                  />
-                  {label}
+                  {icon} {label}
                 </span>
                 <span className="map-cat-bar-track" aria-hidden>
                   <span

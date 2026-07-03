@@ -2,8 +2,7 @@ import { geoNavigateUrl, yandexMapsPointUrl, yandexRouteUrl } from "@/lib/mapLin
 import { Button } from "@/components/ui/button";
 import type { ComplaintType } from "@/lib/api/types/issues";
 import type { PlaceDetail } from "@/lib/api/types/places";
-import { CategoryIcon } from "./categoryIcons";
-import { CATEGORY_COLORS } from "./constants";
+import { CATEGORY_ICONS } from "./constants";
 import { RatingBadge } from "./RatingBadge";
 import { formatPlaceNote } from "./utils";
 import type { MapPageState } from "./useMapPage";
@@ -57,13 +56,7 @@ export function PlaceDetailPanel({
       </button>
 
       <div className="org-detail-header">
-        <span className="org-detail-icon">
-          <CategoryIcon
-            category={selected.category}
-            size={28}
-            color={CATEGORY_COLORS[selected.category] ?? CATEGORY_COLORS.other}
-          />
-        </span>
+        <span className="org-detail-icon">{CATEGORY_ICONS[selected.category] || "📍"}</span>
         <div>
           <h3 className="text-xl font-bold leading-tight">{selected.name}</h3>
           <p className="text-sm text-muted-foreground">{selected.category_label}</p>
