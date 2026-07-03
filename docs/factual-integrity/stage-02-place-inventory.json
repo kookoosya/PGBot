@@ -1014,20 +1014,32 @@
             "opening_hours",
             "active_status"
           ]
+        },
+        {
+          "type": "OFFICIAL_WEBSITE",
+          "url": "https://pushgory.gosuslugi.ru/ofitsialno/struktura-munitsipalnogo-obrazovaniya/munitsipalnye-podvedomstvennye-organizatsii/",
+          "entity_id": null,
+          "checked_at": "2026-07-03T18:50:00Z",
+          "supports": [
+            "existence",
+            "public_name",
+            "address",
+            "active_status"
+          ]
         }
       ],
-      "source_checked_at": "2026-07-02T17:34:19Z",
-      "existence_status": "YANDEX_ACTIVE",
-      "name_status": "YANDEX_ACTIVE",
+      "source_checked_at": "2026-07-03T18:50:00Z",
+      "existence_status": "MULTISOURCE_CONFIRMED",
+      "name_status": "MULTISOURCE_CONFIRMED",
       "category_status": "YANDEX_ACTIVE",
       "address_status": "YANDEX_ACTIVE",
       "coordinates_status": "YANDEX_ACTIVE",
       "phone_status": "UNVERIFIED",
       "hours_status": "UNVERIFIED",
       "active_status": "ACTIVE",
-      "conflict_notes": null,
+      "conflict_notes": "МБО ДО доп. образования; не дубль МБОУ СОШ (ул. Лермонтова, 13); санаторная школа-интернат (ул. Ленина, 5) — отдельное учреждение вне seed",
       "decision": "RESTORE",
-      "decision_reason": "Yandex org school of arts",
+      "decision_reason": "Module 11: KEEP_BOTH_VERIFIED — школа искусств, отдельное МБО ДО",
       "verification_note": null,
       "seed_as_reference": true
     },
@@ -2214,7 +2226,7 @@
       "conflict_notes": "ул. Ленина, 30 — ошибочный legacy-адрес; физическое здание — Лермонтова, 13",
       "decision": "RESTORE",
       "decision_reason": "Module 5: UPDATE_VERIFIED физический адрес школы",
-      "verification_note": "Санаторная школа-интернат у ул. Ленина — отдельное учреждение, не дубль",
+      "verification_note": "Module 11: school:2 — СОШ (Лермонтова 13) + школа искусств (Пушкинская 3). ГБОУ санаторная школа-интернат (ул. Ленина, 5) — отдельное учреждение, не в seed",
       "seed_as_reference": true
     },
     {
