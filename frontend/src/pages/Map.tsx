@@ -31,6 +31,9 @@ export function MapPage() {
   useDocumentTitle(copy.title);
   const map = useMapPage();
 
+  const listCount = map.currentAreaCount ?? map.places.length;
+  const hasActiveFilter = Boolean(map.category || map.shopsOnly || map.usefulOnly || map.searchDebounced);
+
   const mapCenter = useMemo<[number, number]>(() => {
     if (map.mapStats?.center) {
       return [map.mapStats.center.lat, map.mapStats.center.lng];
@@ -80,6 +83,8 @@ export function MapPage() {
         categories={map.categories}
         activeCategory={map.category}
         onCategoryClick={map.applyCategoryFilter}
+        currentAreaCount={map.currentAreaCount}
+        hasActiveFilter={Boolean(map.category || map.shopsOnly || map.usefulOnly || map.searchDebounced)}
       />
 
       <div className="map-mobile-tabs lg:hidden page-section pb-2">
@@ -95,7 +100,7 @@ export function MapPage() {
           className={`map-mobile-tab ${map.mobileTab === "list" ? "map-mobile-tab-active" : ""}`}
           onClick={() => map.setMobileTab("list")}
         >
-          📋 Список ({map.places.length})
+          📋 Список ({listCount})
         </button>
       </div>
 
@@ -166,6 +171,7 @@ export function MapPage() {
               categories={map.categories}
               activeCategory={map.category}
               onSelect={map.applyCategoryFilter}
+              categoryCounts={map.mapStats?.by_category ?? {}}
             />
             <div className="map-filter-row">
               <button
@@ -207,6 +213,8 @@ export function MapPage() {
               places={map.places}
               placesLoading={map.placesLoading}
               placesError={map.placesError}
+              count={listCount}
+              hasActiveFilter={hasActiveFilter}
               onOpenPlace={handleOpenPlace}
               onRetry={() => map.loadPlaces(map.boundsRef.current ?? undefined)}
             />

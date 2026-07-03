@@ -51,6 +51,7 @@ export function useMapPage() {
   const [mapStats, setMapStats] = useState<MapStats | null>(null);
   const [placesLoading, setPlacesLoading] = useState(true);
   const [placesError, setPlacesError] = useState(false);
+  const [placesTotal, setPlacesTotal] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
   const boundsRef = useRef<{ south: number; west: number; north: number; east: number } | null>(null);
   const boundsPausedRef = useRef(false);
@@ -146,6 +147,7 @@ export function useMapPage() {
       .then((r) => {
         if (!placesRequestRef.current.isLatest(requestId)) return;
         setPlaces(r.items);
+        setPlacesTotal(r.total);
         cachePlacesForOffline(r.items);
         setPlacesLoading(false);
       })
@@ -158,10 +160,12 @@ export function useMapPage() {
             ? cached.filter((p) => p.category === category)
             : cached;
           setPlaces(filtered);
+          setPlacesTotal(filtered.length);
           setOfflineMsg("Нет сети — показаны сохранённые точки.");
           setPlacesLoading(false);
         } else {
           setPlaces([]);
+          setPlacesTotal(0);
           setPlacesError(true);
           setPlacesLoading(false);
         }
@@ -281,6 +285,7 @@ export function useMapPage() {
     mapReportTypes,
     search,
     setSearch,
+    searchDebounced,
     mapStyle,
     setMapStyle,
     mapModes,
@@ -302,6 +307,8 @@ export function useMapPage() {
     mapStats,
     placesLoading,
     placesError,
+    placesTotal,
+    currentAreaCount: placesTotal,
     mobileTab,
     setMobileTab,
     boundsRef,

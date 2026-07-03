@@ -130,6 +130,7 @@ describe("MapStatsRibbon", () => {
         ]}
         activeCategory=""
         onCategoryClick={() => {}}
+        currentAreaCount={3}
       />,
     );
     expect(container.textContent).toContain("🏪");
@@ -145,6 +146,7 @@ describe("MapStatsRibbon", () => {
         categories={[{ value: "supermarket", label: "Супермаркет" }]}
         activeCategory=""
         onCategoryClick={onCategoryClick}
+        currentAreaCount={2}
       />,
     );
     fireEvent.click(screen.getByTitle("Супермаркет: 2"));
@@ -168,6 +170,7 @@ describe("PlacesList", () => {
         places={[samplePlace]}
         placesLoading={false}
         placesError={false}
+        count={1}
         onOpenPlace={() => {}}
         onRetry={() => {}}
       />,

@@ -47,6 +47,8 @@ async def test_map_stats_village_excludes_district_hospitals(
     stats = await get_map_stats(db_session, scope=VILLAGE)
     assert stats.by_category.get("hospital") == 1
     assert stats.total_places == 1
+    assert stats.catalog_places == 1
+    assert sum(stats.by_category.values()) == stats.catalog_places
     assert stats.village_places == 1
     assert stats.district_places == 1
 

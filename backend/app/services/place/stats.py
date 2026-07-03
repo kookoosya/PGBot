@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.place_scope import MUNICIPAL_DISTRICT, NEARBY_ATTRACTION, VILLAGE
@@ -21,6 +21,7 @@ from app.models.taxi import TaxiService
 from app.services.map_routes import get_map_routes
 
 from .schemas import EFFECTIVE_RATING, MapStatsResult
+from .search import settlement_bbox
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -46,6 +47,19 @@ def _scope_filter(scope: str):
     return Place.scope == VILLAGE
 
 
+def _mappable_coord_filter():
+    """Active places with non-degenerate coordinates inside the default settlement view."""
+    lat_min, lat_max, lng_min, lng_max = settlement_bbox()
+    return and_(
+        Place.latitude >= lat_min,
+        Place.latitude <= lat_max,
+        Place.longitude >= lng_min,
+        Place.longitude <= lng_max,
+        Place.latitude != 0,
+        Place.longitude != 0,
+    )
+
+
 async def _count_by_scope(db: AsyncSession) -> dict[str, int]:
     rows = await db.execute(
         select(Place.scope, func.count(Place.id))
@@ -65,8 +79,13 @@ async def get_map_stats(db: AsyncSession, *, scope: str = VILLAGE) -> MapStatsRe
     scoped_filter = active_filter & _scope_filter(scope)
     try:
         scope_counts = await _count_by_scope(db)
-        total_places = (
+        catalog_places = (
             await db.execute(select(func.count(Place.id)).where(scoped_filter))
+        ).scalar() or 0
+        mappable_places = (
+            await db.execute(
+                select(func.count(Place.id)).where(scoped_filter, _mappable_coord_filter())
+            )
         ).scalar() or 0
 
         cat_rows = await db.execute(
@@ -118,7 +137,7 @@ async def get_map_stats(db: AsyncSession, *, scope: str = VILLAGE) -> MapStatsRe
         reference_places = (
             await db.execute(
                 select(func.count(Place.id)).where(
-                    active_filter,
+                    scoped_filter,
                     Place.external_source == "reference",
                 )
             )
@@ -129,15 +148,18 @@ async def get_map_stats(db: AsyncSession, *, scope: str = VILLAGE) -> MapStatsRe
 
     route_count = len(get_map_routes())
     logger.debug(
-        "Map stats: places=%s reviews=%s complaints=%s taxi=%s routes=%s",
-        total_places,
+        "Map stats: places=%s mappable=%s reviews=%s complaints=%s taxi=%s routes=%s",
+        catalog_places,
+        mappable_places,
         total_reviews,
         total_complaints,
         active_taxi_count,
         route_count,
     )
     return MapStatsResult(
-        total_places=total_places,
+        total_places=catalog_places,
+        catalog_places=catalog_places,
+        mappable_places=mappable_places,
         by_category=by_category,
         last_sync=last_sync,
         center_lat=settings.MAP_CENTER_LAT,

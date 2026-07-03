@@ -186,11 +186,15 @@ class MapStatsResult:
     village_places: int = 0
     nearby_places: int = 0
     district_places: int = 0
+    catalog_places: int = 0
+    mappable_places: int = 0
 
     def to_response(self) -> MapStatsResponse:
         """Serialize to the public API schema."""
         return MapStatsResponse(
             total_places=self.total_places,
+            catalog_places=self.catalog_places or self.total_places,
+            mappable_places=self.mappable_places or self.total_places,
             by_category=self.by_category,
             last_sync=self.last_sync,
             center={"lat": self.center_lat, "lng": self.center_lng},

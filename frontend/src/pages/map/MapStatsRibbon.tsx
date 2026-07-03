@@ -8,6 +8,8 @@ type MapStatsRibbonProps = {
   categories: { value: string; label: string }[];
   activeCategory: string;
   onCategoryClick: (category: string) => void;
+  currentAreaCount: number | null;
+  hasActiveFilter?: boolean;
 };
 
 const FALLBACK_LABELS: Record<string, string> = {
@@ -35,21 +37,42 @@ const FALLBACK_LABELS: Record<string, string> = {
   towing: "Эвакуатор",
 };
 
+const TOP_CATEGORY_LIMIT = 8;
+
+export function sumCategoryCounts(byCategory: Record<string, number>): number {
+  return Object.values(byCategory).reduce((sum, n) => sum + n, 0);
+}
+
+export function topCategoryEntries(byCategory: Record<string, number>, limit = TOP_CATEGORY_LIMIT) {
+  return Object.entries(byCategory)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit);
+}
+
+export function hiddenCategoryTotal(byCategory: Record<string, number>, limit = TOP_CATEGORY_LIMIT): number {
+  const total = sumCategoryCounts(byCategory);
+  const visible = topCategoryEntries(byCategory, limit).reduce((sum, [, n]) => sum + n, 0);
+  return Math.max(0, total - visible);
+}
+
 export function MapStatsRibbon({
   stats,
   categories,
   activeCategory,
   onCategoryClick,
+  currentAreaCount,
+  hasActiveFilter = false,
 }: MapStatsRibbonProps) {
   if (!stats) return null;
 
   const labelFor = (cat: string) =>
     categories.find((c) => c.value === cat)?.label ?? FALLBACK_LABELS[cat] ?? cat;
 
-  const entries = Object.entries(stats.by_category)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+  const entries = topCategoryEntries(stats.by_category);
   const maxCount = entries[0]?.[1] ?? 1;
+  const catalogTotal = stats.catalog_places ?? stats.total_places;
+  const mappableTotal = stats.mappable_places ?? catalogTotal;
+  const hiddenTotal = hiddenCategoryTotal(stats.by_category);
   const syncHours = stats.auto_sync_hours ?? 6;
   const syncHint = stats.last_sync
     ? `Обновлено ${formatSyncAge(stats.last_sync)} · авто каждые ${syncHours} ч`
@@ -59,15 +82,27 @@ export function MapStatsRibbon({
     ? `${refCount} записей справочника портала · остальное — открытые карты${stats.yandex_live ? " и Яндекс" : " (OSM)"}`
     : "Точки из открытых карт — уточняйте адрес и часы перед визитом";
 
+  const areaLabel = hasActiveFilter
+    ? "По текущему фильтру в области"
+    : "В текущей области";
+
   return (
     <div className="page-section pb-2">
       <div className="map-stats-ribbon" aria-label="Статистика карты">
         <div className="map-stats-ribbon-head">
           <p className="map-stats-ribbon-total m-0">
-            <strong>{stats.total_places}</strong> мест на карте
-            {refCount > 0 ? ` · ${refCount} справочник портала` : ""}
-            {stats.yandex_live ? " · живые данные Яндекс" : ""}
+            Всего в справочнике: <strong>{catalogTotal}</strong>
           </p>
+          {mappableTotal !== catalogTotal ? (
+            <p className="map-stats-ribbon-total m-0">
+              С координатами на карте: <strong>{mappableTotal}</strong>
+            </p>
+          ) : null}
+          {currentAreaCount != null ? (
+            <p className="map-stats-ribbon-total m-0">
+              {areaLabel}: <strong>{currentAreaCount}</strong>
+            </p>
+          ) : null}
           <p className="map-stats-ribbon-sync m-0" title={syncHint}>
             {syncHint}
           </p>
@@ -102,6 +137,11 @@ export function MapStatsRibbon({
             );
           })}
         </div>
+        {hiddenTotal > 0 ? (
+          <p className="map-stats-ribbon-hidden m-0 text-sm text-muted-foreground">
+            Остальные категории: <strong>{hiddenTotal}</strong> организаций · раскройте «Ещё категории» ниже
+          </p>
+        ) : null}
       </div>
     </div>
   );

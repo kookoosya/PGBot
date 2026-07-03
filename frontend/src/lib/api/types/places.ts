@@ -84,6 +84,8 @@ export interface PlaceListResponse {
 
 export interface MapStats {
   total_places: number;
+  catalog_places?: number;
+  mappable_places?: number;
   by_category: Record<string, number>;
   last_sync: string | null;
   center: { lat: number; lng: number };

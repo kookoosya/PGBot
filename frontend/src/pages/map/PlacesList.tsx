@@ -7,6 +7,8 @@ type PlacesListProps = {
   places: Place[];
   placesLoading: boolean;
   placesError: boolean;
+  count: number;
+  hasActiveFilter?: boolean;
   onOpenPlace: (id: number) => void;
   onRetry: () => void;
 };
@@ -14,14 +16,18 @@ type PlacesListProps = {
 const emptyCopy = EMPTY_STATES.mapPlaces;
 const errorCopy = EMPTY_STATES.mapPlacesError;
 
-export function PlacesList({ places, placesLoading, placesError, onOpenPlace, onRetry }: PlacesListProps) {
-  if (placesLoading) {
-    return (
-      <div className="p-4">
-        <LiteraryInlineLoader label="Загружаем точки на карте…" />
-      </div>
-    );
-  }
+export function PlacesList({
+  places,
+  placesLoading,
+  placesError,
+  count,
+  hasActiveFilter = false,
+  onOpenPlace,
+  onRetry,
+}: PlacesListProps) {
+  const countLabel = hasActiveFilter
+    ? `По текущему фильтру в области: ${count}`
+    : `В текущей области: ${count}`;
 
   if (placesError) {
     return (
@@ -40,9 +46,18 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
     );
   }
 
-  if (places.length === 0) {
+  if (placesLoading && places.length === 0) {
+    return (
+      <div className="p-4">
+        <LiteraryInlineLoader label="Загружаем точки на карте…" />
+      </div>
+    );
+  }
+
+  if (!placesLoading && places.length === 0) {
     return (
       <div className="p-3">
+        <p className="text-xs text-muted-foreground px-1 mb-2">{countLabel}</p>
         <LiteraryEmptyState
           icon={emptyCopy.icon}
           title={emptyCopy.title}
@@ -56,7 +71,8 @@ export function PlacesList({ places, placesLoading, placesError, onOpenPlace, on
   return (
     <div className="p-3 space-y-2">
       <p className="text-xs text-muted-foreground px-1">
-        {places.length} в видимой области · данные из открытых источников
+        {countLabel}
+        {placesLoading ? " · обновляем…" : ""}
       </p>
       {places.map((p) => (
         <button key={p.id} className="org-list-card" onClick={() => onOpenPlace(p.id)}>

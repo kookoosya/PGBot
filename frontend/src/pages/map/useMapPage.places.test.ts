@@ -109,9 +109,43 @@ describe("useMapPage places loading", () => {
       resolveFirst!({ items: [placeA], total: 1 });
     });
     expect(result.current.places.map((p) => p.id)).toEqual([2]);
+    expect(result.current.currentAreaCount).toBe(1);
   });
 
-  it("does not set placesError on aborted request", async () => {
+  it("updates currentAreaCount from response.total for latest request only", async () => {
+    let resolveFirst: (value: { items: Place[]; total: number }) => void;
+    let resolveSecond: (value: { items: Place[]; total: number }) => void;
+    const first = new Promise<{ items: Place[]; total: number }>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const second = new Promise<{ items: Place[]; total: number }>((resolve) => {
+      resolveSecond = resolve;
+    });
+    let call = 0;
+    getPlaces.mockImplementation(() => {
+      call += 1;
+      return call === 1 ? first : second;
+    });
+
+    const { result } = renderHook(() => useMapPage());
+
+    act(() => {
+      result.current.loadPlaces(bounds);
+      result.current.loadPlaces({ ...bounds, north: 57.035 });
+    });
+
+    await act(async () => {
+      resolveSecond!({ items: [placeB], total: 9 });
+    });
+    await waitFor(() => expect(result.current.currentAreaCount).toBe(9));
+
+    await act(async () => {
+      resolveFirst!({ items: [placeA], total: 99 });
+    });
+    expect(result.current.currentAreaCount).toBe(9);
+  });
+
+  it("does not clear currentAreaCount on AbortError", async () => {
     let rejectSecond: (reason: unknown) => void;
     const second = new Promise<{ items: Place[]; total: number }>((_, reject) => {
       rejectSecond = reject;
@@ -141,6 +175,7 @@ describe("useMapPage places loading", () => {
     });
 
     expect(result.current.placesError).toBe(false);
+    expect(result.current.currentAreaCount).toBe(1);
   });
 
   it("keeps previous places while newer request is loading", async () => {
@@ -168,11 +203,13 @@ describe("useMapPage places loading", () => {
 
     expect(result.current.places).toHaveLength(1);
     expect(result.current.placesLoading).toBe(true);
+    expect(result.current.currentAreaCount).toBe(1);
 
     await act(async () => {
       resolveSecond!({ items: [placeA, placeB], total: 2 });
     });
     await waitFor(() => expect(result.current.places).toHaveLength(2));
+    expect(result.current.currentAreaCount).toBe(2);
   });
 
   it("passes category filter on every request", async () => {

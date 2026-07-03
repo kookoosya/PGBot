@@ -95,6 +95,8 @@ class PlaceListResponse(BaseModel):
 
 class MapStatsResponse(BaseModel):
     total_places: int
+    catalog_places: int = 0
+    mappable_places: int = 0
     by_category: dict[str, int]
     last_sync: datetime | None
     center: dict[str, float]
