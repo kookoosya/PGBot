@@ -80,8 +80,19 @@ Map, inventory, Афиша, VK bot, admin UI: **unchanged**.
 - Live `201` create on production before fix (all attempts returned 400).
 - Admin UI visibility of test issue (no issue created pre-fix).
 
-Post-deploy verification required for Module 13 COMPLETE.
+## Post-deploy verification (SHA `9fc4395`)
+
+| Check | Result |
+|-------|--------|
+| `/health` | `9fc4395` ✓ |
+| Smoke | **33 OK / 0 FAIL** ✓ |
+| `POST /issues` test text | **201** — issue **#5**, `status`: `NEW` ✓ |
+| Duplicate rapid resubmit | **429** rate limit (no second issue) ✓ |
+| `school` / `catalog_places` | **2** / **45** ✓ |
+| Deploy attempt | **14** |
+
+**Production test issue ID:** **5** (MODULE 13 test text; marked in description).
 
 ## Module status
 
-Pending deploy + production re-test.
+**Module 13 COMPLETE** · Module 14 not started.
