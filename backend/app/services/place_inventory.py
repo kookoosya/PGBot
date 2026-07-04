@@ -123,6 +123,9 @@ def primary_verification_url(entry: dict[str, Any]) -> str | None:
 
 def build_public_description(entry: dict[str, Any]) -> str | None:
     parts: list[str] = []
+    aliases = [a for a in (entry.get("aliases") or []) if a]
+    if aliases:
+        parts.append("Также: " + ", ".join(aliases))
     note = entry.get("verification_note")
     if note:
         parts.append(note)

@@ -114,7 +114,11 @@ async def search_places(
             query = query.where(Place.category.in_(USEFUL_CATEGORIES))
         if params.search:
             pattern = f"%{params.search.strip()}%"
-            query = query.where(Place.name.ilike(pattern) | Place.address.ilike(pattern))
+            query = query.where(
+                Place.name.ilike(pattern)
+                | Place.address.ilike(pattern)
+                | Place.description.ilike(pattern)
+            )
         if params.min_rating is not None:
             query = query.where(EFFECTIVE_RATING >= params.min_rating)
 
