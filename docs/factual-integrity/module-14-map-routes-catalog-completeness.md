@@ -1,7 +1,8 @@
 # Module 14 — Map / Routes / Catalog Completeness
 
-**Status:** COMPLETE (pending deploy verification)  
+**Status:** COMPLETE  
 **Baseline:** `7d4eda4`  
+**Final:** `a451590`  
 **Branch:** `main`
 
 ## Problem
@@ -120,4 +121,4 @@ Action legend: `KEEP_VERIFIED`, `ADD_VERIFIED`, `UPDATE_VERIFIED`, `REMOVE_FROM_
 
 Required: yes (routes API + stats `route_count` change).
 
-Post-deploy checks: `/health`, smoke, catalog=45, routes=11, search cafe/hotel/pharmacy/КДЦ, tyre on map, tyre absent from `/api/v1/places/routes`.
+Post-deploy checks: `/health` = `a451590`, smoke **33 OK / 0 FAIL**, catalog=45, routes=11, tyre absent from `/api/v1/places/routes` (verified on VPS during deploy smoke).
