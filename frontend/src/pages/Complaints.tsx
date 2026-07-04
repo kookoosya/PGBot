@@ -39,6 +39,7 @@ export function Complaints() {
   const highlightRef = useRef<HTMLDivElement | null>(null);
   const issuesSectionRef = useRef<HTMLElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const submittingRef = useRef(false);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [issuesLoading, setIssuesLoading] = useState(false);
@@ -111,11 +112,13 @@ export function Complaints() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current || loading) return;
     if (!formRef.current?.checkValidity()) {
       formRef.current?.querySelector<HTMLElement>(":invalid")?.focus();
       formRef.current?.reportValidity();
       return;
     }
+    submittingRef.current = true;
     setLoading(true);
     setMsg("");
     try {
@@ -140,6 +143,7 @@ export function Complaints() {
       setMsgType("err");
       setMsg(err instanceof Error ? err.message : "Ошибка отправки");
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };

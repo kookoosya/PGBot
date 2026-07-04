@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.issue import Issue
 from app.schemas.analysis_result import AnalysisResult
-from app.services.gemini import GeminiAnalysisError, request_gemini_analysis
+from app.services.gemini import GeminiAnalysisError, _fallback_analysis, request_gemini_analysis
 from app.services.issue_utils import issue_display_summary
 
 from .dedup import find_similar_issues
@@ -20,9 +20,6 @@ settings = get_settings()
 
 _GEMINI_MAX_ATTEMPTS = 2
 _GEMINI_RETRY_DELAY_SEC = 0.75
-_GEMINI_FAILURE_SUMMARY = (
-    "Не удалось проанализировать обращение автоматически. Попробуйте позже."
-)
 
 
 def _is_transient_gemini_error(exc: Exception) -> bool:
@@ -39,12 +36,12 @@ def _is_transient_gemini_error(exc: Exception) -> bool:
     }
 
 
-def _gemini_failure_result(exc: Exception) -> AnalysisResult:
-    return AnalysisResult(
-        is_valid=False,
-        summary=_GEMINI_FAILURE_SUMMARY,
-        raw_response={"error": str(exc)},
-    )
+def _gemini_fallback_result(text: str, exc: Exception | None = None) -> AnalysisResult:
+    """Accept complaint with rule-based analysis when Gemini is unavailable."""
+    payload = _fallback_analysis(text)
+    if exc is not None:
+        payload = {**payload, "fallback_reason": str(exc)}
+    return AnalysisResult.from_gemini(payload)
 
 
 async def run_gemini_with_retry(text: str, context: str) -> AnalysisResult:
@@ -66,11 +63,11 @@ async def run_gemini_with_retry(text: str, context: str) -> AnalysisResult:
                 await asyncio.sleep(_GEMINI_RETRY_DELAY_SEC * attempt)
                 continue
             logger.warning("Gemini analysis failed after %s attempt(s): %s", attempt, exc)
-            return _gemini_failure_result(exc)
+            return _gemini_fallback_result(text, exc)
         except Exception as exc:
             logger.warning("Unexpected error during Gemini analysis: %s", exc)
-            return _gemini_failure_result(exc)
-    return _gemini_failure_result(last_exc or GeminiAnalysisError("unknown"))
+            return _gemini_fallback_result(text, exc)
+    return _gemini_fallback_result(text, last_exc or GeminiAnalysisError("unknown"))
 
 
 async def analyze_issue_with_context(
@@ -85,4 +82,9 @@ async def analyze_issue_with_context(
         for issue in existing[:5]
     ]
     analysis = await run_gemini_with_retry(text, "\n".join(context_lines))
+    if not analysis.is_valid:
+        rule_based = _gemini_fallback_result(text)
+        if rule_based.is_valid:
+            logger.info("Rule fallback accepted complaint rejected by Gemini analysis")
+            analysis = rule_based
     return analysis, existing
