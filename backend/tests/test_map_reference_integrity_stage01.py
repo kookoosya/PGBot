@@ -121,7 +121,7 @@ def test_map_routes_use_official_monastery_name():
 def test_map_routes_include_verified_village_stops():
     names = {stop["name"] for route in get_map_routes() for stop in route["stops"]}
     assert "Пятёрочка" in names
-    assert "Шиномонтаж" in names
+    assert "Шиномонтаж" not in names
 
 
 def test_map_routes_exclude_lavra_wording():

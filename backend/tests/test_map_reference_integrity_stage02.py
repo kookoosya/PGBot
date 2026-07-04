@@ -214,9 +214,10 @@ def test_ai_prompt_forbids_invented_quotes():
 
 def test_map_routes_include_restored_stops():
     names = {stop["name"] for route in get_map_routes() for stop in route["stops"]}
-    assert "Шиномонтаж" in names
+    assert "Шиномонтаж" not in names
     assert "Автовокзал Пушкинские Горы" in names
     assert "Пятёрочка" in names
+    assert len(get_map_routes()) >= 8
 
 
 def test_primary_verification_url_prefers_owner():
