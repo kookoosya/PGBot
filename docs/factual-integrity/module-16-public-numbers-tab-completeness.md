@@ -1,7 +1,8 @@
 # Module 16 — Public «Номера» Tab Completeness
 
-**Status:** COMPLETE (pending deploy verification)  
+**Status:** COMPLETE  
 **Baseline:** `4f8bb5e`  
+**Final:** `c37cc2d`  
 **Branch:** `main`
 
 ## User complaint
