@@ -36,7 +36,6 @@ const FORBIDDEN_PHONES = [
 ];
 
 const OLD_MONASTERY_NAME = "Свято-Успенская Пушкиногорская лавра";
-const OFFICIAL_MONASTERY_NAME = "Свято-Успенский Святогорский мужской монастырь";
 
 describe("map factual integrity UI (stage 1)", () => {
   for (const filePath of PUBLIC_MAP_UI_FILES) {
@@ -62,9 +61,11 @@ describe("map factual integrity UI (stage 1)", () => {
     });
   }
 
-  it("hotlines lists official monastery contact when monastery is shown", () => {
-    const text = readFileSync(join(pagesRoot, "map/hotlines.ts"), "utf8");
-    expect(text).toContain(OFFICIAL_MONASTERY_NAME);
+  it("numbers tab loads verified contacts from public places API", () => {
+    const tabs = readFileSync(join(pagesRoot, "map/MapServicesTabs.tsx"), "utf8");
+    const panel = readFileSync(join(pagesRoot, "map/HotlinesPanel.tsx"), "utf8");
+    expect(tabs).toContain("useVerifiedPhoneContacts");
+    expect(panel).toContain("Экстренные");
   });
 
   it("hotlines does not mention 911", () => {

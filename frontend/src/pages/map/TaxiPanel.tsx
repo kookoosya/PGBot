@@ -9,9 +9,22 @@ type TaxiPanelProps = {
 };
 
 export function TaxiPanel({ taxi, compact = false }: TaxiPanelProps) {
-  if (taxi.length === 0) return null;
-
   const copy = PAGE_SECTIONS.map.taxi;
+
+  if (taxi.length === 0) {
+    return (
+      <div className={compact ? "taxi-compact" : "page-section pb-3"}>
+        <div className={`page-panel page-panel--forest taxi-panel${compact ? " taxi-panel-compact" : ""}`}>
+          {!compact && (
+            <LiterarySectionHead kicker={copy.kicker} title={copy.title} lead={copy.lead} />
+          )}
+          <p className="text-sm text-muted-foreground m-0 px-1">
+            Проверенные номера такси пока не добавлены
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={compact ? "taxi-compact" : "page-section pb-3"}>

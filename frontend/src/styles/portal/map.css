@@ -565,6 +565,15 @@
     @apply text-xs text-muted-foreground m-0 mt-0.5;
   }
 
+  .phone-contact-section {
+    @apply mt-4 first:mt-0;
+  }
+
+  .phone-contact-section-title {
+    @apply text-sm font-semibold mb-2 mt-0 px-1;
+    color: hsl(152 48% 22%);
+  }
+
   .org-list-card {
     @apply w-full text-left flex gap-3 p-3 rounded-xl border-2 border-transparent transition;
     background: hsl(42 40% 97%);

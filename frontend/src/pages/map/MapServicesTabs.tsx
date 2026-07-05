@@ -6,6 +6,7 @@ import type { MapRoute, TaxiService } from "@/lib/api/types/places";
 import { HotlinesPanel } from "./HotlinesPanel";
 import { MapRoutesPanel } from "./MapRoutesPanel";
 import { TaxiPanel } from "./TaxiPanel";
+import { useVerifiedPhoneContacts } from "./useVerifiedPhoneContacts";
 
 type ServiceTab = "routes" | "taxi" | "hotlines";
 
@@ -32,6 +33,7 @@ export function MapServicesTabs({
 }: MapServicesTabsProps) {
   const [tab, setTab] = useState<ServiceTab>("routes");
   const [expanded, setExpanded] = useState(false);
+  const phoneContacts = useVerifiedPhoneContacts();
 
   useEffect(() => {
     if (routes.length > 0 || taxi.length > 0) {
@@ -42,7 +44,9 @@ export function MapServicesTabs({
   const summary = [
     routes.length ? `${routes.length} маршр.` : null,
     taxi.length ? `${taxi.length} такси` : null,
-    "14 номеров",
+    phoneContacts.loading
+      ? "номера…"
+      : `${phoneContacts.totalDisplayCount} номеров`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -89,7 +93,7 @@ export function MapServicesTabs({
             />
           )}
           {tab === "taxi" && <TaxiPanel compact taxi={taxi} />}
-          {tab === "hotlines" && <HotlinesPanel compact />}
+          {tab === "hotlines" && <HotlinesPanel compact contacts={phoneContacts} />}
         </div>
       </div>
 
