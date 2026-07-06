@@ -2,7 +2,8 @@
 
 **Status:** COMPLETE  
 **Baseline:** `268613b02cb57c596bb98aa118abbbd0eadce0ce`  
-**Production deploy SHA (runtime):** `2e154d723d1401b3ca77738afb89014647508e56`  
+**Final:** `6fe7676a502c4c713eea8cf3642d00e079bb4573`  
+**Production deploy SHA (runtime):** `6fe7676` (post-Module 18 deploy)  
 **Scenario:** **ACCEPTANCE** — no new code defect; Module 13 fix remains effective  
 **Branch:** `main`
 
