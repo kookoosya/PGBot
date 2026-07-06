@@ -101,6 +101,15 @@ Archive/close: **not performed** — no safe public lifecycle for guest-created 
 - Screenshots (`docs/screenshots/module-18-production/`) — not captured
 - Mobile layout / console on production
 
+## Post-deploy verification (SHA `6fe7676`)
+
+| Check | Result |
+|-------|--------|
+| `/health` `git_commit` | `6fe7676` |
+| Smoke | **33 OK / 0 FAIL** |
+| Deploy attempts | **19** |
+| Public complaints flow | unchanged behavior; Module 13 fix retained |
+
 ## Module status
 
 **Module 18 COMPLETE** · Module 19 not started.
