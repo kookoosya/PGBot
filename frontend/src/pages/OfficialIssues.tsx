@@ -48,6 +48,7 @@ export function OfficialIssues() {
         onSelectIssue={workbench.selectIssue}
         onResolutionChange={workbench.setResolution}
         onStatusChange={workbench.handleStatusChange}
+        statusError={workbench.statusError}
       />
     </div>
   );

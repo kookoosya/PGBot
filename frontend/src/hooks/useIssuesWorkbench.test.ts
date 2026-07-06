@@ -51,4 +51,21 @@ describe("useIssuesWorkbench", () => {
     expect(updateIssueStatus).toHaveBeenCalledWith(5, "RESOLVED", undefined);
     expect(getIssues).toHaveBeenCalledTimes(2);
   });
+
+  it("stores status update error message", async () => {
+    getIssues.mockResolvedValue({
+      items: [{ id: 5, resolution_text: null, status: "NEW" }],
+      total: 1,
+    });
+    updateIssueStatus.mockRejectedValue(new Error("Недостаточно прав"));
+
+    const { result } = renderHook(() => useIssuesWorkbench());
+    await waitFor(() => expect(result.current.issues).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleStatusChange(result.current.issues[0] as never, "RESOLVED");
+    });
+
+    expect(result.current.statusError).toBe("Недостаточно прав");
+  });
 });

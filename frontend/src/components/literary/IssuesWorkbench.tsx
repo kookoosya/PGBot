@@ -25,6 +25,7 @@ interface IssuesWorkbenchProps {
   onSelectIssue: (issue: Issue) => void;
   onResolutionChange: (value: string) => void;
   onStatusChange: (issue: Issue, status: string) => void;
+  statusError?: string;
   showResolution?: boolean;
   showAdminExtras?: boolean;
   filterLead?: string;
@@ -120,6 +121,7 @@ function DetailPanel({
   showAdminExtras,
   onResolutionChange,
   onStatusChange,
+  statusError = "",
 }: {
   shell: IssuesWorkbenchShell;
   selected: Issue;
@@ -128,6 +130,7 @@ function DetailPanel({
   showAdminExtras: boolean;
   onResolutionChange: (value: string) => void;
   onStatusChange: (issue: Issue, status: string) => void;
+  statusError?: string;
 }) {
   const statusBtnClass = (active: boolean) =>
     shell === "literary"
@@ -193,6 +196,11 @@ function DetailPanel({
       )}
       <div>
         <p className="event-detail-label mb-2">{shell === "literary" ? "Статус" : "Изменить статус"}</p>
+        {statusError && (
+          <p className={shell === "literary" ? "text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-2 m-0" : "issues-workbench-error"}>
+            {statusError}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           {ISSUE_WORKBENCH_STATUSES.map((s) => (
             <button
@@ -228,6 +236,7 @@ export function IssuesWorkbench({
   onSelectIssue,
   onResolutionChange,
   onStatusChange,
+  statusError = "",
   showResolution = false,
   showAdminExtras = false,
   filterLead,
@@ -299,6 +308,7 @@ export function IssuesWorkbench({
             showAdminExtras={showAdminExtras}
             onResolutionChange={onResolutionChange}
             onStatusChange={onStatusChange}
+            statusError={statusError}
           />
         )}
       </div>

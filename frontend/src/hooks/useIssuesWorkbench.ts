@@ -11,6 +11,7 @@ export function useIssuesWorkbench() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Issue | null>(null);
   const [resolution, setResolution] = useState("");
+  const [statusError, setStatusError] = useState("");
 
   const loadIssues = () => {
     api
@@ -30,17 +31,23 @@ export function useIssuesWorkbench() {
   const selectIssue = (issue: Issue) => {
     setSelected(issue);
     setResolution(issue.resolution_text || "");
+    setStatusError("");
   };
 
   const handleStatusChange = async (issue: Issue, status: string) => {
-    await api.updateIssueStatus(
-      issue.id,
-      status,
-      status === "RESOLVED" ? resolution || undefined : undefined,
-    );
-    loadIssues();
-    if (selected?.id === issue.id) {
-      setSelected(await api.getIssue(issue.id));
+    setStatusError("");
+    try {
+      await api.updateIssueStatus(
+        issue.id,
+        status,
+        status === "RESOLVED" ? resolution || undefined : undefined,
+      );
+      loadIssues();
+      if (selected?.id === issue.id) {
+        setSelected(await api.getIssue(issue.id));
+      }
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : "Не удалось обновить статус");
     }
   };
 
@@ -63,5 +70,6 @@ export function useIssuesWorkbench() {
     handleStatusChange,
     totalPages,
     pageSize: ISSUE_WORKBENCH_PAGE_SIZE,
+    statusError,
   };
 }

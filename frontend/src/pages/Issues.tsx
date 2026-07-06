@@ -22,7 +22,8 @@ export function Issues() {
       onPageChange={workbench.setPage}
       onSelectIssue={workbench.selectIssue}
       onResolutionChange={workbench.setResolution}
-      onStatusChange={workbench.handleStatusChange}
-    />
+        onStatusChange={workbench.handleStatusChange}
+        statusError={workbench.statusError}
+      />
   );
 }
