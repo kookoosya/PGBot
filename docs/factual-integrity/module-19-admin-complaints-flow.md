@@ -2,7 +2,8 @@
 
 **Status:** COMPLETE  
 **Baseline:** `48384d91848ede954b008c35fcb9bf59a738556c`  
-**Production deploy SHA (pre-module):** `6fe7676`  
+**Final:** `4e78a93827defcb7164ae515ad2f582d17741269`  
+**Production deploy SHA:** `4e78a93`  
 **Scenario:** **ACCEPTANCE** + minimal UI fix for status update errors  
 **Branch:** `main`
 
@@ -89,6 +90,16 @@ Status lifecycle: `NEW` → `UNDER_REVIEW` / `ASSIGNED` / `IN_PROGRESS` → `RES
 - CI run ID locally
 - Screenshots (`docs/screenshots/module-19-production/`)
 - Mobile layout / console on admin UI
+
+## Post-deploy verification (SHA `4e78a93`)
+
+| Check | Result |
+|-------|--------|
+| `/health` `git_commit` | `4e78a93` |
+| Smoke | **33 OK / 0 FAIL** |
+| Deploy attempts | **4** (recovered from transient 502) |
+| `/complaints` | smoke OK |
+| `/admin/issues` | page route exists; write-test **Cannot be verified** without credentials |
 
 ## Module status
 
