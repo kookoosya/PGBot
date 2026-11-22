@@ -114,10 +114,9 @@ def _should_skip_span(starts_at: datetime, ends_at: datetime | None, *, title: s
 
 
 def _month_number(name: str) -> int:
-    from app.services.event_sources.text_utils import _MONTH_NUMBERS
+    from app.services.event_sources.text_utils import _month_from_name
 
-    prefix = name.lower()[:5]
-    return _MONTH_NUMBERS.get(prefix, 1)
+    return _month_from_name(name)
 
 
 def _parse_program_day_header(chunk: str, *, default_year: int) -> tuple[int, int, int] | None:

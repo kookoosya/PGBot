@@ -30,10 +30,10 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
   const garnectShareUrl = absoluteGarnectShareUrl(info?.site_url ?? siteOrigin());
   const [regionFilter, setRegionFilter] = useState<RegionFilter>("all");
   const [searchInput, setSearchInput] = useState("");
-  const { program: landingGarnect, rest: landingPushkinRest, loading: landingGarnectLoading } =
+  const { program: landingGarnect, rest: landingPushkinRest, loading: landingGarnectLoading, error: landingError, refresh: refreshLanding } =
     usePushkinGarnectProgram(isLanding);
   const apiRegion = regionFilter === "all" ? undefined : regionFilter;
-  const { data, loading } = useToday(apiRegion);
+  const { data, loading, error, refresh } = useToday(apiRegion);
   const events = data?.upcoming_events ?? [];
 
   const filteredEvents = useMemo(() => {
@@ -99,7 +99,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         }
         compact={isLanding}
         linkTo="/events"
-        linkLabel={ctaArrow(CTA.allEvents)}
+        linkLabel={isLanding ? CTA.allEvents : ctaArrow(CTA.allEvents)}
       />
 
       {!isLanding && (
@@ -132,13 +132,19 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
         </div>
       )}
 
-      {loading && !data && !isLanding ? (
+      {(isLanding ? landingError : error) && (
+        <div role="status">
+          <p>Афишу не удалось обновить. Сохранённые события могут быть неактуальны.</p>
+          <button type="button" className="literary-link" onClick={() => void (isLanding ? refreshLanding() : refresh())}>Повторить загрузку афиши</button>
+        </div>
+      )}
+      {(isLanding ? landingError && pushkinEvents.length === 0 : error && !data) ? null : loading && !data && !isLanding ? (
         <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
       ) : isLanding && landingGarnectLoading && garnectProgram.length === 0 && displayPushkin.length === 0 ? (
         <LiteraryInlineLoader label="Собираем афишу Пушкиногорья…" compact />
       ) : showSplit ? (
         garnectProgram.length === 0 && displayPushkin.length === 0 ? (
-          <LiteraryEmptyState {...EMPTY_STATES.events} compact={isLanding} />
+          isLanding ? <p>{EMPTY_STATES.events.title}.</p> : <LiteraryEmptyState {...EMPTY_STATES.events} />
         ) : (
           <>
             {garnectProgram.length > 0 && isFestivalImminent(garnectProgram) && (
@@ -153,7 +159,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
             {garnectProgram.length > 0 && isFestivalPast(garnectProgram) && isLanding && (
               <p className="landing-garnect-archive mb-4 m-0">
                 <Link to={garnectEventsPath()} className="literary-link">
-                  🎭 Архив программы гарнеца →
+                  Архив программы гарнеца
                 </Link>
               </p>
             )}
@@ -186,7 +192,7 @@ export function UpcomingEvents({ variant = "default" }: UpcomingEventsProps) {
 
       {isLanding && (
         <p className="landing-events-more m-0 mt-3">
-          <Link to="/events" className="literary-link">🎬 Кино в Пскове</Link>
+          <Link to="/events" className="literary-link">Кино в Пскове</Link>
           <span className="landing-events-more-sep" aria-hidden> · </span>
           <Link to="/events?region=pskov" className="literary-link">События в городе</Link>
         </p>

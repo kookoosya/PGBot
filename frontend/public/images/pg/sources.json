@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "tire",
+    "source": "https://commons.wikimedia.org/wiki/File:Car_tire_closeup_1_2019-01-15.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Car_tire_closeup_1_2019-01-15.jpg/960px-Car_tire_closeup_1_2019-01-15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User_talk:Fastily\" title=\"User talk:Fastily\"><span style=\"font-family:'Trebuchet MS';color:Indigo;font-weight:bold;\"><span style=\"font-size:120%;\">F</span><span style=\"font-size:90%;\">ASTILY</span></span></a>",
+    "download_sha256": "91df165e6bf0d8a0c8157942d0586daddae8e90cc19ed08f6805e9223da7edbf",
+    "modifications": "Resized Wikimedia thumbnail, converted to WebP, metadata removed. CSS cropping on page.",
+    "files": [
+      {
+        "file": "tire-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 107228,
+        "sha256": "a3982bdf65d65bcc96801fe9f1a0da326c3ccd9ba1bc764412266c476c727c7e"
+      },
+      {
+        "file": "tire-1280.webp",
+        "width": 960,
+        "height": 1280,
+        "bytes": 238128,
+        "sha256": "24ff839c7423ce242dcf5f510f1ce45e2874bc7de5c1047e1559ff310fcc7e14"
+      }
+    ]
+  },
+  {
+    "slug": "sorot",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B8%D1%85%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5._%D0%A0%D0%B0%D0%B7%D0%BB%D0%B8%D0%B2_%D1%80%D0%B5%D0%BA%D0%B8_%D0%A1%D0%BE%D1%80%D0%BE%D1%82%D1%8C.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/%D0%9C%D0%B8%D1%85%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5._%D0%A0%D0%B0%D0%B7%D0%BB%D0%B8%D0%B2_%D1%80%D0%B5%D0%BA%D0%B8_%D0%A1%D0%BE%D1%80%D0%BE%D1%82%D1%8C.jpg/960px-%D0%9C%D0%B8%D1%85%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5._%D0%A0%D0%B0%D0%B7%D0%BB%D0%B8%D0%B2_%D1%80%D0%B5%D0%BA%D0%B8_%D0%A1%D0%BE%D1%80%D0%BE%D1%82%D1%8C.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Sea_Est&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Sea Est (page does not exist)\">Sea Est</a>",
+    "download_sha256": "776c06efc021feb4b616e9c5390a8bb6a959617d875760a2c6de9ca78771f5bb",
+    "modifications": "Resized Wikimedia thumbnail, converted to WebP, metadata removed. CSS cropping on page.",
+    "files": [
+      {
+        "file": "sorot-640.webp",
+        "width": 640,
+        "height": 427,
+        "bytes": 78998,
+        "sha256": "d809c93a224acbf4e7680537eb1840de216b4e417d803ff712e54ad8600da027"
+      },
+      {
+        "file": "sorot-1280.webp",
+        "width": 960,
+        "height": 640,
+        "bytes": 179530,
+        "sha256": "3d519ebe97311655b1d258bfb1b5302880e0d46924d9e29a2fc5e155c51be4a9"
+      }
+    ]
+  }
+]

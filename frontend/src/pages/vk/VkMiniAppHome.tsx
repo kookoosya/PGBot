@@ -15,7 +15,7 @@ export function VkMiniAppHome() {
       </div>
       {!configured && (
         <p className="text-sm literary-page-note m-0">
-          Mini App в режиме предпросмотра. Для продакшена администратору нужно указать VK_APP_ID и VK_APP_SECRET на сервере.
+          Вход через ВКонтакте пока недоступен. <Link to="/cabinet/login" className="literary-link">Вход на сайте PG</Link>
         </p>
       )}
       <div className="grid gap-2">
