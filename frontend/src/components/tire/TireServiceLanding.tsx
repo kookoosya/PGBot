@@ -71,7 +71,6 @@ export function TireServiceLanding() {
           <div className="tire-visual-orbit tire-visual-orbit-two" />
           <div className="tire-visual-wheel"><div className="tire-visual-rim"><div className="tire-visual-hub" /></div></div>
           <span className="tire-visual-word">SERVICE / 2026</span>
-          <span className="tire-visual-coordinate">57°01′ N / 28°55′ E</span>
         </div>
         <div className="tire-hero-bottom">
           <a href="#tire-services" className="tire-scroll-down">Листайте вниз <span aria-hidden="true">↓</span></a>
