@@ -357,7 +357,7 @@ export function Services() {
                 <select className="pushkin-select w-full" value={serviceId} onChange={(e) => setServiceId(+e.target.value)}>
                   {booking.services.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} — {s.duration_minutes} мин{s.price ? `, ${s.price} ₽` : ""}
+                      {s.name} — {s.duration_minutes} мин{s.price != null ? `, ${s.price} ₽` : ""}
                     </option>
                   ))}
                 </select>

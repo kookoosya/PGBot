@@ -1,151 +1,169 @@
-/* Tire workshop: isolated design language; does not modify legacy portal pages. */
-.tire-landing { --tire-black:#101a1c; --tire-ink:#132125; --tire-lime:#d9f05c; --tire-sand:#f4f1e9; --tire-line:rgba(19,33,37,.18); font-family:"Source Sans 3",Arial,sans-serif; color:var(--tire-ink); overflow:clip; }
-.tire-landing *, .tire-landing *::before, .tire-landing *::after {box-sizing:border-box}
-.tire-landing a {text-decoration:none}
-.tire-landing h1,.tire-landing h2,.tire-landing h3 {font-family:"Source Sans 3",Arial,sans-serif;letter-spacing:-.052em}
-.tire-landing em {font-style:normal;color:#8faa23}
-.tire-hero {min-height:min(810px,91vh);position:relative;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);background:var(--tire-black);color:#f7f7ef;isolation:isolate}
-.tire-hero-noise {position:absolute;inset:0;opacity:.35;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 55% 85% at 73% 42%,#33463d 0%,transparent 73%),repeating-linear-gradient(90deg,transparent 0,transparent 127px,rgba(255,255,255,.055) 128px)}
-.tire-hero-content {padding:clamp(48px,8vw,120px) 0 76px max(28px,calc((100vw - 1280px)/2));margin-right:14px;z-index:2;align-self:center}
-.tire-overline,.tire-eyebrow {font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;display:flex;gap:10px;align-items:center}
-.tire-overline {color:var(--tire-lime)}.tire-overline-dot {width:7px;height:7px;background:var(--tire-lime);border-radius:50%}
-.tire-hero-index {font-size:11px;letter-spacing:.25em;line-height:1.6;color:#a7b3ad;margin:65px 0 18px}
-.tire-hero h1 {font-size:clamp(63px,7.8vw,132px);font-weight:850;line-height:.88;color:#fff;margin:0 0 30px;max-width:790px}
-.tire-hero h1 em {color:var(--tire-lime)}
-.tire-hero-description {max-width:475px;font-size:clamp(16px,1.5vw,20px);line-height:1.52;color:#c9d1cc;margin:0}
-.tire-hero-actions,.tire-location-actions {display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 0}
-.tire-button {display:inline-flex;align-items:center;justify-content:space-between;gap:24px;font-size:14px;font-weight:800;min-height:56px;padding:16px 22px;border-radius:4px;transition:transform .2s ease,background .2s ease}
-.tire-button:hover {transform:translateY(-3px)}
-.tire-button-primary {color:#152022!important;background:var(--tire-lime)}
-.tire-button-primary:hover {background:#e7ff78}
-.tire-button-outline {border:1px solid #728078;color:#fff!important}
-.tire-button-outline:hover {background:#2b3737}
-.tire-hero-footnote {font-size:12px;color:#aebcb2;margin:25px 0 0}
-.tire-hero-visual {position:relative;overflow:hidden;display:grid;place-items:center;min-height:520px}
-.tire-visual-orbit {position:absolute;width:730px;height:730px;border:1px solid #ffffff14;border-radius:50%}
-.tire-visual-orbit-two{width:570px;height:570px}
-.tire-visual-wheel {width:clamp(290px,34vw,570px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;transform:rotate(-24deg);background:repeating-conic-gradient(from 8deg,#0c1113 0deg 7deg,#283233 7deg 11deg,#070b0c 11deg 15deg);border:clamp(32px,4.2vw,65px) solid #0b1012;box-shadow:0 0 0 9px #192123,0 0 0 19px #0e1516,0 40px 90px #0009,inset 0 0 0 5px #3f4847}
-.tire-visual-rim {width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:repeating-conic-gradient(from 0deg,#717c7b 0 6deg,#182324 6deg 15deg,#b3beba 15deg 18deg,#1d2728 18deg 30deg);border:15px solid #323b3b;box-shadow:inset 0 0 0 22px #1d292b,inset 0 0 0 25px #899391}
-.tire-visual-hub {width:22%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#152021 0 18%,#c1cdc6 20% 30%,#253031 32% 62%,#88968c 65% 100%);box-shadow:0 2px 15px #000c}
-.tire-visual-word,.tire-visual-coordinate {position:absolute;font-size:11px;letter-spacing:.18em;color:#9aaba4}
-.tire-visual-word {right:30px;top:45px}.tire-visual-coordinate {left:10px;bottom:68px}
-.tire-hero-bottom {position:absolute;bottom:22px;left:max(28px,calc((100vw - 1280px)/2));right:max(28px,calc((100vw - 1280px)/2));display:flex;justify-content:space-between;gap:15px;z-index:2}
-.tire-hero-bottom a {font-size:12px;color:#b2c5b7}.tire-hero-bottom a:hover {color:var(--tire-lime)}
-.tire-scroll-down span {margin-left:15px}
-.tire-page-nav {position:sticky;top:125px;z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;padding:12px max(22px,calc((100vw - 1280px)/2));background:#e5e4d7;border-bottom:1px solid #c6cab9}
-.tire-page-nav a {white-space:nowrap;font-size:13px;color:#273431;font-weight:800;padding:10px 18px;border-radius:2px;transition:background .2s}
-.tire-page-nav a:hover,.tire-page-nav a:focus-visible {background:#d1d6bb}
-.tire-section {padding:clamp(70px,9vw,128px) max(24px,calc((100vw - 1280px)/2));scroll-margin-top:180px}
-.tire-section-light {background:var(--tire-sand)}
-.tire-section-heading {display:grid;grid-template-columns:1fr 1fr;gap:15px 50px;align-items:end;margin-bottom:50px}
-.tire-eyebrow {grid-column:1/-1;color:#7b8d28;margin-bottom:12px}
-.tire-section-heading h2 {font-size:clamp(44px,5.1vw,76px);font-weight:850;line-height:.95;color:#192c2e;margin:0}
-.tire-section-heading p {font-size:17px;line-height:1.6;max-width:430px;margin:0 0 3px;color:#566465}
-.tire-services-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.tire-service-card {min-height:365px;padding:25px;display:flex;flex-direction:column;background:#fff;color:var(--tire-ink);transition:transform .22s,box-shadow .22s;border:1px solid #e0e0d6}
-.tire-service-card:hover {transform:translateY(-5px);box-shadow:0 22px 45px #10242619}
-.tire-service-card-feature {background:#dfe89f;border-color:#dfe89f}
-.tire-card-num,.tire-method-index {font-size:11px;letter-spacing:.13em;font-weight:850;color:#536560}
-.tire-service-icon {font-size:54px;line-height:1;margin:20px 0 18px;color:#698236}
-.tire-service-card h3 {font-size:clamp(24px,2.2vw,34px);font-weight:820;line-height:1.06;color:#17292b;margin:0 0 15px}
-.tire-service-card p {font-size:14px;line-height:1.5;color:#4c5c5c;margin:0 0 20px}
-.tire-card-cta {font-size:13px;font-weight:900;color:#263b35;margin-top:auto}
-.tire-pricing {background:#152125;color:#eef1e9}
-.tire-heading-dark h2 {color:#fff}.tire-heading-dark p {color:#b8c5c2}.tire-heading-dark .tire-eyebrow{color:var(--tire-lime)}
-.tire-price-panel {background:#f4f3e9;color:#182c2e;padding:clamp(20px,4vw,46px);border-radius:3px}
-.tire-price-tabs {display:flex;gap:6px;overflow-x:auto;margin-bottom:40px;border-bottom:1px solid #cbd1c2;padding-bottom:9px}
-.tire-price-tabs button {font:800 14px "Source Sans 3",Arial,sans-serif;white-space:nowrap;border:0;background:transparent;padding:14px 18px;cursor:pointer;color:#556562;border-radius:2px}
-.tire-price-tabs button.is-active {background:#1c3032;color:#fff}
-.tire-price-tabs button:focus-visible,.tire-size-picker button:focus-visible {outline:3px solid #9dbb34;outline-offset:2px}
-.tire-price-label {font-size:11px;letter-spacing:.18em;font-weight:900;color:#66756c;margin:0 0 16px}
-.tire-size-picker {display:flex;flex-wrap:wrap;gap:8px;margin-bottom:27px}
-.tire-size-picker button {font:800 14px "Source Sans 3",Arial,sans-serif;min-height:44px;padding:9px 14px;border:1px solid #b6c1b6;background:#fff;color:#273b38;cursor:pointer;border-radius:2px}
-.tire-size-picker button.is-selected {background:var(--tire-lime);border-color:#9db02e}
-.tire-price-summary {display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.tire-price-summary>div {background:#fff;display:flex;flex-direction:column;gap:12px;min-height:150px;justify-content:center;padding:26px}
-.tire-price-summary span {font-size:12px;letter-spacing:.09em;font-weight:900;color:#6a7671}
-.tire-price-summary strong {font-size:clamp(35px,4.1vw,66px);line-height:1;font-weight:900;letter-spacing:-.06em}
-.tire-price-summary .tire-price-summary-highlight {background:#dff19a}
-.tire-price-breakdown {border-bottom:1px solid #cbd2c6;margin:23px 0}
-.tire-price-breakdown summary {list-style:none;cursor:pointer;font-weight:900;padding:10px 0 22px;display:flex;justify-content:space-between}
-.tire-price-breakdown summary::-webkit-details-marker {display:none}
-.tire-price-breakdown[open] summary span {transform:rotate(45deg)}
-.tire-service-rows {margin:0 0 20px}
-.tire-service-row {display:flex;gap:18px;align-items:baseline;justify-content:space-between;padding:13px 0;border-bottom:1px solid #d4d9cf;font-size:15px;line-height:1.35}
-.tire-service-row strong {white-space:nowrap;font-weight:900}
-.tire-price-secondary {margin-top:30px}.tire-price-secondary h3 {font-size:23px;font-weight:900;color:#152a2a;margin:0 0 12px}
-.tire-price-note {font-size:13px;color:#677572;line-height:1.5;max-width:720px;margin:17px 0}
-.tire-price-footer {display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:34px;padding-top:20px;border-top:1px solid #c9d1c3;font-size:13px;color:#5b6c66}
-.tire-price-footer a {font-weight:900;color:#203a33}
-.tire-methods {background:#e9ebe3}
-.tire-methods-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.tire-method-card {background:#223532;color:#f3f6ec;min-height:295px;padding:26px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform .2s}
-.tire-method-card::after {content:"";width:220px;height:220px;position:absolute;right:-100px;bottom:-100px;border:40px solid #ffffff0c;border-radius:50%}
-.tire-method-card:hover {transform:translateY(-4px)}
-.tire-method-index {color:#d5ef7b}
-.tire-method-play {width:45px;height:45px;border:1px solid #89998a;border-radius:50%;display:grid;place-items:center;margin-top:30px;font-size:22px;color:var(--tire-lime)}
-.tire-method-card h3 {color:#fff;font-size:clamp(21px,2.1vw,29px);line-height:1.15;font-weight:830;max-width:260px;margin:20px 0 17px}
-.tire-method-source {font-size:12px;color:#b6c7c0;margin-top:auto}
-.tire-location {background:#dceaaf;display:grid;grid-template-columns:1fr .85fr;gap:50px;align-items:stretch}
-.tire-location h2 {font-size:clamp(44px,5.1vw,76px);line-height:.98;margin:25px 0 30px;color:#17282c;font-weight:900}
-.tire-location address {font-style:normal;font-weight:700;font-size:20px;max-width:440px}
-.tire-location-phone {font-size:clamp(26px,3vw,44px);letter-spacing:-.04em;display:block;margin-top:15px;color:#1e3e34;font-weight:900}
-.tire-location .tire-button-outline {color:#20322c!important;border-color:#5a734f}
-.tire-location-main>p {font-size:13px;line-height:1.6;max-width:450px;margin-top:25px}
-.tire-location-map {min-height:400px;background:#e4e9d6;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#223b33;border:1px solid #94ac80}
-.tire-map-grid {position:absolute;inset:-70px;transform:rotate(-20deg);background:linear-gradient(90deg,transparent 48%,#b2c2aa 49%,#b2c2aa 51%,transparent 52%),linear-gradient(0deg,transparent 48%,#b2c2aa 49%,#b2c2aa 51%,transparent 52%);background-size:115px 115px;opacity:.75}
-.tire-map-pin {width:60px;height:60px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#1f4238;color:#d9ef66;display:grid;place-items:center;font-size:32px;z-index:1;box-shadow:0 9px 25px #0003}
-.tire-map-pin::first-letter {transform:rotate(45deg)}
-.tire-location-map strong,.tire-location-map span,.tire-location-map small{position:relative;z-index:1;background:#f7f8f1;padding:5px 14px}
-.tire-location-map strong {font-size:22px}
-.tire-location-map small {font-size:13px;font-weight:900;margin-top:12px}
-.tire-village {background:#f4f1e9}
-.tire-village-links {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.tire-village-link {display:flex;gap:16px;align-items:center;padding:25px 22px;background:#fff;border:1px solid #e1e1d6;color:#233734;transition:transform .2s,border-color .2s}
-.tire-village-link:hover {transform:translateY(-3px);border-color:#a4bb5d}
-.tire-village-link-index {align-self:start;font-size:11px;color:#89988e;font-weight:800}
-.tire-village-link-copy {display:flex;flex-direction:column;gap:7px}
-.tire-village-link-copy strong {font-size:21px;font-weight:850;letter-spacing:-.03em}
-.tire-village-link-copy small {font-size:12px;color:#687973}
-.tire-village-link-arrow {margin-left:auto;font-size:22px}
-.tire-village-live {display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:65px;min-width:0}
-.tire-village-live-card {min-width:0}
-.tire-village-footnote {margin:30px 0 0;font-size:14px}.tire-village-footnote a {font-weight:900;color:#3a6044}
-.tire-endnote {display:flex;justify-content:space-between;gap:15px;padding:28px max(24px,calc((100vw - 1280px)/2));background:#1c2b2c;color:#a8b9ad;font-size:11px;letter-spacing:.16em}
-.tire-endnote a {color:#d7ee79}
-@media (max-width:1090px) {
-.tire-hero {grid-template-columns:1fr .8fr}.tire-hero-content{padding-left:30px}.tire-hero h1{font-size:clamp(60px,8vw,105px)}
-.tire-services-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tire-service-card{min-height:295px}
-.tire-page-nav{top:100px}
+.tire-landing {
+  --tire-paper: #f5f2e9;
+  --tire-ink: #20352e;
+  --tire-muted: #58645d;
+  --tire-accent: #a34329;
+  --tire-line: #d7dbd0;
+  --tire-gutter: clamp(20px, 5vw, 80px);
+  background: var(--tire-paper);
+  color: var(--tire-ink);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
 }
-@media (max-width:767px) {
-.tire-hero{display:flex;flex-direction:column;min-height:auto}
-.tire-hero-content{padding:64px 23px 0;margin:0}
-.tire-hero-index{margin:46px 0 14px}.tire-hero h1{font-size:clamp(59px,12vw,95px)}
-.tire-hero-description{font-size:16px}.tire-hero-visual{min-height:290px;max-height:330px}
-.tire-visual-wheel{width:280px;border-width:33px}.tire-visual-rim{border-width:9px}
-.tire-visual-word{top:25px;right:22px}.tire-visual-coordinate{display:none}
-.tire-hero-bottom{position:static;margin:0 23px 22px}.tire-scroll-down{display:none}
-.tire-page-nav{top:0;padding:9px 15px}.tire-section{padding:76px 20px;scroll-margin-top:75px}
-.tire-section-heading{display:block;margin-bottom:35px}.tire-eyebrow{margin-bottom:23px}
-.tire-section-heading h2,.tire-location h2{font-size:clamp(43px,9.4vw,68px)}
-.tire-section-heading p{margin:24px 0 0}
-.tire-methods-grid,.tire-village-links{grid-template-columns:1fr 1fr}
-.tire-location{grid-template-columns:1fr;gap:30px}.tire-location-map{min-height:300px}
-.tire-village-live{grid-template-columns:1fr}
+.tire-landing *, .tire-landing *::before, .tire-landing *::after { box-sizing: border-box; }
+.tire-landing a { color: inherit; text-decoration: none; }
+.tire-landing button, .tire-landing select { font: inherit; }
+.tire-landing h1, .tire-landing h2 { font-family: "Playfair Display", serif; font-weight: 500; letter-spacing: -.045em; line-height: 1.07; color: inherit; }
+.tire-landing h1 { font-size: clamp(44px, 6.7vw, 96px); margin: 32px 0; }
+.tire-landing h1 span { display: block; font-size: .72em; margin-top: 8px; }
+.tire-landing h2 { font-size: clamp(36px, 4.4vw, 60px); margin: 0; }
+.tire-landing h3 { font-family: inherit; font-size: 24px; font-weight: 600; letter-spacing: -.02em; color: inherit; margin: 0; }
+.tire-landing em { font-style: italic; font-weight: 400; }
+.tire-landing p { margin: 0; }
+.tire-landing :is(a, button, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--tire-accent); outline-offset: 4px; }
+.tire-landing :is(a, button, summary, select) { -webkit-tap-highlight-color: transparent; }
+.tire-landing section[id] { scroll-margin-top: 96px; }
+.tire-skip { position: fixed; left: 16px; top: -100px; padding: 12px 24px; background: white; z-index: 100; }
+.tire-skip:focus { top: 12px; }
+.tire-header { min-height: 88px; padding: 16px var(--tire-gutter); display: flex; gap: 24px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--tire-line); background: var(--tire-paper); position: sticky; top: 0; z-index: 40; }
+.tire-brand { display: inline-flex; gap: 12px; align-items: center; font-family: "Playfair Display", serif; font-size: 36px; line-height: 1; letter-spacing: -.06em; }
+.tire-brand span { font-family: "Source Sans 3", sans-serif; font-size: 14px; line-height: 1.1; letter-spacing: 0; }
+.tire-desktop-nav { display: flex; align-items: center; gap: 20px; font-size: 15px; }
+.tire-desktop-nav a { padding: 12px 0; white-space: nowrap; }
+.tire-header nav a[aria-current] { text-decoration: underline; text-underline-offset: 8px; }
+.tire-account { font-size: 15px; padding: 12px 0; }
+.tire-mobile-menu { display: none; }
+.tire-hero { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 660px; background: var(--tire-ink); color: var(--tire-paper); }
+.tire-landing :is(.tire-hero, .tire-location) :focus-visible { outline-color: var(--tire-paper); }
+.tire-hero-copy { padding: 64px 48px 64px var(--tire-gutter); align-self: center; }
+.tire-address { font-size: 16px; color: #d3dccf; }
+.tire-hero-description { max-width: 440px; color: #e0e5dc; font-size: 20px; }
+.tire-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 32px 0 24px; }
+.tire-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 24px; min-height: 52px; border: 1px solid transparent; border-radius: 2px; font-weight: 600; transition: background-color 150ms ease-out, color 150ms ease-out; }
+.tire-landing .tire-button-primary { background: var(--tire-paper); color: var(--tire-ink); }
+.tire-landing .tire-button-primary:hover { background: #e2dfd2; }
+.tire-button-outline { border-color: #a6b3a4; }
+.tire-button-outline:hover { background: #344a40; }
+.tire-route-link { display: inline-block; padding: 8px 0; text-decoration: underline !important; text-underline-offset: 4px; font-size: 16px; }
+.tire-hero-note { color: #d3dccf; font-size: 14px; margin-top: 32px !important; }
+.tire-hero-photo { margin: 0; position: relative; min-width: 0; }
+.tire-hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; position: absolute; inset: 0; }
+.tire-section { padding: 96px max(var(--tire-gutter), calc((100% - 1280px) / 2)); }
+.tire-section-heading { display: grid; grid-template-columns: 1.2fr 1fr; align-items: end; gap: 48px; margin-bottom: 48px; }
+.tire-section-heading > p { color: var(--tire-muted); max-width: 440px; }
+.tire-services-list { border-top: 1px solid var(--tire-line); }
+.tire-services-list > a { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; padding: 32px 0; align-items: baseline; border-bottom: 1px solid var(--tire-line); }
+.tire-services-list p { color: var(--tire-muted); max-width: 540px; }
+.tire-services-list > a:hover h3, .tire-village-directory a:hover h3 { color: var(--tire-accent); }
+.tire-pricing { background: #e5e9de; }
+.tire-price-panel { background: var(--tire-paper); padding: 32px; }
+.tire-price-categories { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--tire-line); padding-bottom: 24px; margin-bottom: 32px; }
+.tire-price-categories button { background: transparent; color: var(--tire-ink); border: 1px solid var(--tire-line); border-radius: 2px; padding: 12px 20px; cursor: pointer; min-height: 48px; }
+.tire-price-categories button[aria-pressed="true"] { background: var(--tire-ink); border-color: var(--tire-ink); color: var(--tire-paper); }
+.tire-price-content { max-width: 880px; margin: auto; }
+.tire-price-categories, .tire-price-contact { max-width: 880px; margin-inline: auto; }
+.tire-calculator-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.tire-calculator-fields label { display: grid; gap: 8px; font-weight: 600; }
+.tire-calculator-fields select { width: 100%; min-height: 52px; padding: 12px; border: 1px solid #849185; border-radius: 2px; background: var(--tire-paper); color: var(--tire-ink); }
+.tire-calculation { margin: 32px 0 16px; padding: 32px 0; border-top: 1px solid var(--tire-line); border-bottom: 1px solid var(--tire-line); }
+.tire-calculation strong { display: block; font-weight: 500; font-size: clamp(48px, 6vw, 80px); letter-spacing: -.045em; font-variant-numeric: tabular-nums; line-height: 1.2; margin: 8px 0; }
+.tire-calculation p:last-child { font-size: 16px; color: var(--tire-muted); }
+.tire-price-note { font-size: 16px; color: var(--tire-muted); }
+.tire-price-breakdown { border-bottom: 1px solid var(--tire-line); margin-top: 16px; }
+.tire-price-breakdown summary, .tire-method-list summary { cursor: pointer; min-height: 52px; padding: 16px 0; font-weight: 600; }
+.tire-service-rows { margin: 8px 0 16px; }
+.tire-service-row { display: flex; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--tire-line); padding: 16px 0; }
+.tire-service-row dd { margin: 0; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tire-table-scroll { overflow: auto; margin-bottom: 24px; }
+.tire-table-scroll table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 16px; }
+.tire-table-scroll :is(th, td) { text-align: left; padding: 12px; border-bottom: 1px solid var(--tire-line); }
+.tire-table-scroll caption { text-align: left; margin: 12px 0; color: var(--tire-muted); }
+.tire-additional { margin: 32px 0; }
+.tire-price-contact { display: block; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--tire-line); text-decoration: underline !important; text-underline-offset: 4px; }
+.tire-method-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+.tire-method-intro p { max-width: 420px; color: var(--tire-muted); }
+.tire-text-link { display: inline-block; margin-top: 24px; padding: 8px 0; text-decoration: underline !important; text-underline-offset: 4px; }
+.tire-method-list details { border-bottom: 1px solid var(--tire-line); }
+.tire-method-list p { margin-bottom: 16px; color: var(--tire-muted); }
+.tire-method-list a { display: inline-block; text-decoration: underline; margin-bottom: 24px; }
+.tire-source-note { font-size: 14px; color: var(--tire-muted); margin-top: 32px !important; }
+.tire-village-photo { margin: 0; position: relative; }
+.tire-village-photo img { display: block; width: 100%; height: clamp(280px, 42vw, 600px); object-fit: cover; object-position: center; }
+.tire-village-photo figcaption { padding: 12px var(--tire-gutter); font-size: 14px; border-bottom: 1px solid var(--tire-line); }
+.tire-village-directory { display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; }
+.tire-village-directory a { border-top: 1px solid var(--tire-line); padding: 24px 0; }
+.tire-village-directory p { color: var(--tire-muted); font-size: 16px; margin-top: 8px; }
+.tire-village-live { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 48px; }
+.tire-village-live > * { min-width: 0; }
+.tire-landing .tire-village-live .page-panel { background: transparent; box-shadow: none; border: 1px solid var(--tire-line); border-radius: 2px; padding: 24px; }
+.tire-village-live .page-panel::before, .tire-village-live .page-panel::after { display: none; }
+.tire-village-live .literary-section-head .literary-title { font-size: clamp(24px, 3vw, 36px); }
+.tire-village-live .landing-today-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+.tire-village-live .landing-today-grid .landing-card {
+  grid-column: auto;
+  padding: 16px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tire-line);
+  border-radius: 0;
+  box-shadow: none;
 }
-@media (max-width:520px) {
-.tire-hero h1 {font-size:clamp(54px,13vw,70px)}
-.tire-overline {font-size:10px;letter-spacing:.11em}
-.tire-hero-actions .tire-button {flex:1 1 auto}
-.tire-services-grid,.tire-methods-grid,.tire-village-links {grid-template-columns:1fr}
-.tire-service-card {min-height:280px}
-.tire-price-panel {padding:19px 14px}.tire-price-tabs{margin-bottom:26px}
-.tire-price-tabs button{font-size:13px;padding:11px 13px}
-.tire-price-summary{grid-template-columns:1fr 1fr;gap:6px}
-.tire-price-summary>div{min-height:125px;padding:15px 12px}.tire-price-summary strong{font-size:clamp(27px,8.5vw,42px)}
-.tire-price-summary span{font-size:10px}.tire-size-picker button{min-height:43px}
-.tire-service-row{font-size:13px}
-.tire-village-live{margin-top:38px}
+.tire-village-live .landing-card-title { font-size: 20px; }
+.tire-village-live .landing-updated { padding: 0; background: transparent; border: 0; }
+.tire-village-live .landing-stat-grid > div { background: transparent; box-shadow: none; border: 0; }
+.tire-more-links { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-top: 32px; }
+.tire-more-links a { padding: 8px 0; text-decoration: underline; text-underline-offset: 4px; }
+.tire-location { background: var(--tire-ink); color: var(--tire-paper); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+.tire-location address { font-style: normal; max-width: 380px; margin-top: 32px; color: #d3dccf; }
+.tire-phone { display: inline-block; font-size: clamp(26px, 3vw, 40px); line-height: 1.2; letter-spacing: -.035em; }
+.tire-contact-details p { margin: 24px 0; color: #d3dccf; max-width: 400px; }
+.tire-contact-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.tire-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 48px var(--tire-gutter); }
+.tire-footer p { font-size: 14px; margin-top: 16px; color: var(--tire-muted); }
+.tire-footer nav { display: flex; flex-wrap: wrap; align-content: start; gap: 16px 32px; }
+.tire-footer nav a { padding: 8px 0; }
+.tire-photo-credits { grid-column: 1 / -1; border-top: 1px solid var(--tire-line); padding-top: 24px; font-size: 14px; }
+.tire-photo-credits summary { cursor: pointer; padding: 12px 0; }
+.tire-photo-credits a { text-decoration: underline; }
+@media (max-width: 1200px) {
+  .tire-desktop-nav { gap: 12px; font-size: 14px; }
+  .tire-header { gap: 16px; }
+  .tire-brand span { display: none; }
 }
-@media (prefers-reduced-motion:reduce) {.tire-landing *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media (max-width: 1023px) {
+  .tire-desktop-nav, .tire-account { display: none; }
+  .tire-brand span { display: block; }
+  .tire-mobile-menu { display: block; }
+  .tire-mobile-menu > summary { min-height: 44px; padding: 12px; cursor: pointer; }
+  .tire-mobile-menu nav { position: absolute; top: 100%; left: 0; right: 0; display: grid; background: var(--tire-paper); border-bottom: 1px solid var(--tire-line); padding: 16px var(--tire-gutter); max-height: calc(100dvh - 88px); overflow: auto; }
+  .tire-mobile-menu nav a { padding: 12px 0; }
+  .tire-hero { min-height: 580px; }
+  .tire-hero-copy { padding-right: 32px; }
+  .tire-services-list > a { grid-template-columns: 1fr 1fr; gap: 16px 32px; }
+}
+@media (max-width: 767px) {
+  .tire-header { min-height: 76px; padding-top: 12px; padding-bottom: 12px; }
+  .tire-landing section[id] { scroll-margin-top: 88px; }
+  .tire-hero { grid-template-columns: 1fr; }
+  .tire-hero-copy { padding: 48px var(--tire-gutter); }
+  .tire-landing h1 { font-size: clamp(40px, 9.8vw, 68px); margin: 24px 0; }
+  .tire-landing h1 span { font-size: .92em; margin-top: 0; }
+  .tire-hero-description { font-size: 18px; }
+  .tire-hero-note { margin-top: 24px !important; }
+  .tire-hero-photo { height: 320px; }
+  .tire-section { padding-top: 64px; padding-bottom: 64px; }
+  .tire-section-heading, .tire-method-layout, .tire-location { grid-template-columns: 1fr; gap: 24px; }
+  .tire-section-heading { margin-bottom: 32px; }
+  .tire-services-list > a { grid-template-columns: 1fr; gap: 12px; padding: 24px 0; }
+  .tire-price-panel { padding: 24px 16px; margin: 0 -4px; }
+  .tire-price-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tire-price-categories button { padding: 12px 8px; font-size: 16px; }
+  .tire-calculator-fields { grid-template-columns: 1fr; gap: 16px; }
+  .tire-service-row { font-size: 16px; gap: 16px; }
+  .tire-village-directory { grid-template-columns: 1fr; }
+  .tire-village-live { grid-template-columns: 1fr; gap: 24px; }
+  .tire-footer { grid-template-columns: 1fr; gap: 24px; }
+}
+@media (prefers-reduced-motion: no-preference) { html:has(.tire-landing) { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: reduce) { .tire-landing * { animation: none !important; transition: none !important; } }

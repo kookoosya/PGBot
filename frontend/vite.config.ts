@@ -5,7 +5,26 @@ import path from "path";
 import { stripCrossorigin } from "./src/vite-strip-crossorigin";
 
 export default defineConfig({
-  plugins: [react(), stripCrossorigin()],
+  plugins: [
+    react(),
+    stripCrossorigin(),
+    {
+      name: "pg-preview-spa-shell",
+      configurePreviewServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          const pathname = req.url?.split("?", 1)[0] ?? "/";
+          if (
+            req.headers.accept?.includes("text/html") && pathname !== "/" &&
+            !path.posix.extname(pathname.replace(/\/$/, "")) &&
+            !/^\/(?:api|tiles|share)(?:\/|$)/.test(pathname)
+          ) {
+            req.url = "/spa.html";
+          }
+          next();
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -30,8 +49,18 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://backend:8000",
+        target: process.env.PG_API_TARGET || "http://backend:8000",
         changeOrigin: true,
+      },
+      "^/tiles/osm/\\d+/\\d+/\\d+\\.png$": {
+        target: "https://tile.openstreetmap.org",
+        changeOrigin: true,
+        rewrite: (url) => url.replace(/^\/tiles\/osm/, ""),
+      },
+      "^/tiles/sat/\\d+/\\d+/\\d+$": {
+        target: "https://server.arcgisonline.com",
+        changeOrigin: true,
+        rewrite: (url) => url.replace(/^\/tiles\/sat/, "/ArcGIS/rest/services/World_Imagery/MapServer/tile"),
       },
     },
   },

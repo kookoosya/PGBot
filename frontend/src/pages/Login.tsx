@@ -41,12 +41,13 @@ export function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Логин</label>
-              <Input value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username" />
+              <label htmlFor="admin-username" className="text-sm font-medium">Логин</label>
+              <Input id="admin-username" value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username" />
             </div>
             <div>
-              <label className="text-sm font-medium">Пароль</label>
+              <label htmlFor="admin-password" className="text-sm font-medium">Пароль</label>
               <Input
+                id="admin-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

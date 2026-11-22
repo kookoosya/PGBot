@@ -19,6 +19,8 @@ export function PublicLayout() {
     api.trackVisit(location.pathname).catch(() => {});
   }, [location.pathname]);
 
+  if (isHome) return <Outlet />;
+
   return (
     <div className="pushkin-page min-h-screen flex flex-col relative">
       <PageBackdrop />
@@ -30,12 +32,12 @@ export function PublicLayout() {
               <div className="pushkin-logo-badge">🪶</div>
               <div>
                 <p className="pushkin-brand-eyebrow">{BRAND.tagline}</p>
-                <h1 className="pushkin-brand-title">{BRAND.name}</h1>
+                <p className="pushkin-brand-title">{BRAND.name}</p>
               </div>
             </Link>
             <div className="pushkin-header-actions">
-              {!isHome && <WeatherWidgetCompact variant="header" />}
-              {!isHome && <VkBotLink />}
+              <WeatherWidgetCompact variant="header" />
+              <VkBotLink />
               {user ? (
                 <Link to={getUserHomePath(user)} className="pushkin-header-link">
                   👤 {user.full_name || user.username}
@@ -54,7 +56,7 @@ export function PublicLayout() {
         <TabNav variant="top" />
       </header>
 
-      <main className="flex-1 w-full pushkin-main page-fade-wrap">
+      <main id="main-content" className="flex-1 w-full pushkin-main page-fade-wrap">
         <Outlet />
       </main>
 

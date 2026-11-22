@@ -7,6 +7,7 @@ import {
   TUBE_REPAIR,
   TUBELESS_REPAIR,
   formatRubles,
+  estimateMounting,
 } from "./tireService";
 
 describe("owner-approved tire price catalog (13.10.2026)", () => {
@@ -42,5 +43,25 @@ describe("owner-approved tire price catalog (13.10.2026)", () => {
 
   it("formats amounts with ruble suffix", () => {
     expect(formatRubles(1950).replace(/\s/g, "")).toBe("1950₽");
+  });
+
+  it("preserves every published passenger complete-set price", () => {
+    [1300, 1600, 1750, 1850, 1950, 2050, 2250, 2350, 2450].forEach((amount, index) => {
+      expect(estimateMounting(`R${index + 12}`, 4)).toEqual({ amount, usesSetPrice: true });
+    });
+  });
+
+  it("uses set amounts only at the published quantity", () => {
+    expect(estimateMounting("R16", 1)).toEqual({ amount: 490, usesSetPrice: false });
+    expect(estimateMounting("R16", 2)).toEqual({ amount: 980, usesSetPrice: false });
+    expect(estimateMounting("Газель", 4)).toEqual({ amount: 2280, usesSetPrice: false });
+    expect(estimateMounting("Газель", 6)).toEqual({ amount: 3400, usesSetPrice: true });
+  });
+
+  it("rejects unsupported sizes and invalid quantities", () => {
+    expect(() => estimateMounting("R21", 4)).toThrow(RangeError);
+    for (const count of [0, -1, 7, 1.5, NaN, Infinity]) {
+      expect(() => estimateMounting("R16", count)).toThrow(RangeError);
+    }
   });
 });

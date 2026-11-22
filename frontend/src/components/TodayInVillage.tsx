@@ -7,7 +7,7 @@ import { EMPTY_STATES, LANDING_SECTIONS } from "@/lib/literaryCopy";
 const copy = LANDING_SECTIONS.today;
 
 export function TodayInVillage() {
-  const { data, loading, error } = useToday();
+  const { data, loading, error, refresh } = useToday();
 
   if (loading && !data) {
     return (
@@ -22,7 +22,8 @@ export function TodayInVillage() {
     return (
       <section className="page-panel page-panel--gold landing-block landing-today-panel">
         <LiterarySectionHead title={copy.title} compact />
-        <p className="landing-muted">Сводка дня временно недоступна — загляните чуть позже.</p>
+        <p className="landing-muted" role="status">Сводка дня недоступна.</p>
+        <button type="button" className="literary-link" onClick={() => void refresh()}>Повторить загрузку сводки</button>
       </section>
     );
   }
@@ -36,14 +37,13 @@ export function TodayInVillage() {
     <section className="page-panel page-panel--gold landing-block landing-today-panel" aria-label="Сегодня в посёлке">
       <LiterarySectionHead
         title={copy.title}
-        lead={copy.lead}
         meta={<p className="landing-updated">Обновлено {formatTodayUpdatedAt(data.updated_at)}</p>}
       />
 
       <div className="landing-today-grid">
         <LandingCard
           title="Ближайшее событие"
-          action={{ label: "Вся афиша →", to: "/events" }}
+          action={{ label: "Вся афиша", to: "/events" }}
           className="landing-card--event"
         >
           {nextEvent ? (
@@ -56,17 +56,14 @@ export function TodayInVillage() {
             </>
           ) : (
             <p className="landing-muted m-0">
-              {EMPTY_STATES.events.title}.{" "}
-              <Link to="/events" className="literary-link">
-                Афиша →
-              </Link>
+              {EMPTY_STATES.events.title}.
             </p>
           )}
         </LandingCard>
 
         <LandingCard
           title="Свежее объявление"
-          action={{ label: "Все объявления →", to: "/classifieds" }}
+          action={{ label: "Все объявления", to: "/classifieds" }}
           className="landing-card--ad"
         >
           {ad ? (
@@ -78,9 +75,9 @@ export function TodayInVillage() {
             </>
           ) : (
             <p className="landing-muted m-0">
-              {EMPTY_STATES.todayNoAd.text}{" "}
+              Свежих объявлений пока нет. {" "}
               <Link to="/classifieds?new=1" className="literary-link">
-                Подать →
+                Подать объявление
               </Link>
             </p>
           )}
@@ -88,7 +85,7 @@ export function TodayInVillage() {
 
         <LandingCard
           title="Справочник на карте"
-          action={{ label: "Открыть карту →", to: "/map" }}
+          action={{ label: "Открыть карту", to: "/map" }}
           className="landing-card--map"
         >
           <dl className="landing-stat-grid">

@@ -8,7 +8,9 @@ export const TIRE_SERVICE = {
   address: "Псковская область, рп. Пушкинские Горы, ул. Аэродромная, 23",
   phoneDisplay: "+7 (906) 221-03-54",
   phoneHref: "tel:+79062210354",
-  yandexMapsUrl: "https://yandex.ru/maps/org/1703652438/",
+  yandexMapsUrl: "https://yandex.ru/maps/org/shinomontazh/1703652438/",
+  // Destination from the verified place inventory (shinomontazh-aerodromnaya-23).
+  yandexRouteUrl: "https://yandex.ru/maps/?rtext=~57.017306%2C28.933486&rtt=auto",
   priceRevision: "13.10.2026",
   materials: "ROSSVIK",
 } as const;
@@ -97,4 +99,14 @@ export const ROSSVIK_VIDEOS = [
 
 export function formatRubles(value: number): string {
   return `${value.toLocaleString("ru-RU")} ₽`;
+}
+
+/** The published complete-set amount takes precedence over per-wheel arithmetic. */
+export function estimateMounting(size: string, count: number) {
+  const tariff = TIRE_SIZE_PRICES.find((item) => item.size === size);
+  if (!tariff || !Number.isInteger(count) || count < 1 || count > 6) {
+    throw new RangeError("Выберите размер из прайса и от 1 до 6 колёс");
+  }
+  const usesSetPrice = count === tariff.setCount;
+  return { amount: usesSetPrice ? tariff.set : tariff.wheel * count, usesSetPrice };
 }

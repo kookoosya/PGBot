@@ -1,268 +1,168 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { TodayInVillage } from "@/components/TodayInVillage";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
-import { LANDING_SECTIONS } from "@/lib/literaryCopy";
+import { VkBotLink } from "@/components/VkBotLink";
 import {
-  formatRubles,
-  REMOVAL_INSTALLATION,
-  ROSSVIK_VIDEOS,
-  STUDDING,
-  TIRE_SERVICE,
-  TIRE_SIZE_PRICES,
-  TUBE_REPAIR,
-  TUBELESS_REPAIR,
+  estimateMounting, formatRubles, REMOVAL_INSTALLATION, ROSSVIK_VIDEOS,
+  STUDDING, TIRE_SERVICE, TIRE_SIZE_PRICES, TUBE_REPAIR, TUBELESS_REPAIR,
   type ServicePrice,
 } from "@/lib/tireService";
 import "@/styles/tire-service.css";
 
-type PriceTab = "mount" | "repair" | "tube" | "studding";
-const PRICE_TABS: { id: PriceTab; label: string }[] = [
-  { id: "mount", label: "Перебортовка" },
-  { id: "repair", label: "Ремонт шин" },
-  { id: "tube", label: "Ремонт камер" },
-  { id: "studding", label: "Дошиповка" },
+type PriceCategory = "mount" | "repair" | "tube" | "studding";
+const CATEGORIES: { id: PriceCategory; label: string }[] = [
+  { id: "mount", label: "Перебортовка" }, { id: "repair", label: "Ремонт шин" },
+  { id: "tube", label: "Ремонт камер" }, { id: "studding", label: "Дошиповка" },
 ];
-
+const SECTIONS = [
+  { id: "tire-top", label: "Главная" }, { id: "tire-services", label: "Услуги" },
+  { id: "tire-prices", label: "Прайс" }, { id: "tire-methods", label: "Как работаем" },
+  { id: "village", label: "Пушкинские Горы" }, { id: "tire-location", label: "Контакты" },
+];
 const VILLAGE_LINKS = [
-  { to: "/map", label: "Карта и места", sub: "Найти нужное в посёлке", icon: "↗" },
-  { to: "/events", label: "Афиша", sub: "События и мероприятия", icon: "↗" },
-  { to: "/classifieds", label: "Объявления", sub: "Предложения жителей", icon: "↗" },
-  { to: "/jobs", label: "Работа", sub: "Вакансии и предложения", icon: "↗" },
-  { to: "/services", label: "Услуги", sub: "Местные специалисты", icon: "↗" },
-  { to: "/complaints", label: "Обращения", sub: "Заявки и проблемы", icon: "↗" },
+  { to: "/map", label: "Карта посёлка", text: "Места, организации и маршруты" },
+  { to: "/events", label: "Афиша", text: "События и мероприятия" },
+  { to: "/classifieds", label: "Объявления", text: "Предложения жителей" },
+  { to: "/jobs", label: "Работа", text: "Вакансии и резюме" },
+  { to: "/services", label: "Местные услуги", text: "Специалисты и организации" },
+  { to: "/complaints", label: "Обращения", text: "Сообщить о проблеме" },
 ];
-
+const SERVICES: { category: PriceCategory; title: string; text: string }[] = [
+  { category: "mount", title: "Перебортовка и балансировка", text: "R12–R20, микроавтобусы, Газель и УАЗ. Разборка, сборка и балансировка колеса." },
+  { category: "repair", title: "Ремонт бескамерных шин", text: "Проколы, порезы, проверка герметичности и вулканизация. Способ ремонта зависит от повреждения." },
+  { category: "tube", title: "Ремонт камер", text: "Легковые и грузовые камеры. Ремонт проколов, порезов и вклейка вентиля." },
+  { category: "studding", title: "Дошиповка", text: "Удаление старых шипов и установка ремонтных. Цена за каждый шип, материал включён." },
+];
 function PriceRows({ items }: { items: readonly ServicePrice[] }) {
-  return (
-    <div className="tire-service-rows">
-      {items.map((item) => (
-        <div className="tire-service-row" key={item.name}>
-          <span>{item.name}</span>
-          <strong>{item.price}</strong>
-        </div>
-      ))}
-    </div>
-  );
+  return <dl className="tire-service-rows">{items.map((item) => (
+    <div className="tire-service-row" key={item.name}><dt>{item.name}</dt><dd>{item.price}</dd></div>
+  ))}</dl>;
 }
-
 export function TireServiceLanding() {
-  const [tab, setTab] = useState<PriceTab>("mount");
-  const [selectedSize, setSelectedSize] = useState("R16");
-  const selected = TIRE_SIZE_PRICES.find((item) => item.size === selectedSize) ?? TIRE_SIZE_PRICES[4];
-
+  const [category, setCategory] = useState<PriceCategory>("mount");
+  const [size, setSize] = useState("R16");
+  const [count, setCount] = useState(4);
+  const [activeSection, setActiveSection] = useState("tire-top");
+  const menu = useRef<HTMLDetailsElement>(null);
+  const header = useRef<HTMLElement>(null);
+  const selected = TIRE_SIZE_PRICES.find((item) => item.size === size)!;
+  const estimate = estimateMounting(size, count);
+  useEffect(() => {
+    const sections = SECTIONS.map(({ id }) => document.getElementById(id)).reverse();
+    let frame = 0;
+    function updateSection() {
+      frame = 0;
+      const edge = (header.current?.offsetHeight ?? 0) + 24;
+      const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      const section = atBottom ? sections[0] : sections.find((node) => node && node.getBoundingClientRect().top <= edge);
+      setActiveSection(section?.id ?? SECTIONS[0].id);
+    }
+    function onScroll() {
+      if (!frame) frame = window.requestAnimationFrame(updateSection);
+    }
+    updateSection();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+  function closeMenu() { if (menu.current) menu.current.open = false; }
   return (
     <div className="tire-landing">
-      <section className="tire-hero" id="tire-top" aria-labelledby="tire-hero-title">
-        <div className="tire-hero-noise" aria-hidden="true" />
-        <div className="tire-hero-content">
-          <div className="tire-overline"><span className="tire-overline-dot" /> ПУШКИНСКИЕ ГОРЫ · АЭРОДРОМНАЯ, 23</div>
-          <p className="tire-hero-index">МАСТЕРСКАЯ ПО РЕМОНТУ И ОБСЛУЖИВАНИЮ ШИН</p>
-          <h1 id="tire-hero-title">Дорога<br />начинается<br /><em>с колёс.</em></h1>
-          <p className="tire-hero-description">Шиномонтаж, балансировка, ремонт проколов и порезов, дошиповка. Услуги и цены — без догадок: весь прайс открыт на этой странице.</p>
-          <div className="tire-hero-actions">
-            <a className="tire-button tire-button-primary" href="#tire-prices">Узнать стоимость <span aria-hidden="true">↗</span></a>
-            <a className="tire-button tire-button-outline" href={TIRE_SERVICE.phoneHref}>Позвонить <span aria-hidden="true">↗</span></a>
-          </div>
-          <p className="tire-hero-footnote">Материалы ROSSVIK · Снятие и установка колёс оплачиваются отдельно</p>
+      <a className="tire-skip" href="#tire-top">К содержимому</a>
+      <header className="tire-header" ref={header}>
+        <a className="tire-brand" href="#tire-top" aria-label="PG, Пушкинские Горы, главная">PG<span>Пушкинские<br />Горы</span></a>
+        <nav className="tire-desktop-nav" aria-label="Разделы главной">
+          {SECTIONS.map((section) => <a key={section.id} href={`#${section.id}`} aria-current={activeSection === section.id ? "location" : undefined}>{section.label}</a>)}
+          <Link to="/map">Карта</Link>
+        </nav>
+        <Link className="tire-account" to="/cabinet">Кабинет</Link>
+        <details className="tire-mobile-menu" ref={menu} onKeyDown={(event) => {
+          if (event.key === "Escape" && event.currentTarget.open) {
+            closeMenu();
+            event.currentTarget.querySelector("summary")?.focus();
+          }
+        }}><summary>Меню</summary><nav aria-label="Мобильная навигация">
+          {SECTIONS.map((section) => <a key={section.id} href={`#${section.id}`} onClick={closeMenu} aria-current={activeSection === section.id ? "location" : undefined}>{section.label}</a>)}
+          <Link to="/map">Карта</Link><Link to="/cabinet">Кабинет</Link>
+        </nav></details>
+      </header>
+      <main id="main-content">
+      <section className="tire-hero" id="tire-top" tabIndex={-1} aria-labelledby="tire-hero-title">
+        <div className="tire-hero-copy">
+          <p className="tire-address">Пушкинские Горы, Аэродромная, 23</p>
+          <h1 id="tire-hero-title">Шиномонтаж <span>на Аэродромной</span></h1>
+          <p className="tire-hero-description">Перебортовка, балансировка и ремонт шин.</p>
+          <div className="tire-actions"><a className="tire-button tire-button-primary" href="#tire-prices">Смотреть цены</a><a className="tire-button tire-button-outline" href={TIRE_SERVICE.phoneHref}>Позвонить</a></div>
+          <a className="tire-route-link" href={TIRE_SERVICE.yandexRouteUrl} target="_blank" rel="noopener noreferrer">Построить маршрут <span aria-hidden="true">↗</span></a>
+          <p className="tire-hero-note">Грузики включены в перебортовку.<br />Снятие и установка колёс оплачиваются отдельно.</p>
         </div>
-        <div className="tire-hero-visual" aria-hidden="true">
-          <div className="tire-visual-orbit tire-visual-orbit-one" />
-          <div className="tire-visual-orbit tire-visual-orbit-two" />
-          <div className="tire-visual-wheel"><div className="tire-visual-rim"><div className="tire-visual-hub" /></div></div>
-          <span className="tire-visual-word">SERVICE / 2026</span>
-        </div>
-        <div className="tire-hero-bottom">
-          <a href="#tire-services" className="tire-scroll-down">Листайте вниз <span aria-hidden="true">↓</span></a>
-          <a href={TIRE_SERVICE.yandexMapsUrl} target="_blank" rel="noopener noreferrer">Найти на Яндекс Картах ↗</a>
-        </div>
+        <figure className="tire-hero-photo"><img src="/images/pg/tire-1280.webp" srcSet="/images/pg/tire-640.webp 640w, /images/pg/tire-1280.webp 960w" sizes="(max-width: 767px) 100vw, 48vw" width="960" height="1280" alt="Крупный план протектора автомобильной шины" /></figure>
       </section>
-
-      <nav className="tire-page-nav" aria-label="Разделы главной страницы">
-        <a href="#tire-services">Услуги</a>
-        <a href="#tire-prices">Прайс</a>
-        <a href="#tire-methods">Как ремонтируют</a>
-        <a href="#tire-location">Контакты</a>
-        <a href="#village">Пушкинские Горы</a>
-      </nav>
-
-      <section id="tire-services" className="tire-section tire-section-light">
-        <div className="tire-section-heading">
-          <span className="tire-eyebrow">01 / Мастерская</span>
-          <h2>Когда важно<br /><em>сцепление с дорогой.</em></h2>
-          <p>Реальный перечень работ из действующего прайса. Без несуществующих услуг и обещаний.</p>
-        </div>
-        <div className="tire-services-grid">
-          <a href="#tire-prices" onClick={() => setTab("mount")} className="tire-service-card tire-service-card-feature">
-            <span className="tire-card-num">01 — ШИНОМОНТАЖ</span>
-            <span className="tire-service-icon" aria-hidden="true">◉</span>
-            <h3>Переобуть<br />автомобиль</h3>
-            <p>Разборка, сборка, балансировка. От R12 до R20, а также УАЗ, микроавтобусы и Газель.</p>
-            <span className="tire-card-cta">Посмотреть тарифы ↗</span>
-          </a>
-          <a href="#tire-prices" onClick={() => setTab("repair")} className="tire-service-card">
-            <span className="tire-card-num">02 — РЕМОНТ</span>
-            <span className="tire-service-icon" aria-hidden="true">✳</span>
-            <h3>Ремонт<br />повреждений</h3>
-            <p>Проколы, порезы, проверка герметичности и вулканизация — по результату осмотра.</p>
-            <span className="tire-card-cta">Перейти к ценам ↗</span>
-          </a>
-          <a href="#tire-prices" onClick={() => setTab("studding")} className="tire-service-card">
-            <span className="tire-card-num">03 — ЗИМНИЕ ШИНЫ</span>
-            <span className="tire-service-icon" aria-hidden="true">✦</span>
-            <h3>Дошиповка<br />шин</h3>
-            <p>Установка ремонтных шипов и удаление старых. Цена указана за штуку.</p>
-            <span className="tire-card-cta">Посмотреть тарифы ↗</span>
-          </a>
-          <a href="#tire-prices" onClick={() => setTab("tube")} className="tire-service-card">
-            <span className="tire-card-num">04 — КАМЕРЫ</span>
-            <span className="tire-service-icon" aria-hidden="true">◎</span>
-            <h3>Ремонт<br />камер</h3>
-            <p>Проколы, порезы, вклейка вентиля для легковых и грузовых камер.</p>
-            <span className="tire-card-cta">Перейти к ценам ↗</span>
-          </a>
-        </div>
+      <section id="tire-services" className="tire-section tire-services">
+        <div className="tire-section-heading"><h2>Услуги <em>шиномонтажа</em></h2></div>
+        <div className="tire-services-list">{SERVICES.map((service) => <a key={service.category} href="#tire-prices" onClick={() => setCategory(service.category)}><h3>{service.title}</h3><p>{service.text}</p></a>)}</div>
       </section>
-
       <section id="tire-prices" className="tire-section tire-pricing">
-        <div className="tire-section-heading tire-heading-dark">
-          <span className="tire-eyebrow">02 / Цены без сюрпризов</span>
-          <h2>Открытый<br /><em>прайс-лист.</em></h2>
-          <p>Редакция от {TIRE_SERVICE.priceRevision}. Для комплекта действует цена из прайса, а не арифметическая сумма отдельных колёс.</p>
-        </div>
-
+        <div className="tire-section-heading"><h2>Стоимость работ</h2><p>Прайс от {TIRE_SERVICE.priceRevision}. Комплектные цены приведены отдельно.</p></div>
         <div className="tire-price-panel">
-          <div className="tire-price-tabs" role="tablist" aria-label="Категория услуг">
-            {PRICE_TABS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                id={`tire-tab-${item.id}`}
-                role="tab"
-                aria-selected={tab === item.id}
-                aria-controls="tire-tab-panel"
-                className={tab === item.id ? "is-active" : ""}
-                onClick={() => setTab(item.id)}
-              >{item.label}</button>
-            ))}
-          </div>
-          <div id="tire-tab-panel" role="tabpanel" aria-labelledby={`tire-tab-${tab}`}>
-            {tab === "mount" ? (
-              <>
-                <p className="tire-price-label">ПОДБЕРИТЕ РАЗМЕР КОЛЕСА</p>
-                <div className="tire-size-picker">
-                  {TIRE_SIZE_PRICES.map((item) => (
-                    <button key={item.size} type="button" aria-pressed={selectedSize === item.size} className={selectedSize === item.size ? "is-selected" : ""} onClick={() => setSelectedSize(item.size)}>{item.size}</button>
-                  ))}
-                </div>
-                <div className="tire-price-summary">
-                  <div><span>ОДНО КОЛЕСО · {selected.size}</span><strong>{formatRubles(selected.wheel)}</strong></div>
-                  <div className="tire-price-summary-highlight"><span>КОМПЛЕКТ · {selected.setCount} ШТ.</span><strong>{formatRubles(selected.set)}</strong></div>
-                </div>
-                <details className="tire-price-breakdown">
-                  <summary>Показать детализацию цены <span>+</span></summary>
-                  <div className="tire-service-rows">
-                    <div className="tire-service-row"><span>Разборка (1 колесо)</span><strong>{formatRubles(selected.dismount)}</strong></div>
-                    <div className="tire-service-row"><span>Сборка (1 колесо)</span><strong>{formatRubles(selected.mount)}</strong></div>
-                    <div className="tire-service-row"><span>Балансировка (1 колесо)</span><strong>{formatRubles(selected.balance)}</strong></div>
-                  </div>
-                </details>
-                <div className="tire-price-secondary">
-                  <h3>Снятие и установка колёс</h3>
-                  <PriceRows items={REMOVAL_INSTALLATION} />
-                  <p className="tire-price-note">Снятие и установка оплачиваются отдельно от перебортовки. Грузики включены в цену перебортовки. Единицу тарификации снятия и установки уточняйте при обращении.</p>
-                </div>
-              </>
-            ) : tab === "repair" ? (
-              <>
-                <p className="tire-price-label">РЕМОНТ БЕСКАМЕРНЫХ ШИН</p>
-                <PriceRows items={TUBELESS_REPAIR} />
-                <p className="tire-price-note">Цена ремонта зависит от размера латки, размера шины и характера повреждения.</p>
-              </>
-            ) : tab === "tube" ? (
-              <>
-                <p className="tire-price-label">РЕМОНТ КАМЕР</p>
-                <PriceRows items={TUBE_REPAIR} />
-              </>
-            ) : (
-              <>
-                <p className="tire-price-label">ОШИПОВКА / ДОШИПОВКА</p>
-                <PriceRows items={STUDDING} />
-              </>
-            )}
-          </div>
-          <div className="tire-price-footer">
-            <span>Стоимость конкретного ремонта уточняется после оценки повреждения.</span>
-            <a href={TIRE_SERVICE.phoneHref}>Уточнить по телефону ↗</a>
-          </div>
+          <div className="tire-price-categories" role="group" aria-label="Категория услуг">{CATEGORIES.map((item) => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(item.id)}>{item.label}</button>)}</div>
+          <div className="tire-price-content">{category === "mount" ? <>
+            <div className="tire-calculator-fields">
+              <label>Размер или транспорт<select value={size} onChange={(event) => { const value = event.target.value; setSize(value); setCount(TIRE_SIZE_PRICES.find((item) => item.size === value)!.setCount); }}>
+                <optgroup label="Легковые автомобили">{TIRE_SIZE_PRICES.slice(0, 9).map((item) => <option key={item.size}>{item.size}</option>)}</optgroup>
+                <optgroup label="Другой транспорт">{TIRE_SIZE_PRICES.slice(9).map((item) => <option key={item.size}>{item.size}</option>)}</optgroup>
+              </select></label>
+              <label>Количество колёс<select value={count} onChange={(event) => setCount(Number(event.target.value))}>{[1, 2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+            </div>
+            <div className="tire-calculation" role="status" aria-live="polite" aria-atomic="true"><p>{selected.size}, {count} {count === 1 ? "колесо" : count < 5 ? "колеса" : "колёс"}</p><strong>{formatRubles(estimate.amount)}</strong><p>{estimate.usesSetPrice ? `Опубликованная цена комплекта из ${selected.setCount} колёс` : `${formatRubles(selected.wheel)} × ${count}`}</p></div>
+            <p className="tire-price-note">Снятие и установка оплачиваются отдельно. Грузики включены в перебортовку.</p>
+            <details className="tire-price-breakdown"><summary>Из чего складывается цена</summary><PriceRows items={[
+              { name: "Разборка одного колеса", price: formatRubles(selected.dismount) }, { name: "Сборка одного колеса", price: formatRubles(selected.mount) },
+              { name: "Балансировка одного колеса", price: formatRubles(selected.balance) }, { name: "Одно колесо полностью", price: formatRubles(selected.wheel) },
+              { name: `Комплект из ${selected.setCount} колёс`, price: formatRubles(selected.set) },
+            ]} /></details>
+            <details className="tire-price-breakdown"><summary>Весь прайс на перебортовку</summary><div className="tire-table-scroll" tabIndex={0} role="region" aria-label="Таблица цен на перебортовку"><table><caption>Разборка, сборка и балансировка. Цены в рублях.</caption><thead><tr><th scope="col">Размер</th><th scope="col">Разборка</th><th scope="col">Сборка</th><th scope="col">Баланс.</th><th scope="col">Колесо</th><th scope="col">Комплект</th></tr></thead><tbody>{TIRE_SIZE_PRICES.map((item) => <tr key={item.size}><th scope="row">{item.size}</th><td>{item.dismount}</td><td>{item.mount}</td><td>{item.balance}</td><td>{item.wheel}</td><td>{item.set} ({item.setCount} шт.)</td></tr>)}</tbody></table></div></details>
+            <div className="tire-additional"><h3>Снятие и установка</h3><PriceRows items={REMOVAL_INSTALLATION} /><p className="tire-price-note">Единицу тарификации уточните по телефону. Эти работы не включены в расчёт выше.</p></div>
+          </> : <><h3>{CATEGORIES.find((item) => item.id === category)!.label}</h3><PriceRows items={category === "repair" ? TUBELESS_REPAIR : category === "tube" ? TUBE_REPAIR : STUDDING} />{category === "repair" && <p className="tire-price-note">Цена зависит от характера повреждения, размера шины и ремонтного материала. Точную стоимость определяют после осмотра.</p>}</>}</div>
+          <a className="tire-price-contact" href={TIRE_SERVICE.phoneHref}>Уточнить стоимость по телефону {TIRE_SERVICE.phoneDisplay}</a>
         </div>
       </section>
-
       <section id="tire-methods" className="tire-section tire-methods">
-        <div className="tire-section-heading">
-          <span className="tire-eyebrow">03 / Материалы и технология</span>
-          <h2>Не магия.<br /><em>Технология.</em></h2>
-          <p>В работе используются материалы ROSSVIK. Ниже — обучающие видеоматериалы производителя, чтобы было понятно, как устроены разные виды ремонта. Это не съёмки нашей мастерской.</p>
-        </div>
-        <div className="tire-methods-grid">
-          {ROSSVIK_VIDEOS.map((video, index) => (
-            <a key={video.url} className="tire-method-card" href={video.url} target="_blank" rel="noopener noreferrer">
-              <span className="tire-method-index">0{index + 1} / {video.service}</span>
-              <span className="tire-method-play" aria-hidden="true">↗</span>
-              <h3>{video.title}</h3>
-              <span className="tire-method-source">Обучающий материал · {video.source}</span>
-            </a>
-          ))}
-        </div>
+        <div className="tire-section-heading"><h2>Материалы<br /><em>и ремонт</em></h2><p>В мастерской используются материалы ROSSVIK. Способ ремонта выбирают после осмотра шины.</p></div>
+        <div className="tire-method-layout"><div className="tire-method-intro"><p>Прокол, порез и потеря герметичности требуют разных решений. Размер повреждения и состояние шины важнее выбора услуги по названию.</p><a className="tire-text-link" href={TIRE_SERVICE.phoneHref}>Обсудить повреждение</a></div><div className="tire-method-list">{ROSSVIK_VIDEOS.map((video) => <details key={video.url}><summary>{video.service}</summary><p>{video.title}</p><a href={video.url} target="_blank" rel="noopener noreferrer">Смотреть материал {video.source} <span aria-hidden="true">↗</span></a></details>)}</div></div>
+        <p className="tire-source-note">По ссылкам открываются учебные видео производителя.</p>
       </section>
-
-      <section id="tire-location" className="tire-section tire-location">
-        <div className="tire-location-main">
-          <span className="tire-eyebrow">04 / Как нас найти</span>
-          <h2>Заезжайте.<br /><em>Мы на карте.</em></h2>
-          <address>{TIRE_SERVICE.address}</address>
-          <a href={TIRE_SERVICE.phoneHref} className="tire-location-phone">{TIRE_SERVICE.phoneDisplay}</a>
-          <div className="tire-location-actions">
-            <a href={TIRE_SERVICE.yandexMapsUrl} target="_blank" rel="noopener noreferrer" className="tire-button tire-button-primary">Открыть Яндекс Карты ↗</a>
-            <a href={TIRE_SERVICE.phoneHref} className="tire-button tire-button-outline">Позвонить ↗</a>
+      <section id="village" className="tire-village">
+        <figure className="tire-village-photo"><img src="/images/pg/sorot-1280.webp" srcSet="/images/pg/sorot-640.webp 640w, /images/pg/sorot-1280.webp 960w" sizes="100vw" width="960" height="640" loading="lazy" decoding="async" alt="Разлив Сороти у усадьбы Михайловское весной" /><figcaption>Михайловское. Разлив Сороти.</figcaption></figure>
+        <div className="tire-section tire-village-content"><div className="tire-section-heading"><h2>Пушкинские Горы</h2><p>Независимый портал для жителей и гостей посёлка.</p></div>
+          <div className="tire-village-directory">{VILLAGE_LINKS.map((item) => <Link to={item.to} key={item.to}><h3>{item.label}</h3><p>{item.text}</p></Link>)}</div>
+          <div className="tire-village-live"><TodayInVillage /><UpcomingEvents variant="landing" /></div>
+          <div className="tire-more-links">
+            <Link to="/wishes">Пожелания для посёлка</Link><Link to="/ai">Помощник PG</Link><Link to="/cabinet">Личный кабинет</Link>
+            <VkBotLink className="tire-vk-link" />
           </div>
-          <p>Актуальное время работы и маршрут уточняйте в карточке организации на Яндекс Картах.</p>
         </div>
-        <a className="tire-location-map" href={TIRE_SERVICE.yandexMapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Открыть расположение шиномонтажа на Яндекс Картах">
-          <div className="tire-map-grid" aria-hidden="true" />
-          <div className="tire-map-pin" aria-hidden="true">●</div>
-          <strong>Пушкинские Горы</strong>
-          <span>Аэродромная, 23</span>
-          <small>Построить маршрут ↗</small>
-        </a>
       </section>
-
-      <section id="village" className="tire-section tire-village">
-        <div className="tire-section-heading tire-village-heading">
-          <span className="tire-eyebrow">05 / Не только мастерская</span>
-          <h2>Пушкинские Горы.<br /><em>Место, где мы живём.</em></h2>
-          <p>Афиша, карта, объявления, вакансии и полезные сервисы посёлка — в том же проекте PG. Все существующие разделы портала остаются доступны.</p>
+      <section id="tire-location" className="tire-section tire-location">
+        <div><h2>Адрес и телефон</h2><address>{TIRE_SERVICE.address}</address></div>
+        <div className="tire-contact-details">
+          <a className="tire-phone" href={TIRE_SERVICE.phoneHref}>{TIRE_SERVICE.phoneDisplay}</a>
+          <p>Уточните время работы по телефону.</p>
+          <div className="tire-contact-links">
+            <a className="tire-button tire-button-primary" href={TIRE_SERVICE.yandexRouteUrl} target="_blank" rel="noopener noreferrer">Построить маршрут <span aria-hidden="true">↗</span></a>
+            <a className="tire-route-link" href={TIRE_SERVICE.yandexMapsUrl} target="_blank" rel="noopener noreferrer">Карточка в Яндекс Картах <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
-        <div className="tire-village-links">
-          {VILLAGE_LINKS.map((item, index) => (
-            <Link to={item.to} key={item.to} className="tire-village-link">
-              <span className="tire-village-link-index">0{index + 1}</span>
-              <span className="tire-village-link-copy"><strong>{item.label}</strong><small>{item.sub}</small></span>
-              <span className="tire-village-link-arrow" aria-hidden="true">{item.icon}</span>
-            </Link>
-          ))}
-        </div>
-        <div className="tire-village-live">
-          <div className="tire-village-live-card"><TodayInVillage /></div>
-          <div className="tire-village-live-card"><UpcomingEvents variant="landing" /></div>
-        </div>
-        <p className="tire-village-footnote">{LANDING_SECTIONS.useful.title} — <Link to="/map">перейти к карте посёлка ↗</Link></p>
       </section>
-
-      <div className="tire-endnote">
-        <span>PG / ПУШКИНСКИЕ ГОРЫ</span>
-        <a href="#tire-top">Наверх ↑</a>
-      </div>
+      </main>
+      <footer className="tire-footer"><div><a className="tire-brand" href="#tire-top">PG<span>Пушкинские<br />Горы</span></a><p>Независимый портал посёлка</p></div><nav aria-label="Ссылки внизу страницы"><Link to="/map">Карта</Link><Link to="/events">Афиша</Link><Link to="/services">Услуги посёлка</Link><Link to="/cabinet">Кабинет</Link></nav>
+        <details className="tire-photo-credits"><summary>Источники фотографий</summary><p><a href="https://commons.wikimedia.org/wiki/File:Car_tire_closeup_1_2019-01-15.jpg" target="_blank" rel="noopener noreferrer">Протектор шины, Fastily, Wikimedia Commons</a>, CC BY-SA 4.0.</p><p><a href="https://commons.wikimedia.org/wiki/File:Михайловское._Разлив_реки_Сороть.jpg" target="_blank" rel="noopener noreferrer">Михайловское, Sea Est</a>, CC BY-SA 4.0. Фотографии уменьшены, преобразованы в WebP и кадрируются на странице. <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Лицензия оригиналов и производных изображений</a>.</p></details>
+      </footer>
     </div>
   );
 }

@@ -84,8 +84,8 @@ describe("PublicLayout navigation performance", () => {
     document.body.innerHTML = "";
   });
 
-  it("keeps the same main element across route changes (no pathname key remount)", async () => {
-    const router = renderPortal("/");
+  it("keeps the same main element across portal route changes", async () => {
+    const router = renderPortal("/events");
     const mainBefore = document.querySelector("main.pushkin-main");
     expect(mainBefore).toBeTruthy();
 
@@ -97,7 +97,7 @@ describe("PublicLayout navigation performance", () => {
   });
 
   it("clicking a tab changes route", async () => {
-    const router = renderPortal("/");
+    const router = renderPortal("/map");
     topTab("/events").click();
     await waitFor(() => expect(router.state.location.pathname).toBe("/events"));
     expect(screen.getByRole("heading", { name: /Афиша probe/i })).toBeTruthy();
@@ -133,13 +133,13 @@ describe("PublicLayout navigation performance", () => {
   });
 
   it("mobile bottom navigation works", async () => {
-    const router = renderPortal("/");
+    const router = renderPortal("/events");
     bottomTab("/map").click();
     await waitFor(() => expect(router.state.location.pathname).toBe("/map"));
   });
 
   it("desktop top navigation works", async () => {
-    const router = renderPortal("/");
+    const router = renderPortal("/events");
     topTab("/map").click();
     await waitFor(() => expect(router.state.location.pathname).toBe("/map"));
   });
