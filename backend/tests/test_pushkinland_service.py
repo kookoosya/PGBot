@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from app.services.event_sources.fetchers.pushkinland import (
     _should_expand_with_program,
+    _month_number,
     parse_pushkinland_calendar,
     parse_pushkinland_program_page,
 )
@@ -104,3 +105,8 @@ def test_should_expand_multi_day_festival_with_news_link():
     garnect_row, _, year, _, _ = _future_garnect()
     calendar = parse_pushkinland_calendar(garnect_row, year=year)
     assert _should_expand_with_program(calendar[0]) is True
+
+
+def test_all_russian_calendar_months_are_recognized():
+    """Festival program headers may occur in every month, not only 5-letter stems."""
+    assert [_month_number(month) for month in MONTHS] == list(range(1, 13))
