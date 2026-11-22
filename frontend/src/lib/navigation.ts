@@ -25,7 +25,7 @@ export type NavSection = {
 
 /** Основные разделы портала — единый список для табов, подвала и сетки */
 export const MAIN_SECTIONS: NavSection[] = [
-  { to: "/", label: "Главная", icon: "🏠", end: true },
+  { to: "/", label: "Шиномонтаж", icon: "◉", end: true },
   { to: "/map", label: "Карта", icon: "🗺" },
   { to: "/events", label: "Афиша", icon: "📅" },
   { to: "/classifieds", label: "Объявления", icon: "📋" },
